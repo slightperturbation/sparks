@@ -1,0 +1,7 @@
+#ifndef CONFIG_HPP
+#define CONFIG_HPP
+
+// DATA_PATH should be configured by CMake
+#define DATA_PATH "@g_dataPath@"
+
+#endif

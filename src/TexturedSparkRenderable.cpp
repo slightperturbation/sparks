@@ -4,12 +4,13 @@
 using namespace std;
 using namespace Eigen;
 
-const std::string g_defaultVertexShaderFilename = SHADER_DIR "TexturedSparkVertex.glsl";
-const std::string g_defaultFragmentShaderFilename = SHADER_DIR "TexturedSparkFragment.glsl";
+const std::string g_defaultVertexShaderFilename = DATA_PATH "/shaders/TexturedSparkVertex.glsl";
+const std::string g_defaultFragmentShaderFilename = DATA_PATH "/shaders/TexturedSparkFragment.glsl";
 
 TexturedSparkRenderable
 ::TexturedSparkRenderable( LSparkPtr a_spark )
-: m_mesh( new Mesh(g_defaultVertexShaderFilename.c_str(), g_defaultFragmentShaderFilename.c_str()) ), 
+: m_mesh( new Mesh( g_defaultVertexShaderFilename.c_str(), 
+                    g_defaultFragmentShaderFilename.c_str() ) ), 
   m_spark( a_spark )
 {
 
@@ -26,15 +27,29 @@ void
 TexturedSparkRenderable
 ::render( const RenderContext& renderContext )
 {
-    
     // copy new spark data to mesh
-    glm::vec3 c = renderContext.cameraTarget() - renderContext.cameraPos();
-    const Eigen::Vector3f camDir( camDir[0], camDir[1], camDir[2] );
+    glm::vec3 glmCamPos = renderContext.cameraPos();
+    const Vector3f camPos(glmCamPos[0], glmCamPos[1], glmCamPos[2] );
+
+    const float halfAspectRatio = 0.05;
+
+    //m_mesh->clearGeometry();
+ 
     const Segments& segments = m_spark->segments();
     for( size_t i=0; i<segments.size(); ++i )
     {
         const Segment& s = segments[i];
-        m_mesh->addQuad( s.m_begin )
+        const Vector3f len = s.m_end-s.m_begin;
+        const Vector3f dir = len.normalized();
+        const Vector3f midpoint = 0.5f*len + s.m_begin;
+        const Vector3f camDir = (camPos - midpoint).normalized();
+        const Vector3f upDir = camDir.cross( dir );
+        const Vector3f upOffset = upDir * ( len.norm()*halfAspectRatio );
+        m_mesh->addQuad( s.m_begin - upOffset,
+                         s.m_end   - upOffset,
+                         s.m_begin + upOffset,
+                         s.m_end   + upOffset,
+                         camDir ); // normal of the quad
     }
 
     

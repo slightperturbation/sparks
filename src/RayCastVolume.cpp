@@ -3,8 +3,8 @@
 
 
 RayCastVolume::RayCastVolume( VolumeDataPtr data )
-    : Mesh( SHADER_DIR "rayCastVertexShader.glsl",
-            SHADER_DIR "rayCastFragmentShader.glsl" ),
+    : Mesh( DATA_PATH "/shaders/rayCastVertexShader.glsl",
+            DATA_PATH "/shaders/rayCastFragmentShader.glsl" ),
     m_volumeData( data ),
     m_scalarDataSource( DensityScalar ),
     m_vectorDataSource( NoneVector )

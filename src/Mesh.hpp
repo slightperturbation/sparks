@@ -19,13 +19,7 @@
 #include <iostream>
 #include <vector>
 
-#ifdef _WIN32
-#define SHADER_DIR "data/shaders/"
-#else
-#define SHADER_DIR "../../data/shaders/"
-#endif
-
-
+#include "config.hpp"  // Defines DATA_PATH
 
 // Standard vertex type for mesh objects
 class MeshVertex
@@ -97,8 +91,8 @@ struct LineVertex
 class Mesh : public Renderable
 {
 public:
-    Mesh( const char* vertexShaderFilepath = SHADER_DIR "volumeVertexShader.glsl",
-         const char* fragmentShaderFilepath = SHADER_DIR "volumeFragmentShader.glsl" );
+    Mesh( const char* vertexShaderFilepath = DATA_PATH "/shaders/volumeVertexShader.glsl",
+         const char* fragmentShaderFilepath = DATA_PATH "/shaders/volumeFragmentShader.glsl" );
 
     virtual ~Mesh();
 
@@ -112,10 +106,12 @@ public:
     virtual void loadTextures()  {}
     void unitCube();
     
+    void clearGeometry( void );
     void addQuad( const Eigen::Vector3f& a,
                   const Eigen::Vector3f& b,
                   const Eigen::Vector3f& c,
-                  const Eigen::Vector3f& d );
+                  const Eigen::Vector3f& d,
+                  const Eigen::Vector3f& norm );
 
     /// Construction methods
     static RenderablePtr createBox( void );

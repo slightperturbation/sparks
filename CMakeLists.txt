@@ -141,6 +141,16 @@ set( SRCS
   ./src/TexturedSparkRenderable.cpp
 )
 
+
+#####################################################################
+# Data dir config
+#####################################################################
+# Relies on variable name g_dataPath
+SET( g_dataPath "${CMAKE_SOURCE_DIR}/data" )
+configure_file( src/config.hpp.in ${CMAKE_BINARY_DIR}/config/config.hpp )
+# The config directory should be added as a include-searchpath
+include_directories( ${CMAKE_BINARY_DIR}/config/ )
+
 #####################################################################
 # Executables
 #####################################################################

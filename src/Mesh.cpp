@@ -205,19 +205,26 @@ void Mesh::loadShaders()
     m_shaderProgramIndex = loadShaderFromFile( m_vertexShaderFilepath.c_str(),
                                               m_fragmentShaderFilepath.c_str() );
 }
+void Mesh::clearGeometry( void )
+{
+    m_vertexData.clear();
+    m_vertexIndicies.clear();
+}
 
 void Mesh::addQuad( const Eigen::Vector3f& a,
                     const Eigen::Vector3f& b,
                     const Eigen::Vector3f& c,
-                    const Eigen::Vector3f& d )
+                    const Eigen::Vector3f& d,
+                    const Eigen::Vector3f& norm )
 {
     // 0,1 1,1
-    //  c  d
-    //  *--*
-    //  |\ |
-    //  | \|
-    //  *--*
-    //  a  b
+    //  c   d
+    //  *---*
+    //  |\  |
+    //  + \ +  (begin->end)
+    //  |  \|
+    //  *---*
+    //  a   b
     // 0,0 1,0
     //
     //  a  b  c  d
@@ -228,8 +235,9 @@ void Mesh::addQuad( const Eigen::Vector3f& a,
     // TODO v1.m_normal
     
     MeshVertex v;
-    for( int i=0; i<3; ++i ) v.m_position[i] = a(i);
     v.m_position[3] = 0;
+    for( int i=0; i<3; ++i ) v.m_normal[i] = norm[i];
+    for( int i=0; i<3; ++i ) v.m_position[i] = a(i);
     v.m_texCoord[0] = 0;    v.m_texCoord[1] = 0;
     v.m_texCoord[2] = 0;
     size_t aIdx = m_vertexData.size();

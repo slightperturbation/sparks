@@ -192,6 +192,8 @@ int runSimulation(int argc, char** argv)
     
     LSparkPtr spark( new LSpark() );
     spark->create( Vector3f(0,0,0), Vector3f(1,0,0), 1.0, 5 );
+    TexturedSparkRenderablePtr sparkRenderable( new TexturedSparkRenderable(spark) );
+    scene.push_back( sparkRenderable );
     
     float angle = 0.0f;
 
