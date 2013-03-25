@@ -1,12 +1,14 @@
 #include "Mesh.hpp"
 
-#include <iostream>
-
+#define GLEW_STATIC
+#include <GL/glew.h>
+#include <GL/glfw.h>
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <cassert>
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -15,14 +17,13 @@
 /// 
 void checkOpenGLErrors( void )
 {
-#ifdef DEBUG
     GLenum errCode;
     const GLubyte *errString;
     if ((errCode = glGetError()) != GL_NO_ERROR) {
         errString = gluErrorString(errCode);
         std::cerr << "OpenGL Error: " << errString << "\n";
+        assert( false );
     }
-#endif
 }
 
 
@@ -45,7 +46,7 @@ GLuint createShaderWithErrorHandling( GLuint shaderType, const std::string& shad
 {
     //////////////////
     // Load the Shader with error handling
-    GLuint shader = glCreateShader( shaderType );
+    GLuint shader = glCreateShader( shaderType );checkOpenGLErrors();
     {
         const char* shaderSourceCStr = shaderSource.c_str();
         glShaderSource( shader, 1, &(shaderSourceCStr), NULL );  checkOpenGLErrors();
@@ -64,7 +65,6 @@ GLuint createShaderWithErrorHandling( GLuint shaderType, const std::string& shad
         {
             std::cerr << "Failed to compile shader:\n-------------\n" 
                 << shaderSource << "\n-------------\n";
-            //throw "Error during shader compilation.\n";
         }
         else
         {
@@ -87,6 +87,9 @@ GLuint loadShaderFromFile( const char* vertexShaderFilepath, const char* fragmen
     glAttachShader( shaderProgram, fragmentShader );  checkOpenGLErrors();
     glBindFragDataLocation( shaderProgram, 0, "outColor" );  checkOpenGLErrors();  // define the output for color buffer-0
     glLinkProgram( shaderProgram );  checkOpenGLErrors();
+    
+    std::cerr << "Loaded vertex shader: " << vertexShaderFilepath << "\n"
+    << "Loaded fragment shader: " << fragmentShaderFilepath << "\n";
     return shaderProgram;
 }
 //////////////////////////////////////////////////////////////////////////
@@ -96,20 +99,34 @@ GLuint loadShaderFromFile( const char* vertexShaderFilepath, const char* fragmen
 Mesh::Mesh(const char* vertexShaderFilepath,
            const char* fragmentShaderFilepath )
 : m_vertexArrayObjectId(-1),
-m_dataTextureId(0),
-m_vertexBufferId(-1),
-m_elementBufferId(-1),
-m_shaderProgramIndex(-1),
-m_modelTransform(),
-m_vertexShaderFilepath( vertexShaderFilepath ),
-m_fragmentShaderFilepath( fragmentShaderFilepath )
+  m_vertexBufferId(-1),
+  m_elementBufferId(-1),
+  m_shaderProgramIndex(-1),
+  m_modelTransform(),
+  m_vertexShaderFilepath( vertexShaderFilepath ),
+  m_fragmentShaderFilepath( fragmentShaderFilepath )
 {
-    loadShaders();
+    checkOpenGLErrors();
+    
+    std::cerr << "\tCreating vertex arrays... ";
+    glGenVertexArrays( 1, &(m_vertexArrayObjectId) );
+    checkOpenGLErrors();
+    if( GL_INVALID_VALUE == m_vertexArrayObjectId ) { std::cerr << "------- ERROR in VAO creation ------ \n"; throw; }
+    std::cerr << "done.\n";
+    
+    std::cerr << "\tCreating array buffer... ";
+    glGenBuffers( 1, &(m_vertexBufferId) );
+    checkOpenGLErrors();
+    std::cerr << "done.\n";
+    
+    std::cerr << "\tCreating element buffer... ";
+    glGenBuffers( 1, &(m_elementBufferId) ); // Generate 1 buffer
+    checkOpenGLErrors();
+    std::cerr << "done.\n";
 }
 
 Mesh::~Mesh()
 {
-    glDeleteTextures( 1, &m_dataTextureId );
     glDeleteProgram( m_shaderProgramIndex );
     glDeleteBuffers( 1, &m_vertexBufferId );
     glDeleteBuffers( 1, &m_elementBufferId );
@@ -151,28 +168,48 @@ void Mesh::update( float dt )
 
 void Mesh::setupRenderState( void )
 {
-    glDisable( GL_DEPTH_TEST );
-    glEnable(GL_BLEND);
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-    //        glBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_ONE ); // need to update shader to premultiply alpha
+    glBindVertexArray( m_vertexArrayObjectId );
+    checkOpenGLErrors();
 }
 
 void Mesh::setupShaderState( const RenderContext& renderContext )
 {
-    // SETUP UNIFORM SHADER DATA
-    std::string modelViewProjName = "modelViewProj";  // Depends on the name in the shader program
-    GLint mvpm = glGetUniformLocation( m_shaderProgramIndex, modelViewProjName.c_str() );  checkOpenGLErrors();
-    if( mvpm == -1 )
+    setUniformMatrix( "projMat", renderContext.projectionMatrix() );
+    setUniformMatrix( "modelViewMat", renderContext.modelViewMatrix() );
+    setUniformVector( "g_worldLightPosition", renderContext.lightPosition() );
+    setUniformVector( "g_lightColor", renderContext.lightColor() );
+}
+
+void Mesh::setUniformMatrix( const char* uniformShaderName, const glm::mat4& mat)
+{
+    GLint uniId = glGetUniformLocation( m_shaderProgramIndex, uniformShaderName );
+    checkOpenGLErrors();
+    if( uniId == GL_INVALID_VALUE || uniId == GL_INVALID_OPERATION )
     {
-        std::cerr << "Renderable::render | Failed to find uniform shader attribute of name \""
-        << modelViewProjName << "\" in shader #" << m_shaderProgramIndex << "\n";
+        std::cerr << "Renderable::render | Failed to find uniform shader attribute of name \"modelViewMat\" in shader #" << m_shaderProgramIndex << "\n";
     }
     else
     {
-        glUniformMatrix4fv( mvpm, 1, GL_FALSE, glm::value_ptr( renderContext.getModelViewProjMatrix() ) );  checkOpenGLErrors();
-        //std::cerr << "xform: " << glm::to_string(xform) << "\n";
+        glProgramUniformMatrix4fv( m_shaderProgramIndex, uniId, 1, GL_FALSE, glm::value_ptr(mat) );
+        checkOpenGLErrors();
     }
 }
+
+void Mesh::setUniformVector( const char* uniformShaderName, const glm::vec3& vec )
+{
+    GLint uniId = glGetUniformLocation( m_shaderProgramIndex, uniformShaderName );
+    checkOpenGLErrors();
+    if( uniId == GL_INVALID_VALUE || uniId == GL_INVALID_OPERATION )
+    {
+        std::cerr << "Renderable::render | Failed to find uniform shader attribute of name \"modelViewMat\" in shader #" << m_shaderProgramIndex << "\n";
+    }
+    else
+    {
+        glProgramUniform3fv( m_shaderProgramIndex, uniId, 1, glm::value_ptr(vec) );
+        checkOpenGLErrors();
+    }
+}
+
 
 void Mesh::teardownRenderState( void )
 {
@@ -186,25 +223,40 @@ void Mesh::render( const RenderContext& renderContext )
 {
     setupRenderState();
     glUseProgram( m_shaderProgramIndex );  checkOpenGLErrors();
-    // bind vertex array OBJECT (VAO)
-    glBindVertexArray( m_vertexArrayObjectId );  checkOpenGLErrors(); 
-    
     setupShaderState( renderContext );
+    checkOpenGLErrors();
+
+    // bind vertex array OBJECT (VAO)
+    glBindVertexArray( m_vertexArrayObjectId );  checkOpenGLErrors();
     
     glDrawElements(GL_TRIANGLES,
+    //glPointSize( 1.5 );
+    //glDrawElements(GL_POINTS,
                    ((GLsizei)m_vertexIndicies.size()),
                    GL_UNSIGNED_INT,
                    nullptr);  // start at the beginning
     checkOpenGLErrors();
+    std::cerr << "glDrawElements( " << m_vertexIndicies.size() << ");\n";
 
     teardownRenderState();
 }
 
 void Mesh::loadShaders()
 {
+    checkOpenGLErrors();
     m_shaderProgramIndex = loadShaderFromFile( m_vertexShaderFilepath.c_str(),
-                                              m_fragmentShaderFilepath.c_str() );
+                                               m_fragmentShaderFilepath.c_str() );
+    checkOpenGLErrors();
+    
+    // Acquire shader
+    MeshVertex::addShaderAttributes( m_attributes );
+    attachShaderAttributes();
 }
+
+void Mesh::loadTextures()
+{
+}
+
 void Mesh::clearGeometry( void )
 {
     m_vertexData.clear();
@@ -240,25 +292,29 @@ void Mesh::addQuad( const Eigen::Vector3f& a,
     for( int i=0; i<3; ++i ) v.m_position[i] = a(i);
     v.m_texCoord[0] = 0;    v.m_texCoord[1] = 0;
     v.m_texCoord[2] = 0;
+    v.m_diffuseColor[0] = 1; v.m_diffuseColor[1] = 0; v.m_diffuseColor[2] = 0; v.m_diffuseColor[3] = 0;
     size_t aIdx = m_vertexData.size();
     m_vertexData.push_back( v );
     // b
     for( int i=0; i<3; ++i ) v.m_position[i] = b(i);
     v.m_texCoord[0] = 1;    v.m_texCoord[1] = 0;
+    v.m_diffuseColor[0] = 0; v.m_diffuseColor[1] = 1; v.m_diffuseColor[2] = 0; v.m_diffuseColor[3] = 0;
     size_t bIdx = m_vertexData.size();
     m_vertexData.push_back( v );
     // c
     for( int i=0; i<3; ++i ) v.m_position[i] = c(i);
     v.m_texCoord[0] = 0;    v.m_texCoord[1] = 1;
+    v.m_diffuseColor[0] = 0; v.m_diffuseColor[1] = 0; v.m_diffuseColor[2] = 1; v.m_diffuseColor[3] = 0;
     size_t cIdx = m_vertexData.size();
     m_vertexData.push_back( v );
     // d
     for( int i=0; i<3; ++i ) v.m_position[i] = d(i);
     v.m_texCoord[0] = 1;    v.m_texCoord[1] = 1;
+    v.m_diffuseColor[0] = 1; v.m_diffuseColor[1] = 1; v.m_diffuseColor[2] = 1; v.m_diffuseColor[3] = 0;
     size_t dIdx = m_vertexData.size();
     m_vertexData.push_back( v );
     
-    
+    // Three vertices per triangle (*not* tri-strips)
     m_vertexIndicies.push_back( aIdx );
     m_vertexIndicies.push_back( bIdx );
     m_vertexIndicies.push_back( cIdx );
@@ -267,6 +323,7 @@ void Mesh::addQuad( const Eigen::Vector3f& a,
     m_vertexIndicies.push_back( bIdx );
     m_vertexIndicies.push_back( dIdx );
 }
+
 
 void Mesh::unitCube()
 {
@@ -348,54 +405,61 @@ void Mesh::unitCube()
     {
         m_vertexIndicies.push_back(vertexIndicies[i]);
     }
-    
-    std::cerr << "\tCreating vertex arrays... ";
-    glGenVertexArrays( 1, &(m_vertexArrayObjectId) );  checkOpenGLErrors();
-    if( GL_INVALID_VALUE == m_vertexArrayObjectId ) { std::cerr << "------- ERROR in VAO creation ------ \n"; throw; }
+    bindDataToBuffers();
+}
+
+void Mesh::bindDataToBuffers( void )
+{
+    int count = 0;
+    std::cerr << "\n";
+    for( auto idxIter = m_vertexIndicies.begin(); idxIter != m_vertexIndicies.end(); ++idxIter )
+    {
+        count++;
+        unsigned int idx = *idxIter;
+        std::cerr << idx << "\t";
+        for( int i=0;i<3;++i ) std::cerr << m_vertexData[idx].m_position[i] << " \t ";
+        std::cerr << "\n";
+        
+        if( !(count % 3) ) std::cerr << "----\n";
+    }
+    std::cerr << "++++\n";
     glBindVertexArray( m_vertexArrayObjectId );  checkOpenGLErrors();
-    std::cerr << "done.\n";
-    
-    std::cerr << "\tCreating array buffer... ";
-    glGenBuffers( 1, &(m_vertexBufferId) );  checkOpenGLErrors();
     glBindBuffer( GL_ARRAY_BUFFER, m_vertexBufferId );  checkOpenGLErrors();
     glBufferDataFromVector( GL_ARRAY_BUFFER, m_vertexData, GL_STATIC_DRAW );  checkOpenGLErrors();
-    std::cerr << "done.\n";
-    
-    std::cerr << "\tCreating element buffer... ";
-    glGenBuffers( 1, &(m_elementBufferId) ); // Generate 1 buffer
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_elementBufferId );  checkOpenGLErrors();
     glBufferDataFromVector( GL_ELEMENT_ARRAY_BUFFER, m_vertexIndicies, GL_STATIC_DRAW );  checkOpenGLErrors();
-    std::cerr << "done.\n";
     
-    std::cerr << "\tCreating shader program... ";
-    loadShaders();
-    std::cerr << "done.\n";
-    
-    MeshVertex::addShaderAttributes( m_attributes );
-    
-    // ATTACH TO SHADER
+    // Unbind to clear the state
+    glBindVertexArray( 0 );  checkOpenGLErrors();
+    glBindBuffer( GL_ARRAY_BUFFER, 0 );  checkOpenGLErrors();
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );  checkOpenGLErrors();
+}
+
+void Mesh::attachShaderAttributes()
+{
+    // Must bind VAO & VBO to set attributes
+    std::cerr << "Binding vertex array object: " << m_vertexArrayObjectId << "\n";
+    glBindVertexArray( m_vertexArrayObjectId );  checkOpenGLErrors();
+    glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId ); checkOpenGLErrors();
+
     std::cerr << "\tInitializing: # of attributes = " << m_attributes.size() << "\n";
-    glUseProgram( m_shaderProgramIndex );  checkOpenGLErrors();
     //for( auto attrib : m_attributes )
     for( auto attribIter = m_attributes.begin(); attribIter != m_attributes.end(); ++attribIter )
     {
         auto attrib = *attribIter;
-        std::cerr << "\t\tenabling shader attribute \"" << attrib->m_name << "\"...\n";
-        attrib->enableByNameInShader( m_shaderProgramIndex );
         std::cerr << "\t\tdefining shader attribute \"" << attrib->m_name << "\"...\n";
         attrib->defineByNameInShader( m_shaderProgramIndex );
+        std::cerr << "\t\tenabling shader attribute \"" << attrib->m_name << "\"...\n";
+        attrib->enableByNameInShader( m_shaderProgramIndex );
     }
-    
     glBindVertexArray( 0 );  checkOpenGLErrors();
-    glBindBuffer( GL_ARRAY_BUFFER, 0 );  checkOpenGLErrors();
-    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );  checkOpenGLErrors();
-    std::cerr << "Unit Cube created.\n";
 }
 
 RenderablePtr Mesh::createBox( void )
 {
     Mesh* box = new Mesh();
     if( !box ) return RenderablePtr(nullptr);
-    box->unitCube();
+    box->unitCube();  // Build geometry and setup VAO
+    box->loadShaders(); // load shaders and attach to VAO
     return RenderablePtr( box );
 }

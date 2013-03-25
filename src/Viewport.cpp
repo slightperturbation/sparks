@@ -9,7 +9,7 @@
 void Viewport::render( const Renderables& scene, RenderContext& context ) const
 {
     glViewport( (GLsizei)m_left, (GLsizei)m_bottom, (GLsizei)m_width, (GLsizei)m_height );
-    
+    checkOpenGLErrors();
     for( auto r = scene.begin(); r != scene.end(); ++r )
     {
         (*r)->render( context );

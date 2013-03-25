@@ -117,7 +117,8 @@ public:
     virtual ~FloatShaderAttribute() {}
     virtual void assignPointerByIndex(GLuint attribIndex)
     {
-        //std::cerr << "Assigning float VertexAttribPointer \"" << m_name << "\".\n";
+        std::cerr << "\tassigning float VertexAttribPointer \"" << m_name << "\" size="
+            << m_size << ", stride=" << m_stride << ", offset=" << m_offset << "\n";
         glVertexAttribPointer( attribIndex, m_size, GL_FLOAT, GL_FALSE, m_stride, m_offset );  checkOpenGLErrors();
     }
 };
@@ -164,10 +165,10 @@ class RenderContext
 {
 public:
     RenderContext() : 
-      m_cameraPos( 1.5f, 0.5f, 0.0f ),
+      m_cameraPos( 0.0f, 0.0f, 1.0f ),
       m_cameraTarget( 0, 0, 0 ),
-      m_cameraUp( 0.0f, 0.0f, 1.0f ),
-      m_fov( 50.0f ),
+      m_cameraUp( 0.0f, 1.0f, 0.0f ),
+      m_fov( 80.0f ),
       m_aspectRatio( 800.0f/600.0f ),
       m_nearPlaneDist( 0.01f ),
       m_farPlaneDist( 20.0f )

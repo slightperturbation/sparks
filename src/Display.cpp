@@ -43,8 +43,8 @@ void SideBySideDisplay::resizeWindow( int width, int height )
 
 void SideBySideDisplay::render( const Renderables& scene )
 {
-    glClearColor( 0.3, 0.3, 0.5, 1 );
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    glClearColor( 0.3, 0.3, 0.5, 1 ); checkOpenGLErrors();
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ); checkOpenGLErrors();
     m_context.setAspectRatio( float(m_rightViewport.m_width)/float(m_rightViewport.m_height) );
 
 

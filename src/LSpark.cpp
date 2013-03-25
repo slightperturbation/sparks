@@ -68,7 +68,7 @@ void
 LSpark
 ::splitSegment( size_t a_index, float a_scale, int a_depth )
 {
-    if( a_depth < 0 )
+    if( a_depth <= 0 )
     {
         return;
     }

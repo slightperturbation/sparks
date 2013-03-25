@@ -70,24 +70,31 @@ int initOpenGL( InteractionVars* vars )
     cerr << "done.\n";
 
     // OpenGL 3.2 or higher only
-    glfwOpenWindowHint( GLFW_FSAA_SAMPLES, 16 ); // 8x anti aliasing
-//#ifdef __APPLE__
-//    // Need to force the 3.2 for mac -- note
-//    // that this breaks the AntTweak menus
-//    glfwOpenWindowHint( GLFW_OPENGL_VERSION_MAJOR, 3 );
-//    glfwOpenWindowHint( GLFW_OPENGL_VERSION_MINOR, 2 );
-//#endif
+    glfwOpenWindowHint( GLFW_FSAA_SAMPLES, 8 ); // 8x anti aliasing
+#ifdef __APPLE__
+    // Need to force the 3.2 for mac -- note
+    // that this breaks the AntTweak menus
+    glfwOpenWindowHint( GLFW_OPENGL_VERSION_MAJOR, 3 );
+    glfwOpenWindowHint( GLFW_OPENGL_VERSION_MINOR, 2 );
+#endif
+    glfwOpenWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
     glfwOpenWindowHint( GLFW_WINDOW_NO_RESIZE, GL_FALSE );
     
     cerr << "glfwOpenWindow...";
-    glfwOpenWindow( 800, 400, 0, 0, 0, 0, 32, 0, GLFW_WINDOW ); //
-    glfwEnable(GLFW_MOUSE_CURSOR);
+    glfwOpenWindow( 800, 600, 0, 0, 0, 0, 0, 0, GLFW_WINDOW ); //
+    checkOpenGLErrors();
+    glfwEnable( GLFW_MOUSE_CURSOR );
+    checkOpenGLErrors();
     glfwSetWindowTitle( "softTest" );
+    checkOpenGLErrors();
 
     cerr << " done.\n";
     cerr << "glewInit... ";
     glewExperimental = GL_TRUE;
     GLenum err = glewInit();
+    // according to http://www.opengl.org/wiki/OpenGL_Loading_Library
+    // glewInit may throw invalid enumerant error
+    glGetError(); // eat glew's supurious error
     if( err != GLEW_OK )
     {
         cerr << "glewInit() failed!\n";
@@ -98,6 +105,7 @@ int initOpenGL( InteractionVars* vars )
         cerr << "OpenGL Version 3.2 Required!\n";
         return -1;
     }
+    checkOpenGLErrors();
     if( GL_MAX_3D_TEXTURE_SIZE < 256 )
     {
         cerr << "Max 3d texture size: " << GL_MAX_3D_TEXTURE_SIZE << " is too small for this program.\n";
@@ -107,8 +115,11 @@ int initOpenGL( InteractionVars* vars )
     // Set GLFW event callbacks
     // - Redirect window size changes to the callback function WindowSizeCB
     glfwSetWindowSizeCallback(resizeWindowCallback);
+    checkOpenGLErrors();
     
     glEnable( GL_DEPTH_TEST );
+    checkOpenGLErrors();
+    
     cerr << "done.\n";
     return 0;
 }
@@ -118,7 +129,7 @@ void setupSimpleDisplay( RenderContext& renderContext )
     delete g_display;
     g_display = new SimpleDisplay(renderContext);
     int height = 0; int width = 0;
-    glfwGetWindowSize( &width, &height );
+    glfwGetWindowSize( &width, &height ); checkOpenGLErrors();
     g_display->resizeWindow( width, height );
 }
 
@@ -127,7 +138,7 @@ void setup3dDisplay( RenderContext& renderContext )
     delete g_display;
     g_display = new SideBySideDisplay(renderContext);
     int height = 0; int width = 0;
-    glfwGetWindowSize( &width, &height );
+    glfwGetWindowSize( &width, &height ); checkOpenGLErrors();
     g_display->resizeWindow( width, height );
 }
 
@@ -180,26 +191,30 @@ int runSimulation(int argc, char** argv)
     if( retVal ) return retVal;
 
     setupSimpleDisplay(renderContext);
-    //setup3dDisplay(renderContext);
 
     Renderables scene;
     
-    //SparkPtr spark( new Spark );
-    //spark->aggregate().push_back( PointCharge( 0, 0, 0 ) );
-    
-    //PointSparkRenderablePtr pointSparkRenderable( new PointSparkRenderable( spark ) );
-    //scene.push_back( pointSparkRenderable );
-    
-    LSparkPtr spark( new LSpark() );
-    spark->create( Vector3f(0,0,0), Vector3f(1,0,0), 1.0, 5 );
+    LSparkPtr spark( new LSpark );
+    spark->create( Vector3f(0,0.5,0), Vector3f(0,-0.5,0), 1.0, 0 );
     TexturedSparkRenderablePtr sparkRenderable( new TexturedSparkRenderable(spark) );
+    sparkRenderable->loadShaders();
+    sparkRenderable->loadTextures();
     scene.push_back( sparkRenderable );
-    
+
+    bool useBox = false;
+    if( useBox )
+    {
+        MeshPtr box( new Mesh(DATA_PATH "/shaders/TexturedSparkVertex.glsl",
+                              DATA_PATH "/shaders/TexturedSparkFragment.glsl" ) );
+        box->unitCube();
+        box->loadShaders();
+        scene.push_back( box );
+    }
     float angle = 0.0f;
 
     std::string sliceBaseName("densityYSlice");
     std::string velSliceBaseName( "velocityYSlice");
-
+    
     const double startTime = glfwGetTime();
     double currTime = startTime;
     double lastTime = startTime;
@@ -215,10 +230,10 @@ int runSimulation(int argc, char** argv)
 
         // UPDATE
         const float dt = 1.0f/60.0f;
-        spark->update( dt );
+        //spark->update( dt );
         
-        glClearColor( 0.5, 0.3, 0.3, 1 );
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        glClearColor( 0.3, 0.3, 0.3, 0.0 ); checkOpenGLErrors();
+        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ); checkOpenGLErrors();
         
         g_display->render( scene );
         
@@ -228,7 +243,9 @@ int runSimulation(int argc, char** argv)
         // Process Inputs
         if( glfwGetKey( GLFW_KEY_ENTER ) == GLFW_PRESS )
         {
-            //smokeVolume->loadShaders();
+            // maybe scene should have a loadShaders()??
+            sparkRenderable->loadShaders();
+            //box->loadShaders();
         }
         if( glfwGetKey( GLFW_KEY_ESC ) == GLFW_PRESS )
         {

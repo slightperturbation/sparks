@@ -115,9 +115,7 @@ endif()
 
 set( HDRS
   ./src/Mesh.hpp
-  ./src/SlicedVolume.hpp
   ./src/VolumeData.hpp
-  ./src/RayCastVolume.hpp
   ./src/Display.hpp
   ./src/Renderable.hpp
   ./src/RenderContext.hpp
@@ -132,7 +130,6 @@ set( HDRS
 set( SRCS
   ./src/main.cpp
   ./src/Mesh.cpp
-  ./src/RayCastVolume.cpp
   ./src/Display.cpp
   ./src/Viewport.cpp
   ./src/Spark.cpp

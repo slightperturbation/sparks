@@ -34,17 +34,20 @@ public:
 
     static void addShaderAttributes( std::vector<ShaderAttributePtr>&  outShaderAttributes )
     {
-        ShaderAttributePtr position(new FloatShaderAttribute("position", 3,
+        ShaderAttributePtr position(new FloatShaderAttribute("position",
+            3,
             sizeof(MeshVertex),
             (void*)offsetof(MeshVertex, m_position) )
             );
         outShaderAttributes.push_back( position );
+
         ShaderAttributePtr diffuse(new FloatShaderAttribute("inVertexColor",
             3,
             sizeof(MeshVertex),
             (void*)offsetof(MeshVertex, m_diffuseColor) )
             );
         outShaderAttributes.push_back( diffuse );
+        
         ShaderAttributePtr texCoord3d(new FloatShaderAttribute("texCoord3d",
             3,
             sizeof(MeshVertex),
@@ -103,7 +106,7 @@ public:
     virtual void teardownRenderState( void );
     virtual void render( const RenderContext& renderContext );
     virtual void loadShaders();
-    virtual void loadTextures()  {}
+    virtual void loadTextures();
     void unitCube();
     
     void clearGeometry( void );
@@ -112,15 +115,20 @@ public:
                   const Eigen::Vector3f& c,
                   const Eigen::Vector3f& d,
                   const Eigen::Vector3f& norm );
+    
+    /// Bind geometry data to buffers
+    void bindDataToBuffers( void );
 
     /// Construction methods
     static RenderablePtr createBox( void );
 
 protected:
+    void attachShaderAttributes( void );
+    void setUniformMatrix( const char* uniformShaderName, const glm::mat4& mat);
+    void setUniformVector( const char* uniformShaderName, const glm::vec3& vec );
     std::string m_vertexShaderFilepath;
     std::string m_fragmentShaderFilepath;
 
-    GLuint m_dataTextureId;
     GLuint m_vertexArrayObjectId;
     GLuint m_vertexBufferId;
     GLuint m_elementBufferId;
