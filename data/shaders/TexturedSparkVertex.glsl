@@ -1,13 +1,13 @@
 #version 150
 
 in vec3 position;
-in vec3 inVertexColor;
+in vec4 inVertexColor;
 in vec3 texCoord3d;
 
 uniform mat4 modelViewMat; // projection * view * model
 uniform mat4 projMat;
 
-out vec3 FragColor; // name must match with fragment shader in-attrib
+out vec4 FragColor; // name must match with fragment shader in-attrib
 out vec2 TexCoord;  // texture coordinate of vertex
 out vec4 vertexPosition;
 
