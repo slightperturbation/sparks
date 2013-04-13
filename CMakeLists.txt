@@ -15,6 +15,13 @@ endif( APPLE )
 # Avoiding manifests entirely seems to be one fix. (http://www.cmake.org/Bug/print_bug_page.php?bug_id=8386)
 if( WINDOWS )
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
+  if( MSVC )
+    # warning C4530: C++ exception handler used, but unwind semantics are not 
+    # enabled. Specify /EHsc 
+    # MSVC needs /EHsc flag, which I included in root CMakeLists.txt, but 
+    # above SET(CMAKE_CXX_FLAGS "") erases it.
+    SET(CMAKE_CXX_FLAGS "/EHsc")  
+  endif( MSVC )
 endif( WINDOWS )
 
 set(PROJECT_NAME "sparks")
@@ -33,12 +40,12 @@ MESSAGE( "BOOST: " $ENV{BOOST_ROOT})
 set(BOOST_MIN_VERSION "1.44")
 set( Boost_LIB_DIAGNOSTIC_DEFINITIONS  )
 if( WINDOWS )
-  #set(Boost_USE_STATIC_LIBS ON)
-  #set(Boost_USE_MULTITHREADED ON) 
-  #set(Boost_USE_STATIC_RUNTIME ON)
+  set(Boost_USE_STATIC_LIBS ON)
+  set(Boost_USE_MULTITHREADED ON) 
+  set(Boost_USE_STATIC_RUNTIME ON)
 endif( WINDOWS )
 
-list(APPEND PROJECT_BOOST_COMPONENTS system filesystem thread program_options) 
+list(APPEND PROJECT_BOOST_COMPONENTS system filesystem thread program_options unit_test_framework ) 
 FIND_PACKAGE(Boost ${BOOST_MIN_VERSION} COMPONENTS ${PROJECT_BOOST_COMPONENTS})
 
 if( Boost_FOUND )
@@ -99,10 +106,36 @@ IF( GLM_FOUND )
 ELSE( GLM_FOUND )
   MESSAGE( STATUS "Failed to find GLM ----------------------")
 ENDIF( GLM_FOUND )
-if(OPENGL_FOUND AND APPLE)
-    FIND_LIBRARY(COCOA_LIBRARY Cocoa)
-    FIND_LIBRARY(IOKIT_LIBRARY IOKit)
-endif()
+IF( OPENGL_FOUND AND APPLE )
+    FIND_LIBRARY( COCOA_LIBRARY Cocoa )
+    FIND_LIBRARY( IOKIT_LIBRARY IOKit )
+ENDIF()
+
+## DEVIL -- image loading library
+IF( MSVC )
+    MESSAGE( STATUS "-- MSVC ")
+    SET( CMAKE_PREFIX_PATH $ENV{SOFMIS_DEVIL} )
+    MESSAGE( STATUS "-- CMAKE_PREFIX_PATH = ${CMAKE_PREFIX_PATH} ")
+    FIND_PACKAGE( DevIL REQUIRED )
+    IF( IL_FOUND )
+      MESSAGE( STATUS "-- MSVC -- Think we've found IL ")
+      INCLUDE_DIRECTORIES( "${IL_INCLUDE_DIR}/../" )
+      # Note addition of ../ in include dir is a hack around 
+      # a buggy (on windows) standard cmake file for DevIL.
+      # See http://www.cmake.org/pipermail/cmake-developers/2011-August/001960.html
+      MESSAGE( STATUS "Found DevIL. (Headers at " ${IL_INCLUDE_DIR}/../ " -- note hack.)")
+    ELSE( IL_FOUND )
+      MESSAGE( STATUS "Failed to find DevIL ------------------")
+    ENDIF( IL_FOUND )
+ELSE( MSVC )
+  FIND_PACKAGE( DevIL REQUIRED )
+  IF( IL_FOUND )
+      INCLUDE_DIRECTORIES( ${IL_INCLUDE_DIR} )
+      MESSAGE( STATUS "Found DevIL. (Headers at " ${IL_INCLUDE_DIR} ")")
+  ELSE( IL_FOUND )
+      MESSAGE( STATUS "Failed to find DevIL ------------------")
+  ENDIF( IL_FOUND )  
+ENDIF( MSVC )  
 
 # AntTweakBar -- on windows, depends on env var: ANT_TWEAK_BAR_ROOT
 #FIND_PACKAGE(AntTweakBar REQUIRED)
@@ -115,29 +148,67 @@ endif()
 
 set( HDRS
   ./src/Mesh.hpp
+  ./src/SoftTestDeclarations.hpp
   ./src/VolumeData.hpp
   ./src/Display.hpp
   ./src/Renderable.hpp
-  ./src/RenderContext.hpp
-  ./src/SoftTestDeclarations.hpp
+  ./src/Perspective.hpp
+  ./src/Utilities.hpp
+  ./src/TextureManager.hpp
+  ./src/ShaderManager.hpp
   ./src/Viewport.hpp
   ./src/Spark.hpp
   ./src/PointSparkRenderable.hpp
   ./src/LSpark.hpp
   ./src/TexturedSparkRenderable.hpp
+  ./src/VelocityFieldInterface.hpp
+  ./src/Fluid.hpp
+  ./src/SlicedVolume.hpp
+  ./src/VertexAttribute.hpp
+  ./src/Shader.hpp
+  ./src/ShaderUniform.hpp
+  ./src/Material.hpp
+  ./src/Scene.hpp
+  ./src/RenderPass.hpp
+  ./src/RenderCommand.hpp
+  ./src/FileAssetFinder.hpp
 )
 
 set( SRCS
-  ./src/main.cpp
   ./src/Mesh.cpp
   ./src/Display.cpp
   ./src/Viewport.cpp
+  ./src/Perspective.cpp
+  ./src/Utilities.cpp
+  ./src/TextureManager.cpp
   ./src/Spark.cpp
   ./src/PointSparkRenderable.cpp
   ./src/LSpark.cpp
   ./src/TexturedSparkRenderable.cpp
+  ./src/Fluid.cpp
+  ./src/Scene.cpp
+  ./src/RenderPass.cpp
+  ./src/RenderCommand.cpp
+  ./src/ShaderUniform.cpp
+  ./src/FileAssetFinder.cpp
+)
+set( GUI_SRCS 
+  ./src/main.cpp
 )
 
+set( UNIT_TEST_SRCS
+	./src/tests/UnitTests.cpp
+)
+source_group( "Unit Tests" FILES ${UNIT_TEST_SRCS} )
+
+set( CPPLOG_HDRS
+	./ext/cpplog/cpplog.hpp
+	./ext/cpplog/outputdebugstream.hpp
+	./ext/cpplog/concurrent_queue.hpp
+	./ext/cpplog/scribestream.hpp
+)
+include_directories( ./ext/cpplog/ )
+source_group( "External\\CppLog" FILES ${CPPLOG_HDRS} )
 
 #####################################################################
 # Data dir config
@@ -152,15 +223,25 @@ include_directories( ${CMAKE_BINARY_DIR}/config/ )
 # Executables
 #####################################################################
 add_executable( ${PROJECT_NAME} 
-  ${HDRS} ${SRCS} 
+  ${HDRS} ${SRCS} ${GUI_SRCS} ${CPPLOG_HDRS}
 )
 target_link_libraries(${PROJECT_NAME} 
 	${Boost_LIBRARIES}
 	${GLFW_LIBRARY}
 	${GLEW_LIBRARY}
     ${OPENGL_LIBRARIES}
+    ${IL_LIBRARIES}
 )
-
+add_executable( ${PROJECT_NAME}_test 
+  ${UNIT_TEST_SRCS} ${HDRS} ${SRCS} ${CPPLOG_HDRS}
+)
+target_link_libraries(${PROJECT_NAME}_test
+	${Boost_LIBRARIES}
+	${GLFW_LIBRARY}
+	${GLEW_LIBRARY}
+    ${OPENGL_LIBRARIES}
+    ${IL_LIBRARIES}
+)
 # For OpenGL on Apple, need to link with Cocoa too
 if(APPLE)
 	target_link_libraries(${PROJECT_NAME}

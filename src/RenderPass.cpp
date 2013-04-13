@@ -1,9 +1,31 @@
 
 #include "RenderPass.hpp"
 
+#include "RenderTarget.hpp"
 #include "RenderCommand.hpp"
 #include "Perspective.hpp"
 #include "Renderable.hpp"
+
+RenderPass
+::RenderPass( void )
+    : m_priority( 1.0f )
+{
+
+}
+
+void 
+RenderPass
+::preRender( void ) const
+{
+    if( m_target ) { m_target->preRender(); }
+}
+
+void 
+RenderPass
+::postRender( void ) const
+{
+    if( m_target ) { m_target->postRender(); }
+}
 
 bool renderPassCompareByPriority( ConstRenderPassPtr a, 
                                   ConstRenderPassPtr b )
@@ -11,7 +33,7 @@ bool renderPassCompareByPriority( ConstRenderPassPtr a,
     return a->priority() < b->priority();
 }
 
-RenderCommand createRenderCommand( RenderPassPtr aRenderPass, 
+RenderCommand createRenderCommand( ConstRenderPassPtr aRenderPass, 
                                    ConstRenderablePtr aRenderable )
 {
     RenderCommand rc;

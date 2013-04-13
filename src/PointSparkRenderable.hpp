@@ -9,9 +9,11 @@
 #ifndef sparks_PointSparkRenderable_hpp
 #define sparks_PointSparkRenderable_hpp
 
+#include "SoftTestDeclarations.hpp"
+
 #include "Spark.hpp"
 #include "Renderable.hpp"
-#include "RenderContext.hpp"
+#include "Perspective.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -36,7 +38,7 @@ public:
     PointSparkRenderable( SparkPtr spark );
     virtual ~PointSparkRenderable() {}
     
-    virtual void render( const RenderContext& renderContext );
+    virtual void render( PerspectivePtr renderContext );
     virtual void update( float dt );
     virtual void loadTextures() {}
     virtual void loadShaders() {}

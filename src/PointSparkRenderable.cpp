@@ -18,7 +18,7 @@ PointSparkRenderable
 
 void
 PointSparkRenderable
-::render( const RenderContext& renderContext )
+::render( PerspectivePtr renderContext )
 {
     const PointCharges& aggregate = m_spark->aggregate();
     glBegin( GL_POINTS );
@@ -34,7 +34,7 @@ PointSparkRenderable
     {
         glColor3f( 1,0.1,0.1 );
         float field = candidate[i].phi.norm();
-        std::cerr << "CAN[" << i << "] = " << field << "\n";
+        LOG_INFO(g_log) << "CAN[" << i << "] = " << field << "\n";
         glPointSize( field );
         glVertex( candidate[i].pos );
     }

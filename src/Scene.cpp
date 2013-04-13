@@ -34,17 +34,24 @@ void
 Scene
 ::render( void )
 {
-    RenderPass* lastRenderPass = NULL;
+    const RenderPass* lastRenderPass = NULL;
     // Render each render command in order.
     while( !m_commands.empty() )
     {
-        RenderCommand& rc = m_commands.top();
-        RenderPass* currRenderPass = rc.m_pass.get();
+        const RenderCommand& rc = m_commands.top();
+        const RenderPass* currRenderPass = rc.m_pass.get();
         if( currRenderPass != lastRenderPass && currRenderPass != NULL )
         {
-            rc.m_pass->setTarget();
+            // New render pass, allow both old and new to change GL state.
+            lastRenderPass->postRender();
+            currRenderPass->preRender();
         }
         rc();
         m_commands.pop();
+    }
+    if( lastRenderPass )
+    {
+        // Finally, allow the last-set render pass to cleanup state
+        lastRenderPass->postRender();
     }
 }

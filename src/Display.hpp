@@ -8,19 +8,19 @@
 class Display
 {
 public:
-    Display(  RenderContext& context );
+    Display( PerspectivePtr context );
     virtual ~Display() {}
     virtual void render( const Renderables& scene ) = 0;
     virtual void resizeWindow( int width, int height ) = 0;
 protected:
-    RenderContext& m_context;
+    PerspectivePtr m_context;
 };
 
 // TODO rename to SingleDisplay
 class SimpleDisplay : public Display
 {
 public:
-    SimpleDisplay( RenderContext& context );
+    SimpleDisplay( PerspectivePtr context );
     virtual ~SimpleDisplay() {}
     virtual void render( const Renderables& scene );
     virtual void resizeWindow( int width, int height );
@@ -33,7 +33,7 @@ private:
 class SideBySideDisplay : public Display
 {
 public:
-    SideBySideDisplay( RenderContext& context );
+    SideBySideDisplay( PerspectivePtr context );
     virtual ~SideBySideDisplay() {}
     virtual void render( const Renderables& scene );
     virtual void resizeWindow( int width, int height );

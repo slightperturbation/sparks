@@ -1,15 +1,15 @@
 #include "Viewport.hpp"
 #include "Renderable.hpp"
-#include "RenderContext.hpp"
+#include "Perspective.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GL/glfw.h>
 
-void Viewport::render( const Renderables& scene, RenderContext& context ) const
+void Viewport::render( const Renderables& scene, PerspectivePtr context ) const
 {
-    glViewport( (GLsizei)m_left, (GLsizei)m_bottom, (GLsizei)m_width, (GLsizei)m_height );
-    checkOpenGLErrors();
+    GL_CHECK( glViewport( (GLsizei)m_left, (GLsizei)m_bottom, 
+                          (GLsizei)m_width, (GLsizei)m_height ) );
     for( auto r = scene.begin(); r != scene.end(); ++r )
     {
         (*r)->render( context );

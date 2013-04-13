@@ -9,6 +9,8 @@
 #ifndef sparks_Spark_h
 #define sparks_Spark_h
 
+#include "SoftTestDeclarations.hpp"
+
 #include <vector>
 #include <memory>
 

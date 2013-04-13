@@ -2,6 +2,8 @@
 #ifndef VOLUME_DATA_HPP
 #define VOLUME_DATA_HPP
 
+#include "SoftTestDeclarations.hpp"
+
 #include <memory>
 
 /// Abstract superclass for 3D volume data governed by a density field

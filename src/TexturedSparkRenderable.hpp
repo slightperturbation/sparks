@@ -12,7 +12,7 @@
 #include "Mesh.hpp"
 #include "LSpark.hpp"
 #include "Renderable.hpp"
-#include "RenderContext.hpp"
+#include "Perspective.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -31,16 +31,20 @@ public:
     TexturedSparkRenderable( LSparkPtr spark );
     virtual ~TexturedSparkRenderable() {}
     
-    virtual void render( const RenderContext& renderContext );
+    virtual void render( PerspectivePtr renderContext );
     virtual void update( float dt );
     virtual void loadTextures();
     virtual void loadShaders();
-    virtual void setTextureState( const RenderContext& renderContext );
+    virtual void setTextureState( PerspectivePtr renderContext );
 private:
+    static Eigen::Vector3f upOffset( const Eigen::Vector3f& pos, 
+                                     const Eigen::Vector3f& parentPos,
+                                     const Eigen::Vector3f& camPos,
+                                     float halfAspectRatio );
+
     MeshPtr m_mesh;
     LSparkPtr m_spark;
-    GLuint m_textureId;
-    GLuint m_textureShaderUnit;
+    GLuint m_textureUnit; //< e.g., GL_TEXTURE0 + m_textureUnit
 
     std::string m_fragmentShaderFilename;
     std::string m_vertexShaderFilename;

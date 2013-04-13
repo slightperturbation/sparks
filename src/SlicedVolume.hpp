@@ -1,6 +1,8 @@
 #ifndef SLICED_VOLUME_HPP
 #define SLICED_VOLUME_HPP
 
+#include "SoftTestDeclarations.hpp"
+
 #include "Mesh.hpp"
 #include "VolumeData.hpp"
 
@@ -23,7 +25,7 @@ public:
         {
             float z = zMin + ((float)step) * (zMax - zMin)/((float)zSteps);
             float t = ((float)step)/(zSteps-1.0); // 0 to 1
-            //std::cerr << "slice at z = " << z << "\n";
+            //LOG_INFO(g_log) << "slice at z = " << z << "\n";
 
             MeshVertex v;
             v.m_position[0] = -0.5;     v.m_position[1] =  0.5;     v.m_position[2] = z;
@@ -59,33 +61,33 @@ public:
             m_vertexIndicies.push_back( lowerLeft ); // 3
         }
 
-        std::cerr << "\tCreating vertex arrays... ";
-        glGenVertexArrays( 1, &(m_vertexArrayObjectId) );
-        glBindVertexArray( m_vertexArrayObjectId );
-        std::cerr << "done.\n";
+        LOG_INFO(g_log) << "\tCreating vertex arrays... ";
+        GL_CHECK( glGenVertexArrays( 1, &(m_vertexArrayObjectId) ) );
+        GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
+        LOG_INFO(g_log) << "done.\n";
 
-        std::cerr << "\tCreating array buffer... ";
-        glGenBuffers( 1, &(m_vertexBufferId) );
-        glBindBuffer( GL_ARRAY_BUFFER, m_vertexBufferId );
-        glBufferDataFromVector( GL_ARRAY_BUFFER, m_vertexData, GL_STATIC_DRAW );
-        std::cerr << "done.\n";
+        LOG_INFO(g_log) << "\tCreating array buffer... ";
+        GL_CHECK( glGenBuffers( 1, &(m_vertexBufferId) ) );
+        GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, m_vertexBufferId ) );
+        GL_CHECK( glBufferDataFromVector( GL_ARRAY_BUFFER, m_vertexData, GL_STATIC_DRAW ) );
+        LOG_INFO(g_log) << "done.\n";
 
-        std::cerr << "\tCreating element buffer... ";
-        glGenBuffers( 1, &(m_elementBufferId) ); // Generate 1 buffer
-        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_elementBufferId );
-        glBufferDataFromVector( GL_ELEMENT_ARRAY_BUFFER, m_vertexIndicies, GL_STATIC_DRAW );
-        std::cerr << "done.\n";
+        LOG_INFO(g_log) << "\tCreating element buffer... ";
+        GL_CHECK( glGenBuffers( 1, &(m_elementBufferId) ) ); 
+        GL_CHECK( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_elementBufferId ) );
+        GL_CHECK( glBufferDataFromVector( GL_ELEMENT_ARRAY_BUFFER, m_vertexIndicies, GL_STATIC_DRAW ) );
+        LOG_INFO(g_log) << "done.\n";
 
-        std::cerr << "\tCreating shader program... ";
+        LOG_INFO(g_log) << "\tCreating shader program... ";
         loadShaders();
-        std::cerr << "done.\n";
+        LOG_INFO(g_log) << "done.\n";
 
-        glBindVertexArray( 0 );
-        glBindBuffer( GL_ARRAY_BUFFER, 0 );
-        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
-        std::cerr << "Slices created.\n";
+        GL_CHECK( glBindVertexArray( 0 ) );
+        GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, 0 ) );
+        GL_CHECK( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 ) );
+        LOG_INFO(g_log) << "Slices created.\n";
         load3DTextures();
-        std::cerr << "Textures loaded.\n";
+        LOG_INFO(g_log) << "Textures loaded.\n";
     }
     virtual ~SlicedVolume() {}
     
@@ -99,24 +101,23 @@ public:
     /// Push new density data up to graphics card
     void load3DTextures()
     {
-        glBindTexture( GL_TEXTURE_3D, m_dataTextureId );  checkOpenGLErrors();
-
-        //glTexImage3D( GL_TEXTURE_3D, 0, GL_R32F, m_N+2, m_N+2, m_N+2, 0, GL_RED, GL_FLOAT, m_density );
-        glTexImage3D( GL_TEXTURE_3D, 0, GL_R32F, 
+        GL_CHECK( glBindTexture( GL_TEXTURE_3D, m_dataTextureId ) );
+        //GL_CHECK( glTexImage3D( GL_TEXTURE_3D, 0, GL_R32F, m_N+2, m_N+2, m_N+2, 0, GL_RED, GL_FLOAT, m_density ) );
+        GL_CHECK( glTexImage3D( GL_TEXTURE_3D, 0, GL_R32F, 
             m_volumeData->dimX(), 
             m_volumeData->dimY(), 
             m_volumeData->dimZ(), 
             0, GL_RED, GL_FLOAT, 
-            m_volumeData->getDensityData() );  checkOpenGLErrors();
+            m_volumeData->getDensityData() ) );
 
         //glTexImage3D( GL_TEXTURE_3D, 0, GL_RGBA16F, m_N+2, m_N+2, m_N+2, 0, GL_RGBA, GL_FLOAT, m_density );//m_velU ); //
-        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );  checkOpenGLErrors();
-        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );  checkOpenGLErrors();
-        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );  checkOpenGLErrors();
-        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );  checkOpenGLErrors();
-        glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE );  checkOpenGLErrors();
-        glGenerateMipmap( GL_TEXTURE_3D );  checkOpenGLErrors();
-        //std::cerr << "Loaded 3d texture.\n";
+        GL_CHECK( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR ) );
+        GL_CHECK( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) );
+        GL_CHECK( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE ) );
+        GL_CHECK( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE ) );
+        GL_CHECK( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE ) );
+        GL_CHECK( glGenerateMipmap( GL_TEXTURE_3D ) );
+        //LOG_INFO(g_log) << "Loaded 3d texture.\n";
     }
 
 private:

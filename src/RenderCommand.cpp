@@ -4,7 +4,7 @@
 
 void
 RenderCommand
-::operator()( void )
+::operator()( void ) const
 {
 
 }

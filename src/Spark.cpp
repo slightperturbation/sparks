@@ -12,6 +12,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <algorithm>
 
 using namespace Eigen;
 
@@ -57,7 +58,7 @@ void
 Spark
 ::update( void )
 {
-    std::cerr << "Begin Spark::update(), agg: "
+    LOG_INFO(g_log) << "Begin Spark::update(), agg: "
     << m_aggregate.size() << ", can: " << m_candidate.size() << "\n";
     if( m_aggregate.empty() && m_candidate.empty() )
     {
@@ -84,7 +85,7 @@ Spark
     // Incorporate the new aggregate member into every candidate's
     // electric field.
     updateElectricFields( m_aggregate.back() );
-    std::cerr << "End  Spark::update(), agg: "
+    LOG_INFO(g_log) << "End  Spark::update(), agg: "
     << m_aggregate.size() << ", can: " << m_candidate.size() << "\n";
 }
 
@@ -108,16 +109,16 @@ Spark
         Vector3f fieldAtA = field( a_point, m_aggregate[a] );
         a_point.phi += fieldAtA;
         float phi = fieldAtA.norm();
-        m_minPhi = std::min( m_minPhi, phi );
-        m_maxPhi = std::max( m_maxPhi, phi );
+        m_minPhi = std::min<float>( m_minPhi, phi );
+        m_maxPhi = std::max<float>( m_maxPhi, phi );
     }
     for( size_t b=0; b<m_boundary.size(); ++b )
     {
         Vector3f fieldAtA = field( a_point, m_boundary[b] );
         a_point.phi += fieldAtA;
         float phi = fieldAtA.norm();
-        m_minPhi = std::min( m_minPhi, phi );
-        m_maxPhi = std::max( m_maxPhi, phi );
+        m_minPhi = std::min<float>( m_minPhi, phi );
+        m_maxPhi = std::max<float>( m_maxPhi, phi );
     }
 }
 

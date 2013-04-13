@@ -3,18 +3,11 @@
 
 #include <iostream>
 
-TextureManager& 
-TextureManager
-::get()
-{
-    static TextureManager singleton;
-    return singleton;
-}
 
 TextureManager
 ::~TextureManager()
 {
-    releaseAllTextures();
+    releaseAll();
 }
 
 void 
@@ -24,32 +17,30 @@ TextureManager
 {
     // Load all textures into the zero-th texture unit
     GLuint textureId = 0;
-    glGenTextures( 1, &textureId ); checkOpenGLErrors();
+    GL_CHECK( glGenTextures( 1, &textureId ) );
 
     GLuint textureUnit = 0; // by default, use the base/zeroth texture unit for the initial load
-    glActiveTexture( GL_TEXTURE0 + textureUnit ); checkOpenGLErrors();
-    glBindTexture( GL_TEXTURE_2D, textureId ); checkOpenGLErrors();
+    GL_CHECK( glActiveTexture( GL_TEXTURE0 + textureUnit ) );
+    GL_CHECK( glBindTexture( GL_TEXTURE_2D, textureId ) );
 
-    std::cerr << "Attempting to load texture from file: \"" << aTextureFilePath << "\"... ";
+    LOG_INFO(g_log) << "Attempting to load texture from file: \"" << aTextureFilePath << "\"... ";
 
     bool success = loadTextureFromFile( aTextureFilePath );
-    checkOpenGLErrors();
     if( !success )
     {
-        std::cerr << "\n------- FAILED to load texture from file: \"" << aTextureFilePath << "\".\n";
+        LOG_INFO(g_log) << "\n------- FAILED to load texture from file: \"" << aTextureFilePath << "\".\n";
         assert( false );
     }
     else
     {
-        std::cerr << "OK\n";
+        LOG_INFO(g_log) << "Loaded OK.\n";
         m_registry[aHandle] = textureId;
+        m_paths[aHandle] = aTextureFilePath;
         m_currentBinding[textureUnit] = textureId;
     }
-    glGenerateMipmap(GL_TEXTURE_2D);
-    checkOpenGLErrors();
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-    checkOpenGLErrors();
+    GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) );
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR ) );
 }
 
 void
@@ -63,12 +54,10 @@ TextureManager
         // Redundant binding request, skip.
         return;
     }
-    glActiveTexture( GL_TEXTURE0 + aTextureUnit );
-    checkOpenGLErrors();
-    glBindTexture( GL_TEXTURE_2D, textureId );
-    checkOpenGLErrors();
+    GL_CHECK( glActiveTexture( GL_TEXTURE0 + aTextureUnit ) );
+    GL_CHECK( glBindTexture( GL_TEXTURE_2D, textureId ) );
     m_currentBinding[aTextureUnit] = textureId;
-    std::cerr << "Binding texture \"" << aHandle << "\" to texture unit " << aTextureUnit << ".\n";
+    LOG_INFO(g_log) << "Binding texture \"" << aHandle << "\" to texture unit " << aTextureUnit << ".\n";
 }
 
 GLuint 
@@ -83,15 +72,44 @@ TextureManager
     return iter->second;
 }
 
+void
+TextureManager
+::setTextureParameteri( const std::string& aHandle, 
+                        GLenum target, 
+                        GLenum pname, 
+                        GLint param )
+{
+    std::map< std::string, GLuint >::iterator iter = m_registry.find( aHandle );
+    if( iter != m_registry.end() )
+    {
+        GLuint texture = iter->second;
+        if( glewIsSupported( "GL_EXT_direct_state_access" ) )
+        {
+            GL_CHECK( glTextureParameteriEXT( texture, target, pname, param ) );
+        }
+        else
+        {
+            GLint curTex;
+            glGetIntegerv( GL_TEXTURE_BINDING_2D, &curTex );
+            glBindTexture( GL_TEXTURE_2D, texture );
+            glTexParameteri( GL_TEXTURE_2D, pname, param );
+            glBindTexture( GL_TEXTURE_2D, curTex );
+        }
+    }
+    else
+    {
+        LOG_ERROR( g_log ) << "Cannot find texture by name \"" << aHandle << "\".";
+    }
+}
+
 void 
 TextureManager
-::releaseAllTextures( void )
+::releaseAll( void )
 {
     std::map< std::string, GLuint >::iterator iter = m_registry.begin();
     for( ; iter != m_registry.end(); ++iter )
     {
-        glDeleteTextures( 1, &(iter->second) );
-        checkOpenGLErrors();
+        GL_CHECK( glDeleteTextures( 1, &(iter->second) ) );
     }
     m_registry.clear();
     m_currentBinding.clear();

@@ -1,6 +1,8 @@
 #ifndef SOFTIE_FLUID_HPP
 #define SOFTIE_FLUID_HPP
 
+#include "VelocityFieldInterface.hpp"
+
 #include "Mesh.hpp"
 #include "VolumeData.hpp"
 
