@@ -13,6 +13,7 @@
 #include "SoftTestDeclarations.hpp"
 #include "Utilities.hpp"
 #include "ShaderUniform.hpp"
+#include "ShaderManager.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -26,119 +27,87 @@
 #include <map>
 #include <memory>
 
-/// Responsible for loading a shader program from
-/// files and holding the uniforms settings
-/// Universal uniforms
-/// mat4 u_projMat
-/// mat4 u_modelViewMat
-/// vec4 u_lightPos[N_LIGHTS]
-/// vec3 u_lightColor[N_LIGHTS]
-class Shader
+/// ShaderUniformHolder keeps track of the uniforms used by a shader.
+class ShaderUniformHolder
 {
 public:
-    Shader()
-    :
-    m_shaderProgramIndex(-1)
-    {}
-    
-    ~Shader()
-    {
-        //TODO -- is 0 a valid shader program handle?
-        if( m_shaderProgramIndex > -1 )
-        {
-            GL_CHECK( glDeleteProgram( m_shaderProgramIndex ) );
-        }
-        m_shaderProgramIndex = -1;
-    }
-    
-    void use( void )
-    {
-        GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
-        applyShaderUniforms();
-    }
-    
-    void loadFromFiles( const char* vertexShaderFilename,
-                       const char* fragmentShaderFilename )
-    {
-        m_vertexFilePath = vertexShaderFilename;
-        m_fragmentFilePath = fragmentShaderFilename;
-        reloadFromFiles();
-    }
-    
-    void reloadFromFiles( void )
-    {
-        if( !m_vertexFilePath.empty() && !m_fragmentFilePath.empty() )
-        {
-            m_shaderProgramIndex = loadShaderFromFile( m_vertexFilePath.c_str(),
-                m_fragmentFilePath.c_str() );
-            lookupUniformLocations();
-        }
-        else
-        {
-            LOG_WARN(g_log) << "Reloading shaders failed because filenames are blank.";
-        }
-    }
-    
+    virtual ~ShaderUniformHolder();
     template< typename T >
-    ShaderUniform<T>* operator[]( const std::string& name )
+    ShaderUniform<T>* operator[]( const ShaderUniformName& name )
+    {
+        m_isDirtyUniforms = true;
+        return getUniform<T>(name);
+    }
+
+    template< typename T >
+    const ShaderUniform<T>* operator[]( const ShaderUniformName& name ) const
     { return getUniform<T>(name); }
-	
+
     template< typename T >
-    const ShaderUniform<T>* operator[]( const std::string& name ) const
-    { return getUniform<T>(name); }
-	
-	template< typename T >
-    ShaderUniform<T>* getUniform(const std::string& name)
-	{ return m_uniforms[name]->as<T>(); }
-    
+    ShaderUniform<T>* getUniform( const ShaderUniformName& name)
+    {
+        auto iter = m_uniforms.find( name );
+        if( iter == m_uniforms.end() )
+        {
+            createUniform<T>( name );
+        }
+        return m_uniforms[name]->as<T>(); 
+    }
+
+    /// Throws exception if name hasn't been created yet.
     template< typename T >
-	const ShaderUniform<T>* getUniform(const std::string& name) const
-	{
+    const ShaderUniform<T>* getUniform( const ShaderUniformName& name) const
+    {
         return m_uniforms.at(name)->as<T>();
     }
-    
-	template< typename T >
-	void setUniform(const std::string& name, const T& val )
-	{ m_uniforms[name]->as<T>()->set(val); }
-    
-    /// Note that compilation will fail if ShaderUniform<T> is uninstanced.
+
+    template< typename T >
+    void setUniform( const ShaderUniformName& name, const T& val )
+    { m_uniforms[name]->as<T>()->set(val); m_isDirtyUniforms = true; }
+
+    /// Note that compilation will fail if ShaderUniform<T> is uninstantiated.
     template <typename T>
-    void createUniform( const std::string& name )
+    void createUniform( const ShaderUniformName& name )
     {
         m_uniforms[name] = new ShaderUniform<T>();
+        m_isDirtyUniforms = true;
     }
-    /// Note that compilation will fail if ShaderUniform<T> is uninstanced.
+    /// Note that compilation will fail if ShaderUniform<T> is uninstantiated.
     template <typename T>
-    void createUniform( const std::string& name, const T& val )
+    void createUniform( const ShaderUniformName& name, const T& val )
     {
         m_uniforms[name] = new ShaderUniform<T>( val );
+        m_isDirtyUniforms = true;
     }
-    
-private:
+
+protected:
     /// Set uniforms on this shader (when dirty)
     /// OpenGL state change:  current program is set.
-    void applyShaderUniforms( void )
+    void applyShaderUniforms( GLint a_shaderProgramIndex ) const
     {
-        GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
+        //GL_CHECK( glUseProgram( a_shaderProgramIndex ) );
         for( auto sumap = m_uniforms.begin(); sumap != m_uniforms.end(); ++sumap )
         {
+            LOG_TRACE(g_log) << "Applying ShaderUniform " << (*sumap).first;
             (*sumap).second->apply();
         }
     }
-    
+
     /// Must be called after a shader is compiled to set each uniform's
     /// location in that shader.
-    void lookupUniformLocations( void )
+    void lookupUniformLocations( GLint a_shaderProgramIndex )
     {
+        if( ! m_isDirtyUniforms ) return;
         GLint loc;
         for( auto sumap = m_uniforms.begin(); sumap != m_uniforms.end(); ++sumap )
         {
-            GL_CHECK( loc = glGetUniformLocation( m_shaderProgramIndex, (*sumap).first.c_str() ) );
+            GL_CHECK( loc = glGetUniformLocation( a_shaderProgramIndex, 
+                                                  (*sumap).first.c_str() ) );
             if( loc == GL_INVALID_VALUE || loc == GL_INVALID_OPERATION )
             {
-                LOG_INFO(g_log) << "Failed to find shader uniform of name \""
-                << sumap->first << "\" in shader #"
-                << m_shaderProgramIndex << "\n";
+                LOG_DEBUG(g_log) << "Failed to find shader uniform of name \""
+                                << sumap->first << "\" in shader #"
+                                << a_shaderProgramIndex << "\n";
             }
             else
             {
@@ -146,11 +115,42 @@ private:
             }
         }
     }
+    // stores the uniform's name, locationInShader, and value.
+    std::map< ShaderUniformName, ShaderUniformInterface* > m_uniforms;
+    bool m_isDirtyUniforms;
+};
+typedef std::shared_ptr< ShaderUniformHolder > ShaderUniformHolderPtr;
+typedef std::shared_ptr< const ShaderUniformHolder > ConstShaderUniformHolderPtr;
+
+/// Responsible for loading a shader program from
+/// files and holding the uniforms settings
+/// Caches uniform settings to minimize chatter.
+class Shader : public ShaderUniformHolder
+{
+public:
+    Shader( const ShaderName& name, ShaderManagerPtr manager )
+    : m_name( name ),
+      m_manager( manager )
+    {
+    }
     
-    std::string m_vertexFilePath;
-    std::string m_fragmentFilePath;
-    GLint m_shaderProgramIndex;
-    std::map< std::string, ShaderUniformInterface* > m_uniforms;
+    virtual ~Shader() { }
+    
+    GLuint getGLProgramIndex( void ) const
+    {
+        return m_manager->getProgramIndexForShaderName( m_name );
+    }
+    
+    void use( void ) const
+    {
+        GLuint shaderIndex = getGLProgramIndex();
+        GL_CHECK( glUseProgram( shaderIndex ) );
+        applyShaderUniforms( shaderIndex);
+    }
+
+protected:
+    ShaderName m_name;
+    ShaderManagerPtr m_manager;
 };
 typedef std::shared_ptr< Shader > ShaderPtr;
 

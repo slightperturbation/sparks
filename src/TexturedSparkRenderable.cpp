@@ -5,16 +5,26 @@
 using namespace std;
 using namespace Eigen;
 
-const std::string g_defaultVertexShaderFilename = DATA_PATH "/shaders/TexturedSparkVertex.glsl";
-const std::string g_defaultFragmentShaderFilename = DATA_PATH "/shaders/TexturedSparkFragment.glsl";
+// "texturedSpark"
+const std::string g_defaultVertexShaderFilename = "colorVertexShader.glsl"; //"TexturedSparkVertex.glsl";
+const std::string g_defaultFragmentShaderFilename = "colorFragmentShader.glsl"; //"TexturedSparkFragment.glsl";
 
 TexturedSparkRenderable
-::TexturedSparkRenderable( LSparkPtr a_spark )
-: m_mesh( new Mesh( g_defaultVertexShaderFilename.c_str(), 
-                    g_defaultFragmentShaderFilename.c_str() ) ), 
-  m_spark( a_spark ),
-  m_textureUnit( 0 ) 
+::TexturedSparkRenderable( LSparkPtr a_spark, TextureManagerPtr textureManager, ShaderManagerPtr shaderManager )
+: Renderable( "TexturedSparkRenderable" ),
+  m_mesh( new Mesh() ),
+  m_spark( a_spark ) 
 {
+    // Build materials for needed passes
+    ShaderName colorShaderName = m_name + "_ColorShader";
+    shaderManager->loadShaderFromFiles( colorShaderName, 
+        g_defaultVertexShaderFilename.c_str(),
+        g_defaultFragmentShaderFilename.c_str() );
+    ShaderPtr colorShader( new Shader( colorShaderName, shaderManager ) );
+    MaterialPtr sparkColorMaterial( new Material( colorShader ) );
+    //sparkColorMaterial->addTeture( m_textureManager, "diffuse", "spark.png" );
+
+    this->setMaterialForPassName( g_colorRenderPassName, sparkColorMaterial );
 }
 
 void 
@@ -56,9 +66,9 @@ TexturedSparkRenderable
     
 void 
 TexturedSparkRenderable
-::render( PerspectivePtr renderContext )
+::render( void ) const
 {
-    glm::vec3 glmCamPos = renderContext->cameraPos();
+    glm::vec3 glmCamPos( 0,0,1 ); // = renderContext->cameraPos();
     const Vector3f camPos(glmCamPos[0], glmCamPos[1], glmCamPos[2] );
 
     const float halfAspectRatio = 0.1;
@@ -68,13 +78,13 @@ TexturedSparkRenderable
     // two verts per segment, so vertexIndex = (2i, 2i+1)  (bottom, top)
     // plus two at the end to close the last segment
     m_mesh->resizeVertexArray( 2 * segments.size() );
-//    LOG_INFO(g_log) << "Assuming " << 2*segments.size() << " verts for " << segments.size() << " segments.\n";
+//    LOG_DEBUG(g_log) << "Assuming " << 2*segments.size() << " verts for " << segments.size() << " segments.\n";
 
     for( size_t i=0; i < segments.size(); ++i )
     {
         // First, create the vertices, 0 to 2*(segments.size()-1)
         Segment& s = segments[i];
-//        LOG_INFO(g_log) << "Rendering segment[" << i << "] (parent=" << s.m_parentIndex 
+//        LOG_DEBUG(g_log) << "Rendering segment[" << i << "] (parent=" << s.m_parentIndex 
 //            << ") verts=" << 2*i << ", " << 2*i+1 
 //            << "  p = " << s.m_pos(0) << ", " << s.m_pos(1) << ", " << s.m_pos(2)
 //            << "\n";
@@ -111,11 +121,10 @@ TexturedSparkRenderable
     m_mesh->bindDataToBuffers();
     
     // Setup texture
-    setTextureState( renderContext );
+    //setTextureState( renderContext );
 
     // Render mesh
-    // (mesh knows to load its shader)
-    m_mesh->render( renderContext );
+    m_mesh->render();
 
     // TODO -- need an "unsetRenderState"
     GL_CHECK( glEnable( GL_DEPTH_TEST ) );
@@ -143,9 +152,3 @@ TexturedSparkRenderable
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void
-TexturedSparkRenderable
-::loadShaders()
-{
-    m_mesh->loadShaders();
-}

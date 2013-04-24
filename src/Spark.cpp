@@ -58,7 +58,7 @@ void
 Spark
 ::update( void )
 {
-    LOG_INFO(g_log) << "Begin Spark::update(), agg: "
+    LOG_DEBUG(g_log) << "Begin Spark::update(), agg: "
     << m_aggregate.size() << ", can: " << m_candidate.size() << "\n";
     if( m_aggregate.empty() && m_candidate.empty() )
     {
@@ -85,7 +85,7 @@ Spark
     // Incorporate the new aggregate member into every candidate's
     // electric field.
     updateElectricFields( m_aggregate.back() );
-    LOG_INFO(g_log) << "End  Spark::update(), agg: "
+    LOG_DEBUG(g_log) << "End  Spark::update(), agg: "
     << m_aggregate.size() << ", can: " << m_candidate.size() << "\n";
 }
 

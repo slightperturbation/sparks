@@ -361,7 +361,7 @@ void Fluid::loadFromFile( const char* filename )
         infile >> m_density[i];
         m_density_prev[i] = m_density[i];
     }
-    LOG_INFO(g_log) << "Finished loading file with N=" << m_N << " and size=" << m_size << "\n";
+    LOG_DEBUG(g_log) << "Finished loading file with N=" << m_N << " and size=" << m_size << "\n";
 }
 
 void Fluid::addDensitySources( float dt )
@@ -472,7 +472,7 @@ void Fluid::diffuse( int boundaryCondition, float* x, float* x_prev, float diff,
 void Fluid::linearSolveSlow( int boundaryCondition, float* x, float* x_prev, float a, float c )
 {
     const float invC = 1.0 / c;
-    //LOG_INFO(g_log) << "PRE linear Solve a=" << a << ", invc=" << invC << ",  middle voxel = " << x[index(m_N/2, m_N/2, m_N/2)] << " prev=" << x_prev[index(m_N/2, m_N/2, m_N/2)] << "\n";
+    //LOG_DEBUG(g_log) << "PRE linear Solve a=" << a << ", invc=" << invC << ",  middle voxel = " << x[index(m_N/2, m_N/2, m_N/2)] << " prev=" << x_prev[index(m_N/2, m_N/2, m_N/2)] << "\n";
     for ( size_t iter = 0 ; iter < m_solverIterations; ++iter ) 
     {
         for( size_t k = 1; k <= m_N; k++ )
@@ -496,7 +496,7 @@ void Fluid::linearSolveSlow( int boundaryCondition, float* x, float* x_prev, flo
         // Each iteration, enforce boundary
         enforceBoundary( boundaryCondition, x );
     }
-    //LOG_INFO(g_log) << "POST linear Solve a=" << a << ", invc=" << invC << ",  middle voxel = " << x[index(m_N/2, m_N/2, m_N/2)] << " prev=" << x_prev[index(m_N/2, m_N/2, m_N/2)] << "\n";
+    //LOG_DEBUG(g_log) << "POST linear Solve a=" << a << ", invc=" << invC << ",  middle voxel = " << x[index(m_N/2, m_N/2, m_N/2)] << " prev=" << x_prev[index(m_N/2, m_N/2, m_N/2)] << "\n";
 }
 
 void Fluid::linearSolve( int boundaryCondition, float* x, float* x_prev, float a, float c )

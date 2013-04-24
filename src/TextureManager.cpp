@@ -12,40 +12,55 @@ TextureManager
 
 void 
 TextureManager
-::loadTextureFromImageFile( const char* aTextureFilePath, 
-                            const std::string& aHandle )
+::loadTextureFromImageFile( const char* aTextureFileName, 
+                            const TextureName& aHandle )
 {
-    // Load all textures into the zero-th texture unit
-    GLuint textureId = 0;
-    GL_CHECK( glGenTextures( 1, &textureId ) );
-
-    GLuint textureUnit = 0; // by default, use the base/zeroth texture unit for the initial load
-    GL_CHECK( glActiveTexture( GL_TEXTURE0 + textureUnit ) );
-    GL_CHECK( glBindTexture( GL_TEXTURE_2D, textureId ) );
-
-    LOG_INFO(g_log) << "Attempting to load texture from file: \"" << aTextureFilePath << "\"... ";
-
-    bool success = loadTextureFromFile( aTextureFilePath );
+    LOG_DEBUG(g_log) << "Searching for texture file \"" << aTextureFileName << "\".";
+    std::string filePath;
+    if( !m_finder->findFile( aTextureFileName, filePath ) )
+    {
+        LOG_ERROR(g_log) << "FAILED to find texture file \"" << aTextureFileName << "\" in search paths.";
+        assert( false );
+        return;
+    }
+    LOG_DEBUG(g_log) << "Attempting to load texture from path: \"" << filePath << "\"... ";
+    bool success = loadTextureFromFile( filePath.c_str() );
     if( !success )
     {
-        LOG_INFO(g_log) << "\n------- FAILED to load texture from file: \"" << aTextureFilePath << "\".\n";
+        LOG_DEBUG(g_log) << "FAILED to load texture from file: \"" << filePath << "\".";
         assert( false );
+        return;
     }
     else
     {
-        LOG_INFO(g_log) << "Loaded OK.\n";
+        LOG_DEBUG(g_log) << "Loaded OK.\n";
+        // Load all textures into the zero-th texture unit
+        GLuint textureId = 0;
+        GL_CHECK( glGenTextures( 1, &textureId ) );
+        if( 0 == textureId )
+        {
+            LOG_ERROR(g_log) << "Failed to get a texture id!";
+            assert(false);
+            return;
+        }
+        GLuint textureUnit = 0; // by default, use the base/zeroth texture unit for the initial load
+        GL_CHECK( glActiveTexture( GL_TEXTURE0 + textureUnit ) );
+        GL_CHECK( glBindTexture( GL_TEXTURE_2D, textureId ) );
+
         m_registry[aHandle] = textureId;
-        m_paths[aHandle] = aTextureFilePath;
+        m_paths[aHandle] = filePath;
         m_currentBinding[textureUnit] = textureId;
     }
     GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
+
+    //TODO -- move texture parameter to textureunit
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) );
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR ) );
 }
 
 void
 TextureManager
-::bindTextureToUnit( const std::string& aHandle, GLuint aTextureUnit )
+::bindTextureToUnit( const TextureName& aHandle, GLuint aTextureUnit )
 {
     // Can fail if aHandle hasn't been assigned to a texture yet.
     GLuint textureId = m_registry[aHandle];
@@ -57,14 +72,14 @@ TextureManager
     GL_CHECK( glActiveTexture( GL_TEXTURE0 + aTextureUnit ) );
     GL_CHECK( glBindTexture( GL_TEXTURE_2D, textureId ) );
     m_currentBinding[aTextureUnit] = textureId;
-    LOG_INFO(g_log) << "Binding texture \"" << aHandle << "\" to texture unit " << aTextureUnit << ".\n";
+    LOG_DEBUG(g_log) << "Binding texture \"" << aHandle << "\" to texture unit " << aTextureUnit << ".\n";
 }
 
 GLuint 
 TextureManager
 ::getTextureIdBoundToUnit( GLuint aTextureUnit ) const
 {
-    std::map< GLuint, GLuint >::const_iterator iter = m_currentBinding.find( aTextureUnit );
+    auto iter = m_currentBinding.find( aTextureUnit );
     if( iter == m_currentBinding.end() )
     {
         return -1;
@@ -74,12 +89,12 @@ TextureManager
 
 void
 TextureManager
-::setTextureParameteri( const std::string& aHandle, 
+::setTextureParameteri( const TextureName& aHandle, 
                         GLenum target, 
                         GLenum pname, 
                         GLint param )
 {
-    std::map< std::string, GLuint >::iterator iter = m_registry.find( aHandle );
+    auto iter = m_registry.find( aHandle );
     if( iter != m_registry.end() )
     {
         GLuint texture = iter->second;
@@ -102,11 +117,25 @@ TextureManager
     }
 }
 
+GLint 
+TextureManager
+::getTextureIdFromHandle( const TextureName& aHandle ) const
+{
+    auto iter = m_registry.find( aHandle );
+    if( iter == m_registry.end() )
+    {
+        LOG_ERROR(g_log) << "Failed to find Texture by handle \"" 
+                         << aHandle << "\".";
+        return -1;
+    }
+    return iter->second;
+}
+
 void 
 TextureManager
 ::releaseAll( void )
 {
-    std::map< std::string, GLuint >::iterator iter = m_registry.begin();
+    auto iter = m_registry.begin();
     for( ; iter != m_registry.end(); ++iter )
     {
         GL_CHECK( glDeleteTextures( 1, &(iter->second) ) );

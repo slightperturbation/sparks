@@ -14,6 +14,7 @@ class FileAssetFinder
 {
 public:
     void addSearchPath( const std::string& aPath );
+    void addRecursiveSearchPath( const std::string& aPath );
     /// Search for file aFilename within all known path directories.
     /// Return full path in aFoundPath and return true iff found.
     /// Return false if file not found.

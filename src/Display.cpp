@@ -1,7 +1,7 @@
 #include "Display.hpp"
 
 #include "Viewport.hpp"
-#include "Perspective.hpp"
+#include "Projection.hpp"
 #include "Renderable.hpp"
 
 
@@ -43,7 +43,7 @@ void SideBySideDisplay::resizeWindow( int width, int height )
 
 void SideBySideDisplay::render( const Renderables& scene )
 {
-    GL_CHECK( glClearColor( 0.3, 0.3, 0.5, 1 ) );
+    GL_CHECK( glClearColor( 1.0, 0.3, 0.5, 1 ) );
     GL_CHECK( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
     m_context->setAspectRatio( float(m_rightViewport.m_width)/float(m_rightViewport.m_height) );
 

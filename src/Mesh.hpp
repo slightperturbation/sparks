@@ -4,7 +4,7 @@
 #include "SoftTestDeclarations.hpp"
 
 #include "Renderable.hpp"
-#include "Perspective.hpp"
+#include "Projection.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -44,6 +44,13 @@ public:
             (void*)offsetof(MeshVertex, m_position) )
             );
         outShaderAttributes.push_back( position );
+        
+        VertexAttributePtr normal(new FloatVertexAttribute("normal",
+            3,
+            sizeof(MeshVertex),
+            (void*)offsetof(MeshVertex, m_normal) )
+            );
+        outShaderAttributes.push_back( normal );
 
         VertexAttributePtr diffuse(new FloatVertexAttribute("inVertexColor",
             4,
@@ -62,33 +69,33 @@ public:
 };
 
 
-struct LineVertex
-{
-    GLfloat m_position[4];
-    GLfloat m_direction[4];
-    GLfloat m_diffuseColor[4];
-
-    static void addVertexAttributes( std::vector<VertexAttributePtr>&  outShaderAttributes )
-    {
-        VertexAttributePtr position(new FloatVertexAttribute("position", 3,
-            sizeof(LineVertex),
-            (void*)offsetof(LineVertex, m_position) )
-            );
-        outShaderAttributes.push_back( position );
-        VertexAttributePtr direction(new FloatVertexAttribute("direction",
-            3,
-            sizeof(LineVertex),
-            (void*)offsetof(LineVertex, m_direction) )
-            );
-        outShaderAttributes.push_back( direction );
-        VertexAttributePtr diffuse(new FloatVertexAttribute("inColor",
-            3,
-            sizeof(LineVertex),
-            (void*)offsetof(LineVertex, m_diffuseColor) )
-            );
-        outShaderAttributes.push_back( diffuse );
-    }
-};
+//struct LineVertex
+//{
+//    GLfloat m_position[4];
+//    GLfloat m_direction[4];
+//    GLfloat m_diffuseColor[4];
+//
+//    static void addVertexAttributes( std::vector<VertexAttributePtr>&  outShaderAttributes )
+//    {
+//        VertexAttributePtr position(new FloatVertexAttribute("position", 3,
+//            sizeof(LineVertex),
+//            (void*)offsetof(LineVertex, m_position) )
+//            );
+//        outShaderAttributes.push_back( position );
+//        VertexAttributePtr direction(new FloatVertexAttribute("direction",
+//            3,
+//            sizeof(LineVertex),
+//            (void*)offsetof(LineVertex, m_direction) )
+//            );
+//        outShaderAttributes.push_back( direction );
+//        VertexAttributePtr diffuse(new FloatVertexAttribute("inColor",
+//            3,
+//            sizeof(LineVertex),
+//            (void*)offsetof(LineVertex, m_diffuseColor) )
+//            );
+//        outShaderAttributes.push_back( diffuse );
+//    }
+//};
 
 
 
@@ -105,29 +112,24 @@ inline void glBufferDataFromVector( GLenum targetBufferObjectType, const std::ve
                  usagePattern );
 }
 
-
-
 // TODO -- template-tize over MeshVertex
 /// Mesh supports rendering of a indexed set of triangles
-class Mesh : public Renderable
+class Mesh : public Renderable, public Updatable
 {
 public:
-    Mesh( const char* vertexShaderFilepath = DATA_PATH "/shaders/volumeVertexShader.glsl",
-         const char* fragmentShaderFilepath = DATA_PATH "/shaders/volumeFragmentShader.glsl" );
+    Mesh( void );
 
     virtual ~Mesh();
 
-    /// Example of changing the mesh geometry.
+    /// Renderable
+    virtual void render( void ) const;
+    // Updatable
     virtual void update( float dt );
-    virtual void setupRenderState( void );
-    virtual void setupShaderState( PerspectivePtr renderContext );
-    virtual void teardownRenderState( void );
-    virtual void render( PerspectivePtr renderContext );
-    virtual void loadShaders();
-    virtual void loadTextures();
-    void setShaderUniformMatrix( const char* uniformShaderName, const glm::mat4& mat);
-    void setShaderUniformVector( const char* uniformShaderName, const glm::vec3& vec );
-    void setShaderUniformInt( const char* uniformShaderName, GLint vec );
+
+    /// Example of changing the mesh geometry.
+//    void setShaderUniformMatrix( const char* uniformShaderName, const glm::mat4& mat);
+//    void setShaderUniformVector( const char* uniformShaderName, const glm::vec3& vec );
+//    void setShaderUniformInt( const char* uniformShaderName, GLint vec );
 
     void unitCube();
     
@@ -153,21 +155,19 @@ public:
     void bindDataToBuffers( void );
 
     /// Construction methods
-    static RenderablePtr createBox( void );
+    static RenderablePtr createBox( TextureManagerPtr tm, ShaderManagerPtr sm );
 
+    /// Bind VAO & VBO and set the Vertex Attributes stored in m_attributes
+    /// Required after changing the vertex type.
+    void attachShaderAttributes( GLuint aShaderProgramIndex );
 protected:
-    void attachShaderAttributes( void );
-
     GLuint m_vertexArrayObjectId;
     GLuint m_vertexBufferId;
     GLuint m_elementBufferId;
-    GLuint m_shaderProgramIndex;
     std::vector< VertexAttributePtr > m_attributes;
     std::vector< MeshVertex > m_vertexData;
     std::vector< unsigned int > m_vertexIndicies;
     glm::mat4 m_modelTransform;
-    std::string m_vertexShaderFilepath;
-    std::string m_fragmentShaderFilepath;
 };
 typedef std::shared_ptr< Mesh > MeshPtr;
 

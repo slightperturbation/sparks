@@ -2,7 +2,7 @@
 #include "SoftTestDeclarations.hpp"
 
 // Define the global Logger
-cpplog::FileLogger g_log( "sparks.log" );
+cpplog::BaseLogger* g_log = new cpplog::FileLogger( "unit_test.log" );
 
 #define BOOST_TEST_MODULE SparksUnitTestSuite
 

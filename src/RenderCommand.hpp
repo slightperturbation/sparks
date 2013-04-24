@@ -22,14 +22,14 @@
 class RenderCommand
 {
 public:
-    /// Apply this render command.
-    void operator() ( void ) const;
+    /// Apply this render command.  Only apply changes that differ
+    /// from the precedingCommand.
+    void operator() ( const RenderCommand& precedingCommand );
 
     ConstRenderPassPtr m_pass;
-    ConstShaderPtr m_shader;
     ConstPerspectivePtr m_perspective;
     ConstRenderablePtr m_renderable;
-    Textures m_textures;
+    ConstMaterialPtr m_material;
 };
 
 struct RenderCommandCompare 

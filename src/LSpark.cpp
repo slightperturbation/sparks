@@ -134,7 +134,7 @@ LSpark
     //const Segment& thisSegmentRef = m_segments[a_index];
     //const Segment& newSegmentRef = m_segments[newSegmentIdx];
 
-    //LOG_INFO(g_log) << "SPLIT[" << a_index << "] -> " << a_index << ":" << newSegmentIdx << "\n"
+    //LOG_DEBUG(g_log) << "SPLIT[" << a_index << "] -> " << a_index << ":" << newSegmentIdx << "\n"
     //    << "\t [" << a_index << "].parent = " << thisSegmentRef.m_parentIndex << "\n"
     //    << "\t [" << newSegmentIdx << "].parent = " << newSegmentRef.m_parentIndex << "\n";
 

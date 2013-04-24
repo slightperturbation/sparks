@@ -20,6 +20,16 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
 
+class OpenGLWindow
+{
+public:
+    OpenGLWindow( const char* programName ); 
+    ~OpenGLWindow();
+    bool isOK( void ) { return m_isOK; }
+private:
+    bool m_isOK;
+};
+
 std::string readFileToString( const char* filename );
 GLuint createShaderWithErrorHandling( GLuint shaderType, const std::string& shaderSource );
 GLuint loadShaderFromFile( const char* vertexShaderFilepath, const char* fragmentShaderFilepath );

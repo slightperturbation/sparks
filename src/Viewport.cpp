@@ -1,6 +1,6 @@
 #include "Viewport.hpp"
 #include "Renderable.hpp"
-#include "Perspective.hpp"
+#include "Projection.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -12,7 +12,7 @@ void Viewport::render( const Renderables& scene, PerspectivePtr context ) const
                           (GLsizei)m_width, (GLsizei)m_height ) );
     for( auto r = scene.begin(); r != scene.end(); ++r )
     {
-        (*r)->render( context );
+        (*r)->render();
     }
 }
 

@@ -1,6 +1,26 @@
 cmake_minimum_required(VERSION 2.8.9)
 set(CMAKE_MODULE_PATH "./cmake" "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
+
+# SANITY CHECK -- what variables are set?
+IF(WINDOWS)
+  MESSAGE( STATUS "VARIABLES --- WINDOWS" )
+ENDIF(WINDOWS)
+IF(WIN32)
+  MESSAGE( STATUS "VARIABLES --- WIN32" )
+ENDIF(WIN32)
+IF(MSVC)
+  MESSAGE( STATUS "VARIABLES --- MSVC" )
+ENDIF(MSVC)
+IF(UNIX)
+  MESSAGE( STATUS "VARIABLES --- UNIX" )
+ENDIF(UNIX)
+IF(APPLE)
+  MESSAGE( STATUS "VARIABLES --- APPLE" )
+ENDIF(APPLE)
+
+
+
 if( APPLE )
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
@@ -24,6 +44,7 @@ if( WINDOWS )
   endif( MSVC )
 endif( WINDOWS )
 
+
 set(PROJECT_NAME "sparks")
 project(${PROJECT_NAME})
 
@@ -36,27 +57,38 @@ set(CMAKE_MODULE_PATH
 # BOOST
 #####################################################################
 # On windows, looks for env var: BOOST_ROOT
-MESSAGE( "BOOST: " $ENV{BOOST_ROOT})
+MESSAGE( STATUS "BOOST ENV{BOOST_ROOT}: " $ENV{BOOST_ROOT})
 set(BOOST_MIN_VERSION "1.44")
 set( Boost_LIB_DIAGNOSTIC_DEFINITIONS  )
-if( WINDOWS )
-  set(Boost_USE_STATIC_LIBS ON)
+if( UNIX )
+  MESSAGE( STATUS "BOOST: Boost_USE_STATIC_LIBS Boost_USE_STATIC_RUNTIME" )
+  set(Boost_USE_STATIC_LIBS OFF)
   set(Boost_USE_MULTITHREADED ON) 
-  set(Boost_USE_STATIC_RUNTIME ON)
-endif( WINDOWS )
+  set(Boost_USE_STATIC_RUNTIME OFF)
+endif( UNIX )
+if( WIN32 )
+  MESSAGE( STATUS "Boost on windows" )
+  set(Boost_USE_STATIC_LIBS OFF)
+  set(Boost_USE_MULTITHREADED ON) 
+  set(Boost_USE_STATIC_RUNTIME OFF)
+endif( WIN32 )
 
-list(APPEND PROJECT_BOOST_COMPONENTS system filesystem thread program_options unit_test_framework ) 
+list(APPEND PROJECT_BOOST_COMPONENTS 
+  system 
+  filesystem 
+  thread 
+  program_options 
+  date_time
+  unit_test_framework ) 
 FIND_PACKAGE(Boost ${BOOST_MIN_VERSION} COMPONENTS ${PROJECT_BOOST_COMPONENTS})
 
 if( Boost_FOUND )
-  if( WINDOWS )
-    #add_definitions( -DBOOST_ALL_NO_LIB )
-    #add_definitions( -DBOOST_ALL_DYN_LINK )
-  endif( WINDOWS )
-  INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+    add_definitions( -DBOOST_ALL_NO_LIB ) # Don't auto-link in windows
+    add_definitions( -DBOOST_ALL_DYN_LINK )
+  INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )
   ADD_DEFINITIONS( ${Boost_LIB_DIAGNOSTIC_DEFINITIONS} )
   ADD_DEFINITIONS( "-DHAS_BOOST" )
-  LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+  LINK_DIRECTORIES( ${Boost_LIBRARY_DIRS} )
 else()
   message(SEND_ERROR "Failed to find boost!")
 endif()
@@ -152,7 +184,7 @@ set( HDRS
   ./src/VolumeData.hpp
   ./src/Display.hpp
   ./src/Renderable.hpp
-  ./src/Perspective.hpp
+  ./src/Projection.hpp
   ./src/Utilities.hpp
   ./src/TextureManager.hpp
   ./src/ShaderManager.hpp
@@ -171,14 +203,16 @@ set( HDRS
   ./src/Scene.hpp
   ./src/RenderPass.hpp
   ./src/RenderCommand.hpp
+  ./src/RenderTarget.hpp
   ./src/FileAssetFinder.hpp
 )
+include_directories( ./src/ )  # Move headers to ./include/
 
 set( SRCS
   ./src/Mesh.cpp
   ./src/Display.cpp
   ./src/Viewport.cpp
-  ./src/Perspective.cpp
+  ./src/Projection.cpp
   ./src/Utilities.cpp
   ./src/TextureManager.cpp
   ./src/Spark.cpp
@@ -191,6 +225,7 @@ set( SRCS
   ./src/RenderCommand.cpp
   ./src/ShaderUniform.cpp
   ./src/FileAssetFinder.cpp
+  ./src/ShaderManager.cpp
 )
 set( GUI_SRCS 
   ./src/main.cpp
@@ -198,6 +233,7 @@ set( GUI_SRCS
 
 set( UNIT_TEST_SRCS
 	./src/tests/UnitTests.cpp
+	./src/tests/RenderTests.cpp
 )
 source_group( "Unit Tests" FILES ${UNIT_TEST_SRCS} )
 
@@ -214,7 +250,7 @@ source_group( "External\\CppLog" FILES ${CPPLOG_HDRS} )
 # Data dir config
 #####################################################################
 # Relies on variable name g_dataPath
-SET( g_dataPath "${CMAKE_SOURCE_DIR}/data" )
+SET( g_dataPath "${CMAKE_SOURCE_DIR}/data/" )
 configure_file( src/config.hpp.in ${CMAKE_BINARY_DIR}/config/config.hpp )
 # The config directory should be added as a include-searchpath
 include_directories( ${CMAKE_BINARY_DIR}/config/ )
@@ -229,8 +265,8 @@ target_link_libraries(${PROJECT_NAME}
 	${Boost_LIBRARIES}
 	${GLFW_LIBRARY}
 	${GLEW_LIBRARY}
-    ${OPENGL_LIBRARIES}
-    ${IL_LIBRARIES}
+  ${OPENGL_LIBRARIES}
+  ${IL_LIBRARIES}
 )
 add_executable( ${PROJECT_NAME}_test 
   ${UNIT_TEST_SRCS} ${HDRS} ${SRCS} ${CPPLOG_HDRS}
@@ -239,15 +275,29 @@ target_link_libraries(${PROJECT_NAME}_test
 	${Boost_LIBRARIES}
 	${GLFW_LIBRARY}
 	${GLEW_LIBRARY}
-    ${OPENGL_LIBRARIES}
-    ${IL_LIBRARIES}
+  ${OPENGL_LIBRARIES}
+  ${IL_LIBRARIES}
 )
+
+#if( MSVC )
+#  MESSAGE( STATUS "Adding autorunner for unit tests for MSVC")
+#  add_custom_command( TARGET ${PROJECT_NAME}_test 
+#    POST_BUILD
+#    COMMAND "$(TargetDir)\$(TargetName).exe" --result_code=no --report_level=no
+#    COMMENT "Auto run unit-tests after build"
+#  )
+#endif( MSVC )
+
 # For OpenGL on Apple, need to link with Cocoa too
 if(APPLE)
 	target_link_libraries(${PROJECT_NAME}
 		${COCOA_LIBRARY}
     ${IOKIT_LIBRARY}
 	)
+  target_link_libraries(${PROJECT_NAME}_test
+    ${COCOA_LIBRARY}
+    ${IOKIT_LIBRARY}
+  )
 endif(APPLE)
 
 

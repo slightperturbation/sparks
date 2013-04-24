@@ -13,7 +13,7 @@
 
 #include "Spark.hpp"
 #include "Renderable.hpp"
-#include "Perspective.hpp"
+#include "Projection.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -35,10 +35,12 @@ struct PointSparkVertex
 class PointSparkRenderable : public Renderable
 {
 public:
-    PointSparkRenderable( SparkPtr spark );
+    PointSparkRenderable( SparkPtr spark,
+                          TextureManagerPtr tm,
+                          ShaderManagerPtr sm );
     virtual ~PointSparkRenderable() {}
     
-    virtual void render( PerspectivePtr renderContext );
+    virtual void render( void ) const;
     virtual void update( float dt );
     virtual void loadTextures() {}
     virtual void loadShaders() {}

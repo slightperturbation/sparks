@@ -13,37 +13,32 @@
 
 
 
-Mesh::Mesh(const char* vertexShaderFilepath,
-           const char* fragmentShaderFilepath )
-: m_vertexArrayObjectId(-1),
+Mesh::Mesh( void )
+: Renderable( "Mesh" ),
+  m_vertexArrayObjectId(-1),
   m_vertexBufferId(-1),
   m_elementBufferId(-1),
-  m_shaderProgramIndex(0),
-  m_modelTransform(),
-  m_vertexShaderFilepath( vertexShaderFilepath ),
-  m_fragmentShaderFilepath( fragmentShaderFilepath )
+  m_modelTransform()
 {
-    LOG_INFO(g_log) << "\tCreating vertex arrays... ";
+    LOG_DEBUG(g_log) << "\tCreating vertex arrays... ";
     GL_CHECK( glGenVertexArrays( 1, &(m_vertexArrayObjectId) ) );
     if( GL_INVALID_VALUE == m_vertexArrayObjectId )
     { 
-        LOG_INFO(g_log) << "------- ERROR in VAO creation ------ \n"; throw; 
+        LOG_DEBUG(g_log) << "------- ERROR in VAO creation ------ \n"; throw; 
     }
-    LOG_INFO(g_log) << "done.\n";
+    LOG_DEBUG(g_log) << "done.\n";
         
-    LOG_INFO(g_log) << "\tCreating array buffer... ";
+    LOG_DEBUG(g_log) << "\tCreating array buffer... ";
     GL_CHECK( glGenBuffers( 1, &(m_vertexBufferId) ) );
-    LOG_INFO(g_log) << "done.\n";
+    LOG_DEBUG(g_log) << "done.\n";
     
-    LOG_INFO(g_log) << "\tCreating element buffer... ";
+    LOG_DEBUG(g_log) << "\tCreating element buffer... ";
     GL_CHECK( glGenBuffers( 1, &(m_elementBufferId) ) ); // Generate 1 buffer
-    LOG_INFO(g_log) << "done.\n";
+    LOG_DEBUG(g_log) << "done.\n";
 }
 
 Mesh::~Mesh()
 {
-    GL_CHECK( glDeleteProgram( m_shaderProgramIndex ) );
-    m_shaderProgramIndex = 0;
     GL_CHECK( glDeleteBuffers( 1, &m_vertexBufferId ) );
     GL_CHECK( glDeleteBuffers( 1, &m_elementBufferId ) );
     GL_CHECK( glDeleteVertexArrays( 1, &m_vertexArrayObjectId ) );
@@ -71,149 +66,109 @@ void Mesh::update( float dt )
         GL_CHECK( retVal = glUnmapBuffer( GL_ARRAY_BUFFER ) );
         if( retVal == GL_FALSE )
         {
-            LOG_INFO(g_log) << "Error un-mapping vertex buffer.\n";
+            LOG_DEBUG(g_log) << "Error un-mapping vertex buffer.\n";
         }
     }
     else
     {
         GLenum errCode = glGetError();
-        if( errCode == 0 ) LOG_INFO(g_log) << "NoError\n";
-        if( errCode == GL_INVALID_ENUM  ) LOG_INFO(g_log) << "INVALID_ENUM\n";
-        if( errCode == GL_OUT_OF_MEMORY ) LOG_INFO(g_log) << "OUT OF MEMORY\n";
-        if( errCode == GL_INVALID_OPERATION ) LOG_INFO(g_log) << "INVALID_OPERATION\n";
+        if( errCode == 0 ) LOG_DEBUG(g_log) << "NoError\n";
+        if( errCode == GL_INVALID_ENUM  ) LOG_DEBUG(g_log) << "INVALID_ENUM\n";
+        if( errCode == GL_OUT_OF_MEMORY ) LOG_DEBUG(g_log) << "OUT OF MEMORY\n";
+        if( errCode == GL_INVALID_OPERATION ) LOG_DEBUG(g_log) << "INVALID_OPERATION\n";
     }
     GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, 0 ) );
 }
 
-void Mesh::setupRenderState( void )
-{
-    GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
-}
 
-void Mesh::setupShaderState( PerspectivePtr renderContext )
-{
-    setShaderUniformMatrix( "projMat", renderContext->projectionMatrix() );
-    setShaderUniformMatrix( "modelViewMat", renderContext->modelViewMatrix() );
-    setShaderUniformVector( "g_worldLightPosition", renderContext->lightPosition() );
-    setShaderUniformVector( "g_lightColor", renderContext->lightColor() );
-}
+//void Mesh::setShaderUniformMatrix( const char* uniformName, const glm::mat4& mat)
+//{
+//    GLint uniId;
+//    GL_CHECK( uniId = glGetUniformLocation( m_shaderProgramIndex, uniformName ) );
+//    if( uniId == GL_INVALID_VALUE || uniId == GL_INVALID_OPERATION )
+//    {
+//        LOG_DEBUG(g_log) << "Renderable::render | Failed to find uniform shader attribute of name \""
+//            << uniformName << "\" in shader #" << m_shaderProgramIndex << "\n";
+//    }
+//    else
+//    {
+//        if( glewIsSupported( "ARB_separate_shader_objects" ) )
+//        {
+//            GL_CHECK( glProgramUniformMatrix4fv( m_shaderProgramIndex, uniId, 1, GL_FALSE, glm::value_ptr(mat) ) );
+//        }
+//        else
+//        {
+//            GLint curShader;
+//            GL_CHECK( glGetIntegerv( GL_CURRENT_PROGRAM, &curShader ) );
+//            GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
+//            GL_CHECK( glUniformMatrix4fv( uniId, 1, GL_FALSE, glm::value_ptr(mat) ) );
+//            GL_CHECK( glUseProgram( curShader ) );
+//        }
+//    }
+//}
+//
+//void Mesh::setShaderUniformVector( const char* uniformName, const glm::vec3& vec )
+//{
+//    GLint uniId;
+//    GL_CHECK( uniId = glGetUniformLocation( m_shaderProgramIndex, uniformName ) );
+//    if( uniId == GL_INVALID_VALUE || uniId == GL_INVALID_OPERATION )
+//    {
+//        LOG_DEBUG(g_log) << "Renderable::render | Failed to find uniform shader attribute of name \"" 
+//            <<  uniformName << "\" in shader #" << m_shaderProgramIndex << "\n";
+//    }
+//    else
+//    {        
+//        if( glewIsSupported( "ARB_separate_shader_objects" ) )
+//        {
+//            GL_CHECK( glProgramUniform3fv( m_shaderProgramIndex, uniId, 1, glm::value_ptr(vec) ) );
+//        }
+//        else
+//        {
+//            GLint curShader;
+//            GL_CHECK( glGetIntegerv( GL_CURRENT_PROGRAM, &curShader ) );
+//            GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
+//            GL_CHECK( glUniform3fv( uniId, 1, glm::value_ptr(vec) ) );
+//            GL_CHECK( glUseProgram( curShader ) );
+//        }
+//    }
+//}
+//
+//void Mesh::setShaderUniformInt( const char* uniformName, GLint val )
+//{
+//    GLint uniId;
+//    GL_CHECK( uniId = glGetUniformLocation( m_shaderProgramIndex, uniformName ) );
+//    if( uniId == GL_INVALID_VALUE || uniId == GL_INVALID_OPERATION )
+//    {
+//        LOG_DEBUG(g_log) << "Renderable::render | Failed to find uniform shader attribute of name \""
+//            << uniformName << "\" in shader #" << m_shaderProgramIndex << "\n";
+//    }
+//    else
+//    {
+//        if( glewIsSupported( "ARB_separate_shader_objects" ) )
+//        {
+//            GL_CHECK( glProgramUniform1i( m_shaderProgramIndex, uniId, val ) );
+//        }
+//        else
+//        {
+//            GLint curShader;
+//            GL_CHECK( glGetIntegerv( GL_CURRENT_PROGRAM, &curShader ) );
+//            GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
+//            GL_CHECK( glUniform1i( uniId, val ) );
+//            GL_CHECK( glUseProgram( curShader ) );
+//        }
+//    }
+//}
 
-void Mesh::setShaderUniformMatrix( const char* uniformName, const glm::mat4& mat)
-{
-    GLint uniId;
-    GL_CHECK( uniId = glGetUniformLocation( m_shaderProgramIndex, uniformName ) );
-    if( uniId == GL_INVALID_VALUE || uniId == GL_INVALID_OPERATION )
-    {
-        LOG_INFO(g_log) << "Renderable::render | Failed to find uniform shader attribute of name \""
-            << uniformName << "\" in shader #" << m_shaderProgramIndex << "\n";
-    }
-    else
-    {
-        if( glewIsSupported( "ARB_separate_shader_objects" ) )
-        {
-            GL_CHECK( glProgramUniformMatrix4fv( m_shaderProgramIndex, uniId, 1, GL_FALSE, glm::value_ptr(mat) ) );
-        }
-        else
-        {
-            GLint curShader;
-            GL_CHECK( glGetIntegerv( GL_CURRENT_PROGRAM, &curShader ) );
-            GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
-            GL_CHECK( glUniformMatrix4fv( uniId, 1, GL_FALSE, glm::value_ptr(mat) ) );
-            GL_CHECK( glUseProgram( curShader ) );
-        }
-    }
-}
 
-void Mesh::setShaderUniformVector( const char* uniformName, const glm::vec3& vec )
+void Mesh::render( void ) const
 {
-    GLint uniId;
-    GL_CHECK( uniId = glGetUniformLocation( m_shaderProgramIndex, uniformName ) );
-    if( uniId == GL_INVALID_VALUE || uniId == GL_INVALID_OPERATION )
-    {
-        LOG_INFO(g_log) << "Renderable::render | Failed to find uniform shader attribute of name \"" 
-            <<  uniformName << "\" in shader #" << m_shaderProgramIndex << "\n";
-    }
-    else
-    {        
-        if( glewIsSupported( "ARB_separate_shader_objects" ) )
-        {
-            GL_CHECK( glProgramUniform3fv( m_shaderProgramIndex, uniId, 1, glm::value_ptr(vec) ) );
-        }
-        else
-        {
-            GLint curShader;
-            GL_CHECK( glGetIntegerv( GL_CURRENT_PROGRAM, &curShader ) );
-            GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
-            GL_CHECK( glUniform3fv( uniId, 1, glm::value_ptr(vec) ) );
-            GL_CHECK( glUseProgram( curShader ) );
-        }
-    }
-}
-
-void Mesh::setShaderUniformInt( const char* uniformName, GLint val )
-{
-    GLint uniId;
-    GL_CHECK( uniId = glGetUniformLocation( m_shaderProgramIndex, uniformName ) );
-    if( uniId == GL_INVALID_VALUE || uniId == GL_INVALID_OPERATION )
-    {
-        LOG_INFO(g_log) << "Renderable::render | Failed to find uniform shader attribute of name \""
-            << uniformName << "\" in shader #" << m_shaderProgramIndex << "\n";
-    }
-    else
-    {
-        if( glewIsSupported( "ARB_separate_shader_objects" ) )
-        {
-            GL_CHECK( glProgramUniform1i( m_shaderProgramIndex, uniId, val ) );
-        }
-        else
-        {
-            GLint curShader;
-            GL_CHECK( glGetIntegerv( GL_CURRENT_PROGRAM, &curShader ) );
-            GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
-            GL_CHECK( glUniform1i( uniId, val ) );
-            GL_CHECK( glUseProgram( curShader ) );
-        }
-    }
-}
-
-void Mesh::teardownRenderState( void )
-{
-    //GL_CHECK( glUseProgram( 0 ) );
-    //GL_CHECK( glBindVertexArray( 0 ) );
-    //glBindBuffer( GL_ARRAY_BUFFER, 0 );  checkOpenGLErrors();
-    //glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );  checkOpenGLErrors();
-}
-
-void Mesh::render( PerspectivePtr renderContext )
-{
-    setupRenderState();
-    GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
-    setupShaderState( renderContext );
-
     // bind vertex array OBJECT (VAO)
     GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
     GL_CHECK( glDrawElements( GL_TRIANGLES,
                    ((GLsizei)m_vertexIndicies.size()),
                    GL_UNSIGNED_INT,
                    nullptr ) );  // start at the beginning
-    //LOG_INFO(g_log) << "glDrawElements( " << m_vertexIndicies.size() << ");\n";
-
-    teardownRenderState();
-}
-
-void Mesh::loadShaders()
-{
-    m_shaderProgramIndex = loadShaderFromFile( m_vertexShaderFilepath.c_str(),
-                                               m_fragmentShaderFilepath.c_str() );
-    
-    // Acquire shader
-    GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
-    MeshVertex::addVertexAttributes( m_attributes );
-    attachShaderAttributes();
-}
-
-void Mesh::loadTextures()
-{
+    LOG_TRACE(g_log) << "glDrawElements( " << m_vertexIndicies.size() << ");\n";
 }
 
 void Mesh::clearGeometry( void )
@@ -221,7 +176,6 @@ void Mesh::clearGeometry( void )
     m_vertexData.clear();
     m_vertexIndicies.clear();
 }
-
 
 void Mesh::resizeVertexArray( size_t newSize )
 {
@@ -234,7 +188,7 @@ void Mesh::setVertex( size_t i, const Eigen::Vector3f& a,
 {
     if( i > m_vertexData.size()-1 )
     {
-        LOG_INFO(g_log) << "Call to Mesh::setVertex( " << i << ", ... ) where "
+        LOG_DEBUG(g_log) << "Call to Mesh::setVertex( " << i << ", ... ) where "
             << i << " is larger than number of pre-allocated vertices (" 
             << m_vertexData.size() << ").\n";
         assert( false );
@@ -335,7 +289,7 @@ void Mesh::addQuad( const Eigen::Vector3f& a, const Eigen::Vector2f& aCoord,
 
 void Mesh::unitCube()
 {
-    LOG_INFO(g_log) << "Creating new Unit Cube\n";
+    LOG_DEBUG(g_log) << "Creating new Unit Cube\n";
     float third = 1.0f/1.73205080757f;
     
     MeshVertex v;
@@ -418,18 +372,18 @@ void Mesh::unitCube()
 void Mesh::bindDataToBuffers( void )
 {
     //int count = 0;
-    //LOG_INFO(g_log) << "\n";
+    //LOG_DEBUG(g_log) << "\n";
     //for( auto idxIter = m_vertexIndicies.begin(); idxIter != m_vertexIndicies.end(); ++idxIter )
     //{
     //    count++;
     //    unsigned int idx = *idxIter;
-    //    LOG_INFO(g_log) << idx << "\t";
-    //    for( int i=0;i<3;++i ) LOG_INFO(g_log) << m_vertexData[idx].m_position[i] << " \t ";
-    //    LOG_INFO(g_log) << "\n";
+    //    LOG_DEBUG(g_log) << idx << "\t";
+    //    for( int i=0;i<3;++i ) LOG_DEBUG(g_log) << m_vertexData[idx].m_position[i] << " \t ";
+    //    LOG_DEBUG(g_log) << "\n";
     //    
-    //    if( !(count % 3) ) LOG_INFO(g_log) << "----\n";
+    //    if( !(count % 3) ) LOG_DEBUG(g_log) << "----\n";
     //}
-    //LOG_INFO(g_log) << "++++\n";
+    //LOG_DEBUG(g_log) << "++++\n";
     GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
     GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, m_vertexBufferId ) );
     GL_CHECK( glBufferDataFromVector( GL_ARRAY_BUFFER, m_vertexData, GL_STATIC_DRAW ) );
@@ -437,31 +391,38 @@ void Mesh::bindDataToBuffers( void )
     GL_CHECK( glBufferDataFromVector( GL_ELEMENT_ARRAY_BUFFER, m_vertexIndicies, GL_STATIC_DRAW ) );
 }
 
-void Mesh::attachShaderAttributes()
+void Mesh::attachShaderAttributes( GLuint aShaderProgramIndex )
 {
     // Must bind VAO & VBO to set attributes
-    LOG_INFO(g_log) << "Binding vertex array object: " << m_vertexArrayObjectId << "\n";
+    LOG_DEBUG(g_log) << "Binding vertex array object: " << m_vertexArrayObjectId << "\n";
     GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
     GL_CHECK( glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId ) );
 
-    LOG_INFO(g_log) << "\tInitializing: # of attributes = " << m_attributes.size() << "\n";
+    LOG_DEBUG(g_log) << "\tInitializing: # of attributes = " << m_attributes.size() << "\n";
     //for( auto attrib : m_attributes )
     for( auto attribIter = m_attributes.begin(); attribIter != m_attributes.end(); ++attribIter )
     {
         auto attrib = *attribIter;
-        LOG_INFO(g_log) << "\t\tdefining shader attribute \"" << attrib->m_name << "\"...\n";
-        attrib->defineByNameInShader( m_shaderProgramIndex );
-        LOG_INFO(g_log) << "\t\tenabling shader attribute \"" << attrib->m_name << "\"...\n";
-        attrib->enableByNameInShader( m_shaderProgramIndex );
+        LOG_DEBUG(g_log) << "\t\tdefining shader attribute \"" << attrib->m_name << "\"...\n";
+        attrib->defineByNameInShader( aShaderProgramIndex );
+        LOG_DEBUG(g_log) << "\t\tenabling shader attribute \"" << attrib->m_name << "\"...\n";
+        attrib->enableByNameInShader( aShaderProgramIndex );
     }
     GL_CHECK( glBindVertexArray( 0 ) );
 }
 
-RenderablePtr Mesh::createBox( void )
+RenderablePtr Mesh::createBox( TextureManagerPtr tm, ShaderManagerPtr sm  )
 {
     Mesh* box = new Mesh();
     if( !box ) return RenderablePtr(nullptr);
     box->unitCube();  // Build geometry and setup VAO
-    box->loadShaders(); // load shaders and attach to VAO
+    // Build materials for needed passes
+    ShaderName colorShaderName = box->name() + "_Box_ColorShader";
+    sm->loadShaderFromFiles( colorShaderName, 
+        "colorVertexShader.glsl",
+        "colorFragmentShader.glsl" );
+    ShaderPtr colorShader( new Shader( colorShaderName, sm ) );
+    MaterialPtr colorMaterial( new Material( colorShader ) );
+    box->setMaterialForPassName( g_colorRenderPassName, colorMaterial );
     return RenderablePtr( box );
 }

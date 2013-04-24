@@ -13,11 +13,23 @@
 class SlicedVolume : public Mesh
 {
 public:
-    SlicedVolume( unsigned int sliceCount, VolumeDataPtr data )
-        : Mesh( DATA_PATH "/shaders/volumeVertexShader.glsl", DATA_PATH "/shaders/volumeFragmentShader.glsl" ),
+    SlicedVolume( TextureManagerPtr tm, ShaderManagerPtr sm, 
+                  unsigned int sliceCount, VolumeDataPtr data )
+        : Mesh(), 
           m_volumeData( data ),
           m_dataTextureId( 0 )
     {
+        ShaderName colorShaderName = name() + "_SlicedVolume_ColorShader";
+        sm->loadShaderFromFiles( colorShaderName, 
+//            "volumeVertexShader.glsl",
+//            "volumeFragmentShader.glsl" );
+"colorVertexShader.glsl",
+"colorFragmentShader.glsl" );
+
+        ShaderPtr colorShader( new Shader( colorShaderName, sm ) );
+        MaterialPtr colorMaterial( new Material( colorShader ) );
+        setMaterialForPassName( g_colorRenderPassName, colorMaterial );
+
         const size_t zSteps = sliceCount;
         const float zMin = -0.5;
         const float zMax =  0.5;
@@ -25,7 +37,7 @@ public:
         {
             float z = zMin + ((float)step) * (zMax - zMin)/((float)zSteps);
             float t = ((float)step)/(zSteps-1.0); // 0 to 1
-            //LOG_INFO(g_log) << "slice at z = " << z << "\n";
+            //LOG_DEBUG(g_log) << "slice at z = " << z << "\n";
 
             MeshVertex v;
             v.m_position[0] = -0.5;     v.m_position[1] =  0.5;     v.m_position[2] = z;
@@ -61,33 +73,29 @@ public:
             m_vertexIndicies.push_back( lowerLeft ); // 3
         }
 
-        LOG_INFO(g_log) << "\tCreating vertex arrays... ";
+        LOG_DEBUG(g_log) << "\tCreating vertex arrays... ";
         GL_CHECK( glGenVertexArrays( 1, &(m_vertexArrayObjectId) ) );
         GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
-        LOG_INFO(g_log) << "done.\n";
+        LOG_DEBUG(g_log) << "done.\n";
 
-        LOG_INFO(g_log) << "\tCreating array buffer... ";
+        LOG_DEBUG(g_log) << "\tCreating array buffer... ";
         GL_CHECK( glGenBuffers( 1, &(m_vertexBufferId) ) );
         GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, m_vertexBufferId ) );
         GL_CHECK( glBufferDataFromVector( GL_ARRAY_BUFFER, m_vertexData, GL_STATIC_DRAW ) );
-        LOG_INFO(g_log) << "done.\n";
+        LOG_DEBUG(g_log) << "done.\n";
 
-        LOG_INFO(g_log) << "\tCreating element buffer... ";
+        LOG_DEBUG(g_log) << "\tCreating element buffer... ";
         GL_CHECK( glGenBuffers( 1, &(m_elementBufferId) ) ); 
         GL_CHECK( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_elementBufferId ) );
         GL_CHECK( glBufferDataFromVector( GL_ELEMENT_ARRAY_BUFFER, m_vertexIndicies, GL_STATIC_DRAW ) );
-        LOG_INFO(g_log) << "done.\n";
-
-        LOG_INFO(g_log) << "\tCreating shader program... ";
-        loadShaders();
-        LOG_INFO(g_log) << "done.\n";
+        LOG_DEBUG(g_log) << "done.\n";
 
         GL_CHECK( glBindVertexArray( 0 ) );
         GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, 0 ) );
         GL_CHECK( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 ) );
-        LOG_INFO(g_log) << "Slices created.\n";
+        LOG_DEBUG(g_log) << "Slices created.\n";
         load3DTextures();
-        LOG_INFO(g_log) << "Textures loaded.\n";
+        LOG_DEBUG(g_log) << "Textures loaded.\n";
     }
     virtual ~SlicedVolume() {}
     
@@ -117,7 +125,7 @@ public:
         GL_CHECK( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE ) );
         GL_CHECK( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE ) );
         GL_CHECK( glGenerateMipmap( GL_TEXTURE_3D ) );
-        //LOG_INFO(g_log) << "Loaded 3d texture.\n";
+        //LOG_DEBUG(g_log) << "Loaded 3d texture.\n";
     }
 
 private:

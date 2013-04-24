@@ -45,12 +45,12 @@ public:
         GL_CHECK( index = glGetAttribLocation( shaderProgramIndex, m_name.c_str() ) );
         if( index == GL_INVALID_OPERATION )
         {
-            LOG_INFO(g_log) << "VertexAttribute::enableByNameInShader() | Failed to find shader attribute of name \""
+            LOG_DEBUG(g_log) << "VertexAttribute::enableByNameInShader() | Failed to find shader attribute of name \""
             << m_name << "\" in shader #" << shaderProgramIndex << "\n";
         }
         else if( index == -1 )
         {
-            LOG_INFO(g_log) << "WARNING: VertexAttribute \"" << m_name << "\" not found in shader program "
+            LOG_DEBUG(g_log) << "WARNING: VertexAttribute \"" << m_name << "\" not found in shader program "
             << shaderProgramIndex << "\n";
         }
         else
@@ -64,12 +64,12 @@ public:
         GL_CHECK( index = glGetAttribLocation( shaderProgramIndex, m_name.c_str() ) );
         if( index == GL_INVALID_OPERATION )
         {
-            LOG_INFO(g_log) << "VertexAttribute::defineByNameInShader() | Failed to find shader attribute of name \""
+            LOG_DEBUG(g_log) << "VertexAttribute::defineByNameInShader() | Failed to find shader attribute of name \""
             << m_name << "\" in shader #" << shaderProgramIndex << "\n";
         }
         else if( index == -1 )
         {
-            LOG_INFO(g_log) << "WARNING: VertexAttribute \"" << m_name << "\" not found in shader program "
+            LOG_DEBUG(g_log) << "WARNING: VertexAttribute \"" << m_name << "\" not found in shader program "
             << shaderProgramIndex << "\n";
         }
         else
@@ -83,12 +83,12 @@ public:
         GL_CHECK( index = glGetAttribLocation( shaderProgramIndex, m_name.c_str() ) );
         if( index == GL_INVALID_OPERATION )
         {
-            LOG_INFO(g_log) << "UniformShaderAttribute::disableByNameInShader() | Failed to find shader attribute of name \""
+            LOG_DEBUG(g_log) << "UniformShaderAttribute::disableByNameInShader() | Failed to find shader attribute of name \""
             << m_name << "\" in shader #" << shaderProgramIndex << "\n";
         }
         else if( index == -1 )
         {
-            LOG_INFO(g_log) << "WARNING: VertexAttribute \"" << m_name << "\" not found in shader program "
+            LOG_DEBUG(g_log) << "WARNING: VertexAttribute \"" << m_name << "\" not found in shader program "
             << shaderProgramIndex << "\n";
         }
         else
@@ -118,7 +118,7 @@ public:
     virtual ~FloatVertexAttribute() {}
     virtual void assignPointerByIndex(GLuint attribIndex)
     {
-        LOG_INFO(g_log) << "\tassigning float VertexAttribPointer \"" << m_name << "\" size="
+        LOG_DEBUG(g_log) << "\tassigning float VertexAttribPointer \"" << m_name << "\" size="
         << m_size << ", stride=" << m_stride << ", offset=" << m_offset << "\n";
         GL_CHECK( glVertexAttribPointer( attribIndex, m_size, GL_FLOAT, GL_FALSE, m_stride, m_offset ) );
     }
