@@ -25,7 +25,8 @@ ShaderManager
                        const char* aFragmentFileName )
 {
     std::string vertexFilePath, fragmentFilePath;
-    if( !m_finder->findFile( aVertexFileName, vertexFilePath ) )
+    std::string vertexName( aVertexFileName );
+    if( !m_finder->findFile( vertexName, vertexFilePath ) )
     {
         LOG_ERROR(g_log) << "FAILED to find vertex shader file \""
             << aVertexFileName << "\".";

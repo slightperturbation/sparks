@@ -46,18 +46,32 @@ FileAssetFinder
 ::findFile( const std::string& aFilename, std::string& foundPath ) const
 {
     namespace bfs = boost::filesystem;
+    LOG_DEBUG(g_log) << "Searching for file: \"" << aFilename << "\".";
     for( auto path = m_paths.begin(); path != m_paths.end(); ++path )
     {
         std::string dir = (*path).first;
-        try
-        {
-            if( !bfs::exists(dir) ) continue;
-        }
-        catch( bfs::filesystem_error err )
-        {
-            LOG_ERROR(g_log) << "Unable to find path dir \""
-                             << dir << "\": " << err.what();
-        }
+//        boost::filesystem::path dirPath( dir );
+//        LOG_DEBUG(g_log) << "\tLooking in dir \"" << dir << "\".";
+//        bool isFound = false;
+//        try
+//        {
+//            boost::system::error_code ec;
+//            if( bfs::is_directory( dirPath ) )
+//            {
+//                isFound = true;
+//            }
+//        }
+//        catch( ... )
+//        {
+//            LOG_ERROR(g_log) << "Unable to find path dir \""
+//            << dir << "\".";
+//            continue;
+//        }
+//        if( !isFound )
+//        {
+//            LOG_INFO(g_log) << "Path not found \"" << dir << "\".";
+//            continue;
+//        }
         bool searchRecursively = (*path).second;
         if( bfs::is_directory(dir) )
         {

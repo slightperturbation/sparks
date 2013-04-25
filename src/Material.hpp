@@ -56,6 +56,11 @@ public:
     {
         m_shader = aShader;
     }
+    GLuint getGLShaderIndex( void ) const 
+    {
+        return m_shader->getGLProgramIndex();
+    }
+    const std::string& name( void ) const { return m_shader->name(); }
 
     /// Set OpenGLs state to use the material
     void use( void ) const

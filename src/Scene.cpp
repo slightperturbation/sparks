@@ -24,11 +24,15 @@ Scene
         << m_renderables.size() << " renderables.";
     m_passes.sort( renderPassCompareByPriority );
 
+    RenderCommand rc;
     for( auto rp = m_passes.begin(); rp != m_passes.end(); ++rp )
     {
         for( auto r = m_renderables.begin(); r != m_renderables.end(); ++r )
         {
-            m_commands.push( createRenderCommand( *rp, *r ) );
+            if( createRenderCommand( rc, *rp, *r ) )
+            {
+                m_commands.push( rc );
+            }
         }
     }
 }

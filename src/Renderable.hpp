@@ -21,8 +21,14 @@ public:
     virtual RenderableName name( void ) const { return m_name; }
     virtual void name( const RenderableName& aName ) { m_name = aName; }
 
-    /// Responsible for emitting GL primitives
+    /// Emits GL primitives
     virtual void render( void ) const = 0;
+    /// Ties the shader's "in" variables to the channels of this Renderable's data,
+    /// E.g, "in vec3 v_position" in the shader needs to point to offset 0, stride 6.
+    /// Need be done only after reloading shader or re-assigning Renderable to shader,
+    /// or after changing the vertex type used by the Renderable
+    /// Must be called for each shader that uses this Renderable
+    virtual void attachShaderAttributes( GLuint shaderIndex ) = 0;
     
     const glm::mat4& getTransform( void ) const { return m_objectTransform; }
     void setTransform( const glm::mat4& mat ) { m_objectTransform = mat; }
@@ -36,16 +42,20 @@ public:
         }
         else
         {
-            LOG_ERROR(g_log) << "Failed to find material for renderable for pass \""
+            LOG_INFO(g_log) << "No material for renderable for pass \""
             << renderPassName << "\" for renderable \"" << m_name << "\".";
-            assert( false );
             return ConstMaterialPtr( NULL );
         }
     }
     void setMaterialForPassName( const RenderPassName& renderPassName, 
-                             MaterialPtr material )
+                                 MaterialPtr material )
     {
+        LOG_DEBUG(g_log) << "Assigning material \"" << material->name() 
+            << "\" to renderable \"" << name() << "\" for pass \"" 
+            << renderPassName << "\".";
         m_materials[ renderPassName ] = material;
+        GLuint shaderId = material->getGLShaderIndex();
+        attachShaderAttributes( shaderId );
     }
 
 protected:

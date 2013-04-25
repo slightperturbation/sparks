@@ -13,6 +13,7 @@ bool findFileRecursively( const boost::filesystem::path& dirPath,
 class FileAssetFinder
 {
 public:
+    FileAssetFinder() {}
     void addSearchPath( const std::string& aPath );
     void addRecursiveSearchPath( const std::string& aPath );
     /// Search for file aFilename within all known path directories.

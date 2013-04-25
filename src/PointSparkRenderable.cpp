@@ -16,6 +16,7 @@ PointSparkRenderable
 : Renderable( "PointSparkRenderable" ),
   m_spark( spark )
 {
+    const RenderPassName g_colorRenderPassName = "ColorPass";
     // Build materials for needed passes
     ShaderName colorShaderName = m_name + "_ColorShader";
     sm->loadShaderFromFiles( colorShaderName, 

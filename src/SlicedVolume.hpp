@@ -19,6 +19,8 @@ public:
           m_volumeData( data ),
           m_dataTextureId( 0 )
     {
+        const RenderPassName g_colorRenderPassName = "ColorPass";
+        
         ShaderName colorShaderName = name() + "_SlicedVolume_ColorShader";
         sm->loadShaderFromFiles( colorShaderName, 
 //            "volumeVertexShader.glsl",

@@ -31,6 +31,12 @@ public:
         std::cout << "rendering TestRender";
         renderedCount++;
     }
+    virtual void attachShaderAttributes( GLuint shaderIndex )
+    {
+        // glBindBuffer( GL_ARRAY_BUFFER, m_vertexBufferId );
+        // glVertexAttribPointer( ... );
+        // glEnableVertexAttribArray( position_loc_in_shader );
+    }
 };
 
 BOOST_AUTO_TEST_SUITE( RenderPipelineSuite )
@@ -43,7 +49,7 @@ BOOST_AUTO_TEST_CASE( CreateRenderCommands )
     TextureManagerPtr textureManager( new TextureManager( finder ) );
     ShaderManagerPtr shaderManager( new ShaderManager( finder ) );
     
-    PerspectivePtr camera( new Projection() );
+    PerspectiveProjectionPtr camera( new PerspectiveProjection );
     int width = 400; int height = 400;
     RenderTargetPtr frameBufferTarget( new FrameBufferRenderTarget( width, height ) );
     frameBufferTarget->initialize( textureManager );

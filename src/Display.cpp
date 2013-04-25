@@ -23,7 +23,7 @@ void SimpleDisplay::resizeWindow( int width, int height )
 
 void SimpleDisplay::render( const Renderables& scene )
 {
-    m_context->setAspectRatio( float(m_viewport.m_width)/float(m_viewport.m_height) );
+    m_context->aspectRatio( float(m_viewport.m_width)/float(m_viewport.m_height) );
     m_viewport.render( scene, m_context );
 }
 
@@ -45,10 +45,10 @@ void SideBySideDisplay::render( const Renderables& scene )
 {
     GL_CHECK( glClearColor( 1.0, 0.3, 0.5, 1 ) );
     GL_CHECK( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
-    m_context->setAspectRatio( float(m_rightViewport.m_width)/float(m_rightViewport.m_height) );
+    m_context->aspectRatio( float(m_rightViewport.m_width)/float(m_rightViewport.m_height) );
 
-    glm::vec3 rightVec = glm::cross( ( m_context->cameraTarget() - m_context->cameraPos() ), m_context->cameraUp() );
-    rightVec = glm::normalize( rightVec );
+    //glm::vec3 rightVec = glm::cross( ( m_context->cameraTarget() - m_context->cameraPos() ), m_context->cameraUp() );
+    //rightVec = glm::normalize( rightVec );
 
     // TODO -- need to wrap and hold the rendercontext?
     // change viewpoint, make a duplicate context, shift it

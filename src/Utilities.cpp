@@ -133,16 +133,20 @@ OpenGLWindow
         LOG_DEBUG(g_log) << "Max 3d texture size: " << GL_MAX_3D_TEXTURE_SIZE << " is too small for this program.\n";
     }
 
-    if( GL_ARB_debug_output ) //glewIsSupported( "GL_ARB_debug_output" ) )
+    if( glewIsSupported( "GL_ARB_debug_output" ) )
     {
 #ifdef _DEBUG
         glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
+        checkOpenGLErrors();
 #else
         glEnable( GL_DEBUG_OUTPUT );
+        checkOpenGLErrors();
 #endif
         LOG_DEBUG(g_log) << "Enabling OpenGL Debug messages.\n";
 #ifndef __APPLE__
+        checkOpenGLErrors();
         glDebugMessageCallback( debugOpenGLMessageCallback, 0 );
+        checkOpenGLErrors();
         GLuint unusedIds = 0;
         glDebugMessageControl( GL_DONT_CARE,
             GL_DONT_CARE,
@@ -150,8 +154,10 @@ OpenGLWindow
             0,
             &unusedIds,
             true);
+        checkOpenGLErrors();
 #endif
     }
+    checkOpenGLErrors();
 
     ilInit();
     checkOpenGLErrors();
@@ -235,7 +241,7 @@ void checkOpenGLErrors( void )
     if ((errCode = glGetError()) != GL_NO_ERROR) {
         errString = gluErrorString(errCode);
         LOG_DEBUG(g_log) << "OpenGL Error[" << errCode << "] \"" << errString << "\"\n";
-        assert( false );
+        //assert( false );
     }
 }
 

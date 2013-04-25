@@ -61,10 +61,10 @@ MESSAGE( STATUS "BOOST ENV{BOOST_ROOT}: " $ENV{BOOST_ROOT})
 set(BOOST_MIN_VERSION "1.44")
 set( Boost_LIB_DIAGNOSTIC_DEFINITIONS  )
 if( UNIX )
-  MESSAGE( STATUS "BOOST: Boost_USE_STATIC_LIBS Boost_USE_STATIC_RUNTIME" )
-  set(Boost_USE_STATIC_LIBS OFF)
-  set(Boost_USE_MULTITHREADED ON) 
-  set(Boost_USE_STATIC_RUNTIME OFF)
+  #MESSAGE( STATUS "BOOST: Boost_USE_STATIC_LIBS Boost_USE_STATIC_RUNTIME" )
+  #set(Boost_USE_STATIC_LIBS OFF)
+  #set(Boost_USE_MULTITHREADED ON) 
+  #set(Boost_USE_STATIC_RUNTIME OFF)
 endif( UNIX )
 if( WIN32 )
   MESSAGE( STATUS "Boost on windows" )
@@ -74,17 +74,17 @@ if( WIN32 )
 endif( WIN32 )
 
 list(APPEND PROJECT_BOOST_COMPONENTS 
-  system 
-  filesystem 
-  thread 
-  program_options 
   date_time
-  unit_test_framework ) 
+  unit_test_framework 
+  filesystem 
+  system 
+  thread 
+  ) 
 FIND_PACKAGE(Boost ${BOOST_MIN_VERSION} COMPONENTS ${PROJECT_BOOST_COMPONENTS})
 
 if( Boost_FOUND )
     add_definitions( -DBOOST_ALL_NO_LIB ) # Don't auto-link in windows
-    add_definitions( -DBOOST_ALL_DYN_LINK )
+    #############add_definitions( -DBOOST_ALL_DYN_LINK )
   INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )
   ADD_DEFINITIONS( ${Boost_LIB_DIAGNOSTIC_DEFINITIONS} )
   ADD_DEFINITIONS( "-DHAS_BOOST" )

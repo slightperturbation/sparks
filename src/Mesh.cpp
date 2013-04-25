@@ -164,11 +164,12 @@ void Mesh::render( void ) const
 {
     // bind vertex array OBJECT (VAO)
     GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
+    //GL_CHECK( glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId ) );
     GL_CHECK( glDrawElements( GL_TRIANGLES,
                    ((GLsizei)m_vertexIndicies.size()),
                    GL_UNSIGNED_INT,
                    nullptr ) );  // start at the beginning
-    LOG_TRACE(g_log) << "glDrawElements( " << m_vertexIndicies.size() << ");\n";
+    LOG_TRACE(g_log) << "glDrawElements( " << m_vertexIndicies.size() << " );\n";
 }
 
 void Mesh::clearGeometry( void )
@@ -284,6 +285,8 @@ void Mesh::addQuad( const Eigen::Vector3f& a, const Eigen::Vector2f& aCoord,
     m_vertexIndicies.push_back( cIdx );
     m_vertexIndicies.push_back( bIdx );
     m_vertexIndicies.push_back( dIdx );
+
+    bindDataToBuffers();
 }
 
 
@@ -391,21 +394,29 @@ void Mesh::bindDataToBuffers( void )
     GL_CHECK( glBufferDataFromVector( GL_ELEMENT_ARRAY_BUFFER, m_vertexIndicies, GL_STATIC_DRAW ) );
 }
 
+
 void Mesh::attachShaderAttributes( GLuint aShaderProgramIndex )
 {
+    // TODO -- if mesh always uses a particular vertex type, could replace 
+    // with simple opengl calls
+    // glBindBuffer( GL_ARRAY_BUFFER, m_vertexBufferId );
+    // glVertexAttribPointer( ... );
+    // glEnableVertexAttribArray( position_loc_in_shader );
+
+    MeshVertex::addVertexAttributes( m_attributes );
+
     // Must bind VAO & VBO to set attributes
-    LOG_DEBUG(g_log) << "Binding vertex array object: " << m_vertexArrayObjectId << "\n";
+    LOG_DEBUG(g_log) << "Binding vertex array object: " << m_vertexArrayObjectId ;
     GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
     GL_CHECK( glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId ) );
 
-    LOG_DEBUG(g_log) << "\tInitializing: # of attributes = " << m_attributes.size() << "\n";
-    //for( auto attrib : m_attributes )
+    LOG_DEBUG(g_log) << "\tInitializing: # of attributes = " << m_attributes.size();
     for( auto attribIter = m_attributes.begin(); attribIter != m_attributes.end(); ++attribIter )
     {
         auto attrib = *attribIter;
-        LOG_DEBUG(g_log) << "\t\tdefining shader attribute \"" << attrib->m_name << "\"...\n";
+        LOG_DEBUG(g_log) << "\t\tdefining shader attribute \"" << attrib->m_name << "\".";
         attrib->defineByNameInShader( aShaderProgramIndex );
-        LOG_DEBUG(g_log) << "\t\tenabling shader attribute \"" << attrib->m_name << "\"...\n";
+        LOG_DEBUG(g_log) << "\t\tenabling shader attribute \"" << attrib->m_name << "\".";
         attrib->enableByNameInShader( aShaderProgramIndex );
     }
     GL_CHECK( glBindVertexArray( 0 ) );
@@ -413,6 +424,8 @@ void Mesh::attachShaderAttributes( GLuint aShaderProgramIndex )
 
 RenderablePtr Mesh::createBox( TextureManagerPtr tm, ShaderManagerPtr sm  )
 {
+    const RenderPassName g_colorRenderPassName = "ColorPass";
+    
     Mesh* box = new Mesh();
     if( !box ) return RenderablePtr(nullptr);
     box->unitCube();  // Build geometry and setup VAO

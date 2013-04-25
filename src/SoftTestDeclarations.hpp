@@ -24,7 +24,6 @@
 
 /// Logging
 /// LOG_TRACE for per-frame log messages
-/// LOG_DEBUG for routine messages that indicate success
 /// LOG_DEBUG for unusual but OK cases
 /// LOG_WARNING for potential problems
 /// LOG_ERROR for true error conditions, possibly recoverable
@@ -41,8 +40,15 @@ typedef std::vector< RenderablePtr >  Renderables;
 typedef std::string RenderableName;
 
 class Projection;
+class PerspectiveProjection;
+class OrthogonalProjection;
 typedef std::shared_ptr< Projection > PerspectivePtr;
 typedef std::shared_ptr< const Projection > ConstPerspectivePtr;
+typedef std::shared_ptr< PerspectiveProjection > PerspectiveProjectionPtr;
+typedef std::shared_ptr< const PerspectiveProjection > ConstPerspectiveProjectionPtr;
+typedef std::shared_ptr< OrthogonalProjection > OrthogonalProjectionPtr;
+typedef std::shared_ptr< const OrthogonalProjection > ConstOrthogonalProjectionPtr;
+
 
 class RenderCommand;
 typedef std::shared_ptr< RenderCommand > RenderCommandPtr;
@@ -89,6 +95,6 @@ class FileAssetFinder;
 typedef std::shared_ptr< FileAssetFinder > FileAssetFinderPtr;
 
 // Define standard names for common render passes
-const RenderPassName g_colorRenderPassName = "ColorPass";
+//const RenderPassName g_colorRenderPassName = "ColorPass";
 
 #endif

@@ -135,7 +135,8 @@ public:
     }
     
     virtual ~Shader() { }
-    
+    const ShaderName& name( void ) const { return m_name; }
+
     GLuint getGLProgramIndex( void ) const
     {
         return m_manager->getProgramIndexForShaderName( m_name );

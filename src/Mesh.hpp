@@ -118,21 +118,12 @@ class Mesh : public Renderable, public Updatable
 {
 public:
     Mesh( void );
-
     virtual ~Mesh();
 
     /// Renderable
     virtual void render( void ) const;
     // Updatable
     virtual void update( float dt );
-
-    /// Example of changing the mesh geometry.
-//    void setShaderUniformMatrix( const char* uniformShaderName, const glm::mat4& mat);
-//    void setShaderUniformVector( const char* uniformShaderName, const glm::vec3& vec );
-//    void setShaderUniformInt( const char* uniformShaderName, GLint vec );
-
-    void unitCube();
-    
     void clearGeometry( void );
     void resizeVertexArray( size_t newSize );
     void setVertex( size_t i, const Eigen::Vector3f& a, 
@@ -153,13 +144,12 @@ public:
     
     /// Bind geometry data to buffers
     void bindDataToBuffers( void );
+    /// Bind shader to vertex data
+    virtual void attachShaderAttributes( GLuint aShaderProgramIndex );
 
     /// Construction methods
+    void unitCube();
     static RenderablePtr createBox( TextureManagerPtr tm, ShaderManagerPtr sm );
-
-    /// Bind VAO & VBO and set the Vertex Attributes stored in m_attributes
-    /// Required after changing the vertex type.
-    void attachShaderAttributes( GLuint aShaderProgramIndex );
 protected:
     GLuint m_vertexArrayObjectId;
     GLuint m_vertexBufferId;

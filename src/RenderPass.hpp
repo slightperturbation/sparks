@@ -11,8 +11,9 @@
 
 #include "SoftTestDeclarations.hpp"
 
-RenderCommand createRenderCommand( ConstRenderPassPtr aRenderPass, 
-                                   ConstRenderablePtr aRenderable );
+bool createRenderCommand( RenderCommand& outRC, 
+                          ConstRenderPassPtr aRenderPass, 
+                          ConstRenderablePtr aRenderable );
 
 /// Encapsulates a single rendering pass over all of the renderables in
 /// a given scene.  A scene with only a single pass will likely render
@@ -50,8 +51,9 @@ public:
     float priority( void ) const 
     { return m_priority; }
     
-    friend RenderCommand createRenderCommand( ConstRenderPassPtr aRenderPass, 
-                                              ConstRenderablePtr aRenderable );
+    friend bool createRenderCommand( RenderCommand& outRC, 
+                                     ConstRenderPassPtr aRenderPass, 
+                                     ConstRenderablePtr aRenderable );
     const RenderPassName& name( void ) const { return m_name; }
 private:
     RenderTargetPtr m_target;
@@ -62,7 +64,8 @@ private:
 
 bool renderPassCompareByPriority( ConstRenderPassPtr a, 
                                   ConstRenderPassPtr b );
-RenderCommand createRenderCommand( ConstRenderPassPtr aRenderPass, 
-                                   ConstRenderablePtr aRenderable );
+bool createRenderCommand( RenderCommand& outRC, 
+                          ConstRenderPassPtr aRenderPass, 
+                          ConstRenderablePtr aRenderable );
 
 #endif

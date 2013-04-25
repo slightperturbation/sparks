@@ -61,7 +61,6 @@ public:
     }
     virtual void postRender( void ) const
     {
-        glfwSwapBuffers();
     }
 };
 

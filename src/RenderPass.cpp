@@ -40,8 +40,9 @@ bool renderPassCompareByPriority( ConstRenderPassPtr a,
     return a->priority() < b->priority();
 }
 
-RenderCommand createRenderCommand( ConstRenderPassPtr aRenderPass, 
-                                   ConstRenderablePtr aRenderable )
+bool createRenderCommand( RenderCommand& outRC, 
+                          ConstRenderPassPtr aRenderPass, 
+                          ConstRenderablePtr aRenderable )
 {
     // Assert preconditions
     if( !aRenderPass ) 
@@ -55,26 +56,24 @@ RenderCommand createRenderCommand( ConstRenderPassPtr aRenderPass,
         assert( false );
     }
 
-    RenderCommand rc;
-    rc.m_pass = aRenderPass;
-    rc.m_renderable = aRenderable;
-    rc.m_material = aRenderPass->getMaterialForRenderable( aRenderable );
-    rc.m_perspective = aRenderPass->m_perspective;
+    outRC.m_pass = aRenderPass;
+    outRC.m_renderable = aRenderable;
+    outRC.m_material = aRenderPass->getMaterialForRenderable( aRenderable );
+    outRC.m_perspective = aRenderPass->m_perspective;
 
-    if( !rc.m_material ) 
+    if( !outRC.m_material ) 
     {
-        LOG_ERROR(g_log) << "RenderCommand has no material.";
-        assert( false );
+        return false;
     }
-    if( !rc.m_perspective )
+    if( !outRC.m_perspective )
     {
         LOG_ERROR(g_log) << "RenderCommand has no perspective.";
         assert( false );
     }
-    if( !rc.m_renderable )
+    if( !outRC.m_renderable )
     {
         LOG_ERROR(g_log) << "RenderCommand has no renderable.";
         assert( false );
     }
-    return rc;
+    return true;
 }

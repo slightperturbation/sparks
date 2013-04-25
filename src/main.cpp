@@ -6,6 +6,7 @@
 #include "Viewport.hpp"
 #include "TextureManager.hpp"
 #include "RenderTarget.hpp"
+#include "FileAssetFinder.hpp"
 
 #include "Spark.hpp"
 #include "PointSparkRenderable.hpp"
@@ -125,7 +126,7 @@ void writeFrameBufferToFile( const std::string& frameBaseFileName )
     delete[] frameBuffer;
 }
 
-MeshPtr createOverlayQuad( TextureManagerPtr tm, ShaderManagerPtr sm )
+MeshPtr createOverlayQuad( TextureManagerPtr tm, ShaderManagerPtr sm, const RenderPassName& renderPassName )
 {
     using namespace Eigen;
     MeshPtr overlay( new Mesh() );
@@ -143,7 +144,7 @@ MeshPtr createOverlayQuad( TextureManagerPtr tm, ShaderManagerPtr sm )
     ShaderPtr colorShader( new Shader( colorShaderName, sm ) );
     colorShader->createUniform( "u_color", glm::vec4(1,0,0,0) );
     MaterialPtr colorMaterial( new Material( colorShader ) );
-    overlay->setMaterialForPassName( g_colorRenderPassName, colorMaterial );
+    overlay->setMaterialForPassName( renderPassName, colorMaterial );
     return overlay;
 }
 
@@ -164,27 +165,26 @@ int runSimulation(int argc, char** argv)
         TextureManagerPtr textureManager( new TextureManager() );
         textureManager->setAssetFinder( finder );
         
-        PerspectivePtr camera( new Projection() );
         int width = 0; int height = 0; glfwGetWindowSize( &width, &height );
+        //PerspectiveProjectionPtr camera( new PerspectiveProjection );
+        //camera->aspectRatio( (float)width/height );
+        //camera->cameraPos( glm::vec3( 3, 3, 3 ) );
+        //camera->cameraTarget( glm::vec3( 0, 0, 0 ) );
         RenderTargetPtr frameBufferTarget( new FrameBufferRenderTarget( width, height ) );
         g_frameBufferTarget = frameBufferTarget;
         frameBufferTarget->initialize( textureManager );
-        
 
         // Setup a simple render pipeline out to the framebuffer
         ScenePtr scene( new Scene );
         
         RenderPassName overlayRenderPassName( "OverlayRenderPass" );
         RenderPassPtr overlayRenderPass( new RenderPass( overlayRenderPassName ) );
-        PerspectivePtr overlayPerspective( new Projection );
-        overlayPerspective->cameraPos() = glm::vec3( 0.5, 0.5, -0.5 );
-        overlayPerspective->cameraTarget() = glm::vec3( 0.5, 0.5, 0.0 );
-        overlayPerspective->cameraUp() = glm::vec3( 0.0, 1.0, 0.0 );
-        //setAspectRatio()
-        // set orthographic??
+        OrthogonalProjectionPtr overlayPerspective( new OrthogonalProjection );
         overlayRenderPass->initialize( frameBufferTarget, overlayPerspective, 10.0f );
-        MeshPtr overlay = createOverlayQuad( textureManager, shaderManager );
+        scene->add( overlayRenderPass );
 
+        MeshPtr overlay = createOverlayQuad( textureManager, shaderManager, overlayRenderPassName );
+        scene->add( overlay );
 
 
         //RenderPassPtr primaryRenderPass( new RenderPass( g_colorRenderPassName ) );
@@ -224,8 +224,9 @@ int runSimulation(int argc, char** argv)
             currTime = glfwGetTime();
             vars.fps = 1.0f/(currTime - lastTime);
             angle += rotRate;
-            camera->setModelMatrix(
-                glm::rotate( glm::mat4(), angle, glm::vec3( 0.0f, 1.0f, 0.0f ) ) ); 
+            //camera->setModelMatrix(
+            //    glm::rotate( glm::mat4(), angle, glm::vec3( 0.0f, 1.0f, 0.0f ) ) ); 
+
             //    glm::translate( 
             //       glm::vec3(-0.5, -0.5, -0.5) )
             //    );
@@ -238,6 +239,7 @@ int runSimulation(int argc, char** argv)
             scene->prepareRenderCommands();
             scene->render();
 
+            glfwSwapBuffers();
 
             if( vars.isSavingFrames ) writeFrameBufferToFile( "sparks_" );
 
@@ -314,7 +316,7 @@ int main( int argc, char* argv[] )
 #endif 
 
     {
-        boost::mutex::scoped_lock lock( g_logGuard );
+        //boost::mutex::scoped_lock lock( g_logGuard );
         g_baseLogger = new cpplog::FileLogger( "sparks.log" );
         //g_baseLogger = new cpplog::StdErrLogger;
 //#ifdef CPPLOG_THREADING
@@ -326,7 +328,7 @@ int main( int argc, char* argv[] )
     
     runSimulation( argc, argv );
 
-    boost::mutex::scoped_lock lock( g_logGuard );
+    //boost::mutex::scoped_lock lock( g_logGuard );
     delete g_log;
     delete g_baseLogger;
 }
