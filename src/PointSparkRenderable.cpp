@@ -26,7 +26,7 @@ PointSparkRenderable
 "colorFragmentShader.glsl" );
 
     ShaderPtr colorShader( new Shader( colorShaderName, sm ) );
-    MaterialPtr sparkColorMaterial( new Material( colorShader ) );
+    MaterialPtr sparkColorMaterial( new Material( tm, colorShader ) );
     this->setMaterialForPassName( g_colorRenderPassName, sparkColorMaterial );
 }
 

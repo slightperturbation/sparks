@@ -33,7 +33,8 @@ public:
 };
 
 struct RenderCommandCompare 
-    : public std::binary_function< const RenderCommand&, const RenderCommand&, bool >
+    : public std::binary_function< const RenderCommand&, 
+                                   const RenderCommand&, bool >
 {
     bool operator()( const RenderCommand& a, const RenderCommand& b ) const;
 };

@@ -17,6 +17,10 @@
 /// ShaderManager keeps track of the OpenGL shader resources
 /// and the original files used to load those shaders.
 /// Note:  automatically binds output fragment buffer 0 to "outColor"
+///TODO $$$ Need to own or allow callbacks to Shader objects, because
+/// when ShaderManager detects a new file and reloads, the Shader Object
+/// needs to call lookupUniformLocations().  Note this breaks the current
+/// attempt to isolate the Manager from the actual shader class...
 class ShaderManager
 {
     struct ShaderFilePaths

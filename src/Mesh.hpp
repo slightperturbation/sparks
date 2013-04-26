@@ -31,35 +31,48 @@ class MeshVertex
 public:
     GLfloat m_position[4];
     GLfloat m_normal[4];
-    GLfloat m_texCoord[3];
     GLfloat m_diffuseColor[4];
-    GLfloat m_shininess;
-    GLbyte  m_specular[4];
+    GLfloat m_texCoord[3];
 
-    static void addVertexAttributes( std::vector<VertexAttributePtr>&  outShaderAttributes )
+    /// Set some sane initial values.
+    MeshVertex( void )
     {
-        VertexAttributePtr position(new FloatVertexAttribute("position",
+        for( size_t i = 0; i < 4; ++i )
+        {
+            m_position[i] = 0.0;
+            m_normal[i] = 0.0;
+            m_diffuseColor[i] = 1.0;
+        }
+        m_normal[0] = 1.0;
+        m_texCoord[0] = 0.5; m_texCoord[1] = 0.5; m_texCoord[2] = 0.5;
+    }
+
+    /// Defines the names of the "in" data channels for the vertex shader
+    /// By convention, per-vertex attributes start with "v_"
+    static void addVertexAttributes( std::vector<VertexAttributePtr>& outShaderAttributes )
+    {
+        VertexAttributePtr position(new FloatVertexAttribute("v_position",
             3,
             sizeof(MeshVertex),
             (void*)offsetof(MeshVertex, m_position) )
             );
         outShaderAttributes.push_back( position );
         
-        VertexAttributePtr normal(new FloatVertexAttribute("normal",
+        VertexAttributePtr normal(new FloatVertexAttribute("v_normal",
             3,
             sizeof(MeshVertex),
             (void*)offsetof(MeshVertex, m_normal) )
             );
         outShaderAttributes.push_back( normal );
 
-        VertexAttributePtr diffuse(new FloatVertexAttribute("inVertexColor",
+        VertexAttributePtr diffuse(new FloatVertexAttribute("v_color",
             4,
             sizeof(MeshVertex),
             (void*)offsetof(MeshVertex, m_diffuseColor) )
             );
         outShaderAttributes.push_back( diffuse );
         
-        VertexAttributePtr texCoord3d(new FloatVertexAttribute("texCoord3d",
+        VertexAttributePtr texCoord3d(new FloatVertexAttribute("v_texCoord3d",
             3,
             sizeof(MeshVertex),
             (void*)offsetof(MeshVertex, m_texCoord) )

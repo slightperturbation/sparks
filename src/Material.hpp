@@ -11,27 +11,9 @@
 
 #include "Shader.hpp"
 #include "Projection.hpp"
+#include "TextureManager.hpp"
 
-class TextureUnit;
-//
-//template< typename T >
-//class MaterialProperty;
-//
-//class MaterialPropertyInterface
-//{
-//public:
-//    template<typename T> MaterialProperty<T>* as( void )
-//    {
-//        return dynamic_cast< MaterialProperty<T>* >( this );
-//    }
-//};
-//template< typename T >
-//class MaterialProperty
-//{
-//public:
-//    T m_val;
-//};
-
+#include <set>
 
 /// Material is one way to render the object.  Note that one material 
 /// corresponds to one type of render-pass, so a color pass would use
@@ -46,12 +28,11 @@ class Material
 public:
 
     //TODO ctor --- load material from file
-    Material() {}
-    Material( ShaderPtr aShader ) : m_shader( aShader )
-    {
-        
-    }
-    
+    Material( TextureManagerPtr tm ) : m_textureManager( tm )
+    { }
+    Material( TextureManagerPtr tm, ShaderPtr aShader )
+    : m_shader( aShader ), m_textureManager( tm )
+    { }
     void setShader( ShaderPtr aShader )
     {
         m_shader = aShader;
@@ -69,12 +50,15 @@ public:
         m_shader->use();
         
         // setup texture uniforms
-        for( auto texIter = m_textureUnits.begin(); 
-             texIter != m_textureUnits.end(); 
+        for( auto texIter = m_textures.begin();
+             texIter != m_textures.end(); 
              ++texIter )
         {
-            const TextureUnit& texUnit = *texIter;
-
+            const TextureName& textureName = *texIter;
+            const ShaderUniformName& samplerInShaderName = textureName;
+            GLuint texUnit = m_textureManager->getTextureUnitForTexture( textureName );
+            // Shader looks for the sampler of the same name as the texture
+            m_shader->setUniform( samplerInShaderName, texUnit );
         }
     }
 
@@ -104,6 +88,11 @@ public:
     {
         return m_shader;
     }
+    
+    /// Use a texture with this material.  Must be called prior to rendering
+    /// with a shader that uses the texture.
+    void addTexture( const TextureName& textureName )
+    { m_textures.insert( textureName ); }
 
     /// Set shader uniform properties
     template< typename T >
@@ -112,26 +101,8 @@ public:
         m_shader->setUniform<T>( aName, arg );
     }
 private:
-    std::vector< TextureUnit > m_textureUnits;
+    std::set< const TextureName > m_textures;
     ShaderPtr m_shader;
-    
-    //std::map< std::string, MaterialPropertyInterface* > m_materialProperties;
-
-    //glm::vec4 m_ambientColor;
-    //glm::vec4 m_specularColor;
-    //float m_specularity;
-
-    //bool m_receivesShadows;
-    //bool m_castsShadows;
-    //bool m_isTranslucent;
-};
-
-class TextureUnit
-{
-public:
-    // texture
-    // minfilter, magfilter, mipmap, wrapping
-    
     TextureManagerPtr m_textureManager;
 };
 

@@ -435,7 +435,7 @@ RenderablePtr Mesh::createBox( TextureManagerPtr tm, ShaderManagerPtr sm  )
         "colorVertexShader.glsl",
         "colorFragmentShader.glsl" );
     ShaderPtr colorShader( new Shader( colorShaderName, sm ) );
-    MaterialPtr colorMaterial( new Material( colorShader ) );
+    MaterialPtr colorMaterial( new Material( tm, colorShader ) );
     box->setMaterialForPassName( g_colorRenderPassName, colorMaterial );
     return RenderablePtr( box );
 }

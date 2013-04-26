@@ -35,7 +35,6 @@ public:
     template< typename T >
     ShaderUniform<T>* operator[]( const ShaderUniformName& name )
     {
-        m_isDirtyUniforms = true;
         return getUniform<T>(name);
     }
 
@@ -63,21 +62,19 @@ public:
 
     template< typename T >
     void setUniform( const ShaderUniformName& name, const T& val )
-    { m_uniforms[name]->as<T>()->set(val); m_isDirtyUniforms = true; }
+    { m_uniforms[name]->as<T>()->set(val); }
 
     /// Note that compilation will fail if ShaderUniform<T> is uninstantiated.
     template <typename T>
     void createUniform( const ShaderUniformName& name )
     {
         m_uniforms[name] = new ShaderUniform<T>();
-        m_isDirtyUniforms = true;
     }
     /// Note that compilation will fail if ShaderUniform<T> is uninstantiated.
     template <typename T>
     void createUniform( const ShaderUniformName& name, const T& val )
     {
         m_uniforms[name] = new ShaderUniform<T>( val );
-        m_isDirtyUniforms = true;
     }
 
 protected:
@@ -85,6 +82,7 @@ protected:
     /// OpenGL state change:  current program is set.
     void applyShaderUniforms( GLint a_shaderProgramIndex ) const
     {
+        lookupUniformLocations( a_shaderProgramIndex );
         //GL_CHECK( glUseProgram( a_shaderProgramIndex ) );
         for( auto sumap = m_uniforms.begin(); sumap != m_uniforms.end(); ++sumap )
         {
@@ -95,9 +93,8 @@ protected:
 
     /// Must be called after a shader is compiled to set each uniform's
     /// location in that shader.
-    void lookupUniformLocations( GLint a_shaderProgramIndex )
+    void lookupUniformLocations( GLint a_shaderProgramIndex ) const
     {
-        if( ! m_isDirtyUniforms ) return;
         GLint loc;
         for( auto sumap = m_uniforms.begin(); sumap != m_uniforms.end(); ++sumap )
         {
@@ -117,7 +114,6 @@ protected:
     }
     // stores the uniform's name, locationInShader, and value.
     std::map< ShaderUniformName, ShaderUniformInterface* > m_uniforms;
-    bool m_isDirtyUniforms;
 };
 typedef std::shared_ptr< ShaderUniformHolder > ShaderUniformHolderPtr;
 typedef std::shared_ptr< const ShaderUniformHolder > ConstShaderUniformHolderPtr;
@@ -133,6 +129,9 @@ public:
       m_manager( manager )
     {
     }
+
+    //TODO$$$$ Need to be notified by ShaderManager when 
+    // our shader is reloaded so we can call lookupUniformLocations()
     
     virtual ~Shader() { }
     const ShaderName& name( void ) const { return m_name; }

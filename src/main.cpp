@@ -131,19 +131,22 @@ MeshPtr createOverlayQuad( TextureManagerPtr tm, ShaderManagerPtr sm, const Rend
     using namespace Eigen;
     MeshPtr overlay( new Mesh() );
     overlay->name( "Overlay_Quad" );
-    overlay->addQuad( Vector3f(0,0,0), Vector2f(0,0),
-                      Vector3f(1,0,0), Vector2f(1,0), 
-                      Vector3f(0,1,0), Vector2f(0,1), 
-                      Vector3f(1,1,0), Vector2f(1,1),
-                      Vector3f(0,0,-1) );
+    overlay->addQuad( Vector3f(0,0,0), Vector2f(0,0), // Lower Left
+                      Vector3f(1,0,0), Vector2f(1,0), // Lower Right
+                      Vector3f(0,1,0), Vector2f(0,1), // Upper Left
+                      Vector3f(1,1,0), Vector2f(1,1), // Upper Right
+                      Vector3f(0,0,-1) ); // Normal points according to right-hand system
     ShaderName colorShaderName = overlay->name() + "_ColorShader";
     sm->loadShaderFromFiles( colorShaderName, 
         "colorVertexShader.glsl",
         "colorFragmentShader.glsl" );
+    //TODO - Overlay Quad -- add texture and transparency
 
     ShaderPtr colorShader( new Shader( colorShaderName, sm ) );
-    colorShader->createUniform( "u_color", glm::vec4(1,0,0,0) );
-    MaterialPtr colorMaterial( new Material( colorShader ) );
+    colorShader->createUniform( "u_color", glm::vec4(1,1,1,1) );
+    
+    MaterialPtr colorMaterial( new Material( tm, colorShader ) );
+    colorMaterial->addTexture( "catTex" );
     overlay->setMaterialForPassName( renderPassName, colorMaterial );
     return overlay;
 }
@@ -316,7 +319,7 @@ int main( int argc, char* argv[] )
 #endif 
 
     {
-        //boost::mutex::scoped_lock lock( g_logGuard );
+//        boost::mutex::scoped_lock lock( g_logGuard );
         g_baseLogger = new cpplog::FileLogger( "sparks.log" );
         //g_baseLogger = new cpplog::StdErrLogger;
 //#ifdef CPPLOG_THREADING
@@ -327,9 +330,10 @@ int main( int argc, char* argv[] )
     }
     
     runSimulation( argc, argv );
-
-    //boost::mutex::scoped_lock lock( g_logGuard );
-    delete g_log;
-    delete g_baseLogger;
+    {
+//        boost::mutex::scoped_lock lock( g_logGuard );
+        delete g_log;
+        delete g_baseLogger;
+    }
 }
 

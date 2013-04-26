@@ -25,56 +25,57 @@ void APIENTRY debugOpenGLMessageCallback( GLenum source,
     void* userParam )
 {
     using namespace std;
-    LOG_DEBUG(g_log) << "GL Debug Message\n"
-        << "Source: ";
+    stringstream msg;
+    msg << "GL Debug Message- Source: ";
     switch( source )
     {
     case GL_DEBUG_SOURCE_API:
-        LOG_DEBUG(g_log) << "GL_DEBUG_SOURCE_API"; break;
+        msg << "GL_DEBUG_SOURCE_API"; break;
     case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-        LOG_DEBUG(g_log) << "GL_DEBUG_SOURCE_WINDOW_SYSTEM"; break;
+        msg << "GL_DEBUG_SOURCE_WINDOW_SYSTEM"; break;
     case GL_DEBUG_SOURCE_SHADER_COMPILER:
-        LOG_DEBUG(g_log) << "GL_DEBUG_SOURCE_SHADER_COMPILER"; break;
+        msg << "GL_DEBUG_SOURCE_SHADER_COMPILER"; break;
     case GL_DEBUG_SOURCE_THIRD_PARTY:
-        LOG_DEBUG(g_log) << "GL_DEBUG_SOURCE_THIRD_PARTY"; break;
+        msg << "GL_DEBUG_SOURCE_THIRD_PARTY"; break;
     case GL_DEBUG_SOURCE_APPLICATION:
-        LOG_DEBUG(g_log) << "GL_DEBUG_SOURCE_APPLICATION"; break;
+        msg << "GL_DEBUG_SOURCE_APPLICATION"; break;
     case GL_DEBUG_SOURCE_OTHER:
-        LOG_DEBUG(g_log) << "GL_DEBUG_SOURCE_OTHER"; break;
+        msg << "GL_DEBUG_SOURCE_OTHER"; break;
     default:
-        LOG_DEBUG(g_log) << "UNKNOWN";
+        msg << "UNKNOWN";
     }
-    LOG_DEBUG(g_log) << "\nType: ";
+    msg << ", Type: ";
     switch( type )
     {
     case GL_DEBUG_TYPE_ERROR:
-        LOG_DEBUG(g_log) << "GL_DEBUG_TYPE_ERROR"; break;
+        msg << "GL_DEBUG_TYPE_ERROR"; break;
     case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-        LOG_DEBUG(g_log) << "GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR"; break;
+        msg << "GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR"; break;
     case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-        LOG_DEBUG(g_log) << "GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR"; break;
+        msg << "GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR"; break;
     case GL_DEBUG_TYPE_PORTABILITY:
-        LOG_DEBUG(g_log) << "GL_DEBUG_TYPE_PORTABILITY"; break;
+        msg << "GL_DEBUG_TYPE_PORTABILITY"; break;
     case GL_DEBUG_TYPE_PERFORMANCE:
-        LOG_DEBUG(g_log) << "GL_DEBUG_TYPE_PERFORMANCE"; break;
+        msg << "GL_DEBUG_TYPE_PERFORMANCE"; break;
     case GL_DEBUG_TYPE_OTHER:
-        LOG_DEBUG(g_log) << "GL_DEBUG_TYPE_OTHER"; break;
+        msg << "GL_DEBUG_TYPE_OTHER"; break;
     default:
-        LOG_DEBUG(g_log) << "UNKNOWN";
+        msg << "UNKNOWN";
     }
-    LOG_DEBUG(g_log) << "\nSeverity: ";
+    msg << ", Severity: ";
     switch( severity )
     {
     case GL_DEBUG_SEVERITY_LOW:
-        LOG_DEBUG(g_log) << "GL_DEBUG_SEVERITY_LOW"; break;
+        msg << "GL_DEBUG_SEVERITY_LOW"; break;
     case GL_DEBUG_SEVERITY_MEDIUM:
-        LOG_DEBUG(g_log) << "GL_DEBUG_SEVERITY_MEDIUM"; break;
+        msg << "GL_DEBUG_SEVERITY_MEDIUM"; break;
     case GL_DEBUG_SEVERITY_HIGH:
-        LOG_DEBUG(g_log) << "GL_DEBUG_SEVERITY_HIGH"; break;
+        msg << "GL_DEBUG_SEVERITY_HIGH"; break;
     default:
-        LOG_DEBUG(g_log) << "UNKNOWN";
+        msg << "UNKNOWN";
     }
-    LOG_DEBUG(g_log) << "\nMessage: \"" << message << "\".\n";
+    LOG_ERROR(g_log) << msg.str() << ", Message: \"" << message << "\".\n";
+    //assert(false);
 }
 
 
@@ -227,7 +228,7 @@ void checkOpenGLErrors( const char* aCodeStatement,
     const GLubyte *errString;
     if ((errCode = glGetError()) != GL_NO_ERROR) {
         errString = gluErrorString(errCode);
-        LOG_DEBUG(g_log) << "OpenGL Error[" << errCode << "] \"" << errString 
+        LOG_ERROR(g_log) << "OpenGL Error[" << errCode << "] \"" << errString 
             << "\", at " << aFileName << ":" << aLineNumber << " -- " 
             << aCodeStatement << "\n";
         assert( false );

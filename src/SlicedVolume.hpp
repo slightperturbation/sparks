@@ -29,7 +29,7 @@ public:
 "colorFragmentShader.glsl" );
 
         ShaderPtr colorShader( new Shader( colorShaderName, sm ) );
-        MaterialPtr colorMaterial( new Material( colorShader ) );
+        MaterialPtr colorMaterial( new Material( tm, colorShader ) );
         setMaterialForPassName( g_colorRenderPassName, colorMaterial );
 
         const size_t zSteps = sliceCount;
