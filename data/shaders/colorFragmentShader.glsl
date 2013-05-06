@@ -7,10 +7,13 @@ out vec4 outColor;
 in vec4 f_fragColor; // interpolated color of fragment from vertex colors 
 in vec2 f_texCoord;  // texture coordinate of vertex
 in vec4 f_vertexPosition;
+in float f_time;     // time in seconds
 
-uniform sampler2D catTex;
-//uniform sampler2D tex2d;
-//uniform sampler3D tex3d;
+// Samplers are named s_TEXTURENAME
+uniform sampler2D s_color;
+uniform sampler2D s_color2;
+//uniform sampler2D s_tex2d;
+//uniform sampler3D s_tex3d;
 
 void main()
 {
@@ -19,7 +22,12 @@ void main()
 
 	// Show interpolated vertex color
 	//outColor = vec4( f_fragColor.s, 0.0, f_fragColor.t, 1.0 );
-
-    outColor = vec4( texture( catTex, f_texCoord ), 1.0 );
+	float cutoff = 0.01;
+	outColor = texture( s_color, f_texCoord );
+	if( outColor.a < cutoff )
+	{
+		discard;
+	}
+    //outColor = mix( texture( s_color, f_texCoord ), texture( s_color2, f_texCoord ), 0.1 );
      //f_fragColor;//vec4(1,1,0,1); //vec4( TexCoord, 1.0 );
 }

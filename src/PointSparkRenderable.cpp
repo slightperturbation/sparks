@@ -25,7 +25,7 @@ PointSparkRenderable
 "colorVertexShader.glsl",
 "colorFragmentShader.glsl" );
 
-    ShaderPtr colorShader( new Shader( colorShaderName, sm ) );
+    ShaderInstancePtr colorShader( new ShaderInstance( colorShaderName, sm ) );
     MaterialPtr sparkColorMaterial( new Material( tm, colorShader ) );
     this->setMaterialForPassName( g_colorRenderPassName, sparkColorMaterial );
 }
@@ -46,7 +46,7 @@ PointSparkRenderable
     const PointCharges& candidate = m_spark->candidate();
     for( size_t i=0; i<candidate.size(); ++i )
     {
-        glColor3f( 1,0.1,0.1 );
+        glColor3f( 1.0f, 0.1f, 0.1f );
         float field = candidate[i].phi.norm();
         LOG_DEBUG(g_log) << "CAN[" << i << "] = " << field << "\n";
         glPointSize( field );

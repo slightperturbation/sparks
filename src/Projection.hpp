@@ -2,7 +2,7 @@
 #define CAMERA_HPP
 
 #include "SoftTestDeclarations.hpp"
-#include "Shader.hpp"
+#include "ShaderInstance.hpp"
 #include "Utilities.hpp"
 
 #define GLEW_STATIC
@@ -17,23 +17,8 @@
 #include <memory>
 #include <iostream>
 #include <string>
+#include <sstream>
 
-
-/// Simple Point lights only for now
-class Light
-{
-public:
-    Light()
-        : m_intensity( 1.0 ),
-          m_color(  1.0f, 0.2f, 0.2f ),
-          m_position( 0.5f, 0.5f, 1.0f )
-    {
-        m_position = glm::normalize( m_position );
-    }
-    float m_intensity;
-    glm::vec3 m_color;
-    glm::vec3 m_position;
-};
 
 /// Projection manages state for the Model, View and Projection transforms
 /// and provides utility functions for setting camera and camera target.
@@ -46,6 +31,7 @@ public:
       m_farPlaneDist( 20.0f )
     {
     }
+    virtual std::string name( void ) const = 0;
 
     float aspectRatio( void ) const { return m_aspectRatio; }
     void aspectRatio( float ratio ) { m_aspectRatio = ratio; }
@@ -56,20 +42,9 @@ public:
     float farPlaneDistance( void ) const { return m_farPlaneDist; }
     void farPlaneDistance( float farDist ) { m_farPlaneDist = farDist; }
 
-    const glm::mat4& modelMatrix( void ) const { return m_modelMatrix; }
-    void modelMatrix( const glm::mat4& modelMatrix ) { m_modelMatrix = modelMatrix; }
-
-    glm::mat4 getModelViewProjMatrix( void ) const 
-    {
-        return getViewProjMatrix() * m_modelMatrix;
-    }
     glm::mat4 getViewProjMatrix( void ) const
     {
         return projectionMatrix() * viewMatrix();
-    }
-    glm::mat4 modelViewMatrix( void ) const 
-    {
-        return viewMatrix() * modelMatrix();
     }
 
     virtual glm::mat4 viewMatrix( void ) const = 0;
@@ -93,17 +68,27 @@ public:
         m_cameraUp( 0.0f, 1.0f, 0.0f ),
         m_fov( 80.0f )
     { }
-    glm::vec3 cameraUp( void ) const             { return m_cameraUp; }
-    void cameraUp( const glm::vec3& up )         { m_cameraUp = up; }
+    virtual std::string name( void ) const 
+    {
+        std::stringstream out;
+        out << "Perspective(from={" << m_cameraPos 
+            << "}, to={"<<m_cameraTarget<<"})";
+        return out.str();
+    }
+    glm::vec3 cameraUp( void ) const               { return m_cameraUp; }
+    void cameraUp( const glm::vec3& up )           { m_cameraUp = up; }
+    void cameraUp( float x, float y, float z )     { m_cameraUp = glm::vec3(x,y,z); }
 
-    glm::vec3 cameraPos( void ) const            { return m_cameraPos; }
-    void cameraPos( const glm::vec3& pos )       { m_cameraPos = pos; }
+    glm::vec3 cameraPos( void ) const              { return m_cameraPos; }
+    void cameraPos( const glm::vec3& pos )         { m_cameraPos = pos; }
+    void cameraPos( float x, float y, float z )    { m_cameraPos = glm::vec3(x,y,z); }
 
-    glm::vec3 cameraTarget( void ) const         { return m_cameraTarget; }
-    void cameraTarget( const glm::vec3& target ) { m_cameraTarget = target; }
+    glm::vec3 cameraTarget( void ) const           { return m_cameraTarget; }
+    void cameraTarget( const glm::vec3& target )   { m_cameraTarget = target; }
+    void cameraTarget( float x, float y, float z ) { m_cameraTarget = glm::vec3(x,y,z); }
 
-    float fov( void ) const                      { return m_fov; }
-    void  fov( float arg )                       { m_fov = arg; }
+    float fov( void ) const                        { return m_fov; }
+    void  fov( float arg )                         { m_fov = arg; }
 
     virtual glm::mat4 viewMatrix( void ) const
     {
@@ -135,6 +120,16 @@ public:
     {
         m_nearPlaneDist = -10.1;
         m_farPlaneDist = 10.1;
+    }
+    virtual std::string name( void ) const 
+    {
+        std::stringstream out;
+        out << "Ortho(L=" 
+            << m_left << ", R=" << m_right << ", B=" 
+            << m_bottom << ", T=" << m_top << ", N="
+            << m_nearPlaneDist << ", F="
+            << m_farPlaneDist << ")";
+        return out.str();
     }
     float left( void ) const { return m_left; }
     void left( float arg ) { m_left = arg; }

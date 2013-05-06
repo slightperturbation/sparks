@@ -50,6 +50,7 @@ FileAssetFinder
     for( auto path = m_paths.begin(); path != m_paths.end(); ++path )
     {
         std::string dir = (*path).first;
+        // Getting unexpected crashes on OSX -- maybe conflicted boost lib?
 //        boost::filesystem::path dirPath( dir );
 //        LOG_DEBUG(g_log) << "\tLooking in dir \"" << dir << "\".";
 //        bool isFound = false;
@@ -77,17 +78,17 @@ FileAssetFinder
         {
             if( searchRecursively )
             {
-                bfs::path path;
-                findFileRecursively( dir, aFilename, path );
-                foundPath = path.string();
+                bfs::path fpath;
+                findFileRecursively( dir, aFilename, fpath );
+                foundPath = fpath.string();
                 return true;
             }
             else
             {
-                bfs::path path( dir + aFilename );
-                if( bfs::is_regular_file( path ) )
+                bfs::path fpath( dir + aFilename );
+                if( bfs::is_regular_file( fpath ) )
                 {
-                    foundPath = path.string();
+                    foundPath = fpath.string();
                     return true;
                 }
             }

@@ -422,10 +422,9 @@ void Mesh::attachShaderAttributes( GLuint aShaderProgramIndex )
     GL_CHECK( glBindVertexArray( 0 ) );
 }
 
-RenderablePtr Mesh::createBox( TextureManagerPtr tm, ShaderManagerPtr sm  )
+RenderablePtr Mesh::createBox( TextureManagerPtr tm, ShaderManagerPtr sm, 
+                               const RenderPassName& renderPassName  )
 {
-    const RenderPassName g_colorRenderPassName = "ColorPass";
-    
     Mesh* box = new Mesh();
     if( !box ) return RenderablePtr(nullptr);
     box->unitCube();  // Build geometry and setup VAO
@@ -434,8 +433,8 @@ RenderablePtr Mesh::createBox( TextureManagerPtr tm, ShaderManagerPtr sm  )
     sm->loadShaderFromFiles( colorShaderName, 
         "colorVertexShader.glsl",
         "colorFragmentShader.glsl" );
-    ShaderPtr colorShader( new Shader( colorShaderName, sm ) );
+    ShaderInstancePtr colorShader( new ShaderInstance( colorShaderName, sm ) );
     MaterialPtr colorMaterial( new Material( tm, colorShader ) );
-    box->setMaterialForPassName( g_colorRenderPassName, colorMaterial );
+    box->setMaterialForPassName( renderPassName, colorMaterial );
     return RenderablePtr( box );
 }

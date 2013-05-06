@@ -4,6 +4,10 @@
 //#define BOOST_ALL_NO_LIB
 #define _CRT_SECURE_NO_WARNINGS
 
+#ifdef WIN32
+#  define _CRTDBG_MAP_ALLOC
+#endif
+
 #define CPPLOG_THREADING
 #define CPPLOG_FILTER_LEVEL               LL_TRACE
 //#define CPPLOG_FILTER_LEVEL               LL_DEBUG
@@ -69,9 +73,9 @@ class RenderTarget;
 typedef std::shared_ptr< RenderTarget > RenderTargetPtr;
 typedef std::shared_ptr< const RenderTarget > ConstRenderTargetPtr;
 
-class Shader;
-typedef std::shared_ptr< Shader > ShaderPtr;
-typedef std::shared_ptr< const Shader > ConstShaderPtr;
+class ShaderInstance;
+typedef std::shared_ptr< ShaderInstance > ShaderInstancePtr;
+typedef std::shared_ptr< const ShaderInstance > ConstShaderInstancePtr;
 
 class Material;
 typedef std::shared_ptr< Material > MaterialPtr;

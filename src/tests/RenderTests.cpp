@@ -10,7 +10,7 @@
 
 #include "Renderable.hpp"
 #include "RenderCommand.hpp"
-#include "Shader.hpp"
+#include "ShaderInstance.hpp"
 #include "TextureManager.hpp"
 #include "RenderTarget.hpp"
 #include "Projection.hpp"
@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE( CreateRenderCommands )
     std::shared_ptr< TestRenderable > testObject( new TestRenderable( textureManager, shaderManager ) );
     // Add a simple material to the testObject for the ColorPass
     shaderManager->loadShaderFromFiles( "ColorShader", "colorVertexShader.glsl", "colorFragmentShader.glsl" );
-    ShaderPtr testShader( new Shader( "ColorShader", shaderManager ) );
-    MaterialPtr material( new Material( testShader ) );
+    ShaderInstancePtr testShader( new ShaderInstance( "ColorShader", shaderManager ) );
+    MaterialPtr material( new Material( textureManager, testShader ) );
     testObject->setMaterialForPassName( "TestRenderPass", material );
     scene->add( testObject ); 
 

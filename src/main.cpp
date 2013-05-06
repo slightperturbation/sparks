@@ -90,65 +90,58 @@ void setGLFWCallbacks( void )
 #endif
 }
 
-/// Write a 24-bit color binary PPM image file for the current frame buffer
-/// files are named sequentially starting at 1, padded to 4 digits.
-void writeFrameBufferToFile( const std::string& frameBaseFileName ) 
-{
-    static unsigned int frameNumber = 1;
-    
-    int width = 0;
-    int height = 0;
-    glfwGetWindowSize( &width, &height );
 
-    unsigned char* frameBuffer = new unsigned char[ 3 * width * height * sizeof(unsigned char) ];
 
-    GL_CHECK( glPixelStorei( GL_PACK_ALIGNMENT, 1 ) ); // align start of pixel row on byte
-
-    std::stringstream frameFileName;
-    frameFileName << frameBaseFileName << std::setfill('0') << std::setw(4) << frameNumber++ << ".ppm";
-    std::ofstream frameFile( frameFileName.str().c_str(), std::ios::binary | std::ios::trunc );
-    GL_CHECK( glReadBuffer( GL_FRONT ) ); 
-    GL_CHECK( glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, frameBuffer ) );
-
-    // PPM header.  P6 is binary RGB
-    frameFile << "P6\n" << width << " " << height << "\n255\n";
-    for( int j = height-1; j>=0; --j )  // opengl vs image is swapped top-bottom
-    {
-        for( int i = 0; i < width; ++i )
-        {
-            frameFile << (char)frameBuffer[3*width*j + 3*i + 0] 
-            << (char)frameBuffer[3*width*j + 3*i + 1] 
-            << (char)frameBuffer[3*width*j + 3*i + 2] 
-            ;
-        }
-    }
-    frameFile.close();
-    delete[] frameBuffer;
-}
-
+/// Example of creating a full-screen quad for HUD-style overlay
 MeshPtr createOverlayQuad( TextureManagerPtr tm, ShaderManagerPtr sm, const RenderPassName& renderPassName )
 {
     using namespace Eigen;
     MeshPtr overlay( new Mesh() );
     overlay->name( "Overlay_Quad" );
-    overlay->addQuad( Vector3f(0,0,0), Vector2f(0,0), // Lower Left
-                      Vector3f(1,0,0), Vector2f(1,0), // Lower Right
-                      Vector3f(0,1,0), Vector2f(0,1), // Upper Left
-                      Vector3f(1,1,0), Vector2f(1,1), // Upper Right
+    overlay->addQuad( Vector3f(0,0,0), Vector2f(0,1), // Lower Left
+                      Vector3f(1,0,0), Vector2f(1,1), // Lower Right
+                      Vector3f(0,1,0), Vector2f(0,0), // Upper Left
+                      Vector3f(1,1,0), Vector2f(1,0), // Upper Right
                       Vector3f(0,0,-1) ); // Normal points according to right-hand system
+    ///////////////////////
+
     ShaderName colorShaderName = overlay->name() + "_ColorShader";
     sm->loadShaderFromFiles( colorShaderName, 
         "colorVertexShader.glsl",
         "colorFragmentShader.glsl" );
     //TODO - Overlay Quad -- add texture and transparency
 
-    ShaderPtr colorShader( new Shader( colorShaderName, sm ) );
-    colorShader->createUniform( "u_color", glm::vec4(1,1,1,1) );
+    ShaderInstancePtr colorShader( new ShaderInstance( colorShaderName, sm ) );
+    colorShader->setUniform( "u_color", glm::vec4(1,1,1,1) );
     
     MaterialPtr colorMaterial( new Material( tm, colorShader ) );
-    colorMaterial->addTexture( "catTex" );
+    tm->loadTextureFromImageFile( "ESU_alpha.png", "ESU" );
+    tm->loadTextureFromImageFile( "skin_tile.jpg", "skin" );
+    colorMaterial->addTexture( "ESU", "s_color" );
+    colorMaterial->addTexture( "skin", "s_color2" );
     overlay->setMaterialForPassName( renderPassName, colorMaterial );
     return overlay;
+}
+
+//RenderPassName createPostEffectRenderPass( TextureManagerPtr tm, 
+//    ShaderManagerPtr sm, const std::string& name, ShaderInstancePtr shader )
+//{
+//    using namespace Eigen;
+//    MeshPtr quad( new Mesh() );
+//    quad->name( "postEffect_" + name );
+//    quad->addQuad( Vector3f(0,0,0), Vector2f(0,1), // Lower Left
+//        Vector3f(1,0,0), Vector2f(1,1), // Lower Right
+//        Vector3f(0,1,0), Vector2f(0,0), // Upper Left
+//        Vector3f(1,1,0), Vector2f(1,0), // Upper Right
+//        Vector3f(0,0,-1) ); // Normal points according to right-hand system
+//
+//}
+
+
+RenderablePtr createTestBox( TextureManagerPtr tm, ShaderManagerPtr sm, const RenderPassName& renderPassName )
+{
+    RenderablePtr box = Mesh::createBox( tm, sm, renderPassName );
+    return box;
 }
 
 /// Online simulation and display of fluid
@@ -161,11 +154,11 @@ int runSimulation(int argc, char** argv)
         setGLFWCallbacks();
         
         // Tell managers where to find file resources
-        FileAssetFinderPtr finder( new FileAssetFinder( ) );
+        FileAssetFinderPtr finder( new FileAssetFinder );
         finder->addRecursiveSearchPath( DATA_PATH );
-        ShaderManagerPtr shaderManager( new ShaderManager( ) );
+        ShaderManagerPtr shaderManager( new ShaderManager );
         shaderManager->setAssetFinder( finder );
-        TextureManagerPtr textureManager( new TextureManager() );
+        TextureManagerPtr textureManager( new TextureManager );
         textureManager->setAssetFinder( finder );
         
         int width = 0; int height = 0; glfwGetWindowSize( &width, &height );
@@ -177,16 +170,35 @@ int runSimulation(int argc, char** argv)
         g_frameBufferTarget = frameBufferTarget;
         frameBufferTarget->initialize( textureManager );
 
-        // Setup a simple render pipeline out to the framebuffer
+        // Setup a simple render pipeline
         ScenePtr scene( new Scene );
         
+        //////////////////////////////////////////////////////////////////////////
+        // Define render passes
+
+        //TODO define "common" render pass and shader names for pre-load
+        const RenderPassName directRenderPassName( "DirectRenderPass" );
+        RenderPassPtr directRenderPass( new RenderPass( directRenderPassName ) );
+        PerspectiveProjectionPtr cameraPerspective( new PerspectiveProjection );
+        cameraPerspective->cameraPos( 1.0f, 1.0f, -5.0f );
+        cameraPerspective->cameraTarget( 0.5f, 0.5f, 0.0f );
+        directRenderPass->initialize( frameBufferTarget, cameraPerspective, 1.0f );
+        scene->add( directRenderPass );
+
         RenderPassName overlayRenderPassName( "OverlayRenderPass" );
         RenderPassPtr overlayRenderPass( new RenderPass( overlayRenderPassName ) );
         OrthogonalProjectionPtr overlayPerspective( new OrthogonalProjection );
         overlayRenderPass->initialize( frameBufferTarget, overlayPerspective, 10.0f );
         scene->add( overlayRenderPass );
 
+
+        //////////////////////////////////////////////////////////////////////////
+        // Create Objects
         MeshPtr overlay = createOverlayQuad( textureManager, shaderManager, overlayRenderPassName );
+        glm::mat4 xform = glm::translate( glm::mat4(1.0f), glm::vec3( 0.5f, 0.5f, 0.0f ) );
+        xform = glm::rotate( xform, 30.0f, glm::vec3( 0.0f, 0.0f, 1.0f ) ) ;
+        xform = glm::translate( xform, glm::vec3( -0.5f, -0.5f, 0.0f ) );
+        overlay->setTransform( xform );
         scene->add( overlay );
 
 
@@ -200,19 +212,29 @@ int runSimulation(int argc, char** argv)
         //TexturedSparkRenderablePtr sparkRenderable( new TexturedSparkRenderable(spark, textureManager, shaderManager ) );
         //scene->add( sparkRenderable );
 
-
-
         //VolumeDataPtr data( new Fluid(16) );
         //MeshPtr slices( new SlicedVolume( 32, data ) );
         //scene->add( slices );
 
-        //bool useBox = false;
-        //if( useBox )
-        //{
-        //    MeshPtr box( new Mesh() );
-        //    box->unitCube();
-        //    scene->add( box );
-        //}
+        bool useBox = true;
+        if( useBox )
+        {
+            MeshPtr box( new Mesh() );
+            box->unitCube();
+            box->name("TestBox");
+
+            /// TODO -- shader creation should be easier!
+            const ShaderName shaderName = "colorShader";
+            //shaderManager->loadShaderFromFiles( shaderName, "colorVertexShader.glsl", "colorFragmentShader.glsl" );
+            //ShaderInstancePtr colorShader = shaderManager->createShaderInstance( shaderName );
+
+
+            shaderManager->loadShaderFromFiles( shaderName, "colorVertexShader.glsl", "colorFragmentShader.glsl" );
+            ShaderInstancePtr colorShader( new ShaderInstance( "colorShader", shaderManager ) );
+            MaterialPtr colorMaterial( new Material( textureManager, colorShader ) );
+            box->setMaterialForPassName( directRenderPassName, colorMaterial );
+            scene->add( box );
+        }
         float angle = 0.0f;
         float rotRate = 0.5f;
         std::string sliceBaseName("densityYSlice");
@@ -221,7 +243,7 @@ int runSimulation(int argc, char** argv)
         const double startTime = glfwGetTime();
         double currTime = startTime;
         double lastTime = startTime;
-        while( glfwGetWindowParam( GLFW_OPENED ) )
+        while( window.isRunning() )
         {
             lastTime = currTime;
             currTime = glfwGetTime();
@@ -250,8 +272,7 @@ int runSimulation(int argc, char** argv)
             // Process Inputs
             if( glfwGetKey( GLFW_KEY_ENTER ) == GLFW_PRESS )
             {
-                //sparkRenderable->loadShaders();
-                //box->loadShaders();
+                shaderManager->reloadAllShaders();
             }
             if( glfwGetKey( GLFW_KEY_ESC ) == GLFW_PRESS )
             {
@@ -326,6 +347,7 @@ int main( int argc, char* argv[] )
 //        cpplog::BackgroundLogger backgroundLogger( g_baseLogger );
 //        g_baseLogger = &backgroundLogger;
 //#endif // CPPLOG_THREADING
+        //g_log = new cpplog::FilteringLogger( LL_DEBUG, g_baseLogger );
         g_log = new cpplog::FilteringLogger( LL_TRACE, g_baseLogger );
     }
     

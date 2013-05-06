@@ -78,7 +78,7 @@ public:
     void reset( void );
 
 private:
-    void realloc( void );
+    void reallocate( void );
     void init( void );
     void deleteData( void );
     void zeroData( void );

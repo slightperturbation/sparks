@@ -226,6 +226,7 @@ set( SRCS
   ./src/ShaderUniform.cpp
   ./src/FileAssetFinder.cpp
   ./src/ShaderManager.cpp
+  ./src/Material.cpp
 )
 set( GUI_SRCS 
   ./src/main.cpp

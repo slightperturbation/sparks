@@ -1,6 +1,6 @@
 #include "ShaderUniform.hpp"
 #include "Utilities.hpp"
-#include "Shader.hpp"
+#include "ShaderInstance.hpp"
 
 
 ShaderUniformHolder
@@ -22,7 +22,7 @@ void ShaderUniform<int>::applyImpl( void ) const
 template<>
 void ShaderUniform<unsigned int>::applyImpl( void ) const
 {
-    GL_CHECK( glUniform1ui( m_locationInShader, m_val ) );
+    GL_CHECK( glUniform1ui( m_locationInShader, (GLuint)m_val ) );
 }
 template<>
 void ShaderUniform<glm::vec3>::applyImpl( void ) const

@@ -12,6 +12,7 @@
 
 /// Loads and manages OpenGL textures.
 /// Avoids redundant glBindTexture calls.
+/// Note texture units are signed and texture ids are unsigned.
 class TextureManager
 {
 public:
@@ -22,7 +23,7 @@ public:
     TextureManager( FileAssetFinderPtr finder ) : m_finder( finder ) { }
     ~TextureManager();
     
-    void setNextAvailableTextureUnit( GLuint unit )
+    void setNextAvailableTextureUnit( GLint unit )
     { m_nextAvailableTextureUnit = unit; }
 
     /// Set the asset finder, giving a set of paths for texture files.
@@ -32,31 +33,41 @@ public:
     /// aHandle.  Later, can call e.g. bindTextureToUnit( aHandle, 0 );
     void loadTextureFromImageFile( const char* aTextureFilePath, 
                                    const TextureName& aHandle );
-    /// Request to get an uncontrolled (by manager) texture unit
-    GLuint reserveTextureUnit( void )
-    { return m_nextAvailableTextureUnit++; }
-    
-    GLuint getTextureUnitForTexture( const TextureName& aHandle )
+    bool isTextureNameReady( const TextureName& aHandle )
     {
-        return m_currentBinding[ m_registry[aHandle] ];
+        auto iter = m_registry.find( aHandle );
+        if( iter == m_registry.end() ) return false;
+        return ( getTextureUnitBoundToId( iter->second ) != (unsigned int)-1 );
     }
-
-    /// Returns (unsigned int)-1 if texture unit has not been bound to a texture yet.
-    GLuint getTextureIdBoundToUnit( GLuint aTextureUnit ) const;
+    /// Request to get an uncontrolled (by manager) texture unit
+    GLint reserveTextureUnit( void )
+    { 
+        return m_nextAvailableTextureUnit++; 
+    }
+    /// Returns the Texture Unit that the given texture is currently bound to.
+    /// Returns (unsigned int)-1 and logs error if texture is not bound to a unit.
+    GLint getTextureUnitForTexture( const TextureName& aHandle )
+    {
+        return getTextureUnitBoundToId( getTextureIdFromHandle( aHandle ) );
+    }
     /// Parameters set per-texture handle
     void setTextureParameteri( const TextureName& aHandle, GLenum target,
-                              GLenum  pname, GLint param );
+                               GLenum  pname, GLint param );
     /// Returns OpenGL's texture ID (aka texture name) for the given handle.
     /// Returns -1 if handle is not found.
-    GLint getTextureIdFromHandle( const TextureName& aHandle ) const;
+    GLuint getTextureIdFromHandle( const TextureName& aHandle ) const;
     /// Clients must call releaseAll() explicitly (rather than to rely on
     /// destructor) to ensure order of release.
     void releaseAll( void );
 private:    
+    /// Returns (unsigned int)-1 if texture unit has not been bound to a texture id yet.
+    GLuint getTextureIdBoundToUnit( GLint aTextureUnit ) const;
+    /// Returns (unsigned int)-1 if texture id has not been bound to a texture unit yet.
+    GLint getTextureUnitBoundToId( GLuint aTextureId ) const;
     /// Call at render time to bind the texture with aHandle to the given texture unit.
     //TODO-- When is this useful?  Remove?
     void bindTextureToUnit( const TextureName& aHandle,
-                            GLuint aTextureUnit );
+                            GLint aTextureUnit );
 private:
     /// Registry maps string handles/names to texture "ID"s (sometimes called 
     /// texture names in GL docs).
@@ -65,10 +76,10 @@ private:
     std::map< const TextureName, std::string > m_paths;
     /// Stores the textureId (second) known to be bound to a given 
     /// texture unit (first).
-    std::map< GLuint, GLuint > m_currentBinding;
+    std::vector< std::pair<GLint, GLuint> > m_bindingTextureUnitToTextureId;
 
     FileAssetFinderPtr m_finder;
-    GLuint m_nextAvailableTextureUnit;
+    GLint m_nextAvailableTextureUnit;
 };
 typedef std::shared_ptr< TextureManager > TextureManagerPtr;
 #endif

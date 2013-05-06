@@ -1,5 +1,5 @@
 //
-//  Shader.hpp
+//  ShaderInstance.hpp
 //  sparks
 //
 //  Created by Brian Allen on 4/9/13.
@@ -62,19 +62,29 @@ public:
 
     template< typename T >
     void setUniform( const ShaderUniformName& name, const T& val )
-    { m_uniforms[name]->as<T>()->set(val); }
-
+    { 
+        LOG_TRACE(g_log) << "Setting uniform " << name ;
+        if( m_uniforms.find( name ) == m_uniforms.end() ) 
+        {
+            createUniform<T>( name );
+        }
+        ShaderUniformInterface* uniform = m_uniforms[name];
+        ShaderUniform<T>* uniformT = uniform->as<T>();
+        if( !uniformT )
+        {
+            LOG_ERROR(g_log) << "ShaderUniform type conflict on uniform \""
+                << name << "\" trying to request type " << typeid(T).name();
+            assert( false );
+            return;
+        }
+        uniformT->set( val );
+    }
     /// Note that compilation will fail if ShaderUniform<T> is uninstantiated.
     template <typename T>
     void createUniform( const ShaderUniformName& name )
     {
+        LOG_TRACE(g_log) << "Creating uniform " << name << " with default value.";
         m_uniforms[name] = new ShaderUniform<T>();
-    }
-    /// Note that compilation will fail if ShaderUniform<T> is uninstantiated.
-    template <typename T>
-    void createUniform( const ShaderUniformName& name, const T& val )
-    {
-        m_uniforms[name] = new ShaderUniform<T>( val );
     }
 
 protected:
@@ -118,13 +128,12 @@ protected:
 typedef std::shared_ptr< ShaderUniformHolder > ShaderUniformHolderPtr;
 typedef std::shared_ptr< const ShaderUniformHolder > ConstShaderUniformHolderPtr;
 
-/// Responsible for loading a shader program from
-/// files and holding the uniforms settings
+/// Responsible for holding the uniforms settings
 /// Caches uniform settings to minimize chatter.
-class Shader : public ShaderUniformHolder
+class ShaderInstance : public ShaderUniformHolder
 {
 public:
-    Shader( const ShaderName& name, ShaderManagerPtr manager )
+    ShaderInstance( const ShaderName& name, ShaderManagerPtr manager )
     : m_name( name ),
       m_manager( manager )
     {
@@ -133,7 +142,7 @@ public:
     //TODO$$$$ Need to be notified by ShaderManager when 
     // our shader is reloaded so we can call lookupUniformLocations()
     
-    virtual ~Shader() { }
+    virtual ~ShaderInstance() { }
     const ShaderName& name( void ) const { return m_name; }
 
     GLuint getGLProgramIndex( void ) const
@@ -144,6 +153,9 @@ public:
     void use( void ) const
     {
         GLuint shaderIndex = getGLProgramIndex();
+        LOG_TRACE(g_log) << "Use Shader Program " << shaderIndex;
+        for( auto iter = m_uniforms.begin(); iter != m_uniforms.end(); ++iter )
+        { LOG_TRACE(g_log) << "\tUniform: " << iter->first; }
         GL_CHECK( glUseProgram( shaderIndex ) );
         applyShaderUniforms( shaderIndex);
     }
@@ -152,6 +164,5 @@ protected:
     ShaderName m_name;
     ShaderManagerPtr m_manager;
 };
-typedef std::shared_ptr< Shader > ShaderPtr;
 
 #endif

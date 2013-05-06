@@ -21,7 +21,7 @@ TexturedSparkRenderable
     shaderManager->loadShaderFromFiles( colorShaderName, 
         g_defaultVertexShaderFilename.c_str(),
         g_defaultFragmentShaderFilename.c_str() );
-    ShaderPtr colorShader( new Shader( colorShaderName, shaderManager ) );
+    ShaderInstancePtr colorShader( new ShaderInstance( colorShaderName, shaderManager ) );
     MaterialPtr sparkColorMaterial( new Material( textureManager, colorShader ) );
     //sparkColorMaterial->addTeture( m_textureManager, "diffuse", "spark.png" );
 

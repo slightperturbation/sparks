@@ -54,10 +54,10 @@ ShaderManager
 ::reloadShader( const ShaderName& aHandle )
 {
     GLuint shaderProgram = m_registry[aHandle];
-    LOG_INFO(g_log) << "Reloading vertex shader from path: " << m_files[aHandle].vertexFilePath;
+    LOG_DEBUG(g_log) << "Loading vertex shader from path: " << m_files[aHandle].vertexFilePath;
     std::string vertexShaderString = readFileToString( m_files[aHandle].vertexFilePath.c_str() );
     GLuint vertexShader = createShaderWithErrorHandling( GL_VERTEX_SHADER, vertexShaderString );
-    LOG_INFO(g_log) << "Reloading fragment shader from path: " << m_files[aHandle].fragmentFilePath;
+    LOG_DEBUG(g_log) << "Loading fragment shader from path: " << m_files[aHandle].fragmentFilePath;
     std::string fragmentShaderString = readFileToString( m_files[aHandle].fragmentFilePath.c_str() );
     GLuint fragmentShader = createShaderWithErrorHandling( GL_FRAGMENT_SHADER, fragmentShaderString );
 
@@ -66,9 +66,9 @@ ShaderManager
     GL_CHECK( glBindFragDataLocation( shaderProgram, 0, "outColor" ) );  // define the output for color buffer-0
     GL_CHECK( glLinkProgram( shaderProgram ) );
 
-    LOG_DEBUG(g_log) << "Loaded vertex shader: " << m_files[aHandle].vertexFilePath 
-        << "\tLoaded fragment shader: " << m_files[aHandle].fragmentFilePath 
-        << "\tto create shaderID = " << shaderProgram ;
+    LOG_INFO(g_log) << "Loaded vertex shader: \"" << m_files[aHandle].vertexFilePath
+                    << "\", Loaded fragment shader: \"" << m_files[aHandle].fragmentFilePath
+                    << "\", to create shaderID = " << shaderProgram ;
 }
 
 void

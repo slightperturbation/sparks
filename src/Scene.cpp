@@ -49,9 +49,11 @@ Scene
     const RenderPass* lastRenderPass = NULL;
     RenderCommand lastRenderCommand, rc;
     // Render each render command in order.
+    int counter = 0;
     while( !m_commands.empty() )
     {
         RenderCommand rc = m_commands.top();
+        LOG_TRACE(g_log) << "----Executing RenderCommand " << ++counter << ": " << rc;
         const RenderPass* currRenderPass = rc.m_pass.get();
         if( currRenderPass != lastRenderPass )
         {

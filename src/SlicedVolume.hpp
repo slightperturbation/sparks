@@ -28,7 +28,7 @@ public:
 "colorVertexShader.glsl",
 "colorFragmentShader.glsl" );
 
-        ShaderPtr colorShader( new Shader( colorShaderName, sm ) );
+        ShaderInstancePtr colorShader( new ShaderInstance( colorShaderName, sm ) );
         MaterialPtr colorMaterial( new Material( tm, colorShader ) );
         setMaterialForPassName( g_colorRenderPassName, colorMaterial );
 

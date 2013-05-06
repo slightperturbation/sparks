@@ -6,10 +6,10 @@ in vec3 v_normal;
 in vec4 v_color;
 in vec3 v_texCoord3d;
 
-// Perspective uniforms (see Matierial.hpp)
-uniform mat4 u_modelViewMat;
-uniform mat4 u_modelViewProjMat; // projection * view * model
-uniform mat4 u_projMat;
+// Perspective uniforms (see Matierial::setTransformUniforms)
+uniform mat4 u_projViewModelMat; // projection * view * model
+uniform mat4 u_viewModelMat;     // transforms object into camera(eye) space
+uniform mat4 u_projMat;          // projects camera(eye) space to clip(screen) space
 
 // Non-standard uniforms
 uniform vec4 u_color;
@@ -21,8 +21,8 @@ out vec4 f_vertexPosition;
 
 void main()
 {
-    f_fragColor = v_color ;//* u_color;
+    f_fragColor = v_color ;// * u_color;
     f_texCoord = v_texCoord3d.st;// take 2d texcoord from 3d coordinate  
-    f_vertexPosition = u_modelViewProjMat * vec4( v_position, 1.0 );
+    f_vertexPosition = u_projViewModelMat * vec4( v_position, 1.0 );
     gl_Position = f_vertexPosition;
 }

@@ -162,7 +162,8 @@ public:
 
     /// Construction methods
     void unitCube();
-    static RenderablePtr createBox( TextureManagerPtr tm, ShaderManagerPtr sm );
+    static RenderablePtr createBox( TextureManagerPtr tm, ShaderManagerPtr sm,
+                                    const RenderPassName& renderPassName );
 protected:
     GLuint m_vertexArrayObjectId;
     GLuint m_vertexBufferId;

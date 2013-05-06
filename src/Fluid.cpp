@@ -85,11 +85,11 @@ Fluid::Fluid( int size )
         m_N = minSize;
         m_size = (m_N+2)*(m_N+2)*(m_N+2);
     }
-    realloc();
+    reallocate();
     init();
 }
 
-void Fluid::realloc( void )
+void Fluid::reallocate( void )
 {
     deleteData();
 
@@ -178,7 +178,7 @@ void Fluid::setSize( int size )
     m_N = size - 2;
     m_size = size*size*size;
 
-    realloc();
+    reallocate();
     init();
 }
 
@@ -354,7 +354,7 @@ void Fluid::loadFromFile( const char* filename )
     ifstream infile( filename );
     infile >> m_N;
     m_size = (m_N+2)*(m_N+2)*(m_N+2);
-    realloc();
+    reallocate();
     init();
     for( size_t i = 0; i < m_size; ++i )
     {

@@ -18,7 +18,7 @@ using namespace Eigen;
 
 Spark
 ::Spark()
-: m_h( 0.025 ),
+: m_h( 0.025f ),
   m_degree( 5 ),
   m_eta( 10 )
 {
@@ -129,7 +129,7 @@ Spark
     Vector3f r = (to.pos-from.pos);
     float d = r.norm();
     // Green's func soln to spherical shell boundary-value problem
-    return ( 1.0 - ( m_h / d ) ) * r.normalized() * from.q;
+    return ( 1.0f - ( m_h / d ) ) * r.normalized() * from.q;
 }
 
 size_t

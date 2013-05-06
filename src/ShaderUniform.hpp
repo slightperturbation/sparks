@@ -9,6 +9,8 @@
 #ifndef sparks_ShaderUniform_hpp
 #define sparks_ShaderUniform_hpp
 
+#include "SoftTestDeclarations.hpp"
+
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GL/glfw.h>
@@ -20,7 +22,7 @@
 #include <typeinfo>
 #include <map>
 
-class Shader;
+class ShaderInstance;
 class ShaderUniformHolder;
 
 template<typename T>
@@ -36,7 +38,14 @@ public:
     /// Return a cast of the ShaderUniform type.
     template<typename T> ShaderUniform<T>* as( void )
     {
-        return dynamic_cast< ShaderUniform<T>* > ( this );
+        ShaderUniform<T>* out = dynamic_cast< ShaderUniform<T>* > ( this );
+        if( !out )
+        {
+            LOG_ERROR(g_log) << "ShaderUniform typecast failed--  Unable to cast \""
+                << typeid( *this ).name() << "\" into \"" 
+                << typeid( ShaderUniform<T> ).name() << "\".";
+        }
+        return out;
     }
     /// Set this uniform to the stored value.
     void apply( void ) const
@@ -48,7 +57,7 @@ public:
             //(const_cast<ShaderUniformInterface*>(this))->m_dirty = false;
         }
     }
-    friend class Shader;
+    friend class ShaderInstance;
     friend class ShaderUniformHolder;
 protected:
     virtual void applyImpl( void ) const = 0;

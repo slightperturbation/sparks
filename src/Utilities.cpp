@@ -80,6 +80,39 @@ void APIENTRY debugOpenGLMessageCallback( GLenum source,
 
 
 
+void writeFrameBufferToFile( const std::string& frameBaseFileName ) 
+{
+    static unsigned int frameNumber = 1;
+
+    int width = 0;
+    int height = 0;
+    glfwGetWindowSize( &width, &height );
+
+    unsigned char* frameBuffer = new unsigned char[ 3 * width * height * sizeof(unsigned char) ];
+
+    GL_CHECK( glPixelStorei( GL_PACK_ALIGNMENT, 1 ) ); // align start of pixel row on byte
+
+    std::stringstream frameFileName;
+    frameFileName << frameBaseFileName << std::setfill('0') << std::setw(4) << frameNumber++ << ".ppm";
+    std::ofstream frameFile( frameFileName.str().c_str(), std::ios::binary | std::ios::trunc );
+    GL_CHECK( glReadBuffer( GL_FRONT ) ); 
+    GL_CHECK( glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, frameBuffer ) );
+
+    // PPM header.  P6 is binary RGB
+    frameFile << "P6\n" << width << " " << height << "\n255\n";
+    for( int j = height-1; j>=0; --j )  // opengl vs image is swapped top-bottom
+    {
+        for( int i = 0; i < width; ++i )
+        {
+            frameFile << (char)frameBuffer[3*width*j + 3*i + 0] 
+            << (char)frameBuffer[3*width*j + 3*i + 1] 
+            << (char)frameBuffer[3*width*j + 3*i + 2] 
+            ;
+        }
+    }
+    frameFile.close();
+    delete[] frameBuffer;
+}
 
 /// Startup OpenGL and create the rendering context and window.
 OpenGLWindow
@@ -170,11 +203,9 @@ OpenGLWindow
 OpenGLWindow
 ::~OpenGLWindow()
 {
+    ilShutDown();
     glfwTerminate();
 }
-
-
-
 
 bool loadTextureFromFile( const char* filepath )
 {
@@ -203,8 +234,11 @@ bool loadTextureFromFile( const char* filepath )
     GLint height = ilGetInteger(IL_IMAGE_HEIGHT);
     GLint imageFormat = ilGetInteger(IL_IMAGE_FORMAT);
     GLint imageType = ilGetInteger(IL_IMAGE_TYPE);
-    LOG_DEBUG(g_log) << "TexImage -- components=" << components << ", width=" << width << ", height=" << height << ", imageFormat=" << imageFormat
-    << ( GL_RGBA == imageFormat ? " GL_RGBA" : " No Alpha") << "\n";
+    LOG_DEBUG(g_log) << "Texture loaded: components=" << components 
+        << ", width=" << width << ", height=" << height 
+        << ", imageFormat=" << imageFormat
+        << ( GL_RGBA == imageFormat ? " GL_RGBA" : " No Alpha")
+        << " from path \"" << filepath << "\"";
     GL_CHECK( glTexImage2D(GL_TEXTURE_2D,
                  0, // level-of-detail number
                  components,
@@ -219,6 +253,27 @@ bool loadTextureFromFile( const char* filepath )
     return true;
 }
 
+std::ostream& operator<<( std::ostream& out, glm::vec3 v )
+{
+    out << v.x << ", " << v.y << ", " << v.z ;
+    return out;
+}
+std::ostream& operator<<( std::ostream& out, glm::vec4 v )
+{
+    out << v.x << ", " << v.y << ", " << v.z << ", " << v.w;
+    return out;
+}
+std::ostream& operator<<( std::ostream& out, glm::mat3 m )
+{
+    out << glm::to_string(m);
+    return out;
+}
+std::ostream& operator<<( std::ostream& out, glm::mat4 m )
+{
+    out << glm::to_string(m);
+    return out;
+}
+
 ///
 void checkOpenGLErrors( const char* aCodeStatement, 
                         const char* aFileName, 
@@ -231,7 +286,7 @@ void checkOpenGLErrors( const char* aCodeStatement,
         LOG_ERROR(g_log) << "OpenGL Error[" << errCode << "] \"" << errString 
             << "\", at " << aFileName << ":" << aLineNumber << " -- " 
             << aCodeStatement << "\n";
-        assert( false );
+        //assert( false );
     }
 }
 
