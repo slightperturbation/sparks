@@ -1,8 +1,7 @@
 
 #include "ShaderManager.hpp"
 #include "Utilities.hpp"
-
-
+#include "ShaderInstance.hpp"
 
 ShaderManager
 ::~ShaderManager() 
@@ -17,6 +16,32 @@ ShaderManager
         (*iter).second = -1;
     }
 }
+
+ShaderInstancePtr 
+ShaderManager
+::createShaderInstance( const ShaderName& name )
+{
+    ShaderManagerPtr manager = shared_from_this();
+    ShaderInstancePtr out( new ShaderInstance( name, manager ) );
+    std::weak_ptr< ShaderInstance > weakOut( out );
+    m_shaderInstances.push_back( weakOut );
+    return out;
+}
+
+unsigned int 
+ShaderManager
+::getProgramIndexForShaderName( const ShaderName& name )
+{
+    auto iter = m_registry.find( name );
+    if( iter == m_registry.end() )
+    {
+        LOG_ERROR(g_log) << "Failed to find shader by name \"" << name
+            << "\".  Not loaded?";
+        assert( false );
+    }
+    return iter->second;
+}
+
 
 void 
 ShaderManager
@@ -40,9 +65,6 @@ ShaderManager
         assert(false);
         return;
     }
-    GLuint shaderProgram = -1;
-    GL_CHECK( shaderProgram = glCreateProgram() );
-    m_registry[aHandle] = shaderProgram;
     ShaderFilePaths& filePaths = m_files[aHandle];
     filePaths.vertexFilePath = vertexFilePath;
     filePaths.fragmentFilePath = fragmentFilePath; 
@@ -53,7 +75,21 @@ void
 ShaderManager
 ::reloadShader( const ShaderName& aHandle )
 {
-    GLuint shaderProgram = m_registry[aHandle];
+    GLuint shaderProgram = -1;
+    auto shaderItr = m_registry.find( aHandle );
+    if( shaderItr != m_registry.end() ) 
+    {
+        // already exists
+        if( glIsProgram( shaderProgram ) )
+        {
+            LOG_DEBUG(g_log) << "Deleting existing shader for handle \""
+                << aHandle << "\" during reloading.";
+            glDeleteShader( shaderProgram );
+        }
+    }
+    GL_CHECK( shaderProgram = glCreateProgram() );
+    m_registry[aHandle] = shaderProgram;
+
     LOG_DEBUG(g_log) << "Loading vertex shader from path: " << m_files[aHandle].vertexFilePath;
     std::string vertexShaderString = readFileToString( m_files[aHandle].vertexFilePath.c_str() );
     GLuint vertexShader = createShaderWithErrorHandling( GL_VERTEX_SHADER, vertexShaderString );
@@ -66,8 +102,9 @@ ShaderManager
     GL_CHECK( glBindFragDataLocation( shaderProgram, 0, "outColor" ) );  // define the output for color buffer-0
     GL_CHECK( glLinkProgram( shaderProgram ) );
 
-    LOG_INFO(g_log) << "Loaded vertex shader: \"" << m_files[aHandle].vertexFilePath
-                    << "\", Loaded fragment shader: \"" << m_files[aHandle].fragmentFilePath
+    LOG_INFO(g_log) << "Loaded shader \"" << aHandle
+                    << "\" with vertex shader: \"" << m_files[aHandle].vertexFilePath
+                    << "\", and fragment shader: \"" << m_files[aHandle].fragmentFilePath
                     << "\", to create shaderID = " << shaderProgram ;
 }
 
@@ -79,9 +116,23 @@ ShaderManager
     {
         reloadShader( iter->first );
     }
+    refreshUniformLocations();
 }
 
-void 
+void
+ShaderManager
+::refreshUniformLocations( void )
+{
+    for( auto shaderIter = m_shaderInstances.begin(); shaderIter != m_shaderInstances.end(); ++shaderIter )
+    {
+        if( ShaderInstancePtr shader = shaderIter->lock() )
+        {
+            shader->refreshUniformLocations();
+        }
+    }
+}
+
+void
 ShaderManager
 ::releaseAll( void )
 {

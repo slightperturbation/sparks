@@ -92,9 +92,10 @@ public:
 
     virtual glm::mat4 viewMatrix( void ) const
     {
-        return glm::lookAt(m_cameraPos,
+        glm::mat4 view = glm::lookAt(m_cameraPos,
             m_cameraTarget,
             m_cameraUp );
+        return view;
     }
 
     virtual glm::mat4 projectionMatrix( void ) const

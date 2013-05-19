@@ -5,27 +5,83 @@
 
 
 TextureManager
+::TextureManager( void )
+: m_finder( new FileAssetFinder() )
+{
+    glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS, &m_maxTextureUnits );
+    // set next to a middle value to catch errors using default unit 0
+    m_nextAvailableTextureUnit = 0;//m_maxTextureUnits / 2;
+}
+
+TextureManager
 ::~TextureManager()
 {
     releaseAll();
 }
 
-void 
+
+void
+TextureManager
+::loadTestTexture( const TextureName& aHandle, GLint textureUnit )
+{
+    if( textureUnit == -1 )
+    {
+        textureUnit = reserveTextureUnit();
+    }
+    GLuint textureId = -1;
+    glGenTextures( 1, &textureId );
+    GL_CHECK( glActiveTexture( GL_TEXTURE0 + textureUnit ) );
+    GL_CHECK( glBindTexture( GL_TEXTURE_2D, textureId ) );
+
+    ::loadTestTexture();
+    m_registry[aHandle] = textureId;
+    m_bindingTextureUnitToTextureId.push_back( std::make_pair( textureUnit,
+                                                              textureId) );
+    LOG_INFO(g_log) << "Created Checkered texture \"" << aHandle
+    << "\" with id=" << textureId
+    << " into texture unit=" << textureUnit;
+
+}
+
+void
+TextureManager
+::loadCheckerTexture( const TextureName& aHandle, GLint textureUnit )
+{
+    if( textureUnit == -1 )
+    {
+        textureUnit = reserveTextureUnit();
+    }
+    GLuint textureId = -1;
+    GL_CHECK( glGenTextures( 1, &textureId ) );
+    if( -1 == textureId )
+    {
+        LOG_ERROR(g_log) << "Failed to get a texture id!";
+        assert(false);
+        return;
+    }
+    GL_CHECK( glActiveTexture( GL_TEXTURE0 + textureUnit ) );
+    GL_CHECK( glBindTexture( GL_TEXTURE_2D, textureId ) );
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    
+    ::loadCheckerTexture();
+    
+    m_registry[aHandle] = textureId;
+    m_bindingTextureUnitToTextureId.push_back( std::make_pair( textureUnit,
+                                                               textureId) );
+    LOG_INFO(g_log) << "Created Checkered texture \"" << aHandle
+                    << "\" with id=" << textureId
+                    << " into texture unit=" << textureUnit;
+}
+
+
+void
 TextureManager
 ::loadTextureFromImageFile( const char* aTextureFileName, 
                             const TextureName& aHandle )
 {
-    GLint maxTextureUnits;
-    glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits );
-    if( m_nextAvailableTextureUnit >= maxTextureUnits )
-    {
-        LOG_ERROR(g_log) << "Out of texture units!  Cannot load texture \""
-                         << aHandle << "\" from file \""
-                         << aTextureFileName << "\".";
-        //assert( false );
-        return;
-    }
-    GLint textureUnit = m_nextAvailableTextureUnit++;
+    GLint textureUnit = reserveTextureUnit();
 
     LOG_DEBUG(g_log) << "Searching for texture file \""
                      << aTextureFileName << "\".";
@@ -37,43 +93,45 @@ TextureManager
         assert( false );
         return;
     }
-    GLuint textureId = 0;
+    GLuint textureId = -1;
     GL_CHECK( glGenTextures( 1, &textureId ) );
-    if( 0 == textureId )
+    if( -1 == textureId )
     {
         LOG_ERROR(g_log) << "Failed to get a texture id!";
         assert(false);
         return;
     }
     GL_CHECK( glActiveTexture( GL_TEXTURE0 + textureUnit ) );
+    //TODO -- specificy texture type
     GL_CHECK( glBindTexture( GL_TEXTURE_2D, textureId ) );
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    
     bool success = loadTextureFromFile( filePath.c_str() );
     if( !success )
     {
-        LOG_ERROR(g_log) << "FAILED to load texture from file: \""
+        LOG_ERROR(g_log) << "Failed to load texture from file: \""
                          << filePath << "\".";
         assert( false );
         return;
     }
-
-    GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
+    //TODO -- specificy texture type
+    //    GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
     //Set default texture state
-    //-- Can be overridden by TextureUnit?
-    GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
-                               GL_TEXTURE_WRAP_S,
-                               GL_CLAMP_TO_EDGE ) );
-
-	GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
-                               GL_TEXTURE_WRAP_T,
-                               GL_CLAMP_TO_EDGE ) );
-	
-    GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
-                               GL_TEXTURE_MIN_FILTER,
-                               GL_LINEAR_MIPMAP_LINEAR ) );
-	
-    GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
-                               GL_TEXTURE_MAG_FILTER,
-                               GL_LINEAR ) );
+    //TODO-- Can be overridden by TextureUnit?
+//    GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
+//                               GL_TEXTURE_WRAP_S,
+//                               GL_CLAMP_TO_EDGE ) );
+//	GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
+//                               GL_TEXTURE_WRAP_T,
+//                               GL_CLAMP_TO_EDGE ) );
+//    GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
+//                               GL_TEXTURE_MIN_FILTER,
+//                               GL_LINEAR_MIPMAP_LINEAR ) );
+//    GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
+//                               GL_TEXTURE_MAG_FILTER,
+//                               GL_LINEAR ) );
     m_registry[aHandle] = textureId;
     m_paths[aHandle] = filePath;
     m_bindingTextureUnitToTextureId.push_back( std::make_pair( textureUnit,
@@ -81,6 +139,31 @@ TextureManager
     LOG_INFO(g_log) << "Texture " << aHandle << " loaded with id=" 
         << textureId << " into texture unit=" << textureUnit << " from path \""
         << filePath << "\"";
+}
+
+bool
+TextureManager
+::isTextureNameReady( const TextureName& aHandle )
+{
+    auto iter = m_registry.find( aHandle );
+    if( iter == m_registry.end() ) return false;
+    return ( getTextureUnitBoundToId( iter->second ) != (unsigned int)-1 );
+}
+
+GLint
+TextureManager
+::getTextureUnitForTexture( const TextureName& aHandle )
+{
+    GLint texId = getTextureIdFromHandle( aHandle );
+    GLint unit = getTextureUnitBoundToId( texId );
+    if( unit == -1 )
+    {
+        // Not currently bound, need to reserve next texture unit
+        // reserve returns the least-recently used unit
+        unit = reserveTextureUnit();
+        bindTextureIdToUnit( texId, unit );
+    }
+    return unit;
 }
 
 void
@@ -94,11 +177,20 @@ TextureManager
         // Redundant binding request, skip.
         return;
     }
+    bindTextureIdToUnit( textureId, aTextureUnit );
+}
+
+void
+TextureManager
+::bindTextureIdToUnit( GLint aTextureId, GLint aTextureUnit )
+{
     GL_CHECK( glActiveTexture( GL_TEXTURE0 + aTextureUnit ) );
-    GL_CHECK( glBindTexture( GL_TEXTURE_2D, textureId ) );
-    m_bindingTextureUnitToTextureId.push_back( std::make_pair(aTextureUnit, textureId) );
-    LOG_TRACE(g_log) << "Bound texture \"" << aHandle << "\" (ID="
-        << textureId << ") to texture unit " << aTextureUnit << ".\n";
+    GL_CHECK( glBindTexture( GL_TEXTURE_2D, aTextureId ) );
+    m_bindingTextureUnitToTextureId.push_back( std::make_pair( aTextureUnit,
+                                                               aTextureId) );
+    LOG_TRACE(g_log) << "Bound texture ID="
+                     << aTextureId << " to texture unit "
+                     << aTextureUnit << ".\n";
 }
 
 GLint 
@@ -113,7 +205,7 @@ TextureManager
             return iter->first;
         }
     }
-    LOG_WARN(g_log) << "In getTextureIdBoundToUnit, looking up an unbound texture ID.";
+    LOG_DEBUG(g_log) << "In getTextureIdBoundToUnit, looking up an unbound texture ID.";
     return -1;
 }
 

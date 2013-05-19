@@ -43,8 +43,6 @@ void SideBySideDisplay::resizeWindow( int width, int height )
 
 void SideBySideDisplay::render( const Renderables& scene )
 {
-    GL_CHECK( glClearColor( 1.0, 0.3, 0.5, 1 ) );
-    GL_CHECK( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
     m_context->aspectRatio( float(m_rightViewport.m_width)/float(m_rightViewport.m_height) );
 
     //glm::vec3 rightVec = glm::cross( ( m_context->cameraTarget() - m_context->cameraPos() ), m_context->cameraUp() );

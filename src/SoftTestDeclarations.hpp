@@ -98,7 +98,10 @@ typedef std::string ShaderName;
 class FileAssetFinder;
 typedef std::shared_ptr< FileAssetFinder > FileAssetFinderPtr;
 
+class Mesh;
+typedef std::shared_ptr< Mesh > MeshPtr;
+
 // Define standard names for common render passes
-//const RenderPassName g_colorRenderPassName = "ColorPass";
+const RenderPassName g_colorRenderPassName = "ColorPass";
 
 #endif

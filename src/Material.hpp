@@ -25,17 +25,20 @@
 class Material
 {
 public:
-
-    //TODO ctor --- load material from file
+    //TODO ctor --- load material from file?
     Material( TextureManagerPtr tm );
     Material( TextureManagerPtr tm, ShaderInstancePtr aShader );
     void setShader( ShaderInstancePtr aShader );
+    /// Returns the OpenGL Shader ID used by this material.
     GLuint getGLShaderIndex( void ) const;
+    /// Returns the name of the **shader** used by this material.
     const std::string& name( void ) const;
     /// Set OpenGLs state to use the material
     void use( void ) const;
-    /// Usage examples:  materialPtr->shaderUniforms()["u_projMat"] = glm::mat4();
-    /// materialPtr->shaderUniforms()["u_color"] = glm::vec4( 1,1,1,1 );
+    /// Usage examples:
+    ///   materialPtr->shaderUniforms()["u_projMat"] = glm::mat4();
+    ///   materialPtr->shaderUniforms()["u_color"] = glm::vec4( 1,1,1,1 );
+    ///   materialPtr->setShaderUniform<float>( "u_rate", 1.0f );
     ShaderUniformHolderPtr shaderUniforms( void )
     { return m_shader; }
     ConstShaderUniformHolderPtr shaderUniforms( void ) const

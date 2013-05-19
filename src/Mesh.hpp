@@ -24,6 +24,8 @@
 #include "config.hpp"  // Defines DATA_PATH
 #include "VertexAttribute.hpp"
 
+// Forward declaration of AssetImporter class for mesh loading
+struct aiMesh;
 
 // Standard vertex type for mesh objects
 class MeshVertex
@@ -161,7 +163,16 @@ public:
     virtual void attachShaderAttributes( GLuint aShaderProgramIndex );
 
     /// Construction methods
-    void unitCube();
+    void unitCube( void );
+    
+    /// Load the mesh and associated materials from the given filename
+    bool createMeshFromFile( const std::string& filename,
+                       TextureManagerPtr tm,
+                       ShaderManagerPtr sm,
+                       const RenderPassName& renderPassName );
+
+    static MeshPtr createMeshFromAiMesh( const aiMesh* meshNode, float scale = 1.0 );
+
     static RenderablePtr createBox( TextureManagerPtr tm, ShaderManagerPtr sm,
                                     const RenderPassName& renderPassName );
 protected:

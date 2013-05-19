@@ -18,6 +18,7 @@
 #include "Fluid.hpp"
 
 #include "Scene.hpp"
+#include "ArcBall.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -26,6 +27,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include <IL/il.h>
 
@@ -41,16 +43,15 @@
 using namespace std;
 using namespace Eigen;
 
-
-
 // Define the global Logger
 cpplog::BaseLogger* g_log = NULL;
 boost::mutex g_logGuard;
 cpplog::BaseLogger* g_baseLogger = NULL;
 
-// Need this global to allow GLFW callbacks access.
-// Why don't GLFW callbacks have a void* userData.  Explain to me.
+// Need globals to allow GLFW callbacks access.
+// Why don't GLFW callbacks have a void* userData? (Apparently coming in V3)
 static RenderTargetPtr g_frameBufferTarget;
+static spark::ArcBall* g_arcBall = nullptr;
 
 class InteractionVars
 {
@@ -78,22 +79,53 @@ void GLFWCALL resizeWindowCallback( int width, int height )
     {
         g_frameBufferTarget->resizeViewport( 0, 0, width, height );
     }
+    if( g_arcBall )
+    {
+        g_arcBall->setExtents( 0, 0, width, height );
+    }
+}
+
+void GLFWCALL mousePosCallback( int x, int y )
+{
+    if( !g_arcBall ) return;
+    g_arcBall->onMouseMove( x, y );
+}
+void GLFWCALL mouseButtonCallback( int button, int action )
+{
+    if( !g_arcBall ) return;
+    int x, y;
+    glfwGetMousePos( &x, &y );
+    if( button == GLFW_MOUSE_BUTTON_LEFT )
+    {
+        g_arcBall->onMouseRotationButton( x, y, GLFW_PRESS == action );
+    }
+    if( button == GLFW_MOUSE_BUTTON_RIGHT )
+    {
+        g_arcBall->onMouseDollyButton( x, y, GLFW_PRESS == action );
+    }
+    if( button == GLFW_MOUSE_BUTTON_LEFT ) // MIDDLE )
+    {
+        g_arcBall->onMouseTrackingButton( x, y, GLFW_PRESS == action );
+    }
 }
 
 void setGLFWCallbacks( void )
 {
     // Set GLFW event callbacks
     // - Redirect window size changes to the callback function WindowSizeCB
-    glfwSetWindowSizeCallback(resizeWindowCallback);
+    glfwSetWindowSizeCallback( resizeWindowCallback );
+    glfwSetMousePosCallback( mousePosCallback );
+    glfwSetMouseButtonCallback( mouseButtonCallback );
 #ifdef __APPLE__
-    glGetError(); // clear spurious OpenGL errors
+    glGetError(); // eat spurious OpenGL errors on OSX/iOS
 #endif
 }
 
-
-
 /// Example of creating a full-screen quad for HUD-style overlay
-MeshPtr createOverlayQuad( TextureManagerPtr tm, ShaderManagerPtr sm, const RenderPassName& renderPassName )
+MeshPtr createOverlayQuad( TextureManagerPtr tm,
+                           ShaderManagerPtr sm,
+                           const TextureName& textureName,
+                           const RenderPassName& renderPassName )
 {
     using namespace Eigen;
     MeshPtr overlay( new Mesh() );
@@ -103,45 +135,20 @@ MeshPtr createOverlayQuad( TextureManagerPtr tm, ShaderManagerPtr sm, const Rend
                       Vector3f(0,1,0), Vector2f(0,0), // Upper Left
                       Vector3f(1,1,0), Vector2f(1,0), // Upper Right
                       Vector3f(0,0,-1) ); // Normal points according to right-hand system
-    ///////////////////////
 
     ShaderName colorShaderName = overlay->name() + "_ColorShader";
     sm->loadShaderFromFiles( colorShaderName, 
-        "colorVertexShader.glsl",
-        "colorFragmentShader.glsl" );
+                            "colorVertexShader.glsl",
+                            "colorFragmentShader.glsl" );
     //TODO - Overlay Quad -- add texture and transparency
 
     ShaderInstancePtr colorShader( new ShaderInstance( colorShaderName, sm ) );
     colorShader->setUniform( "u_color", glm::vec4(1,1,1,1) );
     
     MaterialPtr colorMaterial( new Material( tm, colorShader ) );
-    tm->loadTextureFromImageFile( "ESU_alpha.png", "ESU" );
-    tm->loadTextureFromImageFile( "skin_tile.jpg", "skin" );
-    colorMaterial->addTexture( "ESU", "s_color" );
-    colorMaterial->addTexture( "skin", "s_color2" );
+    colorMaterial->addTexture( textureName, "s_color" );
     overlay->setMaterialForPassName( renderPassName, colorMaterial );
     return overlay;
-}
-
-//RenderPassName createPostEffectRenderPass( TextureManagerPtr tm, 
-//    ShaderManagerPtr sm, const std::string& name, ShaderInstancePtr shader )
-//{
-//    using namespace Eigen;
-//    MeshPtr quad( new Mesh() );
-//    quad->name( "postEffect_" + name );
-//    quad->addQuad( Vector3f(0,0,0), Vector2f(0,1), // Lower Left
-//        Vector3f(1,0,0), Vector2f(1,1), // Lower Right
-//        Vector3f(0,1,0), Vector2f(0,0), // Upper Left
-//        Vector3f(1,1,0), Vector2f(1,0), // Upper Right
-//        Vector3f(0,0,-1) ); // Normal points according to right-hand system
-//
-//}
-
-
-RenderablePtr createTestBox( TextureManagerPtr tm, ShaderManagerPtr sm, const RenderPassName& renderPassName )
-{
-    RenderablePtr box = Mesh::createBox( tm, sm, renderPassName );
-    return box;
 }
 
 /// Online simulation and display of fluid
@@ -151,6 +158,7 @@ int runSimulation(int argc, char** argv)
     {
         using namespace std;
         InteractionVars vars;
+        g_arcBall = new spark::ArcBall;
         setGLFWCallbacks();
         
         // Tell managers where to find file resources
@@ -162,25 +170,20 @@ int runSimulation(int argc, char** argv)
         textureManager->setAssetFinder( finder );
         
         int width = 0; int height = 0; glfwGetWindowSize( &width, &height );
-        //PerspectiveProjectionPtr camera( new PerspectiveProjection );
-        //camera->aspectRatio( (float)width/height );
-        //camera->cameraPos( glm::vec3( 3, 3, 3 ) );
-        //camera->cameraTarget( glm::vec3( 0, 0, 0 ) );
         RenderTargetPtr frameBufferTarget( new FrameBufferRenderTarget( width, height ) );
+        // Expose the frameBufferTarget as a global to allow GLFW callbacks access
         g_frameBufferTarget = frameBufferTarget;
         frameBufferTarget->initialize( textureManager );
 
-        // Setup a simple render pipeline
-        ScenePtr scene( new Scene );
-        
         //////////////////////////////////////////////////////////////////////////
         // Define render passes
+        ScenePtr scene( new Scene );
 
         //TODO define "common" render pass and shader names for pre-load
         const RenderPassName directRenderPassName( "DirectRenderPass" );
         RenderPassPtr directRenderPass( new RenderPass( directRenderPassName ) );
         PerspectiveProjectionPtr cameraPerspective( new PerspectiveProjection );
-        cameraPerspective->cameraPos( 1.0f, 1.0f, -5.0f );
+        cameraPerspective->cameraPos( 1.0f, 4.0f, -5.0f );
         cameraPerspective->cameraTarget( 0.5f, 0.5f, 0.0f );
         directRenderPass->initialize( frameBufferTarget, cameraPerspective, 1.0f );
         scene->add( directRenderPass );
@@ -188,20 +191,89 @@ int runSimulation(int argc, char** argv)
         RenderPassName overlayRenderPassName( "OverlayRenderPass" );
         RenderPassPtr overlayRenderPass( new RenderPass( overlayRenderPassName ) );
         OrthogonalProjectionPtr overlayPerspective( new OrthogonalProjection );
-        overlayRenderPass->initialize( frameBufferTarget, overlayPerspective, 10.0f );
+        overlayRenderPass->initialize( frameBufferTarget, overlayPerspective, 100.0f );
         scene->add( overlayRenderPass );
-
 
         //////////////////////////////////////////////////////////////////////////
         // Create Objects
-        MeshPtr overlay = createOverlayQuad( textureManager, shaderManager, overlayRenderPassName );
+        
+        const TextureName overlayTextureName( "overlay_color" );
+        textureManager->loadTextureFromImageFile( "ESU_alpha_square.png", overlayTextureName );
+        //tm->loadTextureFromImageFile( "sample.png", "overlay2" );
+        textureManager->loadCheckerTexture( "checker" );
+        textureManager->loadTestTexture( "test" );
+
+        MeshPtr overlay = createOverlayQuad( textureManager,
+                                             shaderManager,
+                                             overlayTextureName,
+                                             overlayRenderPassName );
         glm::mat4 xform = glm::translate( glm::mat4(1.0f), glm::vec3( 0.5f, 0.5f, 0.0f ) );
         xform = glm::rotate( xform, 30.0f, glm::vec3( 0.0f, 0.0f, 1.0f ) ) ;
         xform = glm::translate( xform, glm::vec3( -0.5f, -0.5f, 0.0f ) );
+        xform = glm::scale( xform, glm::vec3(0.5f, 0.5f, 1.0f) );
         overlay->setTransform( xform );
         scene->add( overlay );
 
+        // Load assets
+        {
+            const ShaderName colorShaderName = "colorShader";
+            shaderManager->loadShaderFromFiles( colorShaderName, "colorVertexShader.glsl", "colorFragmentShader.glsl");
+            ShaderInstancePtr colorShader = shaderManager->createShaderInstance( colorShaderName );
+            MaterialPtr colorMaterial( new Material( textureManager, colorShader ) );
+            colorMaterial->addTexture( "checker", "s_color" );
+        }
+        {
+            const ShaderName shaderName = "phongShader";
+            shaderManager->loadShaderFromFiles( shaderName,
+                                               "baseVertexShader.glsl",
+                                               "phongFragmentShader.glsl" );
+            ShaderInstancePtr phongShader = shaderManager->createShaderInstance( shaderName );
+            MaterialPtr phongMaterial( new Material( textureManager, phongShader ) );
+            const TextureName colorTexture = "color_skin";
+            textureManager->loadTextureFromImageFile( "skin_tile.jpg",
+                                                      colorTexture );
+            // Bind texture to the color sampler (s_color is used in shader)
+            phongMaterial->addTexture( "checker", "s_color" );
+            //Todo uniforms should be set by illumination in scene
+            phongMaterial->setShaderUniform( "u_light.position_camera",
+                                            glm::vec4(5.0f,10.0f,0.0f,1.0f) );
+            phongMaterial->setShaderUniform( "u_light.diffuse",
+                                            glm::vec4(0.8f,0.8f,0.8f,1.0f) );
+            phongMaterial->setShaderUniform( "u_ambientLight",
+                                            glm::vec4(0.3f,0.1f,0.1f,1.0f) );
+            // Phong/Blinn material properties
+            phongMaterial->setShaderUniform( "u_ka",
+                                            glm::vec4(1.0f,1.0f,1.0f,1.0f) );
+            phongMaterial->setShaderUniform( "u_kd",
+                                            glm::vec4(1.0f,1.0f,1.0f,1.0f) );
+            phongMaterial->setShaderUniform( "u_ks",
+                                            glm::vec4(1.0f,1.0f,1.0f,1.0f) );
+            phongMaterial->setShaderUniform( "u_ns", 100.0f );
+#ifdef WIN32
+            std::vector< MeshPtr > meshes;
+            createMeshesFromFile( "liver.3ds", finder, meshes );
+            for( auto meshItr = meshes.begin(); meshItr != meshes.end(); ++meshItr )
+            {
+                MeshPtr mesh = *meshItr;
+                mesh->setMaterialForPassName( directRenderPassName, phongMaterial );
+                scene->add( mesh );
+            }
+#else
+            MeshPtr box( new Mesh() );
+            box->unitCube();
+            box->name("TestBox");
+            box->setMaterialForPassName( directRenderPassName, phongMaterial );
 
+            glm::mat4 xform( 1.0f );
+            xform = glm::translate( xform, glm::vec3( -10.0f, 0.0f, -10.0f ) );
+            xform = glm::scale( xform, glm::vec3(20.0f, 0.5f, 20.0f) );
+            xform = glm::rotate( xform, 90.0f, glm::vec3( 1.0f, 0.0f, 0.0f ) ) ;
+            box->setTransform( xform );
+            scene->add( box );
+#endif
+        }
+
+        
         //RenderPassPtr primaryRenderPass( new RenderPass( g_colorRenderPassName ) );
         //primaryRenderPass->initialize( frameBufferTarget, camera );
         //scene->add( primaryRenderPass );
@@ -216,25 +288,13 @@ int runSimulation(int argc, char** argv)
         //MeshPtr slices( new SlicedVolume( 32, data ) );
         //scene->add( slices );
 
-        bool useBox = true;
-        if( useBox )
-        {
-            MeshPtr box( new Mesh() );
-            box->unitCube();
-            box->name("TestBox");
 
-            /// TODO -- shader creation should be easier!
-            const ShaderName shaderName = "colorShader";
-            //shaderManager->loadShaderFromFiles( shaderName, "colorVertexShader.glsl", "colorFragmentShader.glsl" );
-            //ShaderInstancePtr colorShader = shaderManager->createShaderInstance( shaderName );
-
-
-            shaderManager->loadShaderFromFiles( shaderName, "colorVertexShader.glsl", "colorFragmentShader.glsl" );
-            ShaderInstancePtr colorShader( new ShaderInstance( "colorShader", shaderManager ) );
-            MaterialPtr colorMaterial( new Material( textureManager, colorShader ) );
-            box->setMaterialForPassName( directRenderPassName, colorMaterial );
-            scene->add( box );
-        }
+        // Setup shared rendering state
+        // Enable alpha blending.
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_CULL_FACE);
+        
         float angle = 0.0f;
         float rotRate = 0.5f;
         std::string sliceBaseName("densityYSlice");
@@ -245,26 +305,33 @@ int runSimulation(int argc, char** argv)
         double lastTime = startTime;
         while( window.isRunning() )
         {
+            glm::mat4 viewTransform;
+
             lastTime = currTime;
             currTime = glfwGetTime();
             vars.fps = 1.0f/(currTime - lastTime);
-            angle += rotRate;
-            //camera->setModelMatrix(
-            //    glm::rotate( glm::mat4(), angle, glm::vec3( 0.0f, 1.0f, 0.0f ) ) ); 
-
-            //    glm::translate( 
-            //       glm::vec3(-0.5, -0.5, -0.5) )
-            //    );
-            //camera->setLightPosition( vars.lightPos );
 
             // UPDATE
             //const float dt = 1.0f/60.0f;
             //spark->update( dt );
+            
+            if( g_arcBall )
+            {
+                g_arcBall->updatePerspective( cameraPerspective );
+            }
 
             scene->prepareRenderCommands();
+
+            glClearColor( 0.5f, 0.3f, 0.3f, 0.0f );
+            //glClearDepth( -10000.0f );
+            glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+            LOG_TRACE(g_log) << "Scene start - glClear(COLOR|DEPTH)";
+
             scene->render();
 
             glfwSwapBuffers();
+            
+            LOG_TRACE(g_log) << "Scene end - glfwSwapBuffers()";
 
             if( vars.isSavingFrames ) writeFrameBufferToFile( "sparks_" );
 
@@ -272,6 +339,7 @@ int runSimulation(int argc, char** argv)
             // Process Inputs
             if( glfwGetKey( GLFW_KEY_ENTER ) == GLFW_PRESS )
             {
+                LOG_INFO(g_log) << "Reloading all shaders";
                 shaderManager->reloadAllShaders();
             }
             if( glfwGetKey( GLFW_KEY_ESC ) == GLFW_PRESS )
@@ -322,7 +390,6 @@ int runSimulation(int argc, char** argv)
                 //    LOG_DEBUG(g_log) << "Decreasing interoccular distance to " << dist << "\n";
                 //}
             }
-            glfwSwapBuffers();
         }
         textureManager->releaseAll();
     }
@@ -338,17 +405,25 @@ int main( int argc, char* argv[] )
     //_CrtSetDbgFlag( debugFlags | _CRTDBG_DELAY_FREE_MEM_DF );
     _CrtSetDbgFlag( debugFlags |  _CRTDBG_LEAK_CHECK_DF ); // FAST
 #endif 
-
+    
     {
 //        boost::mutex::scoped_lock lock( g_logGuard );
-        g_baseLogger = new cpplog::FileLogger( "sparks.log" );
-        //g_baseLogger = new cpplog::StdErrLogger;
 //#ifdef CPPLOG_THREADING
 //        cpplog::BackgroundLogger backgroundLogger( g_baseLogger );
 //        g_baseLogger = &backgroundLogger;
 //#endif // CPPLOG_THREADING
-        //g_log = new cpplog::FilteringLogger( LL_DEBUG, g_baseLogger );
-        g_log = new cpplog::FilteringLogger( LL_TRACE, g_baseLogger );
+        if( argc > 2 && std::string(argv[1]) == std::string("-stderr") )
+        {
+            g_baseLogger = new cpplog::StdErrLogger;
+        } else {
+            g_baseLogger = new cpplog::FileLogger( "sparks.log" );
+        }
+        if( argc > 2 && std::string(argv[1]) == std::string("-trace") )
+        {
+            g_log = new cpplog::FilteringLogger( LL_TRACE, g_baseLogger );
+        } else {
+            g_log = new cpplog::FilteringLogger( LL_DEBUG, g_baseLogger );
+        }
     }
     
     runSimulation( argc, argv );

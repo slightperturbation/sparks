@@ -57,6 +57,7 @@ public:
             //(const_cast<ShaderUniformInterface*>(this))->m_dirty = false;
         }
     }
+    virtual std::string toString( void ) const = 0;
     friend class ShaderInstance;
     friend class ShaderUniformHolder;
 protected:
@@ -80,6 +81,8 @@ public:
     ShaderUniform( const T& val ) : m_val( val ) { }
     virtual ~ShaderUniform() {}
     void set( const T& val ) { m_val = val; }
+    virtual std::string toString( void ) const
+    { std::stringstream ss; ss << m_val; return ss.str(); }
 protected:
     /// No default implementation, only specializations (below)
     /// So unrecognized types will cause a compile error.

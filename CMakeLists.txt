@@ -111,9 +111,6 @@ INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}/unsupported/" )
 # GUI Libraries : OpenGL and GLFW (not required)
 #####################################################################
 FIND_PACKAGE(OpenGL REQUIRED)
-#MESSAGE(STATUS "Opengl libraries: ${OPENGL_LIBRARIES}")
-#MESSAGE(STATUS "Opengl libraries: ${OPENGL_gl_LIBRARY}")
-#MESSAGE(STATUS "Opengl input dir: ${OPENGL_INCLUDE_DIR}")
 
 # GLFW -- on Windows: depends on env var: GLFW_ROOT_DIR
 FIND_PACKAGE(glfw REQUIRED)
@@ -169,6 +166,15 @@ ELSE( MSVC )
   ENDIF( IL_FOUND )  
 ENDIF( MSVC )  
 
+## AssImp -- Asset Importer
+FIND_PACKAGE( assimp REQUIRED )
+IF( ASSIMP_FOUND )
+  MESSAGE( STATUS "Found ASSIMP.  Headers at " ${ASSIMP_INCLUDE_DIR} )
+  INCLUDE_DIRECTORIES( ${ASSIMP_INCLUDE_DIR} )
+ELSE( ASSIMP_FOUND )
+  MESSAGE( STATUS "Failed to find ASSIMP -----------------")
+ENDIF( ASSIMP_FOUND )
+
 # AntTweakBar -- on windows, depends on env var: ANT_TWEAK_BAR_ROOT
 #FIND_PACKAGE(AntTweakBar REQUIRED)
 #IF( ANT_TWEAK_BAR_FOUND )
@@ -176,6 +182,16 @@ ENDIF( MSVC )
 #ELSE( ANT_TWEAK_BAR_FOUND )
 #  MESSAGE( STATUS "Failed to find AntTweakBar ----------------------")
 #ENDIF( ANT_TWEAK_BAR_FOUND )
+
+SET( PROJECT_LINK_LIBRARIES
+  ${Boost_LIBRARIES}
+  ${GLFW_LIBRARY}
+  ${GLEW_LIBRARY}
+  ${OPENGL_LIBRARIES}
+  ${IL_LIBRARIES}
+  ${ILU_LIBRARIES}
+  ${ASSIMP_LIBRARIES}
+)
 
 
 set( HDRS
@@ -197,7 +213,7 @@ set( HDRS
   ./src/Fluid.hpp
   ./src/SlicedVolume.hpp
   ./src/VertexAttribute.hpp
-  ./src/Shader.hpp
+  ./src/ShaderInstance.hpp
   ./src/ShaderUniform.hpp
   ./src/Material.hpp
   ./src/Scene.hpp
@@ -205,6 +221,7 @@ set( HDRS
   ./src/RenderCommand.hpp
   ./src/RenderTarget.hpp
   ./src/FileAssetFinder.hpp
+  ./src/ArcBall.hpp
 )
 include_directories( ./src/ )  # Move headers to ./include/
 
@@ -227,6 +244,7 @@ set( SRCS
   ./src/FileAssetFinder.cpp
   ./src/ShaderManager.cpp
   ./src/Material.cpp
+  ./src/ArcBall.cpp
 )
 set( GUI_SRCS 
   ./src/main.cpp
@@ -262,22 +280,15 @@ include_directories( ${CMAKE_BINARY_DIR}/config/ )
 add_executable( ${PROJECT_NAME} 
   ${HDRS} ${SRCS} ${GUI_SRCS} ${CPPLOG_HDRS}
 )
+
 target_link_libraries(${PROJECT_NAME} 
-	${Boost_LIBRARIES}
-	${GLFW_LIBRARY}
-	${GLEW_LIBRARY}
-  ${OPENGL_LIBRARIES}
-  ${IL_LIBRARIES}
+	${PROJECT_LINK_LIBRARIES}
 )
 add_executable( ${PROJECT_NAME}_test 
   ${UNIT_TEST_SRCS} ${HDRS} ${SRCS} ${CPPLOG_HDRS}
 )
 target_link_libraries(${PROJECT_NAME}_test
-	${Boost_LIBRARIES}
-	${GLFW_LIBRARY}
-	${GLEW_LIBRARY}
-  ${OPENGL_LIBRARIES}
-  ${IL_LIBRARIES}
+  ${PROJECT_LINK_LIBRARIES}
 )
 
 #if( MSVC )

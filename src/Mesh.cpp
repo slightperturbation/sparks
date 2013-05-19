@@ -1,6 +1,10 @@
 #include "Mesh.hpp"
 #include "Utilities.hpp"
 
+#include <assimp/Importer.hpp>
+#include <assimp/PostProcess.h>
+#include <assimp/Scene.h>
+
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GL/glfw.h>
@@ -10,6 +14,41 @@
 #include <string>
 #include <sstream>
 #include <cassert>
+
+bool importMesh( const std::string& path )
+{
+    aiVector3D scene_min, scene_max, scene_center;
+    
+    // images / texture
+    std::map<std::string, GLuint*> textureIdMap;	// map image filenames to textureIds
+    GLuint*		textureIds;							// pointer to texture Array
+    
+    //check if file exists
+	std::ifstream fin( path.c_str() );
+	if(!fin.fail())
+	{
+		fin.close();
+	}
+	else
+	{
+		return false;
+	}
+    
+    
+    // Create an instance of the Importer class
+    Assimp::Importer importer;
+    
+    //aiProcessPreset_TargetRealtime_Quality
+    const aiScene* scene = importer.ReadFile( path, aiProcessPreset_TargetRealtime_Quality );
+    if( !scene )
+    {
+        return false;
+    }
+    
+    
+    return true;
+}
+
 
 
 
@@ -42,6 +81,7 @@ Mesh::~Mesh()
     GL_CHECK( glDeleteBuffers( 1, &m_vertexBufferId ) );
     GL_CHECK( glDeleteBuffers( 1, &m_elementBufferId ) );
     GL_CHECK( glDeleteVertexArrays( 1, &m_vertexArrayObjectId ) );
+    LOG_TRACE(g_log) << "Mesh \"" << name() << "\" destroyed.";
 }
 
 void Mesh::update( float dt )
@@ -80,86 +120,6 @@ void Mesh::update( float dt )
     GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, 0 ) );
 }
 
-
-//void Mesh::setShaderUniformMatrix( const char* uniformName, const glm::mat4& mat)
-//{
-//    GLint uniId;
-//    GL_CHECK( uniId = glGetUniformLocation( m_shaderProgramIndex, uniformName ) );
-//    if( uniId == GL_INVALID_VALUE || uniId == GL_INVALID_OPERATION )
-//    {
-//        LOG_DEBUG(g_log) << "Renderable::render | Failed to find uniform shader attribute of name \""
-//            << uniformName << "\" in shader #" << m_shaderProgramIndex << "\n";
-//    }
-//    else
-//    {
-//        if( glewIsSupported( "ARB_separate_shader_objects" ) )
-//        {
-//            GL_CHECK( glProgramUniformMatrix4fv( m_shaderProgramIndex, uniId, 1, GL_FALSE, glm::value_ptr(mat) ) );
-//        }
-//        else
-//        {
-//            GLint curShader;
-//            GL_CHECK( glGetIntegerv( GL_CURRENT_PROGRAM, &curShader ) );
-//            GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
-//            GL_CHECK( glUniformMatrix4fv( uniId, 1, GL_FALSE, glm::value_ptr(mat) ) );
-//            GL_CHECK( glUseProgram( curShader ) );
-//        }
-//    }
-//}
-//
-//void Mesh::setShaderUniformVector( const char* uniformName, const glm::vec3& vec )
-//{
-//    GLint uniId;
-//    GL_CHECK( uniId = glGetUniformLocation( m_shaderProgramIndex, uniformName ) );
-//    if( uniId == GL_INVALID_VALUE || uniId == GL_INVALID_OPERATION )
-//    {
-//        LOG_DEBUG(g_log) << "Renderable::render | Failed to find uniform shader attribute of name \"" 
-//            <<  uniformName << "\" in shader #" << m_shaderProgramIndex << "\n";
-//    }
-//    else
-//    {        
-//        if( glewIsSupported( "ARB_separate_shader_objects" ) )
-//        {
-//            GL_CHECK( glProgramUniform3fv( m_shaderProgramIndex, uniId, 1, glm::value_ptr(vec) ) );
-//        }
-//        else
-//        {
-//            GLint curShader;
-//            GL_CHECK( glGetIntegerv( GL_CURRENT_PROGRAM, &curShader ) );
-//            GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
-//            GL_CHECK( glUniform3fv( uniId, 1, glm::value_ptr(vec) ) );
-//            GL_CHECK( glUseProgram( curShader ) );
-//        }
-//    }
-//}
-//
-//void Mesh::setShaderUniformInt( const char* uniformName, GLint val )
-//{
-//    GLint uniId;
-//    GL_CHECK( uniId = glGetUniformLocation( m_shaderProgramIndex, uniformName ) );
-//    if( uniId == GL_INVALID_VALUE || uniId == GL_INVALID_OPERATION )
-//    {
-//        LOG_DEBUG(g_log) << "Renderable::render | Failed to find uniform shader attribute of name \""
-//            << uniformName << "\" in shader #" << m_shaderProgramIndex << "\n";
-//    }
-//    else
-//    {
-//        if( glewIsSupported( "ARB_separate_shader_objects" ) )
-//        {
-//            GL_CHECK( glProgramUniform1i( m_shaderProgramIndex, uniId, val ) );
-//        }
-//        else
-//        {
-//            GLint curShader;
-//            GL_CHECK( glGetIntegerv( GL_CURRENT_PROGRAM, &curShader ) );
-//            GL_CHECK( glUseProgram( m_shaderProgramIndex ) );
-//            GL_CHECK( glUniform1i( uniId, val ) );
-//            GL_CHECK( glUseProgram( curShader ) );
-//        }
-//    }
-//}
-
-
 void Mesh::render( void ) const
 {
     // bind vertex array OBJECT (VAO)
@@ -182,6 +142,7 @@ void Mesh::resizeVertexArray( size_t newSize )
 {
     m_vertexData.resize( newSize );
 }
+
 void Mesh::setVertex( size_t i, const Eigen::Vector3f& a, 
     const Eigen::Vector2f& textureCoords, 
     const Eigen::Vector4f color, 
@@ -374,19 +335,22 @@ void Mesh::unitCube()
 
 void Mesh::bindDataToBuffers( void )
 {
-    //int count = 0;
-    //LOG_DEBUG(g_log) << "\n";
-    //for( auto idxIter = m_vertexIndicies.begin(); idxIter != m_vertexIndicies.end(); ++idxIter )
-    //{
-    //    count++;
-    //    unsigned int idx = *idxIter;
-    //    LOG_DEBUG(g_log) << idx << "\t";
-    //    for( int i=0;i<3;++i ) LOG_DEBUG(g_log) << m_vertexData[idx].m_position[i] << " \t ";
-    //    LOG_DEBUG(g_log) << "\n";
-    //    
-    //    if( !(count % 3) ) LOG_DEBUG(g_log) << "----\n";
-    //}
-    //LOG_DEBUG(g_log) << "++++\n";
+    const bool explicitLogging = false;
+    if( explicitLogging )
+    {
+        int count = 0;
+        LOG_DEBUG(g_log) << "++++\n";
+        for( auto idxIter = m_vertexIndicies.begin(); idxIter != m_vertexIndicies.end(); ++idxIter )
+        {
+            count++;
+            unsigned int idx = *idxIter;
+            LOG_DEBUG(g_log) << idx ;
+            for( int i=0;i<3;++i ) LOG_DEBUG(g_log) << "\t" 
+                << m_vertexData[idx].m_position[i];
+            if( !(count % 3) ) LOG_DEBUG(g_log) << "----";
+        }
+        LOG_DEBUG(g_log) << "++++\n";
+    }
     GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
     GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, m_vertexBufferId ) );
     GL_CHECK( glBufferDataFromVector( GL_ARRAY_BUFFER, m_vertexData, GL_STATIC_DRAW ) );
@@ -438,3 +402,92 @@ RenderablePtr Mesh::createBox( TextureManagerPtr tm, ShaderManagerPtr sm,
     box->setMaterialForPassName( renderPassName, colorMaterial );
     return RenderablePtr( box );
 }
+
+//bool
+//Mesh
+//::loadFromFile( const std::string& filename,
+//                TextureManagerPtr tm,
+//                ShaderManagerPtr sm,
+//                const RenderPassName& renderPassName )
+//{
+//    // Fill m_vertexData and m_vertexIndices
+//    //MeshVertex v;
+//    //m_vertexData.push_back( v );
+//    //m_vertexIndicies.push_back( vertexIndicies[i] );
+//    
+//    // Create VBO/VAO
+//    bindDataToBuffers();
+//
+//}
+
+
+MeshPtr 
+Mesh
+::createMeshFromAiMesh( const aiMesh* meshNode, float scale )
+{
+    assert( meshNode );
+    
+    MeshPtr mesh( new Mesh );
+    mesh->name( meshNode->mName.C_Str() );
+
+    // Load vertices
+    MeshVertex v;
+    std::map< size_t, size_t > aiVertexIndex_to_meshVertexIndex;
+    for( size_t vertexIndex=0; vertexIndex < meshNode->mNumVertices; ++vertexIndex )
+    {
+        for( size_t i=0; i<3; ++i )
+        {
+            v.m_position[i] = meshNode->mVertices[vertexIndex][i];
+            v.m_normal[i] = meshNode->mNormals[vertexIndex][i];
+        }
+        // Only get the first channel of texture coords for now
+        if( meshNode->HasTextureCoords(0) )
+        {
+            for( size_t i=0; i< std::min<unsigned int>( 3, meshNode->mNumUVComponents[0] ); ++i )
+            {
+                v.m_texCoord[i] = meshNode->mTextureCoords[0][vertexIndex][i];
+            }
+        }
+        //for( size_t channelIndex=0; channelIndex < meshNode->GetNumUVChannels(); ++channelIndex )
+        //{
+        //    for( size_t i=0; i< std::min( 3, meshNode->mNumUVComponents[0] ); ++i )
+        //    {
+        //        v.m_texCoords[channelIndex][i] = meshNode->mTextureCoords[0][vertexIndex][i]
+        //    }
+        //}
+        if( meshNode->HasVertexColors(0) )
+        {
+            for( size_t i=0; i<3; ++i )
+            {
+                v.m_diffuseColor[i] = meshNode->mColors[0][vertexIndex][i];
+            }
+        }
+        aiVertexIndex_to_meshVertexIndex[vertexIndex] = mesh->m_vertexData.size();
+        mesh->m_vertexData.push_back( v );
+    }
+
+    for( size_t faceIdx=0; faceIdx < meshNode->mNumFaces; ++faceIdx )
+    {
+        const aiFace face = meshNode->mFaces[faceIdx];
+        if( face.mNumIndices != 3 )
+        {
+            LOG_WARN(g_log) << "Ignoring face with " 
+                << face.mNumIndices << " indices while loading mesh node \""
+                << mesh->name() << "\" because can only handle triangles.";
+            continue;
+        }
+        for( size_t i=0; i < face.mNumIndices; ++i )
+        {
+            mesh->m_vertexIndicies.push_back( aiVertexIndex_to_meshVertexIndex[ face.mIndices[i] ] );
+        }
+    }
+    mesh->bindDataToBuffers();
+    return mesh;
+}
+
+
+
+
+
+
+

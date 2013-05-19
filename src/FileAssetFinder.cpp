@@ -1,6 +1,7 @@
 #include "FileAssetFinder.hpp"
 #include "SoftTestDeclarations.hpp"
 
+#include <boost/algorithm/string.hpp>
 
 bool findFileRecursively( const boost::filesystem::path& dirPath, 
                           const std::string& fileName, 
@@ -12,7 +13,7 @@ bool findFileRecursively( const boost::filesystem::path& dirPath,
         for( bfs::recursive_directory_iterator itr( dirPath ), end;
              itr != end; ++itr )
         {
-            if( itr->path().filename() == fileName )
+            if( boost::iequals( itr->path().filename().string(), fileName ) )
             {
                 pathFound = itr->path();
                 return true;
@@ -81,6 +82,8 @@ FileAssetFinder
                 bfs::path fpath;
                 findFileRecursively( dir, aFilename, fpath );
                 foundPath = fpath.string();
+                LOG_DEBUG(g_log) << "Found file \"" << aFilename 
+                    << "\" at \"" << foundPath << "\".";
                 return true;
             }
             else
@@ -89,6 +92,8 @@ FileAssetFinder
                 if( bfs::is_regular_file( fpath ) )
                 {
                     foundPath = fpath.string();
+                    LOG_DEBUG(g_log) << "Found file \"" << aFilename 
+                        << "\" at \"" << foundPath << "\".";
                     return true;
                 }
             }

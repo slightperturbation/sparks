@@ -24,6 +24,8 @@
 #include <string>
 #include <ostream>
 
+
+
 class OpenGLWindow
 {
 public:
@@ -46,8 +48,21 @@ GLuint loadShaderFromFile( const char* vertexShaderFilepath, const char* fragmen
 /// files are named sequentially starting at 1, padded to 4 digits.
 void writeFrameBufferToFile( const std::string& frameBaseFileName );
 
-// Pre:  OpenGL must have a bound texture to load.
+/// Load the image specified by filepath.
+/// Returns true if the texture is loaded and bound to current texture id.
+/// Pre:  filepath must be a full path or in the system path.
+/// Pre:  OpenGL must have a bound texture to load.
 bool loadTextureFromFile( const char* filepath );
+/// Pre:  OpenGL must have a bound texture to load.
+bool loadCheckerTexture( void );
+/// Pre:  OpenGL must have a bound texture to load.
+bool loadTestTexture( void );
+
+/// Load the given file and build new Mesh instances for contained assets.
+void createMeshesFromFile( const char* filePath, 
+                           FileAssetFinderPtr finder, 
+                           std::vector< MeshPtr >& outMeshes );
+
 
 /// Pretty printing for GLM types
 std::ostream& operator<<( std::ostream& out, glm::vec3 v );

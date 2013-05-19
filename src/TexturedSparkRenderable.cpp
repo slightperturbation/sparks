@@ -15,7 +15,6 @@ TexturedSparkRenderable
   m_mesh( new Mesh() ),
   m_spark( a_spark ) 
 {
-    const RenderPassName g_colorRenderPassName = "ColorPass";
     // Build materials for needed passes
     ShaderName colorShaderName = m_name + "_ColorShader";
     shaderManager->loadShaderFromFiles( colorShaderName, 

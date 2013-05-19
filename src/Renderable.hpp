@@ -42,7 +42,7 @@ public:
         }
         else
         {
-            LOG_INFO(g_log) << "No material for renderable for pass \""
+            LOG_TRACE(g_log) << "No material for pass \""
             << renderPassName << "\" for renderable \"" << m_name << "\".";
             return ConstMaterialPtr( NULL );
         }

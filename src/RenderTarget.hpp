@@ -53,11 +53,8 @@ public:
     virtual void preRender( void ) const
     {
         // Bind to zero is a magic number to draw to the display FB
-        glBindFramebuffer( GL_FRAMEBUFFER, 0 ); 
+        glBindFramebuffer( GL_FRAMEBUFFER, 0 );
         glViewport( m_left, m_bottom, m_width, m_height );
-
-        glClearColor( 0.3f, 0.3f, 0.3f, 1.0f );
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     }
     virtual void postRender( void ) const
     {

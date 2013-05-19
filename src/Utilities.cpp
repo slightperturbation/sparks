@@ -7,14 +7,19 @@
 //
 
 #include "Utilities.hpp"
+#include "FileAssetFinder.hpp"
+#include "Mesh.hpp"
 
 #include <IL/il.h>
+#include <IL/ilu.h>
+
+#include <assimp/Importer.hpp>
+#include <assimp/PostProcess.h>
+#include <assimp/Scene.h>
 
 #include <fstream>
 #include <sstream>
 #include <iostream>
-
-
 
 void APIENTRY debugOpenGLMessageCallback( GLenum source,
     GLenum type,
@@ -75,7 +80,7 @@ void APIENTRY debugOpenGLMessageCallback( GLenum source,
         msg << "UNKNOWN";
     }
     LOG_ERROR(g_log) << msg.str() << ", Message: \"" << message << "\".\n";
-    //assert(false);
+    assert(false);
 }
 
 
@@ -178,6 +183,7 @@ OpenGLWindow
 #endif
         LOG_DEBUG(g_log) << "Enabling OpenGL Debug messages.\n";
 #ifndef __APPLE__
+        // Debug messages not supported by OSX
         checkOpenGLErrors();
         glDebugMessageCallback( debugOpenGLMessageCallback, 0 );
         checkOpenGLErrors();
@@ -192,11 +198,11 @@ OpenGLWindow
 #endif
     }
     checkOpenGLErrors();
-
     ilInit();
+    iluInit();
     checkOpenGLErrors();
     GL_CHECK( glEnable( GL_DEPTH_TEST ) );
-    LOG_DEBUG(g_log) << "done.\n";
+    LOG_DEBUG(g_log) << "OpenGL initialization complete.";
     m_isOK = true;
 }
 
@@ -207,49 +213,164 @@ OpenGLWindow
     glfwTerminate();
 }
 
+bool loadCheckerTexture( void )
+{
+    float pixels[] = {
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f,
+    };
+    GL_CHECK( glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 4, 4, 0, GL_RGB, GL_FLOAT, pixels ) );
+    return true;
+}
+
+bool loadTestTexture( void )
+{
+    ILuint texId = 0;
+    ILuint devilError = 0;
+    ilGenImages( 1, &texId );
+    ilBindImage( texId );
+    ilDefaultImage();
+    devilError = ilGetError();
+    if( devilError != IL_NO_ERROR )
+    {
+        LOG_ERROR(g_log) << "Devil Error: ilLoadImage: "
+        << iluErrorString( devilError ) ;
+        assert( false );
+        return false;
+    }
+    GLint internalFormat = GL_RGB;
+    GLint width = ilGetInteger(IL_IMAGE_WIDTH);
+    GLint height = ilGetInteger(IL_IMAGE_HEIGHT);
+    GLint imageFormat = ilGetInteger(IL_IMAGE_FORMAT);
+    GLint imageType = ilGetInteger(IL_IMAGE_TYPE);
+    LOG_DEBUG(g_log) << "Texture loaded: internal format = "
+                     << ( GL_RGBA == internalFormat ? " GL_RGBA" : " GL_RGB")
+                     << ", width=" << width << ", height=" << height
+                     << ", imageFormat=(" << imageFormat << "="
+                     << ( GL_RGBA == imageFormat ? " GL_RGBA" : " GL_RGB)");
+    GL_CHECK( glTexImage2D(GL_TEXTURE_2D,
+                           0, // level-of-detail number
+                           internalFormat,
+                           width,
+                           height,
+                           0, // "border", must be zero
+                           imageFormat,
+                           imageType,
+                           ilGetData() ) );
+    
+    devilError = ilGetError();
+    if( devilError != IL_NO_ERROR )
+    {
+        LOG_ERROR(g_log) << "Devil Error: ilDeleteImages: "
+        << iluErrorString( devilError ) ;
+        assert( false );
+        return false;
+    }
+    // Data has now been copied to OpenGL, delete temp copy
+    ilDeleteImages( 1, &texId );
+    devilError = ilGetError();
+    if( devilError != IL_NO_ERROR )
+    {
+        LOG_ERROR(g_log) << "Devil Error: ilDeleteImages: "
+        << iluErrorString( devilError ) ;
+        assert( false );
+        return false;
+    }
+    // Success
+    return true;
+}
+
 bool loadTextureFromFile( const char* filepath )
 {
     ILuint texId = 0;
+    ILuint devilError = 0;
+
     ilGenImages( 1, &texId );
     ilBindImage( texId );
     ILboolean isLoaded = ilLoadImage( filepath );
     if( !isLoaded )
     {
-        LOG_DEBUG(g_log) << "Failed to load image \"" << filepath << "\".";
-        return false;
+        LOG_ERROR(g_log) << "Failed to load image \"" << filepath << "\".";
+        return -1;
     }
-    ILboolean isconverted = ilConvertImage( IL_RGBA, IL_UNSIGNED_BYTE );
-    if( !isconverted )
+    devilError = ilGetError();
+    if( devilError != IL_NO_ERROR )
     {
-        LOG_DEBUG(g_log) << "failed to convert image \"" << filepath << "\".";
-        return false;
-    }
-    if( IL_NO_ERROR != ilGetError() )
-    {
-        LOG_DEBUG(g_log) << "Error loading image!\n";
+        LOG_ERROR(g_log) << "Devil Error: ilLoadImage: "
+                         << iluErrorString( devilError ) ;
         assert( false );
+        return false;
     }
-    GLint components = ilGetInteger(IL_IMAGE_BPP);
+    
+    GLint format = GL_RGB;
+    ILboolean isConverted = false;
+    int bitDepth = ilGetInteger(IL_IMAGE_BITS_PER_PIXEL );
+    if( bitDepth == 32 )
+    {
+        format = GL_RGBA;
+    }
+    isConverted = ilConvertImage( format, IL_UNSIGNED_BYTE );
+    if( !isConverted )
+    {
+        LOG_ERROR(g_log) << "Failed to convert image \"" << filepath
+        << "\" with " << bitDepth << " bit depth.";
+        return false;
+    }
+    else
+    {
+        LOG_DEBUG(g_log) << "Converted image \"" << filepath
+        << "\" with " << bitDepth << " bit depth.";
+    }
+    devilError = ilGetError();
+    if( devilError != IL_NO_ERROR )
+    {
+        LOG_ERROR(g_log) << "Devil Error: ilConvertImage: "
+        << iluErrorString( devilError ) ;
+        assert( false );
+        return false;
+    }
+    
     GLint width = ilGetInteger(IL_IMAGE_WIDTH);
     GLint height = ilGetInteger(IL_IMAGE_HEIGHT);
     GLint imageFormat = ilGetInteger(IL_IMAGE_FORMAT);
     GLint imageType = ilGetInteger(IL_IMAGE_TYPE);
-    LOG_DEBUG(g_log) << "Texture loaded: components=" << components 
-        << ", width=" << width << ", height=" << height 
-        << ", imageFormat=" << imageFormat
-        << ( GL_RGBA == imageFormat ? " GL_RGBA" : " No Alpha")
-        << " from path \"" << filepath << "\"";
+    LOG_DEBUG(g_log) << "Texture loaded: internal format = "
+                     << ( GL_RGBA == imageFormat ? " GL_RGBA" : " GL_RGB")
+                     << ", width=" << width << ", height=" << height
+                     << ", imageFormat=(" << imageFormat << "="
+                     << ( GL_RGBA == imageFormat ? " GL_RGBA" : " GL_RGB)")
+                     << " from path \"" << filepath << "\"";
     GL_CHECK( glTexImage2D(GL_TEXTURE_2D,
-                 0, // level-of-detail number
-                 components,
-                 width,
-                 height,
-                 0, // "border", must be zero
-                 imageFormat,
-                 imageType,
-                 ilGetData() ) );
+                           0,              // level-of-detail number
+                           format,         // *internal* format in device memory, GL_RGB or GL_RGBA
+                           width, height,  // size of image
+                           0,              // "border", must be zero
+                           imageFormat,    // order of *incoming* data colors, GL_RGB or GL_RGA
+                           imageType,      // type of incoming data
+                           ilGetData()     // actual data
+                            ) );
+    
+    devilError = ilGetError();
+    if( devilError != IL_NO_ERROR )
+    {
+        LOG_ERROR(g_log) << "Devil Error: ilDeleteImages: "
+        << iluErrorString( devilError ) ;
+        assert( false );
+        return false;
+    }
     // Data has now been copied to OpenGL, delete temp copy
     ilDeleteImages( 1, &texId );
+    devilError = ilGetError();
+    if( devilError != IL_NO_ERROR )
+    {
+        LOG_ERROR(g_log) << "Devil Error: ilDeleteImages: "
+        << iluErrorString( devilError ) ;
+        assert( false );
+        return false;
+    }
+    // Success
     return true;
 }
 
@@ -312,7 +433,7 @@ std::string readFileToString( const char* filename )
         srcFile.close();
         return contents.str();
     }
-    LOG_DEBUG(g_log) << "---------------------------------------\nError.  Unable to read file \"" << filename << "\"\n---------------------------------------\n";
+    LOG_ERROR(g_log) << "Unable to read file \"" << filename << "\".";
     throw(errno);
 }
 
@@ -340,8 +461,61 @@ GLuint createShaderWithErrorHandling( GLuint shaderType, const std::string& shad
         {
             LOG_ERROR(g_log) << "Failed to compile shader:\n-------------\n"
             << shaderSource << "\n-------------\n";
-            assert( false );
+            //assert( false );
         }
     }
     return shader;
+}
+
+
+void createMeshesFromFile( const char* filePath, 
+                           FileAssetFinderPtr finder,
+                           std::vector< MeshPtr >& outMeshes )
+{
+    std::string foundPath;
+    if( !finder->findFile( filePath, foundPath ) )
+    {
+        LOG_ERROR(g_log) << "Failed to find mesh file \"" << filePath << "\".";
+        assert(false);
+        return;
+    }
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile( foundPath,
+                                              aiProcess_Triangulate
+                                             | aiProcess_CalcTangentSpace
+                                             | aiProcess_GenSmoothNormals
+                                             | aiProcess_GenUVCoords
+                                             //| aiProcess_SortByPType
+                                             //aiProcessPreset_TargetRealtime_MaxQuality
+        | aiProcess_PreTransformVertices // Eliminate the hierarchy; also removes animations
+        | aiProcess_TransformUVCoords // Bake in UV coord transforms
+        );
+    if( !scene )
+    {
+        LOG_ERROR(g_log) << "Unable to read file \"" << filePath 
+            << "\" using found path \"" << foundPath << "\".";
+        assert(false);
+        return;
+    }
+    const aiNode* root = scene->mRootNode;
+    LOG_INFO(g_log) << "Processing scene root node \"" << root->mName.C_Str() << "\".";
+    if( !root )
+    {
+        LOG_ERROR(g_log) << "No scene root found in file \"" << filePath << "\".";
+        return;
+    }
+    if( root->mNumMeshes < 1 )
+    {
+        LOG_WARN(g_log) << "No mesh found when loading scene file \"" 
+            << filePath << "\" using found path \"" << foundPath << "\".";
+    }
+    for( size_t meshIndex = 0; meshIndex < root->mNumMeshes; ++meshIndex )
+    {
+        const aiMesh* aimesh = scene->mMeshes[ root->mMeshes[meshIndex] ];
+        if( !aimesh ) continue;
+        LOG_INFO(g_log) << "Processing mesh node \"" << aimesh->mName.C_Str() << "\".";        
+        //const aiMaterial* aimaterial = scene->mMaterials[ aimesh->mMaterialIndex ];
+        outMeshes.push_back( Mesh::createMeshFromAiMesh( aimesh, 1.0 ) );
+    }
+    LOG_INFO(g_log) << "Loaded " << outMeshes.size() << " new meshes.";
 }

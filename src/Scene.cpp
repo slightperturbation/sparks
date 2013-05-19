@@ -1,51 +1,25 @@
 
 #include "Scene.hpp"
+#include "Mesh.hpp"
 
 #include <functional>
+#include <algorithm>
 
 Scene
 ::Scene( void )
-{
-
-}
+{ }
 
 Scene
 ::~Scene( )
-{
-
-}
-
-void
-Scene
-::prepareRenderCommands( void )
-{
-    LOG_TRACE(g_log) << "Scene::prepareRenderCommands with " 
-        << m_passes.size() << " passes and " 
-        << m_renderables.size() << " renderables.";
-    m_passes.sort( renderPassCompareByPriority );
-
-    RenderCommand rc;
-    for( auto rp = m_passes.begin(); rp != m_passes.end(); ++rp )
-    {
-        for( auto r = m_renderables.begin(); r != m_renderables.end(); ++r )
-        {
-            if( createRenderCommand( rc, *rp, *r ) )
-            {
-                m_commands.push( rc );
-            }
-        }
-    }
-}
-
+{ }
 void
 Scene
 ::render( void )
 {
     LOG_TRACE(g_log) << "Scene::render with "
-        << m_commands.size() << " commands, "
-        << m_passes.size() << " passes and " 
-        << m_renderables.size() << " renderables.";
-
+                     << m_commands.size() << " commands, "
+                     << m_passes.size() << " passes and " 
+                     << m_renderables.size() << " renderables.";
     const RenderPass* lastRenderPass = NULL;
     RenderCommand lastRenderCommand, rc;
     // Render each render command in order.
@@ -71,3 +45,29 @@ Scene
         lastRenderPass->postRender();
     }
 }
+
+void Scene::add( RenderPassPtr rp ) { m_passes.push_back( rp ); }
+void Scene::add( RenderablePtr r ) { m_renderables.push_back( r ); }
+
+void
+Scene
+::prepareRenderCommands( void )
+{
+    LOG_TRACE(g_log) << "Scene::prepareRenderCommands with " 
+        << m_passes.size() << " passes and " 
+        << m_renderables.size() << " renderables.";
+    m_passes.sort( renderPassCompareByPriority );
+
+    RenderCommand rc;
+    for( auto rp = m_passes.begin(); rp != m_passes.end(); ++rp )
+    {
+        for( auto r = m_renderables.begin(); r != m_renderables.end(); ++r )
+        {
+            if( createRenderCommand( rc, *rp, *r ) )
+            {
+                m_commands.push( rc );
+            }
+        }
+    }
+}
+

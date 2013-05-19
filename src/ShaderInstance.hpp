@@ -6,8 +6,8 @@
 //
 //
 
-#ifndef sparks_Shader_hpp
-#define sparks_Shader_hpp
+#ifndef sparks_ShaderInstance_hpp
+#define sparks_ShaderInstance_hpp
 
 #include "config.hpp"  // Defines DATA_PATH
 #include "SoftTestDeclarations.hpp"
@@ -63,7 +63,7 @@ public:
     template< typename T >
     void setUniform( const ShaderUniformName& name, const T& val )
     { 
-        LOG_TRACE(g_log) << "Setting uniform " << name ;
+        LOG_TRACE(g_log) << "Setting uniform " << name << " = " << val;
         if( m_uniforms.find( name ) == m_uniforms.end() ) 
         {
             createUniform<T>( name );
@@ -96,7 +96,8 @@ protected:
         //GL_CHECK( glUseProgram( a_shaderProgramIndex ) );
         for( auto sumap = m_uniforms.begin(); sumap != m_uniforms.end(); ++sumap )
         {
-            LOG_TRACE(g_log) << "Applying ShaderUniform " << (*sumap).first;
+            LOG_TRACE(g_log) << "Applying ShaderUniform " << (*sumap).first
+            << " = " << (*sumap).second->toString();
             (*sumap).second->apply();
         }
     }
@@ -139,25 +140,28 @@ public:
     {
     }
 
-    //TODO$$$$ Need to be notified by ShaderManager when 
-    // our shader is reloaded so we can call lookupUniformLocations()
+    /// Notified by ShaderManager when
+    /// our shader is reloaded so we can call lookupUniformLocations()
+    void refreshUniformLocations( void )
+    {
+        LOG_DEBUG(g_log) << "Refresh \"" << m_name << "\" shader uniform locations.";
+        lookupUniformLocations( getGLProgramIndex() );
+    }
     
     virtual ~ShaderInstance() { }
     const ShaderName& name( void ) const { return m_name; }
-
-    GLuint getGLProgramIndex( void ) const
-    {
-        return m_manager->getProgramIndexForShaderName( m_name );
-    }
     
     void use( void ) const
     {
         GLuint shaderIndex = getGLProgramIndex();
         LOG_TRACE(g_log) << "Use Shader Program " << shaderIndex;
-        for( auto iter = m_uniforms.begin(); iter != m_uniforms.end(); ++iter )
-        { LOG_TRACE(g_log) << "\tUniform: " << iter->first; }
         GL_CHECK( glUseProgram( shaderIndex ) );
         applyShaderUniforms( shaderIndex);
+    }
+    
+    GLuint getGLProgramIndex( void ) const
+    {
+        return m_manager->getProgramIndexForShaderName( m_name );
     }
 
 protected:

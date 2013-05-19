@@ -51,7 +51,11 @@ Material
         const TextureName& textureName = texIter->first;
         const ShaderUniformName& samplerNameInShader = texIter->second;
         GLint texUnit = m_textureManager->getTextureUnitForTexture( textureName );
+        m_textureManager->forceTextureBind( textureName );
         m_shader->setUniform( samplerNameInShader, texUnit );
+        LOG_TRACE(g_log) << "Material setting texture sampler uniform \""
+                         << samplerNameInShader << "\" = " << texUnit
+                         << " bound to texture \"" << textureName << "\".";
     }
     m_shader->use();
 }
@@ -64,11 +68,10 @@ Material
     if( !m_textureManager->isTextureNameReady( textureName ) )
     {
         LOG_WARN(g_log) << "Adding texture \"" 
-            << textureName << "\" to material, but that texture has not been loaded.";
+                        << textureName
+                        << "\" to material, but texture has not been loaded.";
     }
     m_textures.insert( make_pair( textureName, samplerName ) );
-    GLint unit = m_textureManager->getTextureUnitForTexture( textureName );
-    m_shader->setUniform( samplerName, unit );
 }
 
 void
