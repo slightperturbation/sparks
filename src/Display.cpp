@@ -5,23 +5,29 @@
 #include "Renderable.hpp"
 
 
-Display::Display( PerspectivePtr context )
+spark::Display
+::Display( PerspectivePtr context )
     : m_context( context )
 {
 
 }
 
-SimpleDisplay::SimpleDisplay( PerspectivePtr context )
+spark::SimpleDisplay
+::SimpleDisplay( PerspectivePtr context )
     : Display( context )
 {
 }
 
-void SimpleDisplay::resizeWindow( int width, int height ) 
+void
+spark::SimpleDisplay
+::resizeWindow( int width, int height ) 
 {
     m_viewport.setExtents( 0, 0, width, height );
 }
 
-void SimpleDisplay::render( const Renderables& scene )
+void 
+spark::SimpleDisplay
+::render( const Renderables& scene )
 {
     m_context->aspectRatio( float(m_viewport.m_width)/float(m_viewport.m_height) );
     m_viewport.render( scene, m_context );
@@ -29,19 +35,24 @@ void SimpleDisplay::render( const Renderables& scene )
 
 //////////////////////////////////////////////////////////////////////////
 
-SideBySideDisplay::SideBySideDisplay( PerspectivePtr context )
+spark::SideBySideDisplay
+::SideBySideDisplay( PerspectivePtr context )
     : Display( context ), m_eyeSeparationDistance( 0.0 )
 {
 }
 
-void SideBySideDisplay::resizeWindow( int width, int height )
+void
+spark::SideBySideDisplay
+::resizeWindow( int width, int height )
 {
     // update viewports
     m_rightViewport.setExtents( 0,0, width/2, height );
     m_leftViewport.setExtents( width/2, 0, width/2, height );
 }
 
-void SideBySideDisplay::render( const Renderables& scene )
+void
+spark::SideBySideDisplay
+::render( const Renderables& scene )
 {
     m_context->aspectRatio( float(m_rightViewport.m_width)/float(m_rightViewport.m_height) );
 

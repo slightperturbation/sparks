@@ -16,7 +16,7 @@
 
 using namespace Eigen;
 
-Spark
+spark::Spark
 ::Spark()
 : m_h( 0.025f ),
   m_degree( 5 ),
@@ -26,7 +26,7 @@ Spark
 }
 
 void
-Spark
+spark::Spark
 ::setAggregate( const PointCharges& a_ )
 {
     m_aggregate.clear();
@@ -35,7 +35,7 @@ Spark
 }
 
 void
-Spark
+spark::Spark
 ::initializeBoundary( const PointCharges& a_boundary )
 {
     // Compute the electric field for each candidate
@@ -47,7 +47,7 @@ Spark
 }
 
 void
-Spark
+spark::Spark
 ::clear( void )
 {
     m_aggregate.clear();
@@ -55,7 +55,7 @@ Spark
 }
 
 void
-Spark
+spark::Spark
 ::update( void )
 {
     LOG_DEBUG(g_log) << "Begin Spark::update(), agg: "
@@ -90,7 +90,7 @@ Spark
 }
 
 void
-Spark
+spark::Spark
 ::updateElectricFields( const PointCharge& a_additionalCharge )
 {
     for( size_t i=0; i<m_candidate.size(); ++i )
@@ -100,7 +100,7 @@ Spark
 }
 
 void
-Spark
+spark::Spark
 ::recomputeElectricFieldAtPoint( PointCharge& a_point )
 {
     a_point.phi << 0, 0, 0;
@@ -123,7 +123,7 @@ Spark
 }
 
 Eigen::Vector3f
-Spark
+spark::Spark
 ::field( const PointCharge& to, const PointCharge& from )
 {
     Vector3f r = (to.pos-from.pos);
@@ -133,7 +133,7 @@ Spark
 }
 
 size_t
-Spark
+spark::Spark
 ::selectNextCandidate( void ) const
 {
     if( m_candidate.empty() ) throw "Cannot call selectNextCandidate on empty candidate list.";
@@ -159,8 +159,8 @@ Spark
     return m_candidate.size() - 1;
 }
 
-PointCharge
-Spark
+spark::PointCharge
+spark::Spark
 ::sampleNeighborhood( const PointCharge& a_sample, int a_dir, int a_totDirs )
 {
     PointCharge p( a_sample );

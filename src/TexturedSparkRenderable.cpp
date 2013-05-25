@@ -6,11 +6,13 @@ using namespace std;
 using namespace Eigen;
 
 // "texturedSpark"
-const std::string g_defaultVertexShaderFilename = "colorVertexShader.glsl"; //"TexturedSparkVertex.glsl";
-const std::string g_defaultFragmentShaderFilename = "colorFragmentShader.glsl"; //"TexturedSparkFragment.glsl";
+const std::string g_defaultVertexShaderFilename = "colorVertexShader.glsl"; 
+const std::string g_defaultFragmentShaderFilename = "colorFragmentShader.glsl";
 
-TexturedSparkRenderable
-::TexturedSparkRenderable( LSparkPtr a_spark, TextureManagerPtr textureManager, ShaderManagerPtr shaderManager )
+spark::TexturedSparkRenderable
+::TexturedSparkRenderable( LSparkPtr a_spark,
+                           TextureManagerPtr textureManager,
+                           ShaderManagerPtr shaderManager )
 : Renderable( "TexturedSparkRenderable" ),
   m_mesh( new Mesh() ),
   m_spark( a_spark ) 
@@ -27,30 +29,8 @@ TexturedSparkRenderable
     this->setMaterialForPassName( g_colorRenderPassName, sparkColorMaterial );
 }
 
-void 
-TexturedSparkRenderable
-::setTextureState( PerspectivePtr renderContext )
-{
-    glEnable( GL_BLEND );
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-    glDisable( GL_DEPTH_TEST );
-
-
-///////////////////////////////////////////////////////////////////////////
-    //TODO textureManager wrong, should be done in Texture class called by renderCommand
-
-    //TextureManager::get().bindTextureToUnit( "Spark", m_textureUnit );
-    //TextureManager::get().setTextureParameteri( "Spark", GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-    //TextureManager::get().setTextureParameteri( "Spark", GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-    //m_mesh->setShaderUniformInt( "tex2d", m_textureUnit ); // uniform is given the texture unit to read from
-///////////////////////////////////////////////////////////////////////////
-
-
-
-}
-
 Eigen::Vector3f 
-TexturedSparkRenderable
+spark::TexturedSparkRenderable
 ::upOffset( const Eigen::Vector3f& pos, 
             const Eigen::Vector3f& parentPos,
             const Eigen::Vector3f& camPos,
@@ -65,12 +45,10 @@ TexturedSparkRenderable
 }
     
 void 
-TexturedSparkRenderable
+spark::TexturedSparkRenderable
 ::render( void ) const
 {
-    glm::vec3 glmCamPos( 0,0,1 ); // = renderContext->cameraPos();
-    const Vector3f camPos(glmCamPos[0], glmCamPos[1], glmCamPos[2] );
-
+    const Vector3f camPos( m_cameraPos.x, m_cameraPos.y, m_cameraPos.z );
     const float halfAspectRatio = 0.1;
 
     m_mesh->clearGeometry();
@@ -78,24 +56,24 @@ TexturedSparkRenderable
     // two verts per segment, so vertexIndex = (2i, 2i+1)  (bottom, top)
     // plus two at the end to close the last segment
     m_mesh->resizeVertexArray( 2 * segments.size() );
-//    LOG_DEBUG(g_log) << "Assuming " << 2*segments.size() << " verts for " << segments.size() << " segments.\n";
+    LOG_TRACE(g_log) << "Spark render:  assuming " << 2*segments.size()
+                     << " verts for " << segments.size() << " segments.\n";
 
     for( size_t i=0; i < segments.size(); ++i )
     {
         // First, create the vertices, 0 to 2*(segments.size()-1)
         Segment& s = segments[i];
-//        LOG_DEBUG(g_log) << "Rendering segment[" << i << "] (parent=" << s.m_parentIndex 
-//            << ") verts=" << 2*i << ", " << 2*i+1 
-//            << "  p = " << s.m_pos(0) << ", " << s.m_pos(1) << ", " << s.m_pos(2)
-//            << "\n";
+        LOG_TRACE(g_log) << "Rendering segment[" << i << "] (parent=" << s.m_parentIndex
+            << ") verts=" << 2*i << ", " << 2*i+1 
+            << "  p = " << s.m_pos(0) << ", " << s.m_pos(1) << ", " << s.m_pos(2)
+            << "\n";
 
         if( s.m_parentIndex == -1 )
         {
             continue;
         }
-
         const Vector3f offset = upOffset( s.m_pos, s.parentPos(segments), camPos, halfAspectRatio );
-        const Vector3f camDir = (camPos - s.m_pos).normalized();
+        const Vector3f camDir = ( camPos - s.m_pos).normalized();
 
         //const Vector3f frontOffset = dir * ( len.norm()*0.25f );
         Vector4f color( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -120,35 +98,24 @@ TexturedSparkRenderable
 
     m_mesh->bindDataToBuffers();
     
-    // Setup texture
-    //setTextureState( renderContext );
-
     // Render mesh
     m_mesh->render();
 
     // TODO -- need an "unsetRenderState"
-    GL_CHECK( glEnable( GL_DEPTH_TEST ) );
+    //GL_CHECK( glEnable( GL_DEPTH_TEST ) );
+}
+
+void
+spark::TexturedSparkRenderable
+::attachShaderAttributes( GLuint shaderIndex )
+{
+    m_mesh->attachShaderAttributes( shaderIndex );
 }
 
 void 
-TexturedSparkRenderable
+spark::TexturedSparkRenderable
 ::update( float dt )
 {
     m_spark->update( dt );
     m_mesh->update( dt );
 }
-
-void
-TexturedSparkRenderable
-::loadTextures()
-{
-
-
-    ///////////////////////////////////////////////////////////////////////////
-    //TODO textureManager should be passed in, part of loading
-
-    //TextureManager::get()
-    //    .loadTextureFromImageFile( DATA_PATH "/textures/sparkCircularGradient.png", "Spark" );
-    ///////////////////////////////////////////////////////////////////////////
-}
-

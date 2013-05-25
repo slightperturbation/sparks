@@ -11,13 +11,14 @@
 
 #include <Eigen/Dense>
 #include <memory>
-
-class VelocityFieldInterface
+namespace spark
 {
-public:
-    virtual Eigen::Vector3f velocityAtPosition( const Eigen::Vector3f& pos ) = 0;
-};
-typedef std::shared_ptr< VelocityFieldInterface > VelocityFieldInterfacePtr;
-
+    class VelocityFieldInterface
+    {
+    public:
+        virtual Eigen::Vector3f velocityAtPosition( const Eigen::Vector3f& pos ) = 0;
+    };
+    typedef std::shared_ptr< VelocityFieldInterface > VelocityFieldInterfacePtr;
+} // end namespace spark
 
 #endif

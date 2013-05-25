@@ -6,7 +6,7 @@
 #include "Projection.hpp"
 #include "Renderable.hpp"
 
-RenderPass
+spark::RenderPass
 ::RenderPass( void )
     : m_priority( 1.0f )
 {
@@ -14,35 +14,39 @@ RenderPass
 }
 
 void 
-RenderPass
+spark::RenderPass
 ::preRender( void ) const
 {
     if( m_target ) { m_target->preRender(); }
 }
 
 void 
-RenderPass
+spark::RenderPass
 ::postRender( void ) const
 {
     if( m_target ) { m_target->postRender(); }
 }
 
-ConstMaterialPtr
-RenderPass
+spark::ConstMaterialPtr
+spark::RenderPass
 ::getMaterialForRenderable( ConstRenderablePtr aRenderable ) const
 {
     return aRenderable->getMaterialForPassName( m_name );
 }
 
-bool renderPassCompareByPriority( ConstRenderPassPtr a,
-                                  ConstRenderPassPtr b )
+bool 
+spark
+::renderPassCompareByPriority( ConstRenderPassPtr a,
+                               ConstRenderPassPtr b )
 {
     return a->priority() < b->priority();
 }
 
-bool createRenderCommand( RenderCommand& outRC, 
-                          ConstRenderPassPtr aRenderPass, 
-                          ConstRenderablePtr aRenderable )
+bool 
+spark
+::createRenderCommand( RenderCommand& outRC, 
+                       ConstRenderPassPtr aRenderPass, 
+                       ConstRenderablePtr aRenderable )
 {
     // Assert preconditions
     if( !aRenderPass ) 

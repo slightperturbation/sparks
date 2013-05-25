@@ -17,6 +17,7 @@
 #include "RenderPass.hpp"
 #include "Scene.hpp"
 
+using namespace spark;
 
 class TestRenderable : public Renderable
 {
@@ -124,7 +125,7 @@ BOOST_AUTO_TEST_CASE( TextureMangerTests )
     TextureManager tm;
     tm.setAssetFinder( finder );
     tm.loadTextureFromImageFile( "spark.png", "TestSpark" );
-    BOOST_REQUIRE_NE( tm.getTextureIdFromHandle( "TestSpark" ), -1 );
+    BOOST_REQUIRE_NE( tm.getTextureIdForHandle( "TestSpark" ), -1 );
 }
 BOOST_AUTO_TEST_CASE( ShaderMangerTests )
 {

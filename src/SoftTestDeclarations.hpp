@@ -36,72 +36,75 @@ extern cpplog::BaseLogger* g_log;
 
 ///////////////////////////////////////////////////////////////////////////
 // Forward Declarations
+namespace spark
+{
+    class Renderable;
+    typedef std::shared_ptr< Renderable > RenderablePtr;
+    typedef std::shared_ptr< const Renderable > ConstRenderablePtr;
+    typedef std::vector< RenderablePtr >  Renderables;
+    typedef std::string RenderableName;
 
-class Renderable;
-typedef std::shared_ptr< Renderable > RenderablePtr;
-typedef std::shared_ptr< const Renderable > ConstRenderablePtr;
-typedef std::vector< RenderablePtr >  Renderables;
-typedef std::string RenderableName;
+    class Projection;
+    class PerspectiveProjection;
+    class OrthogonalProjection;
+    typedef std::shared_ptr< Projection > PerspectivePtr;
+    typedef std::shared_ptr< const Projection > ConstPerspectivePtr;
+    typedef std::shared_ptr< PerspectiveProjection > PerspectiveProjectionPtr;
+    typedef std::shared_ptr< const PerspectiveProjection > ConstPerspectiveProjectionPtr;
+    typedef std::shared_ptr< OrthogonalProjection > OrthogonalProjectionPtr;
+    typedef std::shared_ptr< const OrthogonalProjection > ConstOrthogonalProjectionPtr;
 
-class Projection;
-class PerspectiveProjection;
-class OrthogonalProjection;
-typedef std::shared_ptr< Projection > PerspectivePtr;
-typedef std::shared_ptr< const Projection > ConstPerspectivePtr;
-typedef std::shared_ptr< PerspectiveProjection > PerspectiveProjectionPtr;
-typedef std::shared_ptr< const PerspectiveProjection > ConstPerspectiveProjectionPtr;
-typedef std::shared_ptr< OrthogonalProjection > OrthogonalProjectionPtr;
-typedef std::shared_ptr< const OrthogonalProjection > ConstOrthogonalProjectionPtr;
+    class RenderCommand;
+    typedef std::shared_ptr< RenderCommand > RenderCommandPtr;
+    struct RenderCommandCompare;
+    typedef std::priority_queue< RenderCommand, std::vector< RenderCommand >, RenderCommandCompare > RenderCommandQueue;
 
+    class RenderPass;
+    typedef std::shared_ptr< RenderPass > RenderPassPtr;
+    typedef std::shared_ptr< const RenderPass > ConstRenderPassPtr;
+    typedef std::list< RenderPassPtr > RenderPassList;
+    typedef std::string RenderPassName;
 
-class RenderCommand;
-typedef std::shared_ptr< RenderCommand > RenderCommandPtr;
-struct RenderCommandCompare;
-typedef std::priority_queue< RenderCommand, std::vector< RenderCommand >, RenderCommandCompare > RenderCommandQueue;
+    class Scene;
+    typedef std::shared_ptr< Scene > ScenePtr;
+    typedef std::shared_ptr< const Scene > ConstScenePtr;
 
-class RenderPass;
-typedef std::shared_ptr< RenderPass > RenderPassPtr;
-typedef std::shared_ptr< const RenderPass > ConstRenderPassPtr;
-typedef std::list< RenderPassPtr > RenderPassList;
-typedef std::string RenderPassName;
+    class RenderTarget;
+    typedef std::shared_ptr< RenderTarget > RenderTargetPtr;
+    typedef std::shared_ptr< const RenderTarget > ConstRenderTargetPtr;
 
-class Scene;
-typedef std::shared_ptr< Scene > ScenePtr;
-typedef std::shared_ptr< const Scene > ConstScenePtr;
+    class ShaderInstance;
+    typedef std::shared_ptr< ShaderInstance > ShaderInstancePtr;
+    typedef std::shared_ptr< const ShaderInstance > ConstShaderInstancePtr;
 
-class RenderTarget;
-typedef std::shared_ptr< RenderTarget > RenderTargetPtr;
-typedef std::shared_ptr< const RenderTarget > ConstRenderTargetPtr;
+    class Material;
+    typedef std::shared_ptr< Material > MaterialPtr;
+    typedef std::shared_ptr< const Material > ConstMaterialPtr;
+    typedef std::string MaterialName;
+    typedef std::string ShaderUniformName;
 
-class ShaderInstance;
-typedef std::shared_ptr< ShaderInstance > ShaderInstancePtr;
-typedef std::shared_ptr< const ShaderInstance > ConstShaderInstancePtr;
+    class TextureUnit;
+    typedef std::shared_ptr< TextureUnit > TextureUnitPtr;
+    typedef std::shared_ptr< const TextureUnit> ConstTextureUnitPtr;
 
-class Material;
-typedef std::shared_ptr< Material > MaterialPtr;
-typedef std::shared_ptr< const Material > ConstMaterialPtr;
-typedef std::string MaterialName;
-typedef std::string ShaderUniformName;
+    class TextureManager;
+    typedef std::shared_ptr< TextureManager > TextureManagerPtr;
+    typedef std::string TextureName;
 
-class TextureUnit;
-typedef std::shared_ptr< TextureUnit > TextureUnitPtr;
-typedef std::shared_ptr< const TextureUnit> ConstTextureUnitPtr;
+    class ShaderManager;
+    typedef std::shared_ptr< ShaderManager > ShaderManagerPtr;
+    typedef std::string ShaderName;
 
-class TextureManager;
-typedef std::shared_ptr< TextureManager > TextureManagerPtr;
-typedef std::string TextureName;
+    class FileAssetFinder;
+    typedef std::shared_ptr< FileAssetFinder > FileAssetFinderPtr;
 
-class ShaderManager;
-typedef std::shared_ptr< ShaderManager > ShaderManagerPtr;
-typedef std::string ShaderName;
+    class Mesh;
+    typedef std::shared_ptr< Mesh > MeshPtr;
 
-class FileAssetFinder;
-typedef std::shared_ptr< FileAssetFinder > FileAssetFinderPtr;
+    class VolumeData;
+    typedef std::shared_ptr< VolumeData > VolumeDataPtr;
 
-class Mesh;
-typedef std::shared_ptr< Mesh > MeshPtr;
-
-// Define standard names for common render passes
-const RenderPassName g_colorRenderPassName = "ColorPass";
-
+    // Define standard names for common render passes
+    const RenderPassName g_colorRenderPassName = "ColorPass";
+} // end namespace spark
 #endif

@@ -22,12 +22,12 @@
 #include <iostream>
 
 void APIENTRY debugOpenGLMessageCallback( GLenum source,
-    GLenum type,
-    GLuint id,
-    GLenum severity,
-    GLsizei length,
-    const GLchar* message,
-    void* userParam )
+                                          GLenum type,
+                                          GLuint id,
+                                          GLenum severity,
+                                          GLsizei length,
+                                          const GLchar* message,
+                                          void* userParam )
 {
     using namespace std;
     stringstream msg;
@@ -83,9 +83,9 @@ void APIENTRY debugOpenGLMessageCallback( GLenum source,
     assert(false);
 }
 
-
-
-void writeFrameBufferToFile( const std::string& frameBaseFileName ) 
+void 
+spark
+::writeFrameBufferToFile( const std::string& frameBaseFileName ) 
 {
     static unsigned int frameNumber = 1;
 
@@ -120,7 +120,7 @@ void writeFrameBufferToFile( const std::string& frameBaseFileName )
 }
 
 /// Startup OpenGL and create the rendering context and window.
-OpenGLWindow
+spark::OpenGLWindow
 ::OpenGLWindow( const char* programName )
 : m_isOK( false )
 {
@@ -206,14 +206,16 @@ OpenGLWindow
     m_isOK = true;
 }
 
-OpenGLWindow
+spark::OpenGLWindow
 ::~OpenGLWindow()
 {
     ilShutDown();
     glfwTerminate();
 }
 
-bool loadCheckerTexture( void )
+bool
+spark
+::loadCheckerTexture( void )
 {
     float pixels[] = {
         0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,   0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
@@ -225,7 +227,9 @@ bool loadCheckerTexture( void )
     return true;
 }
 
-bool loadTestTexture( void )
+bool
+spark
+::loadTestTexture( void )
 {
     ILuint texId = 0;
     ILuint devilError = 0;
@@ -282,7 +286,9 @@ bool loadTestTexture( void )
     return true;
 }
 
-bool loadTextureFromFile( const char* filepath )
+bool 
+spark
+::loadTextureFromFile( const char* filepath )
 {
     ILuint texId = 0;
     ILuint devilError = 0;
@@ -374,29 +380,30 @@ bool loadTextureFromFile( const char* filepath )
     return true;
 }
 
-std::ostream& operator<<( std::ostream& out, glm::vec3 v )
+std::ostream& spark::operator<<( std::ostream& out, glm::vec3 v )
 {
     out << v.x << ", " << v.y << ", " << v.z ;
     return out;
 }
-std::ostream& operator<<( std::ostream& out, glm::vec4 v )
+std::ostream& spark::operator<<( std::ostream& out, glm::vec4 v )
 {
     out << v.x << ", " << v.y << ", " << v.z << ", " << v.w;
     return out;
 }
-std::ostream& operator<<( std::ostream& out, glm::mat3 m )
+std::ostream& spark::operator<<( std::ostream& out, glm::mat3 m )
 {
     out << glm::to_string(m);
     return out;
 }
-std::ostream& operator<<( std::ostream& out, glm::mat4 m )
+std::ostream& spark::operator<<( std::ostream& out, glm::mat4 m )
 {
     out << glm::to_string(m);
     return out;
 }
 
-///
-void checkOpenGLErrors( const char* aCodeStatement, 
+void 
+spark
+::checkOpenGLErrors( const char* aCodeStatement, 
                         const char* aFileName, 
                         int aLineNumber )
 {
@@ -411,7 +418,9 @@ void checkOpenGLErrors( const char* aCodeStatement,
     }
 }
 
-void checkOpenGLErrors( void )
+void 
+spark
+::checkOpenGLErrors( void )
 {
     GLenum errCode;
     const GLubyte *errString;
@@ -422,7 +431,9 @@ void checkOpenGLErrors( void )
     }
 }
 
-std::string readFileToString( const char* filename )
+std::string 
+spark
+::readFileToString( const char* filename )
 {
     using namespace std;
     ifstream srcFile(filename, std::ios::in );
@@ -437,7 +448,9 @@ std::string readFileToString( const char* filename )
     throw(errno);
 }
 
-GLuint createShaderWithErrorHandling( GLuint shaderType, const std::string& shaderSource )
+GLuint 
+spark
+::createShaderWithErrorHandling( GLuint shaderType, const std::string& shaderSource )
 {
     //////////////////
     // Load the Shader with error handling
@@ -467,10 +480,11 @@ GLuint createShaderWithErrorHandling( GLuint shaderType, const std::string& shad
     return shader;
 }
 
-
-void createMeshesFromFile( const char* filePath, 
-                           FileAssetFinderPtr finder,
-                           std::vector< MeshPtr >& outMeshes )
+void 
+spark
+::createMeshesFromFile( const char* filePath, 
+                        FileAssetFinderPtr finder,
+                        std::vector< MeshPtr >& outMeshes )
 {
     std::string foundPath;
     if( !finder->findFile( filePath, foundPath ) )
@@ -480,16 +494,25 @@ void createMeshesFromFile( const char* filePath,
         return;
     }
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile( foundPath,
-                                              aiProcess_Triangulate
-                                             | aiProcess_CalcTangentSpace
-                                             | aiProcess_GenSmoothNormals
-                                             | aiProcess_GenUVCoords
-                                             //| aiProcess_SortByPType
-                                             //aiProcessPreset_TargetRealtime_MaxQuality
-        | aiProcess_PreTransformVertices // Eliminate the hierarchy; also removes animations
-        | aiProcess_TransformUVCoords // Bake in UV coord transforms
-        );
+    //
+    
+    int processing;
+    if( true )
+    {
+        processing = aiProcessPreset_TargetRealtime_MaxQuality;
+    }
+    else
+    {
+        processing =
+              aiProcess_Triangulate
+            | aiProcess_CalcTangentSpace
+            | aiProcess_GenSmoothNormals
+            | aiProcess_GenUVCoords
+            | aiProcess_PreTransformVertices // Eliminate the hierarchy; also removes animations
+            | aiProcess_TransformUVCoords // Bake in UV coord transforms
+            ;
+    }
+    const aiScene* scene = importer.ReadFile( foundPath, processing );
     if( !scene )
     {
         LOG_ERROR(g_log) << "Unable to read file \"" << filePath 

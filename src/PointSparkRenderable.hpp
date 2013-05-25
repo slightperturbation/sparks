@@ -25,30 +25,30 @@
 #include <glm/gtx/string_cast.hpp>
 
 #include <memory>
-
-struct PointSparkVertex
+namespace spark
 {
-    GLfloat m_position[4];
-    GLfloat m_color[4];
-};
+    struct PointSparkVertex
+    {
+        GLfloat m_position[4];
+        GLfloat m_color[4];
+    };
 
-class PointSparkRenderable : public Renderable
-{
-public:
-    PointSparkRenderable( SparkPtr spark,
-                          TextureManagerPtr tm,
-                          ShaderManagerPtr sm );
-    virtual ~PointSparkRenderable() {}
+    class PointSparkRenderable : public Renderable
+    {
+    public:
+        PointSparkRenderable( SparkPtr spark,
+                              TextureManagerPtr tm,
+                              ShaderManagerPtr sm );
+        virtual ~PointSparkRenderable() {}
     
-    virtual void render( void ) const;
-    virtual void update( float dt );
-    virtual void loadTextures() {}
-    virtual void loadShaders() {}
-private:
-    SparkPtr m_spark;
-    std::vector< PointSparkVertex > m_pointData;
-};
-typedef std::shared_ptr< PointSparkRenderable > PointSparkRenderablePtr;
-
-
+        virtual void render( void ) const;
+        virtual void update( float dt );
+        virtual void loadTextures() {}
+        virtual void loadShaders() {}
+    private:
+        SparkPtr m_spark;
+        std::vector< PointSparkVertex > m_pointData;
+    };
+    typedef std::shared_ptr< PointSparkRenderable > PointSparkRenderablePtr;
+} // end namespace spark
 #endif

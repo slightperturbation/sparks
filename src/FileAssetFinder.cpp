@@ -3,9 +3,11 @@
 
 #include <boost/algorithm/string.hpp>
 
-bool findFileRecursively( const boost::filesystem::path& dirPath, 
-                          const std::string& fileName, 
-                          boost::filesystem::path& pathFound )
+bool 
+spark
+::findFileRecursively( const boost::filesystem::path& dirPath, 
+                       const std::string& fileName, 
+                       boost::filesystem::path& pathFound )
 {
     namespace bfs = boost::filesystem;
     try
@@ -29,21 +31,21 @@ bool findFileRecursively( const boost::filesystem::path& dirPath,
 }
 
 void 
-FileAssetFinder
+spark::FileAssetFinder
 ::addSearchPath( const std::string& aPath )
 {
     m_paths.push_back( make_pair( aPath, false ) );
 }
 
 void 
-FileAssetFinder
+spark::FileAssetFinder
 ::addRecursiveSearchPath( const std::string& aPath )
 {
     m_paths.push_back( make_pair( aPath, true ) );
 }
 
 bool 
-FileAssetFinder
+spark::FileAssetFinder
 ::findFile( const std::string& aFilename, std::string& foundPath ) const
 {
     namespace bfs = boost::filesystem;

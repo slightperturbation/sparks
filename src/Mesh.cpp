@@ -14,45 +14,10 @@
 #include <string>
 #include <sstream>
 #include <cassert>
+#include <algorithm>
 
-bool importMesh( const std::string& path )
-{
-    aiVector3D scene_min, scene_max, scene_center;
-    
-    // images / texture
-    std::map<std::string, GLuint*> textureIdMap;	// map image filenames to textureIds
-    GLuint*		textureIds;							// pointer to texture Array
-    
-    //check if file exists
-	std::ifstream fin( path.c_str() );
-	if(!fin.fail())
-	{
-		fin.close();
-	}
-	else
-	{
-		return false;
-	}
-    
-    
-    // Create an instance of the Importer class
-    Assimp::Importer importer;
-    
-    //aiProcessPreset_TargetRealtime_Quality
-    const aiScene* scene = importer.ReadFile( path, aiProcessPreset_TargetRealtime_Quality );
-    if( !scene )
-    {
-        return false;
-    }
-    
-    
-    return true;
-}
-
-
-
-
-Mesh::Mesh( void )
+spark::Mesh
+::Mesh( void )
 : Renderable( "Mesh" ),
   m_vertexArrayObjectId(-1),
   m_vertexBufferId(-1),
@@ -76,7 +41,8 @@ Mesh::Mesh( void )
     LOG_DEBUG(g_log) << "done.\n";
 }
 
-Mesh::~Mesh()
+spark::Mesh
+::~Mesh()
 {
     GL_CHECK( glDeleteBuffers( 1, &m_vertexBufferId ) );
     GL_CHECK( glDeleteBuffers( 1, &m_elementBufferId ) );
@@ -84,8 +50,12 @@ Mesh::~Mesh()
     LOG_TRACE(g_log) << "Mesh \"" << name() << "\" destroyed.";
 }
 
-void Mesh::update( float dt )
+void 
+spark::Mesh
+::update( float dt )
 {
+    return;
+
     // An example of updating the mesh dynamically  (assuming no topological changes)
     GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, m_vertexBufferId ) );
     MeshVertex* mutableVerts;
@@ -120,7 +90,9 @@ void Mesh::update( float dt )
     GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, 0 ) );
 }
 
-void Mesh::render( void ) const
+void
+spark::Mesh
+::render( void ) const
 {
     // bind vertex array OBJECT (VAO)
     GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
@@ -129,24 +101,31 @@ void Mesh::render( void ) const
                    ((GLsizei)m_vertexIndicies.size()),
                    GL_UNSIGNED_INT,
                    nullptr ) );  // start at the beginning
-    LOG_TRACE(g_log) << "glDrawElements( " << m_vertexIndicies.size() << " );\n";
+    LOG_TRACE(g_log) << "Mesh \"" << name() << "\"  glDrawElements( " << m_vertexIndicies.size() << " );\n";
 }
 
-void Mesh::clearGeometry( void )
+void
+spark::Mesh
+::clearGeometry( void )
 {
     m_vertexData.clear();
     m_vertexIndicies.clear();
 }
 
-void Mesh::resizeVertexArray( size_t newSize )
+void 
+spark::Mesh
+::resizeVertexArray( size_t newSize )
 {
     m_vertexData.resize( newSize );
 }
 
-void Mesh::setVertex( size_t i, const Eigen::Vector3f& a, 
-    const Eigen::Vector2f& textureCoords, 
-    const Eigen::Vector4f color, 
-    const Eigen::Vector3f norm )
+void 
+spark::Mesh
+::setVertex( size_t i, 
+             const Eigen::Vector3f& a, 
+             const Eigen::Vector2f& textureCoords, 
+             const Eigen::Vector4f color, 
+             const Eigen::Vector3f norm )
 {
     if( i > m_vertexData.size()-1 )
     {
@@ -164,10 +143,12 @@ void Mesh::setVertex( size_t i, const Eigen::Vector3f& a,
     for( size_t i=0; i<3; ++i ) v.m_normal[i] = norm(i);
 }
 
-size_t Mesh::addVertex( const Eigen::Vector3f& a, 
-                        const Eigen::Vector2f& aCoord,
-                        const Eigen::Vector4f aColor,
-                        const Eigen::Vector3f aNorm )
+size_t 
+spark::Mesh
+::addVertex( const Eigen::Vector3f& a, 
+             const Eigen::Vector2f& aCoord,
+             const Eigen::Vector4f aColor,
+             const Eigen::Vector3f aNorm )
 {
     MeshVertex v;
     v.m_position[3] = 0;
@@ -180,18 +161,30 @@ size_t Mesh::addVertex( const Eigen::Vector3f& a,
     return m_vertexData.size() - 1;
 }
 
-void Mesh::addTriangleByIndex( unsigned int a, unsigned int b, unsigned int c )
+size_t 
+spark::Mesh
+::addVertex( const MeshVertex& v )
+{
+    m_vertexData.push_back( v );
+    return m_vertexData.size() - 1;
+}
+
+void 
+spark::Mesh
+::addTriangleByIndex( unsigned int a, unsigned int b, unsigned int c )
 {
     m_vertexIndicies.push_back( a ); 
     m_vertexIndicies.push_back( b ); 
     m_vertexIndicies.push_back( c ); 
 }
 
-void Mesh::addQuad( const Eigen::Vector3f& a, const Eigen::Vector2f& aCoord, 
-                    const Eigen::Vector3f& b, const Eigen::Vector2f& bCoord, 
-                    const Eigen::Vector3f& c, const Eigen::Vector2f& cCoord, 
-                    const Eigen::Vector3f& d, const Eigen::Vector2f& dCoord, 
-                    const Eigen::Vector3f& norm )
+void
+spark::Mesh
+::addQuad( const Eigen::Vector3f& a, const Eigen::Vector2f& aCoord, 
+           const Eigen::Vector3f& b, const Eigen::Vector2f& bCoord, 
+           const Eigen::Vector3f& c, const Eigen::Vector2f& cCoord, 
+           const Eigen::Vector3f& d, const Eigen::Vector2f& dCoord, 
+           const Eigen::Vector3f& norm )
 {
     // 0,1 1,1
     //  c   d
@@ -250,8 +243,9 @@ void Mesh::addQuad( const Eigen::Vector3f& a, const Eigen::Vector2f& aCoord,
     bindDataToBuffers();
 }
 
-
-void Mesh::unitCube()
+void 
+spark::Mesh
+::unitCube()
 {
     LOG_DEBUG(g_log) << "Creating new Unit Cube\n";
     float third = 1.0f/1.73205080757f;
@@ -333,9 +327,11 @@ void Mesh::unitCube()
     bindDataToBuffers();
 }
 
-void Mesh::bindDataToBuffers( void )
+void 
+spark::Mesh
+::bindDataToBuffers( void )
 {
-    const bool explicitLogging = false;
+    const bool explicitLogging = true;
     if( explicitLogging )
     {
         int count = 0;
@@ -343,7 +339,7 @@ void Mesh::bindDataToBuffers( void )
         for( auto idxIter = m_vertexIndicies.begin(); idxIter != m_vertexIndicies.end(); ++idxIter )
         {
             count++;
-            unsigned int idx = *idxIter;
+            size_t idx = *idxIter;
             LOG_DEBUG(g_log) << idx ;
             for( int i=0;i<3;++i ) LOG_DEBUG(g_log) << "\t" 
                 << m_vertexData[idx].m_position[i];
@@ -358,8 +354,9 @@ void Mesh::bindDataToBuffers( void )
     GL_CHECK( glBufferDataFromVector( GL_ELEMENT_ARRAY_BUFFER, m_vertexIndicies, GL_STATIC_DRAW ) );
 }
 
-
-void Mesh::attachShaderAttributes( GLuint aShaderProgramIndex )
+void 
+spark::Mesh
+::attachShaderAttributes( GLuint aShaderProgramIndex )
 {
     // TODO -- if mesh always uses a particular vertex type, could replace 
     // with simple opengl calls
@@ -386,8 +383,11 @@ void Mesh::attachShaderAttributes( GLuint aShaderProgramIndex )
     GL_CHECK( glBindVertexArray( 0 ) );
 }
 
-RenderablePtr Mesh::createBox( TextureManagerPtr tm, ShaderManagerPtr sm, 
-                               const RenderPassName& renderPassName  )
+spark::RenderablePtr 
+spark::Mesh
+::createBox( TextureManagerPtr tm, 
+             ShaderManagerPtr sm, 
+             const RenderPassName& renderPassName  )
 {
     Mesh* box = new Mesh();
     if( !box ) return RenderablePtr(nullptr);
@@ -403,26 +403,8 @@ RenderablePtr Mesh::createBox( TextureManagerPtr tm, ShaderManagerPtr sm,
     return RenderablePtr( box );
 }
 
-//bool
-//Mesh
-//::loadFromFile( const std::string& filename,
-//                TextureManagerPtr tm,
-//                ShaderManagerPtr sm,
-//                const RenderPassName& renderPassName )
-//{
-//    // Fill m_vertexData and m_vertexIndices
-//    //MeshVertex v;
-//    //m_vertexData.push_back( v );
-//    //m_vertexIndicies.push_back( vertexIndicies[i] );
-//    
-//    // Create VBO/VAO
-//    bindDataToBuffers();
-//
-//}
-
-
-MeshPtr 
-Mesh
+spark::MeshPtr 
+spark::Mesh
 ::createMeshFromAiMesh( const aiMesh* meshNode, float scale )
 {
     assert( meshNode );
@@ -448,13 +430,15 @@ Mesh
                 v.m_texCoord[i] = meshNode->mTextureCoords[0][vertexIndex][i];
             }
         }
-        //for( size_t channelIndex=0; channelIndex < meshNode->GetNumUVChannels(); ++channelIndex )
-        //{
-        //    for( size_t i=0; i< std::min( 3, meshNode->mNumUVComponents[0] ); ++i )
-        //    {
-        //        v.m_texCoords[channelIndex][i] = meshNode->mTextureCoords[0][vertexIndex][i]
-        //    }
-        //}
+//        for( size_t channelIndex=0;
+//             channelIndex < meshNode->GetNumUVChannels();
+//             ++channelIndex )
+//        {
+//            for( size_t i=0; i< std::min( 3, meshNode->mNumUVComponents[0] ); ++i )
+//            {
+//                v.m_texCoords[channelIndex][i] = meshNode->mTextureCoords[0][vertexIndex][i]
+//            }
+//        }
         if( meshNode->HasVertexColors(0) )
         {
             for( size_t i=0; i<3; ++i )
@@ -478,7 +462,8 @@ Mesh
         }
         for( size_t i=0; i < face.mNumIndices; ++i )
         {
-            mesh->m_vertexIndicies.push_back( aiVertexIndex_to_meshVertexIndex[ face.mIndices[i] ] );
+            mesh->m_vertexIndicies
+              .push_back( aiVertexIndex_to_meshVertexIndex[ face.mIndices[i] ] );
         }
     }
     mesh->bindDataToBuffers();

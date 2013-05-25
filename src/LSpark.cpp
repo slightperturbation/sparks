@@ -15,7 +15,7 @@
 using namespace Eigen;
 using namespace std;
 
-Segment
+spark::Segment
 ::Segment()
 : m_pos( 0,0,0 ),
   m_intensity( 1.0 ),
@@ -24,7 +24,7 @@ Segment
     // Noop
 }
 
-Segment
+spark::Segment
 ::Segment( const Vector3f& a_pos, float a_intensity )
 : m_pos(a_pos),
   m_intensity(a_intensity), 
@@ -33,21 +33,21 @@ Segment
     // Noop
 }
 
-LSpark
+spark::LSpark
 ::LSpark()
 {
 
 }
 
 float
-LSpark
+spark::LSpark
 ::unitRandom( void )
 {
     return 1.0f - ( (rand()*2.0f) / RAND_MAX );
 }
 
 void
-LSpark
+spark::LSpark
 ::create( const Eigen::Vector3f& a_begin,
     const Eigen::Vector3f& a_end,
     float a_intensity,
@@ -63,7 +63,7 @@ LSpark
 }
 
 void
-LSpark
+spark::LSpark
 ::update( float dt )
 {
     for( size_t i=0; i<m_segments.size(); ++i )
@@ -77,14 +77,14 @@ LSpark
 }
 
 void
-LSpark
+spark::LSpark
 ::advect( VelocityFieldInterfacePtr velocityField )
 {
     
 }
 
 void
-LSpark
+spark::LSpark
 ::splitSegment( size_t a_index, float a_scale, int a_depth )
 {
     if( a_depth <= 0 ) return;
@@ -144,7 +144,7 @@ LSpark
 }
 
 void
-LSpark
+spark::LSpark
 ::forkSegment( size_t a_index, float a_scale, int a_depth )
 {
     const float intensityFalloff = 0.666f;
@@ -186,7 +186,7 @@ LSpark
 }
 
 bool
-LSpark
+spark::LSpark
 ::isTerminalSegment( size_t a_index ) const
 {
     for( size_t i = 0; i < m_segments.size(); ++i )
@@ -198,5 +198,3 @@ LSpark
     }
     return true;
 }
-
-

@@ -1,5 +1,3 @@
-
-
 #include "Fluid.hpp"
 #include <limits>
 #include <fstream>
@@ -7,7 +5,7 @@
 #include <cassert>
 
 std::ostream&
-Fluid
+spark::Fluid
 ::writeYDensitySliceToPythonStream(std::ostream& out,
                                    const std::string& varName,
                                    unsigned int frame,
@@ -30,7 +28,7 @@ Fluid
 }
 
 std::ostream&
-Fluid
+spark::Fluid
 ::writeYVelocitySliceToPythonStream(std::ostream& out,
                                     const std::string& varName,
                                     unsigned int frame,
@@ -56,7 +54,8 @@ Fluid
     return out;
 }
 
-Fluid::Fluid( int size ) 
+spark::Fluid
+::Fluid( int size ) 
     :
     m_N( size - 2 ),
     m_density( NULL ), m_density_prev( NULL ), m_density_source( NULL ),
@@ -89,7 +88,9 @@ Fluid::Fluid( int size )
     init();
 }
 
-void Fluid::reallocate( void )
+void 
+spark::Fluid
+::reallocate( void )
 {
     deleteData();
 
@@ -127,7 +128,9 @@ void Fluid::reallocate( void )
     m_div = new float[m_size];
 }
 
-void Fluid::deleteData( void )
+void
+spark::Fluid
+::deleteData( void )
 {
     delete[] m_density;
     delete[] m_density_prev;
@@ -155,12 +158,15 @@ void Fluid::deleteData( void )
     delete[] m_div;
 }
 
-Fluid::~Fluid()
+spark::Fluid
+::~Fluid()
 {
     deleteData();
 }
 
-void Fluid::init( void )
+void 
+spark::Fluid
+::init( void )
 {
     zeroData();
     swapAdvectedFields();
@@ -168,12 +174,16 @@ void Fluid::init( void )
     zeroData();
 }
 
-void Fluid::reset( void )
+void
+spark::Fluid
+::reset( void )
 {
     init();
 }
 
-void Fluid::setSize( int size )
+void
+spark::Fluid
+::setSize( int size )
 {
     m_N = size - 2;
     m_size = size*size*size;
@@ -182,12 +192,16 @@ void Fluid::setSize( int size )
     init();
 }
 
-int Fluid::getSize( void )
+int
+spark::Fluid
+::getSize( void )
 {
     return m_N + 2;
 }
 
-void Fluid::zeroData( void )
+void
+spark::Fluid
+::zeroData( void )
 {
     for( size_t i=0; i < m_size; ++i )
     {
@@ -249,12 +263,14 @@ void Fluid::zeroData( void )
 }
 
 /// Create a 4x4x1 area at the bottom with high temp and source
-void Fluid::addBottomSource( void )
+void
+spark::Fluid
+::addBottomSource( void )
 {
-    int cx = m_N/2;
-    int cy = m_N/2;
-    int cz = m_N/4;
-    float r = m_N/6;
+    int cx  = m_N/2;
+    int cy  = m_N/2;
+    int cz  = m_N/4;
+    float r = (float)m_N/6.0f;
 
     for( int x=1; x<m_N; ++x )
     {
@@ -280,7 +296,9 @@ void Fluid::addBottomSource( void )
     }
 }
 
-void Fluid::addBoom( void )
+void
+spark::Fluid
+::addBoom( void )
 {
     const float vu = 100;
     const float vv = 100;
@@ -334,8 +352,9 @@ void Fluid::addBoom( void )
     m_temp[index(m_N/2, m_N/2, m_N/2-1)] = 1.8f * m_ambientTemp;
 }
 
-
-void Fluid::saveToFile( const char* filename )
+void
+spark::Fluid
+::saveToFile( const char* filename )
 {
     using namespace std;
     ofstream out( filename, std::ios::ate );
@@ -348,7 +367,9 @@ void Fluid::saveToFile( const char* filename )
     }
 }
 
-void Fluid::loadFromFile( const char* filename )
+void
+spark::Fluid
+::loadFromFile( const char* filename )
 {
     using namespace std;
     ifstream infile( filename );
@@ -361,10 +382,13 @@ void Fluid::loadFromFile( const char* filename )
         infile >> m_density[i];
         m_density_prev[i] = m_density[i];
     }
-    LOG_DEBUG(g_log) << "Finished loading file with N=" << m_N << " and size=" << m_size << "\n";
+    LOG_DEBUG(g_log) << "Finished loading file with N=" << m_N 
+                     << " and size=" << m_size << "\n";
 }
 
-void Fluid::addDensitySources( float dt )
+void
+spark::Fluid
+::addDensitySources( float dt )
 {
     for( size_t k = 1; k <= m_N; k++ )
     {
@@ -382,7 +406,9 @@ void Fluid::addDensitySources( float dt )
     }
 }
 
-void Fluid::addVelocitySources( float dt )
+void
+spark::Fluid
+::addVelocitySources( float dt )
 {
     for( size_t k = 1; k <= m_N; k++ )
     {
@@ -412,9 +438,8 @@ void Fluid::addVelocitySources( float dt )
     }
 }
 
-
 void
-Fluid
+spark::Fluid
 ::project( void )
 {
     // compute divergence of velocity field
@@ -463,13 +488,21 @@ Fluid
     enforceBoundary( 3, vz );
 }
 
-void Fluid::diffuse( int boundaryCondition, float* x, float* x_prev, float diff, float dt )
+void 
+spark::Fluid
+::diffuse( int boundaryCondition, 
+           float* x, float* x_prev, 
+           float diff, float dt )
 {
     float a = dt * diff * m_N * m_N * m_N;
     linearSolve( boundaryCondition, x, x_prev, a, 1+6*a );
 }
 
-void Fluid::linearSolveSlow( int boundaryCondition, float* x, float* x_prev, float a, float c )
+void
+spark::Fluid
+::linearSolveSlow( int boundaryCondition, 
+                   float* x, float* x_prev, 
+                   float a, float c )
 {
     const float invC = 1.0 / c;
     //LOG_DEBUG(g_log) << "PRE linear Solve a=" << a << ", invc=" << invC << ",  middle voxel = " << x[index(m_N/2, m_N/2, m_N/2)] << " prev=" << x_prev[index(m_N/2, m_N/2, m_N/2)] << "\n";
@@ -499,7 +532,11 @@ void Fluid::linearSolveSlow( int boundaryCondition, float* x, float* x_prev, flo
     //LOG_DEBUG(g_log) << "POST linear Solve a=" << a << ", invc=" << invC << ",  middle voxel = " << x[index(m_N/2, m_N/2, m_N/2)] << " prev=" << x_prev[index(m_N/2, m_N/2, m_N/2)] << "\n";
 }
 
-void Fluid::linearSolve( int boundaryCondition, float* x, float* x_prev, float a, float c )
+void 
+spark::Fluid
+::linearSolve( int boundaryCondition, 
+               float* x, float* x_prev, 
+               float a, float c )
 {
     const int dim = m_N+2;
     const int dim2 = dim*dim;
@@ -531,12 +568,13 @@ void Fluid::linearSolve( int boundaryCondition, float* x, float* x_prev, float a
     }
 }
 
-
-void Fluid::curl( float* dest, 
-    const float* a, const float* b, 
-    int ax, int ay, int az, 
-    int bx, int by, int bz,
-    float h )
+void 
+spark::Fluid
+::curl( float* dest, 
+        const float* a, const float* b, 
+        int ax, int ay, int az, 
+        int bx, int by, int bz,
+        float h )
 {
     for( size_t k = 1; k <= m_N; k++ )
     {
@@ -551,7 +589,9 @@ void Fluid::curl( float* dest,
     }
 }
 
-void Fluid::computeVorticityConfinment( void )
+void 
+spark::Fluid
+::computeVorticityConfinment( void )
 {
     if( m_vorticityConfinementFactor == 0.0 )
     {
@@ -641,7 +681,7 @@ void Fluid::computeVorticityConfinment( void )
         {
             for( size_t i = 1; i <= m_N; i++ )
             {
-                size_t ind = index(i,j,k);
+                const int ind = index(i,j,k);
                 float nU = m_vorticityForceU[ind];
                 float nV = m_vorticityForceV[ind];
                 float nW = m_vorticityForceW[ind];
@@ -653,9 +693,13 @@ void Fluid::computeVorticityConfinment( void )
     }
 }
 
-
 /// Compute the scalar field d by back-projecting d_prev by velocity field vx,vy,vz
-void Fluid::advect( int boundaryCondition, float* d, float* d_prev, float* vx, float* vy, float* vz, float dt )
+void
+spark::Fluid
+::advect( int boundaryCondition, 
+          float* d, float* d_prev, 
+          float* vx, float* vy, float* vz, 
+          float dt )
 {
     float dt0 = dt * m_N;
     float x, y, z;  // back-traced position
@@ -710,9 +754,8 @@ void Fluid::advect( int boundaryCondition, float* d, float* d_prev, float* vx, f
     enforceBoundary( boundaryCondition, d );
 }
 
-
 void
-Fluid
+spark::Fluid
 ::enforceBoundary( int dim, float* x )
 {
     const float N = m_N;
@@ -770,7 +813,9 @@ Fluid
     x[index(N+1,N+1,N+1)] = third*( x[index(N,N+1,N+1)] + x[index(N+1,N,N+1)] + x[index(N+1,N+1,N)] );
 }
 
-void Fluid::stepVelocity( float dt )
+void 
+spark::Fluid
+::stepVelocity( float dt )
 {
     computeVorticityConfinment();
     // update vel{UVW} with sources, including external and internal forces
@@ -798,7 +843,9 @@ void Fluid::stepVelocity( float dt )
     project();
 }
 
-void Fluid::stepDensity( float dt )
+void
+spark::Fluid
+::stepDensity( float dt )
 {
     addDensitySources(dt);
     
@@ -811,7 +858,9 @@ void Fluid::stepDensity( float dt )
     // now m_density has the advected density
 }
 
-void Fluid::update( float dt )
+void 
+spark::Fluid
+::update( float dt )
 {
     stepVelocity( dt );
     stepDensity( dt );

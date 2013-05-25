@@ -237,6 +237,7 @@ set( SRCS
   ./src/LSpark.cpp
   ./src/TexturedSparkRenderable.cpp
   ./src/Fluid.cpp
+  ./src/SlicedVolume.cpp
   ./src/Scene.cpp
   ./src/RenderPass.cpp
   ./src/RenderCommand.cpp
@@ -244,6 +245,7 @@ set( SRCS
   ./src/FileAssetFinder.cpp
   ./src/ShaderManager.cpp
   ./src/Material.cpp
+  ./src/SlicedVolume.cpp
   ./src/ArcBall.cpp
 )
 set( GUI_SRCS 

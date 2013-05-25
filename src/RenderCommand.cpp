@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 
 void
-RenderCommand
+spark::RenderCommand
 ::operator()( const RenderCommand& precedingCommand )
 {
     // Check preconditions
@@ -68,7 +68,7 @@ RenderCommand
 }
 
 bool
-RenderCommandCompare
+spark::RenderCommandCompare
 ::operator()( const RenderCommand& a, const RenderCommand& b ) const
 {
     // Render commands are order by:
@@ -86,7 +86,7 @@ RenderCommandCompare
 }
 
 
-std::ostream& operator<<( std::ostream& out, const RenderCommand& rc )
+std::ostream& spark::operator<<( std::ostream& out, const RenderCommand& rc )
 {
     out << "Pass[" << rc.m_pass->name() 
         << "]\tPersp[" << rc.m_perspective->name()

@@ -1,5 +1,5 @@
 //
-//  Material.hpp
+//  spark::Material.hpp
 //  sparks
 //
 //  Created by Brian Allen on 4/26/13.
@@ -9,37 +9,37 @@
 #include "Projection.hpp"
 #include "Renderable.hpp"
 
-Material
+spark::Material
 ::Material( TextureManagerPtr tm ) : m_textureManager( tm )
 { }
 
-Material
+spark::Material
 ::Material( TextureManagerPtr tm, ShaderInstancePtr aShader )
     : m_shader( aShader ), m_textureManager( tm )
 { }
 
 void 
-Material
+spark::Material
 ::setShader( ShaderInstancePtr aShader )
 { m_shader = aShader; }
 
 GLuint 
-Material
+spark::Material
 ::getGLShaderIndex( void ) const 
 { return m_shader->getGLProgramIndex(); }
 
 const std::string& 
-Material
+spark::Material
 ::name( void ) const 
 { return m_shader->name(); }
 
 void 
-Material
+spark::Material
 ::use( void ) const
 {
     if( !m_shader ) 
     {
-        LOG_ERROR(g_log) << "Material used without a shader\n";
+        LOG_ERROR(g_log) << "spark::Material used without a shader\n";
         assert( false );
         return;
     }
@@ -50,10 +50,14 @@ Material
     {
         const TextureName& textureName = texIter->first;
         const ShaderUniformName& samplerNameInShader = texIter->second;
-        GLint texUnit = m_textureManager->getTextureUnitForTexture( textureName );
-        m_textureManager->forceTextureBind( textureName );
+        GLint texUnit = m_textureManager->getTextureUnitForHandle( textureName );
+        if( texUnit == -1 )
+        {
+            LOG_ERROR(g_log) << "Unable to bind texture \"" << textureName 
+                << "\" in spark::Material \"" << name() << "\".";
+        }
         m_shader->setUniform( samplerNameInShader, texUnit );
-        LOG_TRACE(g_log) << "Material setting texture sampler uniform \""
+        LOG_TRACE(g_log) << "spark::Material setting texture sampler uniform \""
                          << samplerNameInShader << "\" = " << texUnit
                          << " bound to texture \"" << textureName << "\".";
     }
@@ -61,21 +65,21 @@ Material
 }
 
 void 
-Material
+spark::Material
 ::addTexture( const TextureName& textureName, 
               const ShaderUniformName& samplerName )
 { 
-    if( !m_textureManager->isTextureNameReady( textureName ) )
+    if( !m_textureManager->isTextureReady( textureName ) )
     {
         LOG_WARN(g_log) << "Adding texture \"" 
                         << textureName
-                        << "\" to material, but texture has not been loaded.";
+                        << "\" to spark::Material, but texture has not been loaded.";
     }
     m_textures.insert( make_pair( textureName, samplerName ) );
 }
 
 void
-Material
+spark::Material
 ::dumpShaderUniforms( void ) const
 {
     GLint programHandle = m_shader->getGLProgramIndex();

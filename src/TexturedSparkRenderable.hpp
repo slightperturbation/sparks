@@ -24,31 +24,33 @@
 #include <glm/gtx/string_cast.hpp>
 
 #include <memory>
-
-class TexturedSparkRenderable : public Renderable, public Updatable
+namespace spark
 {
-public:
-    TexturedSparkRenderable( LSparkPtr spark, TextureManagerPtr tm, ShaderManagerPtr sm  );
-    virtual ~TexturedSparkRenderable() {}
+    /// Renders the component spark with a textured set of triangles.
+    class TexturedSparkRenderable : public Renderable, public Updatable
+    {
+    public:
+        TexturedSparkRenderable( LSparkPtr spark, 
+                                 TextureManagerPtr tm, 
+                                 ShaderManagerPtr sm  );
+        virtual ~TexturedSparkRenderable() {}
     
-    virtual void render( void ) const;
-    virtual void update( float dt );
-    virtual void loadTextures();
-    virtual void setTextureState( PerspectivePtr renderContext );
-private:
-    static Eigen::Vector3f upOffset( const Eigen::Vector3f& pos, 
-                                     const Eigen::Vector3f& parentPos,
-                                     const Eigen::Vector3f& camPos,
-                                     float halfAspectRatio );
+        // cam pos is used to orient the spark billboards toward the camera
+        void setCameraPosition( const glm::vec3& cameraPos )
+        { m_cameraPos = cameraPos; }
+        virtual void render( void ) const override;
+        virtual void attachShaderAttributes( GLuint shaderIndex ) override;
+        virtual void update( float dt ) override;
+    private:
+        static Eigen::Vector3f upOffset( const Eigen::Vector3f& pos, 
+                                         const Eigen::Vector3f& parentPos,
+                                         const Eigen::Vector3f& camPos,
+                                         float halfAspectRatio );
 
-    MeshPtr m_mesh;
-    LSparkPtr m_spark;
-
-    std::string m_fragmentShaderFilename;
-    std::string m_vertexShaderFilename;
-};
-typedef std::shared_ptr< TexturedSparkRenderable > TexturedSparkRenderablePtr;
-
-
-
+        MeshPtr m_mesh;
+        LSparkPtr m_spark;
+        glm::vec3 m_cameraPos;
+    };
+    typedef std::shared_ptr< TexturedSparkRenderable > TexturedSparkRenderablePtr;
+}
 #endif

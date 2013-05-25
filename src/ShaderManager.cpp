@@ -3,7 +3,7 @@
 #include "Utilities.hpp"
 #include "ShaderInstance.hpp"
 
-ShaderManager
+spark::ShaderManager
 ::~ShaderManager() 
 {
     for( auto iter = m_registry.begin(); iter != m_registry.end(); ++iter )
@@ -17,8 +17,8 @@ ShaderManager
     }
 }
 
-ShaderInstancePtr 
-ShaderManager
+spark::ShaderInstancePtr 
+spark::ShaderManager
 ::createShaderInstance( const ShaderName& name )
 {
     ShaderManagerPtr manager = shared_from_this();
@@ -29,7 +29,7 @@ ShaderManager
 }
 
 unsigned int 
-ShaderManager
+spark::ShaderManager
 ::getProgramIndexForShaderName( const ShaderName& name )
 {
     auto iter = m_registry.find( name );
@@ -42,9 +42,8 @@ ShaderManager
     return iter->second;
 }
 
-
 void 
-ShaderManager
+spark::ShaderManager
 ::loadShaderFromFiles( const ShaderName& aHandle,
                        const char* aVertexFileName,
                        const char* aFragmentFileName )
@@ -72,7 +71,7 @@ ShaderManager
 }
 
 void
-ShaderManager
+spark::ShaderManager
 ::reloadShader( const ShaderName& aHandle )
 {
     GLuint shaderProgram = -1;
@@ -109,7 +108,7 @@ ShaderManager
 }
 
 void
-ShaderManager
+spark::ShaderManager
 ::reloadAllShaders( void )
 {
     for( auto iter = m_registry.begin(); iter != m_registry.end(); ++iter )
@@ -120,7 +119,7 @@ ShaderManager
 }
 
 void
-ShaderManager
+spark::ShaderManager
 ::refreshUniformLocations( void )
 {
     for( auto shaderIter = m_shaderInstances.begin(); shaderIter != m_shaderInstances.end(); ++shaderIter )
@@ -133,7 +132,7 @@ ShaderManager
 }
 
 void
-ShaderManager
+spark::ShaderManager
 ::releaseAll( void )
 {
     for( auto iter = m_registry.begin(); iter != m_registry.end(); ++iter )
@@ -145,5 +144,3 @@ ShaderManager
         }
     }
 }
-
-

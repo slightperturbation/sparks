@@ -5,15 +5,16 @@
 #include <functional>
 #include <algorithm>
 
-Scene
+spark::Scene
 ::Scene( void )
 { }
 
-Scene
+spark::Scene
 ::~Scene( )
 { }
+
 void
-Scene
+spark::Scene
 ::render( void )
 {
     LOG_TRACE(g_log) << "Scene::render with "
@@ -46,11 +47,22 @@ Scene
     }
 }
 
-void Scene::add( RenderPassPtr rp ) { m_passes.push_back( rp ); }
-void Scene::add( RenderablePtr r ) { m_renderables.push_back( r ); }
+void 
+spark::Scene
+::add( RenderPassPtr rp ) 
+{ 
+    m_passes.push_back( rp ); 
+}
+
+void 
+spark::Scene
+::add( RenderablePtr r ) 
+{ 
+    m_renderables.push_back( r ); 
+}
 
 void
-Scene
+spark::Scene
 ::prepareRenderCommands( void )
 {
     LOG_TRACE(g_log) << "Scene::prepareRenderCommands with " 

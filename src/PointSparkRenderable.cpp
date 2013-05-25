@@ -9,7 +9,7 @@
 #include "PointSparkRenderable.hpp"
 #include <Eigen/OpenGLSupport>
 
-PointSparkRenderable
+spark::PointSparkRenderable
 ::PointSparkRenderable( SparkPtr spark,
                         TextureManagerPtr tm,
                         ShaderManagerPtr sm )
@@ -30,7 +30,7 @@ PointSparkRenderable
 }
 
 void
-PointSparkRenderable
+spark::PointSparkRenderable
 ::render( void ) const
 {
     const PointCharges& aggregate = m_spark->aggregate();
@@ -55,7 +55,7 @@ PointSparkRenderable
 }
 
 void
-PointSparkRenderable
+spark::PointSparkRenderable
 ::update( float dt )
 {
     
