@@ -195,59 +195,61 @@ SET( PROJECT_LINK_LIBRARIES
 
 
 set( HDRS
-  ./src/Mesh.hpp
-  ./src/SoftTestDeclarations.hpp
-  ./src/VolumeData.hpp
+  ./src/ArcBall.hpp
   ./src/Display.hpp
-  ./src/Renderable.hpp
-  ./src/Projection.hpp
-  ./src/Utilities.hpp
-  ./src/TextureManager.hpp
-  ./src/ShaderManager.hpp
-  ./src/Viewport.hpp
-  ./src/Spark.hpp
-  ./src/PointSparkRenderable.hpp
   ./src/LSpark.hpp
-  ./src/TexturedSparkRenderable.hpp
-  ./src/VelocityFieldInterface.hpp
   ./src/Fluid.hpp
-  ./src/SlicedVolume.hpp
-  ./src/VertexAttribute.hpp
-  ./src/ShaderInstance.hpp
-  ./src/ShaderUniform.hpp
+  ./src/FileAssetFinder.hpp
   ./src/Material.hpp
-  ./src/Scene.hpp
+  ./src/Mesh.hpp
+  ./src/PointSparkRenderable.hpp
+  ./src/Projection.hpp
+  ./src/RayCastVolume.hpp
+  ./src/Renderable.hpp
   ./src/RenderPass.hpp
   ./src/RenderCommand.hpp
   ./src/RenderTarget.hpp
-  ./src/FileAssetFinder.hpp
-  ./src/ArcBall.hpp
+  ./src/Scene.hpp
+  ./src/SlicedVolume.hpp
+  ./src/ShaderManager.hpp
+  ./src/ShaderInstance.hpp
+  ./src/ShaderUniform.hpp
+  ./src/Spark.hpp
+  ./src/SoftTestDeclarations.hpp
+  ./src/TextureManager.hpp
+  ./src/TexturedSparkRenderable.hpp
+  ./src/Utilities.hpp
+  ./src/Viewport.hpp
+  ./src/VolumeData.hpp
+  ./src/VertexAttribute.hpp
+  ./src/VelocityFieldInterface.hpp
 )
 include_directories( ./src/ )  # Move headers to ./include/
 
 set( SRCS
-  ./src/Mesh.cpp
+  ./src/ArcBall.cpp
   ./src/Display.cpp
-  ./src/Viewport.cpp
-  ./src/Projection.cpp
-  ./src/Utilities.cpp
-  ./src/TextureManager.cpp
-  ./src/Spark.cpp
-  ./src/PointSparkRenderable.cpp
   ./src/LSpark.cpp
-  ./src/TexturedSparkRenderable.cpp
   ./src/Fluid.cpp
-  ./src/SlicedVolume.cpp
-  ./src/Scene.cpp
+  ./src/FileAssetFinder.cpp
+  ./src/Material.cpp
+  ./src/Mesh.cpp
+  ./src/PointSparkRenderable.cpp
+  ./src/Projection.cpp
+  ./src/RayCastVolume.cpp
+  ./src/Renderable.cpp
   ./src/RenderPass.cpp
   ./src/RenderCommand.cpp
-  ./src/ShaderUniform.cpp
-  ./src/FileAssetFinder.cpp
-  ./src/ShaderManager.cpp
-  ./src/Material.cpp
+  ./src/Scene.cpp
   ./src/SlicedVolume.cpp
-  ./src/ArcBall.cpp
-)
+  ./src/ShaderUniform.cpp
+  ./src/ShaderManager.cpp
+  ./src/Spark.cpp
+  ./src/TexturedSparkRenderable.cpp
+  ./src/TextureManager.cpp
+  ./src/Utilities.cpp
+  ./src/Viewport.cpp
+ )
 set( GUI_SRCS 
   ./src/main.cpp
 )

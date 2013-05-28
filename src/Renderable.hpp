@@ -5,12 +5,15 @@
 #include "Material.hpp"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace spark
 {
     /// Interface for objects to be rendered.
     /// Exposes methods for changing shader and material properties.
-    /// Note that renderable has a collection of materials that can be 
-    /// applied as appropriate during different render passes.
+    /// Note that a given Renderable has a mapping of render pass
+    /// to material.  The linked material is applied for the current
+    /// render pass.
     class Renderable
     {
     public:
@@ -32,7 +35,53 @@ namespace spark
         virtual void attachShaderAttributes( GLuint shaderIndex ) = 0;
     
         const glm::mat4& getTransform( void ) const { return m_objectTransform; }
+        
         void setTransform( const glm::mat4& mat ) { m_objectTransform = mat; }
+        
+        void transform( const glm::mat4& mat )
+        { m_objectTransform = mat * m_objectTransform; }
+        
+        void scale( const glm::vec3& scaleFactor )
+        {
+            m_objectTransform = glm::scale( m_objectTransform, scaleFactor );
+        }
+        void scale( float scaleFactor )
+        {
+            m_objectTransform = glm::scale( m_objectTransform,
+                                            scaleFactor,
+                                            scaleFactor,
+                                            scaleFactor );
+        }
+        void translate( const glm::vec3& x )
+        {
+            m_objectTransform = glm::translate( m_objectTransform, x );
+        }
+        void translate( float x, float y, float z )
+        {
+            m_objectTransform = glm::translate( m_objectTransform,
+                                                glm::vec3(x,y,z) );
+        }
+        
+        void rotate( float angleInDegrees, const glm::vec3& axis )
+        {
+            m_objectTransform = glm::rotate( m_objectTransform,
+                                             angleInDegrees,
+                                             axis );
+        }
+        void alignZAxisWithVector( const glm::vec3& dir )
+        {
+            glm::mat4 invModel = glm::inverse( m_objectTransform );
+            glm::vec4 dirN4 = glm::normalize( invModel * glm::vec4(dir, 0) );
+            glm::vec3 dirN( dirN4.x, dirN4.y, dirN4.z );
+            float angle = std::acos( glm::dot( dirN, glm::vec3(0,0,1) ) );
+            const float epsilon = 1e-20f;
+            if( std::fabs( angle ) > epsilon )
+            {
+                glm::vec3 axis = glm::cross( dirN, glm::vec3(0,0,1 ) ) ;
+                axis = glm::normalize( axis );
+                this->rotate( glm::degrees(angle), axis );
+            }
+        }
 
         ConstMaterialPtr getMaterialForPassName( const RenderPassName& renderPassName ) const
         { 

@@ -15,6 +15,7 @@
 #include "TexturedSparkRenderable.hpp"
 
 #include "SlicedVolume.hpp"
+#include "RayCastVolume.hpp"
 #include "Fluid.hpp"
 
 #include "Scene.hpp"
@@ -222,6 +223,12 @@ int runSimulation(int argc, char** argv)
                                             "base3DVertexShader.glsl",
                                             "density3DFragmentShader.glsl");
     }
+    {
+        const ShaderName raycast3dShader = "rayCastVolumeShader";
+        shaderManager->loadShaderFromFiles( raycast3dShader,
+                                           "rayCastVertexShader.glsl",
+                                           "rayCastFragmentShader.glsl");
+    }
 
     {
         const ShaderName colorShaderName = "colorShader";
@@ -294,29 +301,35 @@ int runSimulation(int argc, char** argv)
                                      textureManager, 
                                      shaderManager ) );
     scene->add( sparkRenderable );
-
     
     FluidPtr data( new Fluid(12) );
     //data->loadFromFile( "test.fluid" );
     std::shared_ptr< spark::SlicedVolume > slices( new spark::SlicedVolume( textureManager,
         shaderManager, 128, data ) );
+
+    RayCastVolumePtr fluid( new RayCastVolume( "fluid_raycastvolume",
+                                               textureManager,
+                                               shaderManager,
+                                               data ) );
+    scene->add( fluid );
     
     glm::mat4 xform = glm::translate( glm::mat4(1.0f), glm::vec3( 0.0f, 0.0f, 0.0f ) );
     xform = glm::scale( xform, glm::vec3(5.0f, 5.0f, 5.0f) );
+    fluid->setTransform( xform );
     slices->setTransform( xform );
-    scene->add( slices );
-    // sim->add( slices OR data );
 
+    /////////////////
+    //scene->add( slices );
+    
+    // sim->add( slices OR data );
 
     // Setup shared rendering state
     // Enable alpha blending.
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //glDisable(GL_CULL_FACE);
-        
-    float angle = 0.0f;
-    float rotRate = 0.5f;
+    
     std::string sliceBaseName("densityYSlice");
     std::string velSliceBaseName( "velocityYSlice");
 
@@ -333,13 +346,17 @@ int runSimulation(int argc, char** argv)
 
         // UPDATE
         const float dt = 1.0f/60.0f;
-        //testSpark->update( dt );
+        testSpark->update( dt );
         slices->update( dt );
-            
+        fluid->update( dt );
+        
         if( g_arcBall )
         {
             g_arcBall->updatePerspective( cameraPerspective );
         }
+        // Point slices to camera
+        //slices->setCameraDirection(  cameraPerspective->cameraTarget()
+        //                           - cameraPerspective->cameraPos() );
 
         scene->prepareRenderCommands();
 

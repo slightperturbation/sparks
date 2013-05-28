@@ -1,3 +1,4 @@
+
 #include "SlicedVolume.hpp"
 
 using namespace Eigen;
@@ -8,11 +9,10 @@ spark::SlicedVolume
 : Renderable( "SlicedVolume" ),
   m_mesh( new Mesh() ),
   m_volumeData( data ),
-  m_dataTextureId( 0 ),
   m_textureManager( tm ),
-  m_textureName( "SlicedVolumeTexture3D" )
+  m_textureName( "SlicedVolumeTexture3D" ),
+  m_cameraDir( 0,0,1 )
 {
-    name( "SlicedVolume" );
     ShaderInstancePtr densityShader = sm->createShaderInstance( "densityShader" );
     MaterialPtr densityMaterial( new Material( tm, densityShader ) );
     tm->load3DTextureFromVolumeData( m_textureName, m_volumeData );
@@ -56,7 +56,6 @@ spark::SlicedVolume
         m_mesh->addTriangleByIndex( c, d, a );
     }
     m_mesh->bindDataToBuffers();
-    LOG_DEBUG(g_log) << "Slices created.\n";
 }
 
 void
@@ -82,4 +81,24 @@ spark::SlicedVolume
 {
     m_mesh->attachShaderAttributes( shaderIndex );
 }
+
+void
+spark::SlicedVolume
+::setCameraDirection( const glm::vec3& dir )
+{
+    // previously we've rotated our model to point to the old cameraDir
+    // so invert that rotation, then re-align to new direction
+    float angle = std::acos( glm::dot( m_cameraDir, glm::vec3(0,0,1) ) );
+    const float epsilon = 1e-10f;
+    if( std::fabs( angle ) > epsilon )
+    {
+        glm::vec3 axis = glm::cross( m_cameraDir, glm::vec3(0,0,1 ) ) ;
+        axis = glm::normalize( axis );
+        m_mesh->rotate( glm::degrees(-angle), axis );
+    }
+    // now align to new direction
+    m_mesh->alignZAxisWithVector( dir );
+    m_cameraDir = glm::normalize( dir );
+}
+
 
