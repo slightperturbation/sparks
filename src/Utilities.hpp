@@ -33,17 +33,16 @@ namespace spark
         OpenGLWindow( const char* programName ); 
         ~OpenGLWindow();
         bool isOK( void ) { return m_isOK; }
-        bool isRunning( void )
-        {
-            return glfwGetWindowParam( GLFW_OPENED );
-        }
+        bool isRunning( void );
     private:
         bool m_isOK;
     };
 
     std::string readFileToString( const char* filename );
-    GLuint createShaderWithErrorHandling( GLuint shaderType, const std::string& shaderSource );
-    GLuint loadShaderFromFile( const char* vertexShaderFilepath, const char* fragmentShaderFilepath );
+    GLuint createShaderWithErrorHandling( GLuint shaderType, 
+                                          const std::string& shaderSource );
+    GLuint loadShaderFromFile( const char* vertexShaderFilepath, 
+                               const char* fragmentShaderFilepath );
 
     /// Write a 24-bit color binary PPM image file for the current frame buffer
     /// files are named sequentially starting at 1, padded to 4 digits.

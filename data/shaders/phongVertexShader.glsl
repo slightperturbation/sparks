@@ -4,7 +4,7 @@
 in vec3 v_position;
 in vec3 v_normal;
 in vec4 v_color;
-in vec3 v_texCoord3d;
+in vec3 v_texCoord;
 
 // Perspective uniforms (see Matierial::setTransformUniforms)
 uniform mat4 u_projViewModelMat; // projection * view * model
@@ -22,7 +22,7 @@ out vec4 f_vertexPosition;
 void main()
 {
     f_fragColor = v_color ;// * u_color;
-    f_texCoord = v_texCoord3d.st;// take 2d texcoord from 3d coordinate  
+    f_texCoord = v_texCoord.st;// take 2d texcoord from 3d coordinate  
     f_vertexPosition = u_projViewModelMat * vec4( v_position, 1.0 );
     gl_Position = f_vertexPosition;
 }

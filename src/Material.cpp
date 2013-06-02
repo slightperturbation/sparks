@@ -43,6 +43,7 @@ spark::Material
         assert( false );
         return;
     }
+    LOG_TRACE(g_log) << "Using Material \"" << name() << "\".";
     // setup texture uniforms
     for( auto texIter = m_textures.begin();
         texIter != m_textures.end(); 

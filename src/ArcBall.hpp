@@ -1,4 +1,5 @@
 #include "SoftTestDeclarations.hpp"
+#include "GuiEventSubscriber.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -8,12 +9,14 @@ namespace spark
 {
     /// Updates a PerspectiveProjection based on mouse motions.
     /// See http://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Arcball
-    class ArcBall
+    class ArcBall : public GuiEventSubscriber
     {
     public:
         ArcBall( void );
+        virtual ~ArcBall() {}
         /// Update the ArcBall's regions of interest
-        void setExtents( int left, int bottom, int right, int top );
+        virtual void resizeViewport( int left, int bottom,
+                                     int right, int top ) override;
         /// x and y are in raw screen coordinates
         void onMouseMove( int x, int y );
         void onMouseRotationButton( int x, int y, bool isPressed );
@@ -45,4 +48,5 @@ namespace spark
         glm::ivec2 m_rotatingStart;
         glm::ivec2 m_rotatingCurr;
     };
+    typedef std::shared_ptr< ArcBall > ArcBallPtr;
 }

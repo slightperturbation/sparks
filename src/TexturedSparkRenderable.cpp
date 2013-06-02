@@ -26,7 +26,7 @@ spark::TexturedSparkRenderable
     MaterialPtr sparkColorMaterial( new Material( textureManager, colorShader ) );
     //sparkColorMaterial->addTeture( m_textureManager, "diffuse", "spark.png" );
 
-    this->setMaterialForPassName( g_colorRenderPassName, sparkColorMaterial );
+    this->setMaterialForPassName( g_opaqueRenderPassName, sparkColorMaterial );
 }
 
 Eigen::Vector3f 

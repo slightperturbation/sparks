@@ -7,9 +7,20 @@ out vec4 outColor;
 in vec4 f_fragColor; // interpolated color of fragment from vertex colors 
 in vec2 f_texCoord;  // texture coordinate of vertex
 in vec4 f_vertexPosition;
-in float f_time;     // time in seconds
 
-// Samplers are named s_TEXTURENAME
+//////////////////////////////////////////////////////////////////////
+// Common Uniforms (see RenderCommand)
+uniform mat4 u_projViewModelMat;     // projection * view * model
+uniform mat4 u_viewModelMat;         // transforms object into camera(eye) space
+uniform mat4 u_inverseViewModelMat;  // inverse of the model-view matrix, can give camera position
+uniform mat4 u_projMat;              // projects camera(eye) space to clip(screen) space
+uniform mat3 u_normalMat;            // transpose(inverse(viewModelMat))
+uniform float u_time;                // current time (in seconds) 
+//////////////////////////////////////////////////////////////////////
+
+// Non-standard uniforms
+uniform vec4 u_color;
+
 uniform sampler2D s_color;
 //uniform sampler2D s_color2;
 //uniform sampler2D s_tex2d;
@@ -25,9 +36,17 @@ void main()
 
 	//ivec2 x = textureSize( s_color, 0 );
 	//outColor = vec4( x.x/4.0, x.y/4.0, 0.0, 1.0 );  
+
+///	f_fragColor * 
+//outColor = vec4( f_texCoord, 1.0, 1.0 );
+	outColor = vec4( texture( s_color, f_texCoord ).rgb, 1.0 );
 	
-	outColor = f_fragColor * vec4( texture( s_color, f_texCoord ).xyz, 1.0 );
-    //outColor = vec4( 0.8, 0.3, 0.3, 1.0 );
+// HACK/TEST to force transparency in black regions
+	if( outColor.r + outColor.g + outColor.b < 0.01 )
+	{
+		discard;
+	}
+	//outColor = texture( s_color, f_texCoord );
 	//outColor = vec4( texture( s_color2, f_texCoord ).xyz, 1.0 );
 	
 	//outColor = vec4( f_texCoord, 1.0,  1.0 );

@@ -105,6 +105,8 @@ namespace spark
     typedef std::shared_ptr< VolumeData > VolumeDataPtr;
 
     // Define standard names for common render passes
-    const RenderPassName g_colorRenderPassName = "ColorPass";
+    const RenderPassName g_opaqueRenderPassName = "OpaquePass";
+    const RenderPassName g_transparencyRenderPassName = "TransparencyPass";
+
 } // end namespace spark
 #endif

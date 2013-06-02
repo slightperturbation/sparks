@@ -14,7 +14,7 @@ spark::ArcBall
 
 void
 spark::ArcBall
-::setExtents( int left, int bottom, int right, int top )
+::resizeViewport( int left, int bottom, int right, int top )
 {
     m_left = left; m_bottom = bottom;  m_right = right;  m_top = top;
 }

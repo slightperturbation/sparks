@@ -20,7 +20,9 @@ IF(APPLE)
 ENDIF(APPLE)
 
 
-
+# Use C++11 
+# Note that on Windows, this requires the Intel C++ Compiler
+# which can't be setup or enforced by cmake.
 if( APPLE )
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
@@ -29,7 +31,6 @@ else( APPLE )
     set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
   endif( UNIX )
 endif( APPLE )
-
 
 # Bug in some versions of visual studio create duplicate manifest entries
 # Avoiding manifests entirely seems to be one fix. (http://www.cmake.org/Bug/print_bug_page.php?bug_id=8386)
@@ -106,6 +107,15 @@ FIND_PATH( EIGEN3_INCLUDE_DIR signature_of_eigen3_matrix_library
           PATH_SUFFIXES eigen3 )
 INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}" )
 INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}/unsupported/" )
+
+#####################################################################
+# Intel Thread Building Blocks (TBB)
+#####################################################################
+FIND_PACKAGE( TBB REQUIRED )
+if(NOT TBB_FOUND)
+  MESSAGE( SEND_ERROR "Failed to find TBB." )
+endif(NOT TBB_FOUND)
+INCLUDE_DIRECTORIES( "${TBB_INCLUDE_DIRS}" )
 
 #####################################################################
 # GUI Libraries : OpenGL and GLFW (not required)
@@ -185,6 +195,7 @@ ENDIF( ASSIMP_FOUND )
 
 SET( PROJECT_LINK_LIBRARIES
   ${Boost_LIBRARIES}
+  ${TBB_LIBRARIES}
   ${GLFW_LIBRARY}
   ${GLEW_LIBRARY}
   ${OPENGL_LIBRARIES}
@@ -200,6 +211,8 @@ set( HDRS
   ./src/LSpark.hpp
   ./src/Fluid.hpp
   ./src/FileAssetFinder.hpp
+  ./src/GuiEventSubscriber.hpp
+  ./src/GuiEventPublisher.hpp
   ./src/Material.hpp
   ./src/Mesh.hpp
   ./src/PointSparkRenderable.hpp
@@ -238,8 +251,9 @@ set( SRCS
   ./src/Projection.cpp
   ./src/RayCastVolume.cpp
   ./src/Renderable.cpp
-  ./src/RenderPass.cpp
   ./src/RenderCommand.cpp
+  ./src/RenderPass.cpp
+  ./src/RenderTarget.cpp
   ./src/Scene.cpp
   ./src/SlicedVolume.cpp
   ./src/ShaderUniform.cpp

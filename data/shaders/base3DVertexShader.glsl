@@ -4,7 +4,7 @@
 in vec3 v_position;
 in vec3 v_normal;
 in vec4 v_color;
-in vec3 v_texCoord3d;
+in vec3 v_texCoord;
 
 // Perspective uniforms (see Matierial::setTransformUniforms)
 uniform mat4 u_projViewModelMat; // projection * view * model
@@ -26,7 +26,7 @@ void main()
 
     // TEMP-- testing with white fragment color output
     f_fragColor = vec4( 1,1,1,1 );//v_color ;
-    f_texCoord = v_texCoord3d;  
+    f_texCoord = v_texCoord;  
     f_vertex_screen = u_projViewModelMat * vec4( v_position, 1.0 );
     gl_Position = f_vertex_screen;
 }

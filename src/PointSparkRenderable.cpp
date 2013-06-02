@@ -26,7 +26,7 @@ spark::PointSparkRenderable
 
     ShaderInstancePtr colorShader( new ShaderInstance( colorShaderName, sm ) );
     MaterialPtr sparkColorMaterial( new Material( tm, colorShader ) );
-    this->setMaterialForPassName( g_colorRenderPassName, sparkColorMaterial );
+    this->setMaterialForPassName( g_opaqueRenderPassName, sparkColorMaterial );
 }
 
 void

@@ -22,6 +22,40 @@ spark::TextureManager
 
 void
 spark::TextureManager
+::createTargetTexture( const TextureName& aHandle,
+                      int width, int height )
+{
+    if( exists(aHandle) )
+    {
+        LOG_ERROR(g_log) << "Attempt to create a texture that already "
+        << "exists with handle \""
+        << aHandle << "\".";
+        return;
+    }
+    GLuint textureId;
+    GL_CHECK( glGenTextures( 1, &textureId ) );
+    if( -1 == textureId )
+    {
+        LOG_ERROR(g_log) << "OpenGL failed to allocate a texture id.";
+        assert(false);
+        return;
+    }
+    m_registry[aHandle] = textureId;
+    GLint textureUnit = reserveTextureUnit();
+    bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
+    
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA,
+                 width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+
+    // Do we need to set mipmap level explicitly?
+    glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER, 
+        GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0 );
+}
+
+void
+spark::TextureManager
 ::loadTestTexture( const TextureName& aHandle, GLint textureUnit )
 {
     if( textureUnit == -1 )
@@ -39,13 +73,28 @@ spark::TextureManager
     bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
 
     spark::loadTestTexture();
+    GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
+    //Set default texture state
+    //TODO-- Can be overridden by TextureUnit?
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_S,
+        GL_CLAMP_TO_EDGE ) );
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_T,
+        GL_CLAMP_TO_EDGE ) );
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
+        GL_TEXTURE_MIN_FILTER,
+        GL_LINEAR_MIPMAP_LINEAR ) );
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
+        GL_TEXTURE_MAG_FILTER,
+        GL_LINEAR ) );
+
     m_registry[aHandle] = textureId;
     m_bindingTextureUnitToTextureId.push_back( std::make_pair( textureUnit,
-                                                              textureId) );
+                                                               textureId) );
     LOG_INFO(g_log) << "Created Checkered texture \"" << aHandle
     << "\" with id=" << textureId
     << " into texture unit=" << textureUnit;
-
 }
 
 void
@@ -65,7 +114,16 @@ spark::TextureManager
         return;
     }
     bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
-
+    GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
+    //Set default texture state
+    //TODO-- Can be overridden by TextureUnit?
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_S,
+        GL_CLAMP_TO_EDGE ) );
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_T,
+        GL_CLAMP_TO_EDGE ) );
+    
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     
@@ -114,7 +172,6 @@ spark::TextureManager
         assert( false );
         return;
     }
-    m_paths[aHandle] = filePath;
     GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
     //Set default texture state
     //TODO-- Can be overridden by TextureUnit?
@@ -130,7 +187,9 @@ spark::TextureManager
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
                                GL_TEXTURE_MAG_FILTER,
                                GL_LINEAR ) );
-    LOG_INFO(g_log) << "Texture " << aHandle << " loaded with id=" 
+    m_registry[aHandle] = textureId;
+    m_paths[aHandle] = filePath;
+    LOG_INFO(g_log) << "Texture \"" << aHandle << "\" loaded with id=" 
         << textureId << " into texture unit=" << textureUnit << " from path \""
         << filePath << "\"";
 }
@@ -159,8 +218,12 @@ spark::TextureManager
                                VolumeDataPtr aVolume )
 {
     // Ok to call many times, if so, reuse texture id
-    GLuint textureId = getTextureIdForHandle( aHandle );
-    if( textureId == -1 )
+    GLuint textureId;
+    if( exists( aHandle ) )
+    {
+        textureId = getTextureIdForHandle( aHandle );
+    }
+    else
     {
         GL_CHECK( glGenTextures( 1, &textureId ) );
         if( -1 == textureId )
@@ -180,8 +243,6 @@ spark::TextureManager
         assert(false);
         return;
     }
-
-    //GL_CHECK( glTexImage3D( GL_TEXTURE_3D, 0, GL_R32F, m_N+2, m_N+2, m_N+2, 0, GL_RED, GL_FLOAT, m_density ) );
     GL_CHECK( glTexImage3D( GL_TEXTURE_3D, 0, GL_R32F,
                            aVolume->dimX(),
                            aVolume->dimY(),
@@ -189,7 +250,6 @@ spark::TextureManager
                            0, GL_RED, GL_FLOAT,
                            aVolume->getDensityData() ) );
     
-    //glTexImage3D( GL_TEXTURE_3D, 0, GL_RGBA16F, m_N+2, m_N+2, m_N+2, 0, GL_RGBA, GL_FLOAT, m_density );//m_velU ); //
     GL_CHECK( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR ) );
     GL_CHECK( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) );
 
@@ -197,6 +257,8 @@ spark::TextureManager
     GL_CHECK( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, edgeParameter ) );
     GL_CHECK( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, edgeParameter ) );
     GL_CHECK( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, edgeParameter ) );
+    float borderColor[] = {0,0,0,0};
+    glTexParameterfv( GL_TEXTURE_3D, GL_TEXTURE_BORDER_COLOR, borderColor );
     
     GL_CHECK( glGenerateMipmap( GL_TEXTURE_3D ) );
 
@@ -210,8 +272,12 @@ spark::TextureManager
 ::isTextureReady( const TextureName& aHandle )
 {
     auto iter = m_registry.find( aHandle );
-    if( iter == m_registry.end() ) return false;
-    return ( getTextureUnitBoundToId( iter->second ) != (unsigned int)-1 );
+    if( iter == m_registry.end() ) 
+    {
+        return false;
+    }
+    GLint id = getTextureUnitBoundToId( iter->second );
+    return id != -1 ;
 }
 
 GLint
@@ -239,7 +305,9 @@ spark::TextureManager
                                                                aTextureId) );
     LOG_TRACE(g_log) << "Bound texture ID="
                      << aTextureId << " to texture unit "
-                     << aTextureUnit << ".\n";
+                     << aTextureUnit << ", type = "
+                     << ((aTextureType == GL_TEXTURE_2D) ? "TEXTURE_2D" : "" )
+                     << ((aTextureType == GL_TEXTURE_3D) ? "TEXTURE_3D" : "" );
 }
 
 GLint
@@ -362,6 +430,13 @@ spark::TextureManager
         return -1;
     }
     return iter->second;
+}
+
+bool
+spark::TextureManager
+::exists( const TextureName& aHandle ) const
+{
+    return m_registry.end() != m_registry.find( aHandle );
 }
 
 spark::TextureName

@@ -76,7 +76,7 @@ namespace spark
                 );
             outShaderAttributes.push_back( diffuse );
         
-            VertexAttributePtr texCoord3d(new FloatVertexAttribute("v_texCoord3d",
+            VertexAttributePtr texCoord3d(new FloatVertexAttribute("v_texCoord",
                 3,
                 sizeof(MeshVertex),
                 (void*)offsetof(MeshVertex, m_texCoord) )

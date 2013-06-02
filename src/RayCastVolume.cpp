@@ -22,16 +22,14 @@ spark::RayCastVolume
     tm->load3DTextureFromVolumeData( m_textureName, m_volumeData );
     m_material->addTexture( m_textureName, "s_density3d" );
     
-    m_material->setShaderUniform( "scalarTextureEnabled", 1.0f );
-    m_material->setShaderUniform( "vectorTextureEnabled", 0.0f );
-    m_material->setShaderUniform( "u_numSamples", 64 );
-    m_material->setShaderUniform( "u_numLightSamples", 16 );
-    m_material->setShaderUniform( "u_absorption", 0.4f );
+    m_material->setShaderUniform( "u_numSamples", 96 );
+    m_material->setShaderUniform( "u_numLightSamples", 72 );
+    m_material->setShaderUniform( "u_absorption", 0.25f );
     m_material->setShaderUniform( "u_lightColor",
-                                  glm::vec3( 1.0f, 1.0f, 1.0f ) );
+                                  glm::vec3( 0.7f, 0.3f, 0.3f ) );
     m_material->setShaderUniform( "u_lightPosition_world",
-                                  glm::vec3( 1.0f, 1.0f, 1.0f ) );
-    setMaterialForPassName( g_colorRenderPassName, m_material );
+                                  glm::vec3( 0.0f, 0.5f, 0.5f ) );
+    setMaterialForPassName( g_transparencyRenderPassName, m_material );
 }
 
 void
@@ -45,7 +43,6 @@ void
 spark::RayCastVolume
 ::update( float dt )
 {
-    m_volumeData->update( dt );
     /// Push new density data up to graphics card
     m_textureManager->load3DTextureFromVolumeData( m_textureName, m_volumeData );
     m_mesh->update( dt );

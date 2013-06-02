@@ -11,7 +11,6 @@
 
 namespace spark
 {
-
     /// Loads and manages OpenGL textures.
     /// Avoids redundant glBindTexture calls.
     /// Texture units are bound to textures on a first-in-first-out basis.
@@ -22,7 +21,8 @@ namespace spark
     ///   GLint texUnit = tm->getTextureUnitForHandle( "fire_color" );
     ///   m_shader->setUniform( "s_color", texUnit );
     /// Where "s_color" is the shader's texture sampler.
-    class TextureManager : public std::enable_shared_from_this< TextureManager >
+    class TextureManager
+    : public std::enable_shared_from_this< TextureManager >
     {
     public:
         TextureManager( void );
@@ -33,12 +33,19 @@ namespace spark
         void setAssetFinder( FileAssetFinderPtr finder ) { m_finder = finder; }
     
         FileAssetFinderPtr assetFinder( void ) { return m_finder; }
-
+        
+        /// Create a 2D texture with the given handle that serves as a
+        /// texture to render to.
+        void createTargetTexture( const TextureName& aHandle,
+                                  int width, int height );
+        
         /// Load a simple test texture.
-        void loadTestTexture( const TextureName& aHandle, GLint textureUnit = -1  );
+        void loadTestTexture( const TextureName& aHandle,
+                              GLint textureUnit = -1  );
 
         /// Load a simple 3x3 checkerboard test texture.
-        void loadCheckerTexture( const TextureName& aHandle, GLint textureUnit = -1 );
+        void loadCheckerTexture( const TextureName& aHandle,
+                                 GLint textureUnit = -1 );
 
         /// Load the image file at aTextureFilePath and associate it with 
         /// aHandle.
@@ -51,6 +58,10 @@ namespace spark
         /// Returns true if the given texture handle is loaded and bound to a
         /// texture unit.
         bool isTextureReady( const TextureName& aHandle );
+        
+        /// Returns true if the given texture handle is currently associated
+        /// with a texture.
+        bool exists( const TextureName& aHandle ) const;
 
         /// Returns the Texture Unit that the given texture is currently bound to.
         /// If handle is valid and texture is not currently bound to a unit, 

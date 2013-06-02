@@ -185,7 +185,9 @@ spark::OpenGLWindow
 #ifndef __APPLE__
         // Debug messages not supported by OSX
         checkOpenGLErrors();
+#ifdef LOG_OPENGL_MESSAGE_CALLBACKS
         glDebugMessageCallback( debugOpenGLMessageCallback, 0 );
+#endif
         checkOpenGLErrors();
         GLuint unusedIds = 0;
         glDebugMessageControl( GL_DONT_CARE,
@@ -211,6 +213,13 @@ spark::OpenGLWindow
 {
     ilShutDown();
     glfwTerminate();
+}
+
+bool
+spark::OpenGLWindow
+::isRunning( void )
+{
+    return glfwGetWindowParam( GLFW_OPENED );
 }
 
 bool

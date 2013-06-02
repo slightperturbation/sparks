@@ -19,11 +19,6 @@ namespace spark
     /// Material is one way to render the object.  Note that one material 
     /// corresponds to one type of render-pass, so a color pass would use
     /// a different Material object than a depth-write pass or a G-buffer pass.
-    /// 
-    /// Universal uniforms
-    /// mat4 u_projMat
-    /// mat4 u_modelViewMat
-    /// mat4 u_modelViewProjMat
     class Material
     {
     public:
@@ -53,6 +48,9 @@ namespace spark
         template< typename T >
         void setShaderUniform( ShaderUniformName aName, T arg )
         {
+            LOG_TRACE(g_log) << "Setting Shader Uniform \""
+                             << aName << "\" for Material \""
+                             << name() << "\".";
             m_shader->setUniform<T>( aName, arg );
         }
         /// Send to logger all of the shader uniforms actually applied.

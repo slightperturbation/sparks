@@ -82,28 +82,39 @@ spark::ShaderManager
         if( glIsProgram( shaderProgram ) )
         {
             LOG_DEBUG(g_log) << "Deleting existing shader for handle \""
-                << aHandle << "\" during reloading.";
+                             << aHandle << "\" during reloading.";
             glDeleteShader( shaderProgram );
         }
     }
     GL_CHECK( shaderProgram = glCreateProgram() );
     m_registry[aHandle] = shaderProgram;
 
-    LOG_DEBUG(g_log) << "Loading vertex shader from path: " << m_files[aHandle].vertexFilePath;
-    std::string vertexShaderString = readFileToString( m_files[aHandle].vertexFilePath.c_str() );
-    GLuint vertexShader = createShaderWithErrorHandling( GL_VERTEX_SHADER, vertexShaderString );
-    LOG_DEBUG(g_log) << "Loading fragment shader from path: " << m_files[aHandle].fragmentFilePath;
-    std::string fragmentShaderString = readFileToString( m_files[aHandle].fragmentFilePath.c_str() );
-    GLuint fragmentShader = createShaderWithErrorHandling( GL_FRAGMENT_SHADER, fragmentShaderString );
+    LOG_DEBUG(g_log) << "Loading vertex shader from path: "
+                     << m_files[aHandle].vertexFilePath;
+    std::string vertexShaderString
+        = readFileToString( m_files[aHandle].vertexFilePath.c_str() );
+    GLuint vertexShader = createShaderWithErrorHandling( GL_VERTEX_SHADER,
+                                                         vertexShaderString );
+    LOG_DEBUG(g_log) << "Loading fragment shader from path: "
+                     << m_files[aHandle].fragmentFilePath;
+    std::string fragmentShaderString
+        = readFileToString( m_files[aHandle].fragmentFilePath.c_str() );
+    GLuint fragmentShader = createShaderWithErrorHandling( GL_FRAGMENT_SHADER,
+                                                           fragmentShaderString );
 
     GL_CHECK( glAttachShader( shaderProgram, vertexShader ) );
     GL_CHECK( glAttachShader( shaderProgram, fragmentShader ) );
-    GL_CHECK( glBindFragDataLocation( shaderProgram, 0, "outColor" ) );  // define the output for color buffer-0
+    
+    // Define the fixed shader variable "outColor" receive the color channel
+    GL_CHECK( glBindFragDataLocation( shaderProgram, 0, "outColor" ) );
+
     GL_CHECK( glLinkProgram( shaderProgram ) );
 
     LOG_INFO(g_log) << "Loaded shader \"" << aHandle
-                    << "\" with vertex shader: \"" << m_files[aHandle].vertexFilePath
-                    << "\", and fragment shader: \"" << m_files[aHandle].fragmentFilePath
+                    << "\" with vertex shader: \""
+                    << m_files[aHandle].vertexFilePath
+                    << "\", and fragment shader: \""
+                    << m_files[aHandle].fragmentFilePath
                     << "\", to create shaderID = " << shaderProgram ;
 }
 
@@ -122,7 +133,9 @@ void
 spark::ShaderManager
 ::refreshUniformLocations( void )
 {
-    for( auto shaderIter = m_shaderInstances.begin(); shaderIter != m_shaderInstances.end(); ++shaderIter )
+    for( auto shaderIter = m_shaderInstances.begin();
+         shaderIter != m_shaderInstances.end();
+         ++shaderIter )
     {
         if( ShaderInstancePtr shader = shaderIter->lock() )
         {

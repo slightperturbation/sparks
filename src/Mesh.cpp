@@ -331,21 +331,21 @@ void
 spark::Mesh
 ::bindDataToBuffers( void )
 {
-    const bool explicitLogging = true;
+    const bool explicitLogging = false;
     if( explicitLogging )
     {
         int count = 0;
-        LOG_DEBUG(g_log) << "++++\n";
+        LOG_TRACE(g_log) << "++++\n";
         for( auto idxIter = m_vertexIndicies.begin(); idxIter != m_vertexIndicies.end(); ++idxIter )
         {
             count++;
             size_t idx = *idxIter;
-            LOG_DEBUG(g_log) << idx ;
-            for( int i=0;i<3;++i ) LOG_DEBUG(g_log) << "\t" 
+            LOG_TRACE(g_log) << idx ;
+            for( int i=0;i<3;++i ) LOG_TRACE(g_log) << "\t" 
                 << m_vertexData[idx].m_position[i];
-            if( !(count % 3) ) LOG_DEBUG(g_log) << "----";
+            if( !(count % 3) ) LOG_TRACE(g_log) << "----";
         }
-        LOG_DEBUG(g_log) << "++++\n";
+        LOG_TRACE(g_log) << "++++\n";
     }
     GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
     GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, m_vertexBufferId ) );

@@ -6,6 +6,7 @@
 #include "Renderable.hpp"
 
 #include <glm/glm.hpp>
+#include <GL/glfw.h>  // for time
 
 void
 spark::RenderCommand
@@ -38,19 +39,36 @@ spark::RenderCommand
         // due to OpenGL calls being limited to a single thread.
         MaterialPtr mutableMaterial = std::const_pointer_cast<Material>( m_material );
         
-        // Perspective
+        // Define Common uniforms
+        ///////////////////////////////////////////////////////////////////
+        //// Common Uniforms (see RenderCommand)
+        //uniform mat4 u_projViewModelMat;     // projection * view * model
+        //uniform mat4 u_viewModelMat;         // transforms object into camera(eye) space
+        //uniform mat4 u_inverseViewModelMat;  // inverse of the model-view matrix, can give camera position
+        //uniform mat4 u_projMat;              // projects camera(eye) space to clip(screen) space
+        //uniform mat3 u_normalMat;            // transpose(inverse(viewModelMat))
+        //uniform float u_time;                // current time (in seconds) 
+        ///////////////////////////////////////////////////////////////////
         const glm::mat4 model = m_renderable->getTransform();
         const glm::mat4 view = m_perspective->viewMatrix();
         const glm::mat4 proj = m_perspective->projectionMatrix();
         const glm::mat4 viewModel = view * model;
+        const glm::mat4 invViewModel = glm::inverse( viewModel );
         const glm::mat4 projViewModel = proj * viewModel;
         const glm::mat3 normal = glm::transpose( glm::inverse( glm::mat3(viewModel) ) );
-        
-        mutableMaterial->setShaderUniform<glm::mat4>( "u_projMat", proj );
-        mutableMaterial->setShaderUniform<glm::mat4>( "u_viewModelMat", viewModel );
-        mutableMaterial->setShaderUniform<glm::mat4>( "u_projViewModelMat", projViewModel );
-        mutableMaterial->setShaderUniform<glm::mat3>( "u_normalMat", normal );
-        
+        const float time = glfwGetTime();
+
+        mutableMaterial->setShaderUniform<glm::mat4>( "u_projMat", 
+                                                      proj );
+        mutableMaterial->setShaderUniform<glm::mat4>( "u_viewModelMat", 
+                                                      viewModel );
+        mutableMaterial->setShaderUniform<glm::mat4>( "u_inverseViewModelMat", 
+                                                      invViewModel );
+        mutableMaterial->setShaderUniform<glm::mat4>( "u_projViewModelMat", 
+                                                      projViewModel );
+        mutableMaterial->setShaderUniform<glm::mat3>( "u_normalMat", 
+                                                      normal );
+        mutableMaterial->setShaderUniform<float>( "u_time", time );
     }
     if( isNewMaterial || (precedingCommand.m_illumination != m_illumination) )
     {
