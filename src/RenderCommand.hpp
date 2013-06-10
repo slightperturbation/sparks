@@ -98,6 +98,11 @@ namespace spark
     typedef std::shared_ptr< const Illumination > ConstIlluminationPtr;
     ///////////
 
+    /// Command that encapsulates all the needed information
+    /// to render a particular object.
+    /// RenderCommands can be ordered for rendering to support
+    /// effects such as transparency and to reduce the number
+    /// of calls to the graphics API.
     class RenderCommand
     {
     public:
@@ -113,7 +118,10 @@ namespace spark
         friend std::ostream& operator<<( std::ostream& out, const RenderCommand& rc );
     };
 
-    struct RenderCommandCompare 
+    /// Function object for ordering the rendering of two RenderCommands
+    /// RenderCommandCompare( A, B ) returns TRUE if **B** should be rendered FIRST
+    /// Used by std::priority_queue to determine rendering order.
+    struct RenderCommandCompare
         : public std::binary_function< const RenderCommand&, 
                                        const RenderCommand&, bool >
     {

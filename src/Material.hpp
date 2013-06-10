@@ -41,8 +41,7 @@ namespace spark
         { return m_shader; }
         /// Use a texture with this material.  Must be called prior to rendering
         /// with a shader that uses the texture.
-        void addTexture( const TextureName& textureName, 
-                         const ShaderUniformName& samplerName );
+        void addTexture( const ShaderUniformName& samplerName, const TextureName& textureName );
 
         /// Set shader uniform properties
         template< typename T >

@@ -19,7 +19,7 @@
 
 using namespace spark;
 
-class TestRenderable : public Renderable
+class TestRenderable : public spark::Renderable
 {
 public:
     TestRenderable( TextureManagerPtr tm, ShaderManagerPtr sm ) 
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE( TextureMangerTests )
     finder->addRecursiveSearchPath( DATA_PATH );
     TextureManager tm;
     tm.setAssetFinder( finder );
-    tm.loadTextureFromImageFile( "spark.png", "TestSpark" );
+    tm.loadTextureFromImageFile( "TestSpark", "spark.png" );
     BOOST_REQUIRE_NE( tm.getTextureIdForHandle( "TestSpark" ), -1 );
 }
 BOOST_AUTO_TEST_CASE( ShaderMangerTests )

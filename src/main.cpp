@@ -136,58 +136,65 @@ MeshPtr createOverlayQuad( TextureManagerPtr tm,
                       Vector3f(0,1,0), Vector2f(0,0), // Upper Left
                       Vector3f(1,1,0), Vector2f(1,0), // Upper Right
                       Vector3f(0,0,-1) ); // Normal points according to right-hand system
-
-    //TODO - Overlay Quad -- add texture and transparency
+    overlay->setRequireExplicitMaterial( true );
     ShaderInstancePtr colorShader = sm->createShaderInstance( shaderName );
-    colorShader->setUniform( "u_color", glm::vec4(1,0,1,1) );
-
     MaterialPtr colorMaterial( new Material( tm, colorShader ) );
-    colorMaterial->addTexture( textureName, "s_color" );
+    colorMaterial->addTexture( "s_color", textureName );
     overlay->setMaterialForPassName( renderPassName, colorMaterial );
     return overlay;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+// TODO Replace with loading from file (or running a script, python? lua?)
 void loadTextures( TextureManagerPtr textureManager )
 {
     textureManager->loadCheckerTexture( "checker" );
     textureManager->loadTestTexture( "test" );
-    textureManager->loadTextureFromImageFile( "ESU_alpha_square.png", "esuColor" );
-    textureManager->loadTextureFromImageFile( "sample.png", "cat" );
-    textureManager->loadTextureFromImageFile( "skin_tile.jpg", "skinColor" );
+    textureManager->loadTextureFromImageFile( "esuColor", "ESU_alpha_square.png" );
+    textureManager->loadTextureFromImageFile( "cat", "sample.png" );
+    textureManager->loadTextureFromImageFile( "skinColor", "skin_tile.jpg" );
+    textureManager->loadTextureFromImageFile( "sparkColor", "sparkCircularGradient.png" );
 }
 
 void loadShaders( ShaderManagerPtr shaderManager )
 {
-    const ShaderName density3dShader = "densityShader";
-    shaderManager->loadShaderFromFiles( density3dShader,
+    shaderManager->loadShaderFromFiles( "densityShader",
                                         "base3DVertexShader.glsl",
                                         "density3DFragmentShader.glsl" );
 
-    const ShaderName rayCastVolumeShader = "rayCastVolumeShader";
-    shaderManager->loadShaderFromFiles( rayCastVolumeShader,
+    shaderManager->loadShaderFromFiles( "rayCastVolumeShader",
                                         "rayCastVertexShader.glsl",
                                         "rayCastFragmentShader.glsl" );
 
-    const ShaderName colorShaderName = "colorShader";
-    shaderManager->loadShaderFromFiles( colorShaderName,
-                                        "colorVertexShader.glsl",
+    shaderManager->loadShaderFromFiles( "colorShader",
+                                        "baseVertexShader.glsl",
                                         "colorFragmentShader.glsl" );
+    
+    shaderManager->loadShaderFromFiles( "constantColorShader",
+                                        "baseVertexShader.glsl",
+                                        "constantColorFragmentShader.glsl" );
 
-    const ShaderName phongShaderName = "phongShader";
-    shaderManager->loadShaderFromFiles( phongShaderName,
-                                       "baseVertexShader.glsl",
-                                       "phongFragmentShader.glsl" );
+    shaderManager->loadShaderFromFiles( "phongShader",
+                                        "baseVertexShader.glsl",
+                                        "phongFragmentShader.glsl" );
+    
+    shaderManager->loadShaderFromFiles( "texturedOverlayShader",
+                                        "baseVertexShader.glsl",
+                                        "texturedOverlayFragmentShader.glsl" );
 
+    shaderManager->loadShaderFromFiles( "texturedSparkShader", 
+                                        "baseVertexShader.glsl",
+                                        "texturedSparkFragmentShader.glsl" );
 }
 
 MaterialPtr loadPhongMaterial( TextureManagerPtr textureManager,
                                ShaderManagerPtr shaderManager )
 {
-    ShaderInstancePtr phongShader = shaderManager->createShaderInstance( "phongShader" );
+    ShaderInstancePtr phongShader = shaderManager
+        ->createShaderInstance( "phongShader" );
     MaterialPtr phongMaterial( new Material( textureManager, phongShader ) );
     // Bind texture to the color sampler (s_color is used in shader)
-    phongMaterial->addTexture( "checker", "s_color" );
+    phongMaterial->addTexture( "s_color", "checker" );
     //Todo these uniforms should be set by illumination in scene?
     phongMaterial->setShaderUniform( "u_light.position_camera",
                                     glm::vec4(5.0f,10.0f,0.0f,1.0f) );
@@ -205,6 +212,7 @@ MaterialPtr loadPhongMaterial( TextureManagerPtr textureManager,
     phongMaterial->setShaderUniform( "u_ns", 100.0f );
     return phongMaterial;
 }
+////////////////////////////////////////////////////////////////////////////////
 
 void loadScene( ScenePtr scene,
                 FileAssetFinderPtr finder,
@@ -213,7 +221,7 @@ void loadScene( ScenePtr scene,
 {
     MaterialPtr phongMaterial = loadPhongMaterial( textureManager,
                                                    shaderManager );
-    if( true )
+    if( false )
     {
         std::vector< MeshPtr > meshes;
         createMeshesFromFile( "stomach.obj", finder, meshes );
@@ -226,7 +234,7 @@ void loadScene( ScenePtr scene,
             scene->add( mesh );
         }
     }
-    if( true )
+    if( false )
     {
         MeshPtr box( new Mesh() );
         box->unitCube();
@@ -259,25 +267,14 @@ int runSimulation(int argc, char** argv)
     shaderManager->setAssetFinder( finder );
     TextureManagerPtr textureManager( new TextureManager );
     textureManager->setAssetFinder( finder );
-        
+    
     int width = 0; int height = 0; glfwGetWindowSize( &width, &height );
-    FrameBufferRenderTargetPtr frameBufferTarget( new FrameBufferRenderTarget( width, height ) );
-    frameBufferTarget->initialize( textureManager );
 
     g_arcBall = ArcBallPtr( new spark::ArcBall );
     g_arcBall->resizeViewport( 0, 0, width, height );
-    g_guiEventPublisher->subscribe( frameBufferTarget );
     g_guiEventPublisher->subscribe( g_arcBall );
 
-    TextureRenderTargetPtr textureRenderTarget( new TextureRenderTarget(
-        "TextureRenderTarget", width, height ) ); 
-    textureRenderTarget->initialize( textureManager );
-
-    //////////////////////////////////////////////////////////////////////////
-    // Define render passes
     ScenePtr scene( new Scene );
-
-    // TODO -- spawn as job-threads
     loadTextures( textureManager );
     loadShaders( shaderManager );
     loadScene( scene, finder, textureManager, shaderManager );
@@ -288,79 +285,261 @@ int runSimulation(int argc, char** argv)
     cameraPerspective->cameraTarget( 0.5f, 0.5f, 0.0f );
 
     //////////////////////////////////////////////////////////////////////////
-    // the pass that renders the scene to a texture
-    RenderPassPtr opaqueRenderPass( new RenderPass( g_opaqueRenderPassName ) );
-    opaqueRenderPass->initialize( textureRenderTarget, cameraPerspective, 1.0f );
-    scene->add( opaqueRenderPass );
-    // render transparent objects after opaque
-    RenderPassPtr transparencyRenderPass( new RenderPass( g_transparencyRenderPassName ) );
-    transparencyRenderPass->initialize( textureRenderTarget, cameraPerspective, 2.0f );
-    scene->add( transparencyRenderPass );
+    // Define render passes
+    //////////////////////////////////////////////////////////////////////////
+    // Pass to render directly to framebuffer
+    FrameBufferRenderTargetPtr frameBufferTarget(
+        new FrameBufferRenderTarget( width, height ) );
+    frameBufferTarget->initialize( textureManager );
+    frameBufferTarget->setClearColor( glm::vec4( 0,1,0,0 ) );
+    g_guiEventPublisher->subscribe( frameBufferTarget );
+
+    // Render a full-screen quad to the framebuffer -- does the final drawing
+    // "MainRenderTargetTexture" texture holds the previously rendered scene
+    {
+        RenderPassPtr msaaRenderPass( new RenderPass( "MSAAFinalRenderPass" ) );
+        msaaRenderPass->initialize( frameBufferTarget, 
+                                    overlayPerspective,
+                                    0.0f );
+        //msaaRenderPass->disableBlending();  //useInterpolatedBlending();
+        msaaRenderPass->useAdditiveBlending();
+        msaaRenderPass->setDepthTest(false);
+        scene->add( msaaRenderPass );
+        // Create full-screen quad to render MainRenderTargetTexture
+        // with the MSAAFinalRenderPass
+        MeshPtr msaaOverlay = createOverlayQuad( textureManager,
+                                                 shaderManager,
+                                                 "MainRenderTargetTexture",
+                                                 "MSAAFinalRenderPass",
+                                                 "texturedOverlayShader" );
+        scene->add( msaaOverlay );
+    }
     //////////////////////////////////////////////////////////////////////////
 
     //////////////////////////////////////////////////////////////////////////
-    // Render a full-screen quad to the framebuffer
-    // Texture is the previously rendered scene
-    RenderPassName overlayRenderPassName( "OverlayRenderPass" );
-    RenderPassPtr overlayRenderPass( new RenderPass( overlayRenderPassName ) );
-    overlayRenderPass->initialize( frameBufferTarget, overlayPerspective, 100.0f );
-    scene->add( overlayRenderPass );
-    // Create full-screen quad for overlay
-    MeshPtr overlay = createOverlayQuad( textureManager,
-                                         shaderManager,
-                                         "TextureRenderTarget",
-                                         overlayRenderPassName,
-                                         "colorShader" );
-    scene->add( overlay );
+    // Setup Standard render passes
     //////////////////////////////////////////////////////////////////////////
+    // mainRenderTarget is the target for final composition.
+    {
+        const int multiSampleAntiAliasingFactor = 1;
+        ScaledTextureRenderTargetPtr mainRenderTarget(
+            new ScaledTextureRenderTarget( "MainRenderTargetTexture",
+                                           width, height,
+                                           multiSampleAntiAliasingFactor,
+                                           multiSampleAntiAliasingFactor ) );
+        mainRenderTarget->initialize( textureManager );
+        mainRenderTarget->setClearColor( glm::vec4( 0.5,0.2,0.2,0 ) );
+        // g_opaqueRenderPassName and g_transparencyRenderPassName
+        if(true)
+        {
+            RenderPassPtr opaqueRenderPass(
+                new RenderPass( g_opaqueRenderPassName ) );
+            opaqueRenderPass->initialize( mainRenderTarget,
+                                          cameraPerspective, 1.0f );
+            opaqueRenderPass->setDepthWrite( true );
+            opaqueRenderPass->setDepthTest( true );
+            opaqueRenderPass->disableBlending();
+            //opaqueRenderPass->nearToFarRenderOrder();
+            scene->add( opaqueRenderPass );
+        }
+        // render transparent objects after opaque
+        if( true )
+        {
+            RenderPassPtr transparencyRenderPass(
+                new RenderPass( g_transparencyRenderPassName ) );
+            transparencyRenderPass->initialize( mainRenderTarget,
+                                                cameraPerspective, 0.9f );
+            transparencyRenderPass->setDepthWrite( false );
+            transparencyRenderPass->setDepthTest( true );
+            transparencyRenderPass->useAdditiveBlending();
+            //transparencyRenderPass->farToNearRenderOrder();
+            scene->add( transparencyRenderPass );
+        }
+    }
+    //////////////////////////////////////////////////////////////////////////
+    // Setup Glow effect
+    // Make it easier to render to an off-screen texture that gets composited
+    // to main render pass?
+    if( false )
+    {
+        const RenderPassName glowPassName = "GlowRenderPass";
+        const TextureName glowTargetTextureName = "GlowRenderPassTexture";
+        {
+            float downSampleFactor = 0.25f;
+            // Render target to glows to.
+            // Down-sample to get a cheap blur effect
+            ScaledTextureRenderTargetPtr glowRenderTargetTexture(
+                new ScaledTextureRenderTarget( glowTargetTextureName,
+                                               width, height,
+                                               downSampleFactor,
+                                               downSampleFactor ) );
+            glowRenderTargetTexture->setClearColor( glm::vec4( 0.2,0.2,0.5,1 ) );
+            glowRenderTargetTexture->initialize( textureManager );
+            // Listen to viewport resize events to resize texture
+            g_guiEventPublisher->subscribe( glowRenderTargetTexture );
 
-//    
-//    
+            // Render the world to the depth buffer, using a trivial default material
+            if( false )
+            {
+                RenderPassPtr preGlowRenderPass( new RenderPass( "PreGlowPassName" ) );
+                MaterialPtr blankMaterial(
+                    new Material( textureManager,
+                    ShaderInstancePtr( new ShaderInstance(
+                        "constantColorShader", shaderManager ) ) ) );
+                preGlowRenderPass->disableBlending();
+                preGlowRenderPass->setColorWrite( false );
+                preGlowRenderPass->setDepthWrite( true );
+                preGlowRenderPass->useDefaultMaterial( blankMaterial );
+                preGlowRenderPass->initialize( glowRenderTargetTexture,
+                                               cameraPerspective,
+                                               1.2f );
+                scene->add( preGlowRenderPass );
+            }
+            
+            // Render pass to render the glowing stuff to the target texture
+            if( true )
+            {
+                RenderPassPtr glowRenderPass( new RenderPass( glowPassName ) );
+                glowRenderPass->initialize( glowRenderTargetTexture,
+                                            cameraPerspective,
+                                            1.1f );
+                glowRenderPass->setDepthWrite( false );
+                glowRenderPass->useAdditiveBlending();
+                scene->add( glowRenderPass );
+            }
+            // Create full-screen quad for overlay
+//            MeshPtr glowOverlay = createOverlayQuad( textureManager,
+//                                                    shaderManager,
+//                                                    glowTargetTextureName,
+//                                                    g_effectOverlayRenderPassName,
+//                                                    "texturedOverlayShader" );
+//            glowOverlay->setRequireExplicitMaterial(true);
+//            scene->add( glowOverlay );
+        }
+    }
 
 
-// 
-//    LSparkPtr testSpark( new LSpark );
-//    testSpark->create( Vector3f(0.9f,0,0), Vector3f(-0.9f,0,0), 1.0f, 5 );
-//    LOG_DEBUG(g_log) << "Finished creating spark.\n";
-//    TexturedSparkRenderablePtr sparkRenderable(
-//        new TexturedSparkRenderable( testSpark, 
-//                                     textureManager, 
-//                                     shaderManager ) );
-    //scene->add( sparkRenderable );
+
+    /// Sparks (glowing)
+    // spark -> [camera, texture]
+    // overlay -> [ortho, framebuffer]
     
-//    FluidPtr fluidData( new Fluid(24) );
-    //fluidData->loadFromFile( "test.fluid" );
-//    std::shared_ptr< spark::SlicedVolume > slices( new spark::SlicedVolume( textureManager,
-//        shaderManager, 128, fluidData ) );
+    
+//    // To add glow to sparks, we render the sparks to a texture target
+//    TextureRenderTargetPtr sparkRenderTarget( new TextureRenderTarget(
+//        "SparkRenderTargetTexture", width, height ) );
+//    sparkRenderTarget->initialize( textureManager );
+//    // And then render this texture target as an overlay quad in the transparency pass
+//    // using a glow/blur fragment shader
+//    {
+//        RenderPassName overlayCompositeRenderPassName = "OverlayCompositeRenderPass";
+//        RenderPassPtr overlayCompositeRenderPass( new RenderPass( overlayCompositeRenderPassName ) );
+//        overlayCompositeRenderPass->initialize( frameBufferTarget, //mainRenderTarget,
+//                                                overlayPerspective,
+//                                                0.01f );
+//        MeshPtr sparkOverlay = createOverlayQuad( textureManager,
+//                                                  shaderManager,
+//                                                  "SparkRenderTargetTexture",
+//                                                  overlayCompositeRenderPassName,
+//                                                  "texturedOverlayShader" );
+//        scene->add( sparkOverlay );
+//    }
+//    // Add a render-pass to render the spark to the render-texture
+//    RenderPassPtr sparkRenderPass( new RenderPass( "SparkRenderPass" ) );
+//    overlayRenderPass->initialize( sparkRenderTarget, cameraPerspective, 0.1f );
+//    // The spark
 
-    //RayCastVolumePtr rayCastFluid( new RayCastVolume( "fluid_raycastvolume",
-    //                                           textureManager,
-    //                                           shaderManager,
-    //                                           fluidData ) );
-    //scene->add( rayCastFluid );
-    //glm::mat4 xform = glm::translate( glm::mat4(1.0f), glm::vec3( -2.5f, -2.5f, 0.0f ) );
-    //xform = glm::scale( xform, glm::vec3(5.0f, 5.0f, 5.0f) );
+    // Build material for spark
+
+    if( true )
+    {
+        MaterialPtr sparkColorMaterial;
+        bool usePhong = false;
+        if( usePhong )
+        {
+            sparkColorMaterial = loadPhongMaterial( textureManager,
+                                                   shaderManager );
+        }
+        else
+        {
+            sparkColorMaterial = MaterialPtr( new Material( textureManager,
+                                                           ShaderInstancePtr( new ShaderInstance( "texturedSparkShader",
+                                                                                                 shaderManager ) ) )
+                                             );
+        }
+        sparkColorMaterial->setShaderUniform( "u_color", glm::vec4(1,1,1,1) );
+        sparkColorMaterial->addTexture( "s_color", "sparkColor" );
+        
+        LSparkPtr theSpark( new LSpark );
+        theSpark->create( Vector3f(4.9f,0,0), Vector3f(-4.9f,0,0), 1.0f, 5 );
+        
+        TexturedSparkRenderablePtr sparkRenderable( 
+            new TexturedSparkRenderable( theSpark ) );
+        sparkRenderable->setRequireExplicitMaterial( true );
+        
+//        sparkRenderable->setMaterialForPassName( "GlowRenderPass",
+//                                                 sparkColorMaterial );
+        sparkRenderable->setMaterialForPassName( g_transparencyRenderPassName,
+                                                 sparkColorMaterial );
+        scene->add( sparkRenderable );
+    }
+    if( true )
+    {
+        MaterialPtr phongMaterial = loadPhongMaterial( textureManager,
+                                                       shaderManager );
+        MaterialPtr colorMaterial = MaterialPtr( new Material( textureManager,
+            ShaderInstancePtr( new ShaderInstance( "constantColorShader",
+                                                   shaderManager ) ) )
+                                         );
+        colorMaterial->setShaderUniform( "u_color", glm::vec4(1,1,0.3,1) );
+        phongMaterial->addTexture( "s_color", "skinColor" );
+        MeshPtr s( new Mesh() );
+        s->unitCube();
+        s->name("SkinSurface");
+        //s->setMaterialForPassName( g_opaqueRenderPassName, colorMaterial );
+        s->setMaterialForPassName( g_opaqueRenderPassName, phongMaterial );
+        glm::mat4 xform( 1.0f );
+        xform = glm::translate( xform, glm::vec3( -2.0f, 0.0f, -2.0f ) );
+        xform = glm::scale( xform, glm::vec3(5.0f, 0.5f, 5.0f) );
+        xform = glm::rotate( xform, 90.0f, glm::vec3( 1.0f, 0.0f, 0.0f ) ) ;
+        s->setTransform( xform );
+        scene->add( s );
+    }
+
+    
+    
+    // spark renders to sparkRenderTexture
+    // overlay renders to g_transparentRenderPass using a glow shader
+    
+    FluidPtr fluidData( new Fluid(16) );
+    //fluidData->loadFromFile( "test.fluid" );
+        std::shared_ptr< spark::SlicedVolume > slices( new
+            SlicedVolume( textureManager,
+            shaderManager, 128, fluidData ) );
+
+//    RayCastVolumePtr rayCastFluid( new RayCastVolume( "fluid_raycastvolume",
+//                                               textureManager,
+//                                               shaderManager,
+//                                               fluidData ) );
+    
+    glm::mat4 xform = glm::translate( glm::mat4(1.0f), glm::vec3( -2.5f, -2.5f, 0.0f ) );
+    xform = glm::scale( xform, glm::vec3(5.0f, 5.0f, 5.0f) );
     //rayCastFluid->setTransform( xform );
-//    slices->setTransform( xform );
+    //r    slices->setTransform( xform );
 
     /////////////////
-    //scene->add( slices );
+    //scene->add( rayCastFluid );
+    scene->add( slices );
     
     // sim->add( slices OR fluidData );
-
-    // Setup shared rendering state
-    // Enable alpha blending.
-    //glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glDisable(GL_CULL_FACE);
-
     
     const double startTime = glfwGetTime();
     double currTime = startTime;
     double lastTime = startTime;
     while( window.isRunning() )
     {
+        LOG_TRACE(g_log) << ".................................................";
+
         glm::mat4 viewTransform;
 
         lastTime = currTime;
@@ -383,11 +562,6 @@ int runSimulation(int argc, char** argv)
         //                           - cameraPerspective->cameraPos() );
 
         scene->prepareRenderCommands();
-
-        glClearColor( 0.5f, 0.3f, 0.3f, 1.0f );
-        //glClearDepth( -10000.0f );
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-        LOG_TRACE(g_log) << "Scene start - glClear(COLOR|DEPTH)";
 
         scene->render();
 
@@ -479,7 +653,7 @@ int main( int argc, char* argv[] )
         } else {
             g_baseLogger = new cpplog::FileLogger( "sparks.log" );
         }
-        if( true ) //argc > 2 && std::string(argv[1]) == std::string("-trace") )
+        if( argc > 2 && std::string(argv[1]) == std::string("-trace") )
         {
             g_log = new cpplog::FilteringLogger( LL_TRACE, g_baseLogger );
             LOG_INFO(g_log) << "TRACE level logging.";

@@ -5,6 +5,7 @@
 
 #include "Renderable.hpp"
 #include "Mesh.hpp"
+#include "Material.hpp"
 #include "VolumeData.hpp"
 
 #include <vector>

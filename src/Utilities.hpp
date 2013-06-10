@@ -43,6 +43,9 @@ namespace spark
                                           const std::string& shaderSource );
     GLuint loadShaderFromFile( const char* vertexShaderFilepath, 
                                const char* fragmentShaderFilepath );
+    /// Returns a trivial shader that will be used when a shader cannot be
+    /// loaded or created.  Should be very noticeable (e.g., bright yellow)
+    GLuint getErrorShader( void );
 
     /// Write a 24-bit color binary PPM image file for the current frame buffer
     /// files are named sequentially starting at 1, padded to 4 digits.

@@ -24,15 +24,13 @@ struct Light
 	vec4 diffuse;  // diffuse color of light
 };
 uniform Light u_light;
-uniform vec4 u_ambientLight; // ambient light
-uniform vec4 u_ks; // material specular coefficient, typically white
-//uniform float u_ns; // material specular exponent, ~50 is a good value for sharp highlights
+uniform vec4 u_ambientLight = vec4( 0.2, 0.2, 0.2, 1.0 ); // ambient light
+uniform vec4 u_ks = vec4( 1, 1, 1, 1 ); // material specular coefficient, typically white
+uniform float u_ns = 50.1; // material specular exponent, ~50 is a good value for sharp highlights
 
 void main()
 {
 	const float cutoff = 0.1;
-	// Overrides
-	float u_ns = 50.1;
 
 	vec4 normal_camera = normalize( f_normal_camera );
 	vec4 toLight_camera = normalize( u_light.position_camera - f_vertex_camera );

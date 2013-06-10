@@ -16,7 +16,7 @@ namespace spark
     /// Texture units are bound to textures on a first-in-first-out basis.
     /// Typical usage:
     /// In init
-    ///   tm->loadTextureFromImageFile( "fire.png", "fire_color" );
+    ///   tm->loadTextureFromImageFile( "fire_color", "fire.png" );
     /// During rendering (in Material::use()):
     ///   GLint texUnit = tm->getTextureUnitForHandle( "fire_color" );
     ///   m_shader->setUniform( "s_color", texUnit );
@@ -49,8 +49,7 @@ namespace spark
 
         /// Load the image file at aTextureFilePath and associate it with 
         /// aHandle.
-        void loadTextureFromImageFile( const char* aTextureFilePath, 
-                                       const TextureName& aHandle );
+        void loadTextureFromImageFile( const TextureName& aHandle, const char* aTextureFileName );
         /// Load a 3D texture from the given volume data.
         /// Can be used to reload the texture from changed data.
         void load3DTextureFromVolumeData( const TextureName& aHandle,
@@ -90,6 +89,8 @@ namespace spark
         void acquireTextureUnitAndId( const TextureName& aHandle,
                                       GLint& outTextureUnit,
                                       GLuint& outTextureId );
+        /// Remove the texture with the given handle.
+        void deleteTexture( const TextureName& aHandle );
     private:
         /// Calls glActiveTexture and glBindTexture to bind the ID to the unit.
         /// Records binding in m_bindingTextureUnitToTextureId

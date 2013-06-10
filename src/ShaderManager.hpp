@@ -57,6 +57,7 @@ namespace spark
         FileAssetFinderPtr m_finder;
         std::map< const ShaderName, unsigned int > m_registry;
         std::map< const ShaderName, ShaderFilePaths > m_files;
+        /// Keep track of all shader instanced generated.
         std::vector< std::weak_ptr< ShaderInstance > > m_shaderInstances;
     };
 } // end namespace spark

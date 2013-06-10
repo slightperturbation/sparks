@@ -65,10 +65,7 @@ spark::Material
     m_shader->use();
 }
 
-void 
-spark::Material
-::addTexture( const TextureName& textureName, 
-              const ShaderUniformName& samplerName )
+void spark::Material::addTexture( const ShaderUniformName& samplerName, const TextureName& textureName )
 { 
     if( !m_textureManager->isTextureReady( textureName ) )
     {

@@ -1,5 +1,7 @@
 
 #include "SlicedVolume.hpp"
+#include "TextureManager.hpp"
+#include "Material.hpp"
 
 using namespace Eigen;
 
@@ -16,7 +18,7 @@ spark::SlicedVolume
     ShaderInstancePtr densityShader = sm->createShaderInstance( "densityShader" );
     MaterialPtr densityMaterial( new Material( tm, densityShader ) );
     tm->load3DTextureFromVolumeData( m_textureName, m_volumeData );
-    densityMaterial->addTexture( m_textureName, "s_density3d" );
+    densityMaterial->addTexture( "s_density3d", m_textureName );
     setMaterialForPassName( g_opaqueRenderPassName, densityMaterial );
     
     const size_t zSteps = sliceCount;

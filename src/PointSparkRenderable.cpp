@@ -7,6 +7,8 @@
 //
 
 #include "PointSparkRenderable.hpp"
+#include "Material.hpp"
+
 #include <Eigen/OpenGLSupport>
 
 spark::PointSparkRenderable

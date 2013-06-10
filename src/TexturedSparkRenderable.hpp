@@ -30,9 +30,7 @@ namespace spark
     class TexturedSparkRenderable : public Renderable, public Updatable
     {
     public:
-        TexturedSparkRenderable( LSparkPtr spark, 
-                                 TextureManagerPtr tm, 
-                                 ShaderManagerPtr sm  );
+        TexturedSparkRenderable( LSparkPtr spark );
         virtual ~TexturedSparkRenderable() {}
     
         // cam pos is used to orient the spark billboards toward the camera

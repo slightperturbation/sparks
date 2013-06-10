@@ -22,17 +22,45 @@ spark::TextureManager
 
 void
 spark::TextureManager
+::deleteTexture( const TextureName& aHandle )
+{
+    auto iter = m_registry.find( aHandle );
+    if( iter == m_registry.end() )
+    {
+        return;
+    }
+    GLuint textureId = iter->second;
+    if( textureId == -1 )
+    {
+        return;
+    }
+    glDeleteTextures( 1, &textureId );
+    m_registry.erase( aHandle );
+    m_textureType.erase( textureId );
+    m_paths.erase( aHandle );
+
+    auto bindIter = m_bindingTextureUnitToTextureId.begin();
+    while( bindIter != m_bindingTextureUnitToTextureId.end() )
+    {
+        if( bindIter->second == textureId )
+        {
+            bindIter = m_bindingTextureUnitToTextureId.erase( bindIter );
+        }
+        else
+        {
+            ++bindIter;
+        }
+    }
+}
+
+
+void
+spark::TextureManager
 ::createTargetTexture( const TextureName& aHandle,
                       int width, int height )
 {
-    if( exists(aHandle) )
-    {
-        LOG_ERROR(g_log) << "Attempt to create a texture that already "
-        << "exists with handle \""
-        << aHandle << "\".";
-        return;
-    }
     GLuint textureId;
+    deleteTexture( aHandle );
     GL_CHECK( glGenTextures( 1, &textureId ) );
     if( -1 == textureId )
     {
@@ -46,11 +74,11 @@ spark::TextureManager
     
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA,
                  width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 
     // Do we need to set mipmap level explicitly?
-    glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER, 
+    glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0 );
 }
 
@@ -137,10 +165,7 @@ spark::TextureManager
                     << " into texture unit=" << textureUnit;
 }
 
-void
-spark::TextureManager
-::loadTextureFromImageFile( const char* aTextureFileName, 
-                            const TextureName& aHandle )
+void spark::TextureManager::loadTextureFromImageFile( const TextureName& aHandle, const char* aTextureFileName )
 {
     GLint textureUnit = reserveTextureUnit();
 
@@ -315,10 +340,10 @@ spark::TextureManager
 ::reserveTextureUnit( void )
 {
     m_nextAvailableTextureUnit = (m_nextAvailableTextureUnit+1) % m_maxTextureUnits;
-    for( auto iter = m_bindingTextureUnitToTextureId.begin();
-        iter != m_bindingTextureUnitToTextureId.end(); 
-        ++iter )
+    auto iter = m_bindingTextureUnitToTextureId.begin();
+    while( iter != m_bindingTextureUnitToTextureId.end() )
     {
+        bool wasDeleted = false;
         if( iter->first == m_nextAvailableTextureUnit )
         {
             // Unbind current texture
@@ -331,6 +356,11 @@ spark::TextureManager
                 GL_CHECK( glBindTexture( typeIter->second, 0 ) );
             }
             iter = m_bindingTextureUnitToTextureId.erase( iter );
+            wasDeleted = true;
+        }
+        if( !wasDeleted )
+        {
+            ++iter;
         }
     }
     return m_nextAvailableTextureUnit;

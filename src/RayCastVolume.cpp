@@ -1,4 +1,6 @@
 #include "RayCastVolume.hpp"
+#include "Material.hpp"
+
 #include <iomanip>
 
 
@@ -20,7 +22,7 @@ spark::RayCastVolume
     ShaderInstancePtr shader = sm->createShaderInstance( "rayCastVolumeShader" );
     m_material = MaterialPtr( new Material( tm, shader ) );
     tm->load3DTextureFromVolumeData( m_textureName, m_volumeData );
-    m_material->addTexture( m_textureName, "s_density3d" );
+    m_material->addTexture( "s_density3d", m_textureName );
     
     m_material->setShaderUniform( "u_numSamples", 96 );
     m_material->setShaderUniform( "u_numLightSamples", 72 );
@@ -54,10 +56,4 @@ spark::RayCastVolume
 {
     m_mesh->attachShaderAttributes( shaderIndex );
 }
-
-//    glEnable( GL_DEPTH_TEST );
-//    glEnable( GL_BLEND );
-//    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-    //glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
-    // assumes pre-multiplied alpha in texture
 

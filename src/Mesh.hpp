@@ -145,12 +145,12 @@ namespace spark
         void resizeVertexArray( size_t newSize );
         void setVertex( size_t i, const Eigen::Vector3f& a, 
             const Eigen::Vector2f& textureCoords, 
-            const Eigen::Vector4f color, 
-            const Eigen::Vector3f norm );
+            const Eigen::Vector4f& color, 
+            const Eigen::Vector3f& norm );
         size_t addVertex( const Eigen::Vector3f& a, 
                           const Eigen::Vector2f& textureCoords, 
-                          const Eigen::Vector4f color, 
-                          const Eigen::Vector3f norm );
+                          const Eigen::Vector4f& color, 
+                          const Eigen::Vector3f& norm );
         size_t addVertex( const MeshVertex& v );
         void addTriangleByIndex( unsigned int a, unsigned int b, unsigned int c );
 

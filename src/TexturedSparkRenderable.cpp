@@ -10,23 +10,11 @@ const std::string g_defaultVertexShaderFilename = "colorVertexShader.glsl";
 const std::string g_defaultFragmentShaderFilename = "colorFragmentShader.glsl";
 
 spark::TexturedSparkRenderable
-::TexturedSparkRenderable( LSparkPtr a_spark,
-                           TextureManagerPtr textureManager,
-                           ShaderManagerPtr shaderManager )
+::TexturedSparkRenderable( LSparkPtr a_spark )
 : Renderable( "TexturedSparkRenderable" ),
   m_mesh( new Mesh() ),
   m_spark( a_spark ) 
 {
-    // Build materials for needed passes
-    ShaderName colorShaderName = m_name + "_ColorShader";
-    shaderManager->loadShaderFromFiles( colorShaderName, 
-        g_defaultVertexShaderFilename.c_str(),
-        g_defaultFragmentShaderFilename.c_str() );
-    ShaderInstancePtr colorShader( new ShaderInstance( colorShaderName, shaderManager ) );
-    MaterialPtr sparkColorMaterial( new Material( textureManager, colorShader ) );
-    //sparkColorMaterial->addTeture( m_textureManager, "diffuse", "spark.png" );
-
-    this->setMaterialForPassName( g_opaqueRenderPassName, sparkColorMaterial );
 }
 
 Eigen::Vector3f 
@@ -100,9 +88,6 @@ spark::TexturedSparkRenderable
     
     // Render mesh
     m_mesh->render();
-
-    // TODO -- need an "unsetRenderState"
-    //GL_CHECK( glEnable( GL_DEPTH_TEST ) );
 }
 
 void

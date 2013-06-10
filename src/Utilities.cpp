@@ -9,6 +9,7 @@
 #include "Utilities.hpp"
 #include "FileAssetFinder.hpp"
 #include "Mesh.hpp"
+#include "Exceptions.hpp"
 
 #include <IL/il.h>
 #include <IL/ilu.h>
@@ -30,6 +31,18 @@ void APIENTRY debugOpenGLMessageCallback( GLenum source,
                                           void* userParam )
 {
     using namespace std;
+    // ignore some warnings
+    switch( id )
+    {
+    case 131218:  
+        // Source: GL_DEBUG_SOURCE_API, 
+        // Type: GL_DEBUG_TYPE_PERFORMANCE, 
+        // Severity: GL_DEBUG_SEVERITY_MEDIUM[131218] 
+        // Program/shader state performance warning: 
+        // Fragment Shader is going to be recompiled because the shader 
+        // key based on GL state mismatches.
+        return;
+    }
     stringstream msg;
     msg << "GL Debug Message- Source: ";
     switch( source )
@@ -79,8 +92,9 @@ void APIENTRY debugOpenGLMessageCallback( GLenum source,
     default:
         msg << "UNKNOWN";
     }
-    LOG_ERROR(g_log) << msg.str() << ", Message: \"" << message << "\".\n";
-    assert(false);
+    LOG_ERROR(g_log) << msg.str() << "[" << id 
+                     << "] Message: \"" << message << "\".\n";
+    //assert(false);
 }
 
 void 
@@ -136,7 +150,7 @@ spark::OpenGLWindow
 #endif
 
     // OpenGL 3.2 or higher only
-    glfwOpenWindowHint( GLFW_FSAA_SAMPLES, 8 ); // 8x anti aliasing
+    //glfwOpenWindowHint( GLFW_FSAA_SAMPLES, 8 ); // 8x anti aliasing
 #ifdef __APPLE__
     // Need to force the 3.2 for mac -- note
     // that this breaks the AntTweak menus
@@ -147,7 +161,12 @@ spark::OpenGLWindow
     glfwOpenWindowHint( GLFW_WINDOW_NO_RESIZE, GL_FALSE );
 
     LOG_DEBUG(g_log) << "glfwOpenWindow...";
-    glfwOpenWindow( 800, 600, 0, 0, 0, 0, 0, 0, GLFW_WINDOW ); //
+    if( glfwOpenWindow( 800, 600, 0, 0, 0, 0, 24, 0, GLFW_WINDOW ) != GL_TRUE )
+    {
+        LOG_FATAL(g_log) << "Unable to open GLFW window.";
+        glfwTerminate();
+        return;
+    }
     glfwEnable( GLFW_MOUSE_CURSOR );
     glfwSetWindowTitle( programName );
     checkOpenGLErrors();
@@ -185,9 +204,14 @@ spark::OpenGLWindow
 #ifndef __APPLE__
         // Debug messages not supported by OSX
         checkOpenGLErrors();
-#ifdef LOG_OPENGL_MESSAGE_CALLBACKS
-        glDebugMessageCallback( debugOpenGLMessageCallback, 0 );
-#endif
+
+        // Must be disabled for gDebugger and similar tools
+        bool logOpenGLMessages = true;
+        if( logOpenGLMessages )
+        {
+            glDebugMessageCallback( debugOpenGLMessageCallback, 0 );
+        }
+        
         checkOpenGLErrors();
         GLuint unusedIds = 0;
         glDebugMessageControl( GL_DONT_CARE,
@@ -203,7 +227,6 @@ spark::OpenGLWindow
     ilInit();
     iluInit();
     checkOpenGLErrors();
-    GL_CHECK( glEnable( GL_DEPTH_TEST ) );
     LOG_DEBUG(g_log) << "OpenGL initialization complete.";
     m_isOK = true;
 }
@@ -457,6 +480,7 @@ spark
     throw(errno);
 }
 
+
 GLuint 
 spark
 ::createShaderWithErrorHandling( GLuint shaderType, const std::string& shaderSource )
@@ -483,10 +507,40 @@ spark
         {
             LOG_ERROR(g_log) << "Failed to compile shader:\n-------------\n"
             << shaderSource << "\n-------------\n";
-            //assert( false );
+            throw( ShaderCompilationException( buff, shaderSource ) );
         }
     }
     return shader;
+}
+
+GLuint 
+spark::getErrorShader( void )
+{
+    static GLuint shaderProgram = 0;
+    if( shaderProgram == 0 )
+    {
+        std::string vertexSource =
+            "#version 150\n"
+            "in vec3 v_position;\n"   
+            "uniform mat4 u_projViewModelMat;\n"
+            "void main() {\n"
+            " gl_Position = u_projViewModelMat * vec4( v_position, 1.0 );\n"
+            "}\n";
+        std::string fragmentSource = 
+            "#version 150\n"
+            "out vec4 outColor;\n"
+            "void main() {\n"
+            " outColor = vec4( 1.0, 1.0, 0.2, 1.0 );\n"
+            "}\n";
+
+        shaderProgram = glCreateProgram();
+        GLuint v = createShaderWithErrorHandling( GL_VERTEX_SHADER, vertexSource );
+        GLuint f = createShaderWithErrorHandling( GL_FRAGMENT_SHADER, fragmentSource );
+        glAttachShader( shaderProgram, v );
+        glAttachShader( shaderProgram, f );
+        glLinkProgram( shaderProgram );
+    }
+    return shaderProgram;
 }
 
 void 

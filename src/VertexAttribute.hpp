@@ -51,7 +51,7 @@ namespace spark
             }
             else if( index == -1 )
             {
-                LOG_DEBUG(g_log) << "WARNING: VertexAttribute \"" << m_name << "\" not found in shader program "
+                LOG_DEBUG(g_log) << "VertexAttribute \"" << m_name << "\" not found in shader program "
                 << shaderProgramIndex << "\n";
             }
             else
@@ -70,7 +70,7 @@ namespace spark
             }
             else if( index == -1 )
             {
-                LOG_DEBUG(g_log) << "WARNING: VertexAttribute \"" << m_name << "\" not found in shader program "
+                LOG_DEBUG(g_log) << "VertexAttribute \"" << m_name << "\" not found in shader program "
                 << shaderProgramIndex << "\n";
             }
             else
@@ -89,7 +89,7 @@ namespace spark
             }
             else if( index == -1 )
             {
-                LOG_DEBUG(g_log) << "WARNING: VertexAttribute \"" << m_name << "\" not found in shader program "
+                LOG_DEBUG(g_log) << "VertexAttribute \"" << m_name << "\" not found in shader program "
                 << shaderProgramIndex << "\n";
             }
             else

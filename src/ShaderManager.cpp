@@ -2,6 +2,7 @@
 #include "ShaderManager.hpp"
 #include "Utilities.hpp"
 #include "ShaderInstance.hpp"
+#include "Exceptions.hpp"
 
 spark::ShaderManager
 ::~ShaderManager() 
@@ -79,7 +80,8 @@ spark::ShaderManager
     if( shaderItr != m_registry.end() ) 
     {
         // already exists
-        if( glIsProgram( shaderProgram ) )
+        if(    glIsProgram( shaderProgram ) 
+            && shaderProgram != getErrorShader() )
         {
             LOG_DEBUG(g_log) << "Deleting existing shader for handle \""
                              << aHandle << "\" during reloading.";
@@ -90,32 +92,65 @@ spark::ShaderManager
     m_registry[aHandle] = shaderProgram;
 
     LOG_DEBUG(g_log) << "Loading vertex shader from path: "
-                     << m_files[aHandle].vertexFilePath;
+        << m_files[aHandle].vertexFilePath;
     std::string vertexShaderString
         = readFileToString( m_files[aHandle].vertexFilePath.c_str() );
-    GLuint vertexShader = createShaderWithErrorHandling( GL_VERTEX_SHADER,
-                                                         vertexShaderString );
     LOG_DEBUG(g_log) << "Loading fragment shader from path: "
-                     << m_files[aHandle].fragmentFilePath;
+        << m_files[aHandle].fragmentFilePath;
     std::string fragmentShaderString
         = readFileToString( m_files[aHandle].fragmentFilePath.c_str() );
-    GLuint fragmentShader = createShaderWithErrorHandling( GL_FRAGMENT_SHADER,
-                                                           fragmentShaderString );
 
-    GL_CHECK( glAttachShader( shaderProgram, vertexShader ) );
-    GL_CHECK( glAttachShader( shaderProgram, fragmentShader ) );
-    
-    // Define the fixed shader variable "outColor" receive the color channel
-    GL_CHECK( glBindFragDataLocation( shaderProgram, 0, "outColor" ) );
+    //TODO-- Have files loaded OK?
+    GLuint vertexShader = 0;
+    GLuint fragmentShader = 0;
+    try
+    {
+        vertexShader = createShaderWithErrorHandling( GL_VERTEX_SHADER,
+            vertexShaderString );
+        fragmentShader = createShaderWithErrorHandling( GL_FRAGMENT_SHADER,
+            fragmentShaderString );
 
-    GL_CHECK( glLinkProgram( shaderProgram ) );
+        GL_CHECK( glAttachShader( shaderProgram, vertexShader ) );
+        GL_CHECK( glAttachShader( shaderProgram, fragmentShader ) );
 
-    LOG_INFO(g_log) << "Loaded shader \"" << aHandle
-                    << "\" with vertex shader: \""
-                    << m_files[aHandle].vertexFilePath
-                    << "\", and fragment shader: \""
-                    << m_files[aHandle].fragmentFilePath
-                    << "\", to create shaderID = " << shaderProgram ;
+        // Define the fixed shader variable "outColor" receive the color channel
+        GL_CHECK( glBindFragDataLocation( shaderProgram, 0, "outColor" ) );
+
+        GLint linkStatus = GL_FALSE;
+        GL_CHECK( glLinkProgram( shaderProgram ) );
+        glGetProgramiv( shaderProgram, GL_LINK_STATUS, &linkStatus );
+        if( linkStatus == GL_FALSE )
+        {
+            const size_t logSize = 2048;
+            GLchar errorLog[ logSize ] = {0};
+            glGetProgramInfoLog(shaderProgram, logSize, NULL, errorLog);
+            LOG_ERROR(g_log) << "Failed to link shader \"" << aHandle
+                             << "\" with vertex shader: \""
+                             << m_files[aHandle].vertexFilePath
+                             << "\", and fragment shader: \""
+                             << m_files[aHandle].fragmentFilePath
+                             << "\".";
+            LOG_ERROR(g_log) << "Shader Link error: " << errorLog;
+            throw ShaderCompilationException( errorLog, 
+                vertexShaderString + "\n------\n" + fragmentShaderString );
+        }
+
+        LOG_INFO(g_log) << "Loaded shader \"" << aHandle
+            << "\" with vertex shader: \""
+            << m_files[aHandle].vertexFilePath
+            << "\", and fragment shader: \""
+            << m_files[aHandle].fragmentFilePath
+            << "\", to create shaderID = " << shaderProgram ;
+    }
+    catch( ShaderCompilationException& )
+    {
+        if( vertexShader ) glDeleteShader( vertexShader );
+        if( fragmentShader ) glDeleteShader( fragmentShader );
+        LOG_WARN(g_log) << "Using Error Shader in place of shader \"" 
+                        << aHandle << "\".";
+        glDeleteProgram( shaderProgram );
+        m_registry[aHandle] = getErrorShader();
+    }
 }
 
 void

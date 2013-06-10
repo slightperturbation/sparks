@@ -10,6 +10,11 @@
 #define sparks_RenderPass_hpp
 
 #include "SoftTestDeclarations.hpp"
+
+#define GLEW_STATIC
+#include <GL/glew.h>
+#include <GL/glfw.h> 
+
 namespace spark
 {
     bool createRenderCommand( RenderCommand& outRC, 
@@ -27,40 +32,112 @@ namespace spark
     class RenderPass
     {
     public:
-        RenderPass( void );
-        RenderPass( const RenderPassName& aName ) : m_name( aName ) { }
-        virtual ~RenderPass() { }
+        RenderPass( const RenderPassName& aName = "UNLABELED_RENDER_PASS" );
         void initialize( RenderTargetPtr aTarget, 
-                         PerspectivePtr aPerspective )
-        { m_target = aTarget; m_perspective = aPerspective; }
-
+                         PerspectivePtr aPerspective );
         void initialize( RenderTargetPtr aTarget, 
                          PerspectivePtr aPerspective,
-                         float aPriority )
-        { m_target = aTarget; m_perspective = aPerspective; m_priority = aPriority; }
+                         float aPriority );
 
-        /// Subclasses can override to make material selection more complex.
-        virtual ConstMaterialPtr getMaterialForRenderable( ConstRenderablePtr aRenderable ) const;
+        ConstMaterialPtr getMaterialForRenderable( ConstRenderablePtr aRenderable ) const;
 
-        virtual void setName( const RenderPassName& aName ) { m_name = aName; }
+        RenderPassName name( void ) const;
+        std::string targetName( void ) const;
+        void setName( const RenderPassName& aName );
 
-        /// Sets OpenGL state to draw to the render target 
+        /// Defines how this pass will blend into its target.
+        /// If not set, the pass uses interpolation blending, which is
+        /// the same as calling setBlending( GL_SRC_ALPHA, 
+        ///                                  GL_ONE_MINUS_SRC_ALPHA, 
+        ///                                  GL_FUNC_ADD )
+        ///
+        /// Some common settings:
+        /// interpolation       : setBlending( GL_SRC_ALPHA, 
+        ///                                    GL_ONE_MINUS_SRC_ALPHA );
+        /// additive (glow)     : setBlending( GL_ONE, GL_ONE );
+        /// modulated (filter)  : setBlending( GL_DST_COLOR, GL_ZERO );
+        /// 
+        /// Note that some blend modes (e.g., interpolation) are heavily 
+        /// dependent on the rendering order.
+        /// Blending is disabled if equation == (GLenum)-1 
+        void setBlending( GLenum sourceFactor, 
+                          GLenum destinationFactor,
+                          GLenum equation = GL_FUNC_ADD );
+        void useAdditiveBlending( void );
+        void useInterpolatedBlending( void );
+        void useModulatedBlending( void );
+        void disableBlending( void );
+        void enableBlending( void );
+        
+        /// If defaultMaterial is non-null, it will be used for all scene
+        /// renderables without a material assignment for this pass.
+        void useDefaultMaterial( ConstMaterialPtr defaultMaterial );
+        ConstMaterialPtr defaultMaterial( void ) const;
+
+        /// If true (default), this pass will test depth before writing.
+        /// If false, fragments will not be discarded due to depth occlusion.
+        void setDepthTest( bool isDepthTestEnabled );
+        bool depthTest( void ) const;
+        
+        /// If true (default), then this pass
+        /// will write normally to the depth buffer.
+        /// If false, then the depth buffer will not be changed.
+        void setDepthWrite( bool isWritingToDepthBuffer );
+        bool depthWrite( void ) const;
+        
+        void setColorWrite( bool isWritingColor );
+        bool colorWrite( void ) const;
+        
+        /// Passes with higher priority are rendered first.
+        float priority( void ) const  { return m_priority; }
+
+        //TODO-implement per-pass render order
+        // void setRenderCommandComparison( )
+
+        /// Sets OpenGL state to draw to the render target
         /// (e.g., display device or render-to-texture)
-        void preRender( void ) const;
-        void postRender( void ) const;
+        void preRender(  ConstRenderPassPtr prevPass ) const;
+        void postRender( ConstRenderPassPtr prevPass ) const;
+        void startFrame( ConstRenderPassPtr prevPass ) const;
 
-        float priority( void ) const 
-        { return m_priority; }
-    
+        /// Fill the outRC RenderCommand using the pass and renderable 
+        /// specified.
         friend bool createRenderCommand( RenderCommand& outRC, 
                                          ConstRenderPassPtr aRenderPass, 
                                          ConstRenderablePtr aRenderable );
-        const RenderPassName& name( void ) const { return m_name; }
+        friend std::ostream& operator<<( std::ostream& out,
+                                         ConstRenderPassPtr pass );
+        friend std::ostream& operator<<( std::ostream& out,
+                                         RenderPassPtr pass );
     private:
+        RenderPassName m_name;
         RenderTargetPtr m_target;
         PerspectivePtr m_perspective;
+
+        /// Orders pass wrt other passes.  Higher priorities render first.
         float m_priority;
-        RenderPassName m_name;
+
+        /// Determines the blending to be used writing in this pass
+        bool   m_isBlendingEnabled;
+        GLenum m_blendSourceFactor;
+        GLenum m_blendDestinationFactor;
+        GLenum m_blendEquation;
+
+        /// Can be null, which indicates no default
+        /// If null, renderables without a specific material set for this
+        /// pass will not be drawn.
+        ConstMaterialPtr m_defaultMaterial;
+
+        /// True if the pass has depth test enabled
+        bool m_depthTest;
+        /// True if the pass writes to the depth buffer
+        bool m_depthMask;
+        /// True if the pass writes to the color buffer
+        bool m_colorMask;
+        /// True if the pass should cull backfaces (see m_cullFace)
+        bool m_backfaceCulling;
+        /// OpenGL enum for facet to cull:  GL_FRONT, GL_BACK, GL_FRONT_AND_BACK
+        GLenum m_cullFace;
     };
 
     bool renderPassCompareByPriority( ConstRenderPassPtr a, 

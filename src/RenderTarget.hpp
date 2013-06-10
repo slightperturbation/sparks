@@ -8,6 +8,7 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GL/glfw.h>
+#include <glm/glm.hpp>
 
 namespace spark
 {
@@ -19,27 +20,41 @@ namespace spark
     class RenderTarget
     {
     public:
+        RenderTarget() : m_clearColor( 0,1,0,0 ) {}
         virtual ~RenderTarget() {}
+        virtual std::string name( void ) = 0;
         virtual void initialize( TextureManagerPtr& mgr ) = 0;
         virtual void preRender( void ) const = 0;
         virtual void postRender( void ) const = 0;
+        virtual void startFrame( void ) const = 0;
+        void setClearColor( const glm::vec4& c ) { m_clearColor = c; }
+        virtual std::ostream& debugInfo( std::ostream& out ) const { return out; }
+        friend std::ostream& operator<<( std::ostream& out,
+                                         RenderTargetPtr target );
+    protected:
+        glm::vec4 m_clearColor;
     };
 
     /// Draws to the default display framebuffer.
-    class FrameBufferRenderTarget
-    : public RenderTarget, public GuiEventSubscriber
+    class FrameBufferRenderTarget 
+        : public RenderTarget, 
+          public GuiEventSubscriber
     {
     public:
         FrameBufferRenderTarget( int aWidth, int aHeight );
 
         FrameBufferRenderTarget( int aLeft, int aBottom, int aWidth, int aHeight );
         virtual ~FrameBufferRenderTarget() {}
+        virtual std::string name( void ) override { return "FrameBuffer"; }
 
         virtual void resizeViewport( int left, int bottom,
                                      int width, int height ) override;
+
         virtual void initialize( TextureManagerPtr& mgr ) override {}
         virtual void preRender( void ) const override;
         virtual void postRender( void ) const override;
+        virtual void startFrame( void ) const override;
+        virtual std::ostream& debugInfo( std::ostream& out ) const override;
     protected:
         int m_left;
         int m_bottom;
@@ -48,20 +63,28 @@ namespace spark
     };
     typedef std::shared_ptr< FrameBufferRenderTarget > FrameBufferRenderTargetPtr;
 
-    /// Draws to the default display framebuffer.
+    //////////////////////////////////////////////////////////////////////////////
+    // TextureRenderTarget
+
+    /// Directs render output to a fixed-size texture.
     class TextureRenderTarget : public RenderTarget
     {
     public:
         TextureRenderTarget( const TextureName& aName,
                              int aWidth, int aHeight );
         virtual ~TextureRenderTarget() {}
+        virtual std::string name( void ) override 
+        { return getTextureName(); }
         const TextureName& getTextureName( void ) const 
         { return m_textureHandle; }
         
         virtual void initialize( TextureManagerPtr& mgr ) override;
         virtual void preRender( void ) const override;
         virtual void postRender( void ) const override;
-    private:
+        virtual void startFrame( void ) const override;
+
+        virtual std::ostream& debugInfo( std::ostream& out ) const override;
+    protected:
         TextureName m_textureHandle;
         int m_width;
         int m_height;
@@ -69,7 +92,36 @@ namespace spark
         GLuint m_depthRenderbufferId;
     };
     typedef std::shared_ptr< TextureRenderTarget > TextureRenderTargetPtr;
-    
-    // class TextureTarget ??
+
+    //////////////////////////////////////////////////////////////////////////////
+    // ScaledTextureRenderTarget
+
+    /// A ScaledTexureRenderTarget that maintains a size that is a scale factor
+    /// of the viewport's size.  Listens to GUI callbacks to keep size linked.
+    class ScaledTextureRenderTarget : public TextureRenderTarget,
+                                      public GuiEventSubscriber
+    {
+    public:
+        ScaledTextureRenderTarget( const TextureName& aName,
+            int aViewportWidth, int aViewportHeight, 
+            float aScaleX, float aScaleY );
+        virtual ~ScaledTextureRenderTarget() {}
+
+        virtual void initialize( TextureManagerPtr& mgr ) override;
+
+        virtual void resizeViewport( int left, int bottom,
+                                    int width, int height );
+
+        void scaleFactor( float x, float y );
+
+        virtual std::ostream& debugInfo( std::ostream& out ) const override;
+    private:
+        void resetTexture( void );
+        TextureManagerPtr m_textureManager;
+        float m_scaleX;                //< Scale factor vs viewport size
+        float m_scaleY;                //< Scale factor vs viewport size
+    };
+    typedef std::shared_ptr< ScaledTextureRenderTarget > ScaledTextureRenderTargetPtr;
+
 } // end namespace spark
 #endif

@@ -1,4 +1,5 @@
 #include "Mesh.hpp"
+#include "Material.hpp"
 #include "Utilities.hpp"
 
 #include <assimp/Importer.hpp>
@@ -124,8 +125,8 @@ spark::Mesh
 ::setVertex( size_t i, 
              const Eigen::Vector3f& a, 
              const Eigen::Vector2f& textureCoords, 
-             const Eigen::Vector4f color, 
-             const Eigen::Vector3f norm )
+             const Eigen::Vector4f& color, 
+             const Eigen::Vector3f& norm )
 {
     if( i > m_vertexData.size()-1 )
     {
@@ -147,8 +148,8 @@ size_t
 spark::Mesh
 ::addVertex( const Eigen::Vector3f& a, 
              const Eigen::Vector2f& aCoord,
-             const Eigen::Vector4f aColor,
-             const Eigen::Vector3f aNorm )
+             const Eigen::Vector4f& aColor,
+             const Eigen::Vector3f& aNorm )
 {
     MeshVertex v;
     v.m_position[3] = 0;

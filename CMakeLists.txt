@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 2.8.9)
+include(ExternalProject)
+
 set(CMAKE_MODULE_PATH "./cmake" "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 
 # SANITY CHECK -- what variables are set?
-IF(WINDOWS)
-  MESSAGE( STATUS "VARIABLES --- WINDOWS" )
-ENDIF(WINDOWS)
 IF(WIN32)
   MESSAGE( STATUS "VARIABLES --- WIN32" )
 ENDIF(WIN32)
@@ -111,11 +110,38 @@ INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}/unsupported/" )
 #####################################################################
 # Intel Thread Building Blocks (TBB)
 #####################################################################
-FIND_PACKAGE( TBB REQUIRED )
-if(NOT TBB_FOUND)
-  MESSAGE( SEND_ERROR "Failed to find TBB." )
-endif(NOT TBB_FOUND)
-INCLUDE_DIRECTORIES( "${TBB_INCLUDE_DIRS}" )
+if( WIN32 )
+  set( TBB_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/ext/tbb" )
+  set( TBB_BIN_URL "http://threadingbuildingblocks.org/sites/default/files/software_releases/windows/tbb41_20130314oss_win.zip"
+       CACHE STRING "URL pointing to the ZIP archive of TBB binary bundle. (See http://threadingbuildingblocks.org/download#stable-releases )" )
+  ExternalProject_Add(
+      TBB
+      PREFIX ${TBB_PREFIX}
+      URL ${TBB_BIN_URL}
+      URL_MD5 eb73c00f4b40fb0eba8f631bb311ecc5 # Version 4.1 Update 3
+      UPDATE_COMMAND    ""
+      BUILD_IN_SOURCE   1
+      INSTALL_COMMAND   ""
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND     ""
+  )
+  set( TBB_LIB_DIR "${TBB_PREFIX}/src/TBB/lib/intel64/vc10" )
+  set( TBB_LIBRARIES "${TBB_LIB_DIR}/tbb.lib" )
+  set( TBB_INCLUDE_DIRS "${TBB_PREFIX}/src/TBB/include" )
+  set( TBB_DLLS "${TBB_PREFIX}/src/TBB/bin/intel64/vc10")
+endif( WIN32 )
+
+if( APPLE )
+  # Use BREW to stay up-to-date
+  FIND_PACKAGE( TBB REQUIRED )
+  if(NOT TBB_FOUND) 
+   MESSAGE( SEND_ERROR "Failed to find TBB." )  
+  endif(NOT TBB_FOUND)
+  INCLUDE_DIRECTORIES( "${TBB_INCLUDE_DIRS}" )
+endif( APPLE )
+
+
+
 
 #####################################################################
 # GUI Libraries : OpenGL and GLFW (not required)
@@ -209,6 +235,7 @@ set( HDRS
   ./src/ArcBall.hpp
   ./src/Display.hpp
   ./src/LSpark.hpp
+  ./src/Exceptions.hpp
   ./src/Fluid.hpp
   ./src/FileAssetFinder.hpp
   ./src/GuiEventSubscriber.hpp
@@ -227,6 +254,7 @@ set( HDRS
   ./src/ShaderManager.hpp
   ./src/ShaderInstance.hpp
   ./src/ShaderUniform.hpp
+  ./src/Simulation.hpp
   ./src/Spark.hpp
   ./src/SoftTestDeclarations.hpp
   ./src/TextureManager.hpp
@@ -243,6 +271,7 @@ set( SRCS
   ./src/ArcBall.cpp
   ./src/Display.cpp
   ./src/LSpark.cpp
+  ./src/Exceptions.cpp
   ./src/Fluid.cpp
   ./src/FileAssetFinder.cpp
   ./src/Material.cpp
@@ -258,6 +287,7 @@ set( SRCS
   ./src/SlicedVolume.cpp
   ./src/ShaderUniform.cpp
   ./src/ShaderManager.cpp
+  ./src/Simulation.cpp
   ./src/Spark.cpp
   ./src/TexturedSparkRenderable.cpp
   ./src/TextureManager.cpp
@@ -298,6 +328,7 @@ include_directories( ${CMAKE_BINARY_DIR}/config/ )
 add_executable( ${PROJECT_NAME} 
   ${HDRS} ${SRCS} ${GUI_SRCS} ${CPPLOG_HDRS}
 )
+add_dependencies( ${PROJECT_NAME} TBB )
 
 target_link_libraries(${PROJECT_NAME} 
 	${PROJECT_LINK_LIBRARIES}

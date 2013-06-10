@@ -36,6 +36,7 @@ extern cpplog::BaseLogger* g_log;
 
 ///////////////////////////////////////////////////////////////////////////
 // Forward Declarations
+
 namespace spark
 {
     class Renderable;

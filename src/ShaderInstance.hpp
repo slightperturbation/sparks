@@ -152,7 +152,9 @@ namespace spark
     
         virtual ~ShaderInstance() { }
         const ShaderName& name( void ) const { return m_name; }
-    
+        
+        /// TODO -- Currently looks up uniform locations for each use
+        /// Should subscribe to updates from ShaderManager!
         void use( void ) const
         {
             GLuint shaderIndex = getGLProgramIndex();

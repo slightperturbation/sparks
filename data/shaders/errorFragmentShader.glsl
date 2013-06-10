@@ -18,12 +18,10 @@ uniform mat3 u_normalMat;            // transpose(inverse(viewModelMat))
 uniform float u_time;                // current time (in seconds) 
 //////////////////////////////////////////////////////////////////////
 
-uniform vec4 u_color = vec4( 1, 1, 1, 1 );
-
 uniform sampler2D s_color;
 
 void main()
 {
-	//vec4 tex = texture( s_color, f_texCoord );
-	outColor = vec4(f_texCoord.st,1,1); //f_fragColor ;//* tex;
+	outColor = vec4( 1, 1, 0, 1 );
 }
+

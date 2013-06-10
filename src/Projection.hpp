@@ -101,10 +101,6 @@ namespace spark
         void bottom( float arg ) { m_bottom = arg; }
         float top( void ) const { return m_top; }
         void top( float arg ) { m_top = arg; }
-        float nearPlane( void ) const { return m_nearPlaneDist; }
-        void nearPlane( float arg ) { m_nearPlaneDist = arg; }
-        float farPlane( void ) const { return m_farPlaneDist; }
-        void farPlane( float arg ) { m_farPlaneDist = arg; }
 
         virtual glm::mat4 viewMatrix( void ) const
         {

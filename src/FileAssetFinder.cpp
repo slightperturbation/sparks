@@ -82,11 +82,19 @@ spark::FileAssetFinder
             if( searchRecursively )
             {
                 bfs::path fpath;
-                findFileRecursively( dir, aFilename, fpath );
+                bool isFound = findFileRecursively( dir, aFilename, fpath );
                 foundPath = fpath.string();
-                LOG_DEBUG(g_log) << "Found file \"" << aFilename 
-                    << "\" at \"" << foundPath << "\".";
-                return true;
+                if( isFound )
+                {
+                    LOG_DEBUG(g_log) << "Found file \"" << aFilename 
+                        << "\" at \"" << foundPath << "\".";
+                } 
+                else
+                {
+                    LOG_WARN(g_log) << "Unable to find file \"" << aFilename 
+                        << "\" in recursive search of \"" << dir << "\".";
+                }
+                return isFound;
             }
             else
             {

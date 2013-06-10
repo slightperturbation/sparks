@@ -6,11 +6,15 @@ in vec3 v_normal;
 in vec4 v_color;
 in vec3 v_texCoord;
 
-// Perspective uniforms (see Matierial::setTransformUniforms)
-uniform mat4 u_projViewModelMat; // projection * view * model
-uniform mat4 u_viewModelMat;     // transforms object into camera(eye) space
-uniform mat4 u_projMat;          // projects camera(eye) space to clip(screen) space
-uniform mat3 u_normalMat;        // transpose(inverse(viewModelMat))
+//////////////////////////////////////////////////////////////////////
+// Common Uniforms (see RenderCommand)
+uniform mat4 u_projViewModelMat;     // projection * view * model
+uniform mat4 u_viewModelMat;         // transforms object into camera(eye) space
+uniform mat4 u_inverseViewModelMat;  // inverse of the model-view matrix, can give camera position
+uniform mat4 u_projMat;              // projects camera(eye) space to clip(screen) space
+uniform mat3 u_normalMat;            // transpose(inverse(viewModelMat))
+uniform float u_time;                // current time (in seconds) 
+//////////////////////////////////////////////////////////////////////
 
 // Out to fragment shader
 out vec4 f_fragColor;      // interpolated color of fragment from vertex colors 
