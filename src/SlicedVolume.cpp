@@ -7,6 +7,7 @@ using namespace Eigen;
 
 spark::SlicedVolume
 ::SlicedVolume( TextureManagerPtr tm, ShaderManagerPtr sm,
+               const RenderPassName& renderPassName,
                unsigned int sliceCount, VolumeDataPtr data )
 : Renderable( "SlicedVolume" ),
   m_mesh( new Mesh() ),
@@ -19,7 +20,7 @@ spark::SlicedVolume
     MaterialPtr densityMaterial( new Material( tm, densityShader ) );
     tm->load3DTextureFromVolumeData( m_textureName, m_volumeData );
     densityMaterial->addTexture( "s_density3d", m_textureName );
-    setMaterialForPassName( g_opaqueRenderPassName, densityMaterial );
+    setMaterialForPassName( renderPassName, densityMaterial );
     
     const size_t zSteps = sliceCount;
     const float zMin = -0.5;
@@ -61,15 +62,16 @@ spark::SlicedVolume
 
 void
 spark::SlicedVolume
-::render( void ) const 
+::render( const RenderCommand& rc ) const
 {
-    m_mesh->render();
+    m_mesh->render( rc );
 }
 
 void
 spark::SlicedVolume
 ::update( float dt ) 
 {
+    m_volumeData->update( dt );
     /// Push new density data up to graphics card
     m_textureManager->load3DTextureFromVolumeData( m_textureName, m_volumeData );
     m_mesh->update( dt );

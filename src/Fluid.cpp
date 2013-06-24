@@ -68,8 +68,8 @@ spark::Fluid
     m_velU_source( NULL ), m_velV_source( NULL ), m_velW_source( NULL ),
     m_solverIterations( 20 ),
     m_size( size*size*size ),
-    m_diff( 0.000 ), // ????
     m_visc( 0.0000 ),
+    m_diff( 0.000 ), // ????
     m_div( NULL ), m_pressure( NULL ),
     m_ambientTemp( 20.0f ),
     m_tempFactor( 1.0f ), 
@@ -226,9 +226,9 @@ spark::Fluid
     }
 
     // Sources are hacked into the initialization code for now
-    const bool hasCentralSource = true;
-    const bool hasBottomSource = false;
-    const bool hasBoom = true;
+    const bool hasCentralSource = false;
+    const bool hasBottomSource = true;
+    const bool hasBoom = false;
 
     for( size_t i=1; i<m_N; ++i )
     {
@@ -246,9 +246,9 @@ spark::Fluid
                     );
                 if( hasCentralSource && d < m_N/5.0f )
                 {
-                    m_density[index(i,j,k)] = 10;
-                    m_density_source[index(i,j,k)] = 5;
-                    m_temp[index(i,j,k)] = 20 + m_ambientTemp;
+                    m_density[index(i,j,k)] = 0.5;
+                    m_density_source[index(i,j,k)] = 0;
+                    m_temp[index(i,j,k)] = 5 + m_ambientTemp;
                 }
                 // grid is nice for understanding shape of volume
                 if( (!(i%8) || !(k%8)) && j==m_N/2 )
@@ -268,9 +268,9 @@ spark::Fluid
 ::addBottomSource( void )
 {
     int cx  = m_N/2;
-    int cy  = m_N/2;
+    int cy  = 2;///m_N/2;
     int cz  = m_N/4;
-    float r = (float)m_N/6.0f;
+    float r = (float)m_N/8.0f;
 
     for( int x=1; x<m_N; ++x )
     {
@@ -286,9 +286,9 @@ spark::Fluid
                 if( d <= r )
                 {
                     int i = index(x,y,z);
-                    m_density[i] = 10.0;
+                    m_density[i] = 0.25f;
                     //m_density_source[i] = 10.0;
-                    m_temp[i] = 1.8f * m_ambientTemp;
+                    m_temp[i] = 2.2f * m_ambientTemp;
                     //m_temp_source[i] = 1.8f * m_ambientTemp;
                 }
             }
@@ -464,8 +464,8 @@ spark::Fluid
         }
     }
 
-    enforceBoundary( 0, div );
-    enforceBoundary( 0, p );
+    enforceConcentrationBoundary( 0, div );
+    enforceConcentrationBoundary( 0, p );
 
     // Gauss-Seidel solver of the pressure field
     linearSolve( 0, p, div, 1, 6 );
@@ -483,9 +483,11 @@ spark::Fluid
             }
         }
     }
-    enforceBoundary( 1, vx );
-    enforceBoundary( 2, vy );
-    enforceBoundary( 3, vz );
+    
+    
+    enforceConcentrationBoundary( 1, vx );
+    enforceConcentrationBoundary( 2, vy );
+    enforceConcentrationBoundary( 3, vz );
 }
 
 void 
@@ -527,7 +529,7 @@ spark::Fluid
             }
         }
         // Each iteration, enforce boundary
-        enforceBoundary( boundaryCondition, x );
+        enforceConcentrationBoundary( boundaryCondition, x );
     }
     //LOG_DEBUG(g_log) << "POST linear Solve a=" << a << ", invc=" << invC << ",  middle voxel = " << x[index(m_N/2, m_N/2, m_N/2)] << " prev=" << x_prev[index(m_N/2, m_N/2, m_N/2)] << "\n";
 }
@@ -564,7 +566,7 @@ spark::Fluid
             }
         }
         // Each iteration, enforce boundary
-        enforceBoundary( boundaryCondition, x );
+        enforceConcentrationBoundary( boundaryCondition, x );
     }
 }
 
@@ -751,7 +753,7 @@ spark::Fluid
             }
         }
     }
-    enforceBoundary( boundaryCondition, d );
+    enforceConcentrationBoundary( boundaryCondition, d );
 }
 
 void
@@ -812,6 +814,80 @@ spark::Fluid
 
     x[index(N+1,N+1,N+1)] = third*( x[index(N,N+1,N+1)] + x[index(N+1,N,N+1)] + x[index(N+1,N+1,N)] );
 }
+
+void
+spark::Fluid
+::enforceConcentrationBoundary( int dim, float* x )
+{
+    const float N = m_N;
+    
+    // 4 walls
+    for( size_t a = 1; a <= N; a++ )
+    {
+        for( size_t b = 1; b <= N; b++ )
+        {
+            x[index(0,  a,b)] = 0;
+            x[index(N+1,a,b)] = 0;
+            
+            x[index(a,0,  b)] = dim==2 ? -x[index(a,1,b)] : x[index(a,1,b)];
+            x[index(a,N+1,b)] = 0;
+            
+            x[index(a,b,  0)] = 0;
+            x[index(a,b,N+1)] = 0;
+        }
+    }
+
+    
+    
+    
+    
+    
+    return;
+    
+    
+    
+    
+    
+    
+
+    
+    // 12 edges
+    for( size_t a = 1; a <= N; ++a )
+    {
+        // x varies
+        x[index(a,0,0)] = 0;
+        x[index(a,N+1,0)] = 0;
+        x[index(a,0,N+1)] = 0;
+        x[index(a,N+1,N+1)] = 0;
+        
+        // y varies
+        x[index(0,a,0)] = 0;
+        x[index(N+1,a,0)] = 0;
+        x[index(0,a,N+1)] = 0;
+        x[index(N+1,a,N+1)] = 0;
+        
+        // z varies
+        x[index(0,0,a)] = 0;
+        x[index(N+1,0,a)] = 0;
+        x[index(0,N+1,a)] = 0;
+        x[index(N+1,N+1,a)] = 0;
+    }
+    
+    // 8 corners
+    const float third = 1.0f/3.0f;
+    x[index(0,  0,  0  )] = third*( x[index(1,  0,  0)] + x[index(0,  1,  0)] + x[index(0,  0,  1)] );
+    
+    x[index(N+1,0,  0  )] = third*( x[index(N,  0,  0)] + x[index(N+1,1,  0)] + x[index(N+1,0,  1)] );
+    x[index(0,  N+1,0  )] = third*( x[index(1,N+1,  0)] + x[index(0  ,N,  0)] + x[index(0,  N+1,1)] );
+    x[index(0,  0,  N+1)] = third*( x[index(1,  0,N+1)] + x[index(0  ,1,N+1)] + x[index(0,  0,  N)] );
+    
+    x[index(0  ,N+1,N+1)] = third*( x[index(1,N+1,N+1)] + x[index(0,  N,N+1)] + x[index(0,  N+1,N)] );
+    x[index(N+1,0,  N+1)] = third*( x[index(N,0,  N+1)] + x[index(N+1,0,N+1)] + x[index(N+1,0,  N)] );
+    x[index(N+1,N+1,0  )] = third*( x[index(N,N+1,  0)] + x[index(N+1,N,  0)] + x[index(N+1,N+1,1)] );
+    
+    x[index(N+1,N+1,N+1)] = third*( x[index(N,N+1,N+1)] + x[index(N+1,N,N+1)] + x[index(N+1,N+1,N)] );
+}
+
 
 void 
 spark::Fluid

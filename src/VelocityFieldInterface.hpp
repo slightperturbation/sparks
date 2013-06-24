@@ -9,6 +9,8 @@
 #ifndef sparks_VelocityFieldInterface_hpp
 #define sparks_VelocityFieldInterface_hpp
 
+#include "SoftTestDeclarations.hpp"
+
 #include <Eigen/Dense>
 #include <memory>
 namespace spark
@@ -18,7 +20,7 @@ namespace spark
     public:
         virtual Eigen::Vector3f velocityAtPosition( const Eigen::Vector3f& pos ) = 0;
     };
-    typedef std::shared_ptr< VelocityFieldInterface > VelocityFieldInterfacePtr;
+    typedef spark::shared_ptr< VelocityFieldInterface > VelocityFieldInterfacePtr;
 } // end namespace spark
 
 #endif

@@ -31,7 +31,7 @@ namespace spark
         /// Returns the amount of light absorption per unit density
         virtual float absorption( void ) const = 0;
     };
-    typedef std::shared_ptr< VolumeData > VolumeDataPtr;
+    typedef spark::shared_ptr< VolumeData > VolumeDataPtr;
 }
 
 #endif

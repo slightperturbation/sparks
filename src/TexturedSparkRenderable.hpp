@@ -27,28 +27,29 @@
 namespace spark
 {
     /// Renders the component spark with a textured set of triangles.
-    class TexturedSparkRenderable : public Renderable, public Updatable
+    class TexturedSparkRenderable : public Renderable
     {
     public:
         TexturedSparkRenderable( LSparkPtr spark );
         virtual ~TexturedSparkRenderable() {}
-    
-        // cam pos is used to orient the spark billboards toward the camera
-        void setCameraPosition( const glm::vec3& cameraPos )
-        { m_cameraPos = cameraPos; }
-        virtual void render( void ) const override;
+
+        virtual void render( const RenderCommand& rc ) const override;
         virtual void attachShaderAttributes( GLuint shaderIndex ) override;
         virtual void update( float dt ) override;
+
+        void setViewProjection( ConstProjectionPtr aCamera );
     private:
         static Eigen::Vector3f upOffset( const Eigen::Vector3f& pos, 
                                          const Eigen::Vector3f& parentPos,
-                                         const Eigen::Vector3f& camPos,
+                                         const Eigen::Vector3f& camDir,
                                          float halfAspectRatio );
 
         MeshPtr m_mesh;
         LSparkPtr m_spark;
-        glm::vec3 m_cameraPos;
+        ConstProjectionPtr m_camera;
     };
-    typedef std::shared_ptr< TexturedSparkRenderable > TexturedSparkRenderablePtr;
+    typedef spark::shared_ptr< TexturedSparkRenderable > TexturedSparkRenderablePtr;
+
+    
 }
 #endif

@@ -15,13 +15,13 @@ spark::Material
 
 spark::Material
 ::Material( TextureManagerPtr tm, ShaderInstancePtr aShader )
-    : m_shader( aShader ), m_textureManager( tm )
-{ }
+    : m_textureManager( tm )
+{ setShader(aShader); }
 
 void 
 spark::Material
 ::setShader( ShaderInstancePtr aShader )
-{ m_shader = aShader; }
+{ m_shader = aShader; m_name = m_shader->name(); }
 
 GLuint 
 spark::Material
@@ -31,7 +31,12 @@ spark::Material
 const std::string& 
 spark::Material
 ::name( void ) const 
-{ return m_shader->name(); }
+{ return m_name; }
+
+void
+spark::Material
+::name( const std::string& arg )
+{ m_name = arg; }
 
 void 
 spark::Material

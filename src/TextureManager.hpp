@@ -91,6 +91,9 @@ namespace spark
                                       GLuint& outTextureId );
         /// Remove the texture with the given handle.
         void deleteTexture( const TextureName& aHandle );
+        
+        /// Log all loaded textures
+        void logTextures( void ) const;
     private:
         /// Calls glActiveTexture and glBindTexture to bind the ID to the unit.
         /// Records binding in m_bindingTextureUnitToTextureId
@@ -128,7 +131,7 @@ namespace spark
         GLint m_maxTextureUnits;
         GLint m_nextAvailableTextureUnit;
     };
-    typedef std::shared_ptr< TextureManager > TextureManagerPtr;
+    typedef spark::shared_ptr< TextureManager > TextureManagerPtr;
 } // end namespace spark
 #endif
 

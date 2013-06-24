@@ -29,6 +29,7 @@ namespace spark
         GLuint getGLShaderIndex( void ) const;
         /// Returns the name of the **shader** used by this material.
         const std::string& name( void ) const;
+        void name( const std::string& aName );
         /// Set OpenGLs state to use the material
         void use( void ) const;
         /// Usage examples:
@@ -55,6 +56,7 @@ namespace spark
         /// Send to logger all of the shader uniforms actually applied.
         void dumpShaderUniforms( void ) const;
     private:
+        std::string m_name;
         std::set< std::pair< const TextureName, const ShaderUniformName > > m_textures;
         ShaderInstancePtr m_shader;
         TextureManagerPtr m_textureManager;

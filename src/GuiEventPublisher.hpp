@@ -36,7 +36,7 @@ namespace spark
                  i != m_subscribers.end();
                  ++i )
             {
-                std::shared_ptr<GuiEventSubscriber> p = (*i).lock();
+                spark::shared_ptr<GuiEventSubscriber> p = (*i).lock();
                 if( p )
                 {
                     p->resizeViewport( left, bottom, width, height );
@@ -49,7 +49,7 @@ namespace spark
         std::set< GuiEventSubscriberWeakPtr, 
                   std::owner_less< GuiEventSubscriberWeakPtr > > m_subscribers;
     };
-    typedef std::shared_ptr< GuiEventPublisher > GuiEventPublisherPtr;
+    typedef spark::shared_ptr< GuiEventPublisher > GuiEventPublisherPtr;
 }
 
 

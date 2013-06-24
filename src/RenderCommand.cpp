@@ -29,14 +29,11 @@ spark::RenderCommand
         assert( false );
     }
     
-    bool isNewMaterial = ( precedingCommand.m_material
-                          != this->m_material );
-    
     // setup transformation uniforms on shader
     // OK to cast-away const because we are in the execution of
     // the render command, thus guaranteed to be in a single-thread
     // due to OpenGL calls being limited to a single thread.
-    MaterialPtr mutableMaterial = std::const_pointer_cast<Material>( m_material );
+    MaterialPtr mutableMaterial = spark::const_pointer_cast<Material>( m_material );
     
     // Define Common uniforms
     ///////////////////////////////////////////////////////////////////
@@ -69,6 +66,8 @@ spark::RenderCommand
     mutableMaterial->setShaderUniform<glm::mat3>( "u_normalMat", 
                                                   normal );
     mutableMaterial->setShaderUniform<float>( "u_time", time );
+    mutableMaterial->setShaderUniform<glm::vec2>( "u_targetSizeInPixels",
+                                                 m_pass->targetSize() );
     
     // Lights
     //m_illumination->use( mutableMaterial );
@@ -77,7 +76,7 @@ spark::RenderCommand
     // Show all the uniforms that have been set above for debugging
     m_material->dumpShaderUniforms();    
     m_material->use();
-    m_renderable->render();
+    m_renderable->render( *this );
 }
 
 bool
@@ -91,7 +90,7 @@ spark::RenderCommandCompare
     //  - textures
     
     // Sort by render pass
-    bool isABeforeB = a.m_pass->priority() < b.m_pass->priority();
+    bool isALessThanB = renderPassCompareByPriority( a.m_pass, b.m_pass );
 
     const bool traceSortOrder = false;
     if( traceSortOrder )
@@ -100,12 +99,13 @@ spark::RenderCommandCompare
         LOG_TRACE(g_log) << "\tA: " << a;
         LOG_TRACE(g_log) << "\tB: " << b;
         LOG_TRACE(g_log) << "\tfirst rendered is "
-        << ( isABeforeB ? "A" : "B" )
-        << " because (A.priority() < B.priority() is "
-        << (isABeforeB ? "true" : "false" );
+        << ( isALessThanB ? "B" : "A" )
+        << " because renderPassCompareByPriority(a,b) is "
+        << (isALessThanB ? "true" : "false" )
+        << " and highest priority goes first.";
         LOG_TRACE(g_log) << "****END   Compare RenderCommands";
     }
-    return isABeforeB;
+    return isALessThanB;
 }
 
 

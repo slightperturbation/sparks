@@ -22,7 +22,7 @@ spark::RenderPass
 void 
 spark::RenderPass
 ::initialize( RenderTargetPtr aTarget, 
-              PerspectivePtr aPerspective )
+              ProjectionPtr aPerspective )
 { 
     m_target = aTarget; 
     m_perspective = aPerspective; 
@@ -31,7 +31,7 @@ spark::RenderPass
 void 
 spark::RenderPass
 ::initialize( RenderTargetPtr aTarget, 
-              PerspectivePtr aPerspective,
+              ProjectionPtr aPerspective,
               float aPriority )
 { 
     m_target = aTarget; 
@@ -45,6 +45,14 @@ spark::RenderPass
 { 
     return m_name; 
 }
+
+glm::vec2 
+spark::RenderPass
+::targetSize( void ) const
+{
+    return m_target->size();
+}
+
 
 std::string 
 spark::RenderPass
@@ -66,6 +74,12 @@ spark::RenderPass
 {
     if( m_target ) 
     {
+        if( !prevPass 
+            || (prevPass->m_target != m_target )
+            )
+        {
+            m_target->preRender();
+        }
         // Blending
         if( !prevPass
             || (prevPass->m_isBlendingEnabled != m_isBlendingEnabled)
@@ -150,10 +164,9 @@ spark::RenderPass
 
 void 
 spark::RenderPass
-::postRender( ConstRenderPassPtr prevPass ) const
+::postRender( void ) const
 {
-    if(   m_target && 
-        ( !prevPass || (prevPass->m_target != m_target) ) ) 
+    if( m_target ) 
     { 
         m_target->postRender(); 
     }
@@ -163,8 +176,8 @@ void
 spark::RenderPass
 ::startFrame( ConstRenderPassPtr prevPass ) const
 {
-    if(   m_target && 
-        ( !prevPass || (prevPass->m_target != m_target) ) ) 
+    if( m_target 
+        && ( !prevPass || (prevPass->m_target != m_target) ) ) 
     { 
         m_target->startFrame(); 
     }
@@ -214,9 +227,9 @@ spark::RenderPass
 
 void
 spark::RenderPass
-::useModulatedBlending( void )
+::useMaxBlending( void )
 {
-    setBlending( GL_DST_COLOR, GL_ZERO, GL_FUNC_ADD );
+    setBlending( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_MAX );
 }
 
 void
@@ -292,7 +305,7 @@ spark
 ::renderPassCompareByPriority( ConstRenderPassPtr a,
                                ConstRenderPassPtr b )
 {
-    return a->priority() > b->priority();
+    return a->priority() < b->priority();
 }
 
 bool 

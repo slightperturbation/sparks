@@ -42,12 +42,12 @@ spark::Scene
         commandsCopy.pop();
     }
 
-    ConstRenderPassPtr prevRenderPass( nullptr );
     RenderCommand prevRenderCommand, rc;
     // Render each render command in order.
     int counter = 0;
     
     // Allow passes and their targets to clear and setup buffers
+    ConstRenderPassPtr prevRenderPass( nullptr );
     for( auto pass = m_passes.begin(); pass != m_passes.end(); ++pass )
     {
         (*pass)->startFrame( prevRenderPass );
@@ -58,14 +58,15 @@ spark::Scene
     while( !m_commands.empty() )
     {
         RenderCommand rc = m_commands.top();
-        LOG_TRACE(g_log) << "----Executing RenderCommand " << counter++ << ": " << rc;
+        LOG_TRACE(g_log) << "----Executing RenderCommand "
+                         << counter++ << ": " << rc;
         ConstRenderPassPtr currRenderPass = rc.m_pass;
         if( currRenderPass != prevRenderPass )
         {
             // New render pass, allow both old and new to change GL state.
             if( prevRenderPass ) 
             {
-                prevRenderPass->postRender( prevRenderPass );
+                prevRenderPass->postRender( );
             }
             if( currRenderPass ) 
             {
@@ -77,6 +78,20 @@ spark::Scene
         prevRenderPass = currRenderPass;
         prevRenderCommand = rc;
         m_commands.pop();
+    }
+    if( prevRenderPass )
+    {
+        prevRenderPass->postRender();
+    }
+}
+
+void
+spark::Scene
+::update( float dt )
+{
+    for( auto i = m_renderables.begin(); i != m_renderables.end(); ++i )
+    {
+        (*i)->update( dt );
     }
 }
 
@@ -116,3 +131,14 @@ spark::Scene
     }
 }
 
+void 
+spark::Scene
+::logPasses( void ) const
+{
+    LOG_INFO(g_log) << "Passes:";
+    for( auto piter = m_passes.begin(); piter != m_passes.end(); ++piter )
+    {
+        ConstRenderPassPtr p = *piter;
+        LOG_INFO(g_log) << "\t" << p->priority() << ": " << p;
+    }
+}

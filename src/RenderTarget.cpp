@@ -33,6 +33,13 @@ spark::FrameBufferRenderTarget
     m_left = aLeft; m_bottom = aBottom; m_width = aWidth; m_height = aHeight;
 }
 
+glm::vec2
+spark::FrameBufferRenderTarget
+::size( void ) const
+{
+    return glm::vec2( m_width, m_height );
+}
+
 void
 spark::FrameBufferRenderTarget
 ::preRender( void ) const
@@ -82,7 +89,8 @@ spark::FrameBufferRenderTarget
 spark::TextureRenderTarget
 ::TextureRenderTarget( const TextureName& aName,
                        int aWidth, int aHeight )
-: m_textureHandle( aName ), m_width( aWidth ), m_height( aHeight ),
+: m_textureManager( nullptr ), m_textureHandle( aName ), 
+  m_width( aWidth ), m_height( aHeight ),
   m_framebufferId( -1 ), m_depthRenderbufferId( -1 )
 { }
 
@@ -90,9 +98,9 @@ void
 spark::TextureRenderTarget
 ::initialize( TextureManagerPtr& mgr )
 {
-    
     LOG_TRACE(g_log) << "Initialize TextureRenderTarget \""
     << getTextureName() << "\".";
+    m_textureManager = mgr;
     glGenFramebuffers( 1, &m_framebufferId );
     if( m_framebufferId == -1 )
     {
@@ -101,7 +109,7 @@ spark::TextureRenderTarget
     }
     GL_CHECK( glBindFramebuffer( GL_FRAMEBUFFER, m_framebufferId ) );
     
-    mgr->createTargetTexture( m_textureHandle, m_width, m_height );
+    m_textureManager->createTargetTexture( m_textureHandle, m_width, m_height );
     
     // Setup render target for depth buffer
     glGenRenderbuffers( 1, &m_depthRenderbufferId );
@@ -128,6 +136,13 @@ spark::TextureRenderTarget
     }
 }
 
+glm::vec2
+spark::TextureRenderTarget
+::size( void ) const
+{
+    return glm::vec2( m_width, m_height );
+}
+
 void
 spark::TextureRenderTarget
 ::preRender( void ) const
@@ -144,7 +159,20 @@ void
 spark::TextureRenderTarget
 ::postRender( void ) const
 {
-    
+    LOG_TRACE(g_log) << "Generate Mipmap for TextureRenderTarget \"" 
+                     << name() << "\".";
+    if( !m_textureManager )
+    {
+        LOG_ERROR(g_log) << "TextureRenderTarget (" 
+            << name() << " not initialized (null TextureManager) -- "
+            << "no mipmaps will be generated.";
+        return;
+    }
+    GLint texUnit = m_textureManager->getTextureUnitForHandle( getTextureName() );
+    // Make the target texture active
+    GL_CHECK( glActiveTexture( GL_TEXTURE0 + texUnit ) );
+    // generate using the active texture unit
+    glGenerateMipmap( GL_TEXTURE_2D );
 }
 
 void
@@ -179,7 +207,6 @@ spark::TextureRenderTarget
     << m_width << ", " << m_height << "]";
     return out;
 }
-
 
 //////////////////////////////////////////////////////////////////////////////
 // ScaledTextureRenderTarget
@@ -226,6 +253,9 @@ spark::ScaledTextureRenderTarget
 {
     if( !m_textureManager )
     {
+        LOG_ERROR(g_log) << "ScaledTextureRenderTarget[\""
+            << name()
+            << "\"]::resetTexture called before initializing.";
         m_framebufferId = -1;
         m_depthRenderbufferId = -1;
         return;

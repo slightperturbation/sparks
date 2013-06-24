@@ -11,7 +11,7 @@
 
 #include "SoftTestDeclarations.hpp"
 
-#include "Spark.hpp"
+#include "DBMSpark.hpp"
 #include "Renderable.hpp"
 #include "Projection.hpp"
 
@@ -41,7 +41,7 @@ namespace spark
                               ShaderManagerPtr sm );
         virtual ~PointSparkRenderable() {}
     
-        virtual void render( void ) const;
+        virtual void render( const RenderCommand& ) const override;
         virtual void update( float dt );
         virtual void loadTextures() {}
         virtual void loadShaders() {}
@@ -49,6 +49,6 @@ namespace spark
         SparkPtr m_spark;
         std::vector< PointSparkVertex > m_pointData;
     };
-    typedef std::shared_ptr< PointSparkRenderable > PointSparkRenderablePtr;
+    typedef spark::shared_ptr< PointSparkRenderable > PointSparkRenderablePtr;
 } // end namespace spark
 #endif

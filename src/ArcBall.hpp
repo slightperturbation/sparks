@@ -48,5 +48,5 @@ namespace spark
         glm::ivec2 m_rotatingStart;
         glm::ivec2 m_rotatingCurr;
     };
-    typedef std::shared_ptr< ArcBall > ArcBallPtr;
+    typedef spark::shared_ptr< ArcBall > ArcBallPtr;
 }

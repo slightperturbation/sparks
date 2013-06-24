@@ -28,6 +28,9 @@ namespace spark
     public:
         Projection( void );
         virtual std::string name( void ) const = 0;
+        /// Returns the direction from this "camera" to the given targetPoint.
+        virtual glm::vec3 lookAtDirection( const glm::vec3& targetPoint ) const = 0;
+        virtual glm::vec3 upDirection( void ) const = 0;
 
         float aspectRatio( void ) const { return m_aspectRatio; }
         void aspectRatio( float ratio ) { m_aspectRatio = ratio; }
@@ -51,8 +54,8 @@ namespace spark
         float m_nearPlaneDist;
         float m_farPlaneDist;
     };
-    typedef std::shared_ptr< Projection > PerspectivePtr;
-    typedef std::shared_ptr< const Projection > ConstPerspectivePtr;
+    typedef spark::shared_ptr< Projection > ProjectionPtr;
+    typedef spark::shared_ptr< const Projection > ConstProjectionPtr;
 
     ///////////////////////////////////////////////////////////////////////////
     /// Concrete projection for camera-style projection
@@ -61,6 +64,8 @@ namespace spark
     public:
         PerspectiveProjection( void );
         virtual std::string name( void ) const;
+        virtual glm::vec3 lookAtDirection( const glm::vec3& targetPoint ) const override;
+        virtual glm::vec3 upDirection( void ) const override;
         
         glm::vec3 cameraUp( void ) const               { return m_cameraUp; }
         void cameraUp( const glm::vec3& up )           { m_cameraUp = up; }
@@ -93,6 +98,9 @@ namespace spark
     public:
         OrthogonalProjection();
         virtual std::string name( void ) const;
+        virtual glm::vec3 lookAtDirection( const glm::vec3& targetPoint ) const override;
+        virtual glm::vec3 upDirection( void ) const override;
+
         float left( void ) const { return m_left; }
         void left( float arg ) { m_left = arg; }
         float right( void ) const { return m_right; }

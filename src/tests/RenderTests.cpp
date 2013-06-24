@@ -27,7 +27,7 @@ public:
           renderedCount( 0 ) 
     { }
     mutable int renderedCount;
-    virtual void render( void ) const
+    virtual void render( const RenderCommand& rc ) const override
     {
         std::cout << "rendering TestRender";
         renderedCount++;

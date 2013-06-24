@@ -102,7 +102,7 @@ namespace spark
         /// PRE if attribute has an offset, ARRAY_BUFFER must be bound
         virtual void assignPointerByIndex(GLuint attribIndex) = 0;
     };
-    typedef std::shared_ptr<VertexAttribute> VertexAttributePtr;
+    typedef spark::shared_ptr<VertexAttribute> VertexAttributePtr;
 
     class FloatVertexAttribute : public VertexAttribute
     {

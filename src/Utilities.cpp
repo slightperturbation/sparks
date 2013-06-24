@@ -161,6 +161,7 @@ spark::OpenGLWindow
     glfwOpenWindowHint( GLFW_WINDOW_NO_RESIZE, GL_FALSE );
 
     LOG_DEBUG(g_log) << "glfwOpenWindow...";
+
     if( glfwOpenWindow( 800, 600, 0, 0, 0, 0, 24, 0, GLFW_WINDOW ) != GL_TRUE )
     {
         LOG_FATAL(g_log) << "Unable to open GLFW window.";
@@ -206,21 +207,20 @@ spark::OpenGLWindow
         checkOpenGLErrors();
 
         // Must be disabled for gDebugger and similar tools
-        bool logOpenGLMessages = true;
+        bool logOpenGLMessages = false;
         if( logOpenGLMessages )
         {
             glDebugMessageCallback( debugOpenGLMessageCallback, 0 );
+            checkOpenGLErrors();
+            GLuint unusedIds = 0;
+            glDebugMessageControl( GL_DONT_CARE,
+                GL_DONT_CARE,
+                GL_DONT_CARE,
+                0,
+                &unusedIds,
+                true);
+            checkOpenGLErrors();
         }
-        
-        checkOpenGLErrors();
-        GLuint unusedIds = 0;
-        glDebugMessageControl( GL_DONT_CARE,
-            GL_DONT_CARE,
-            GL_DONT_CARE,
-            0,
-            &unusedIds,
-            true);
-        checkOpenGLErrors();
 #endif
     }
     checkOpenGLErrors();
@@ -412,22 +412,27 @@ spark
     return true;
 }
 
-std::ostream& spark::operator<<( std::ostream& out, glm::vec3 v )
+std::ostream& spark::operator<<( std::ostream& out, const glm::vec2& v )
+{
+    out << v.x << ", " << v.y;
+    return out;
+}
+std::ostream& spark::operator<<( std::ostream& out, const glm::vec3& v )
 {
     out << v.x << ", " << v.y << ", " << v.z ;
     return out;
 }
-std::ostream& spark::operator<<( std::ostream& out, glm::vec4 v )
+std::ostream& spark::operator<<( std::ostream& out, const glm::vec4& v )
 {
     out << v.x << ", " << v.y << ", " << v.z << ", " << v.w;
     return out;
 }
-std::ostream& spark::operator<<( std::ostream& out, glm::mat3 m )
+std::ostream& spark::operator<<( std::ostream& out, const glm::mat3& m )
 {
     out << glm::to_string(m);
     return out;
 }
-std::ostream& spark::operator<<( std::ostream& out, glm::mat4 m )
+std::ostream& spark::operator<<( std::ostream& out, const glm::mat4& m )
 {
     out << glm::to_string(m);
     return out;

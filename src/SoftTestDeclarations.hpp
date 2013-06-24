@@ -37,73 +37,92 @@ extern cpplog::BaseLogger* g_log;
 ///////////////////////////////////////////////////////////////////////////
 // Forward Declarations
 
+
+// Luabind requires boost::shared_ptr, cannot use spark::shared_ptr
+// Alias either boost or std shared_ptrs, both are supported outside of luabind.
+// Note that std::shared_ptr is preferred, and luabind may be fixed.
+#define USE_BOOST_SHARED_PTR
+#ifdef USE_BOOST_SHARED_PTR
+# include <boost/shared_ptr.hpp>
+namespace spark {
+    using boost::shared_ptr;
+    using boost::const_pointer_cast;
+};
+#else
+# include <memory>
+namespace spark {
+    using std::shared_ptr;
+    using std::const_pointer_cast;
+};
+#endif
+
 namespace spark
 {
-    class Renderable;
-    typedef std::shared_ptr< Renderable > RenderablePtr;
-    typedef std::shared_ptr< const Renderable > ConstRenderablePtr;
-    typedef std::vector< RenderablePtr >  Renderables;
-    typedef std::string RenderableName;
-
+    class FileAssetFinder;
+    typedef spark::shared_ptr< FileAssetFinder > FileAssetFinderPtr;
+    
+    class Material;
+    typedef spark::shared_ptr< Material > MaterialPtr;
+    typedef spark::shared_ptr< const Material > ConstMaterialPtr;
+    typedef std::string MaterialName;
+    typedef std::string ShaderUniformName;
+    
+    class Mesh;
+    typedef spark::shared_ptr< Mesh > MeshPtr;
+    
     class Projection;
     class PerspectiveProjection;
     class OrthogonalProjection;
-    typedef std::shared_ptr< Projection > PerspectivePtr;
-    typedef std::shared_ptr< const Projection > ConstPerspectivePtr;
-    typedef std::shared_ptr< PerspectiveProjection > PerspectiveProjectionPtr;
-    typedef std::shared_ptr< const PerspectiveProjection > ConstPerspectiveProjectionPtr;
-    typedef std::shared_ptr< OrthogonalProjection > OrthogonalProjectionPtr;
-    typedef std::shared_ptr< const OrthogonalProjection > ConstOrthogonalProjectionPtr;
+    typedef spark::shared_ptr< Projection > ProjectionPtr;
+    typedef spark::shared_ptr< const Projection > ConstProjectionPtr;
+    typedef spark::shared_ptr< PerspectiveProjection > PerspectiveProjectionPtr;
+    typedef spark::shared_ptr< const PerspectiveProjection > ConstPerspectiveProjectionPtr;
+    typedef spark::shared_ptr< OrthogonalProjection > OrthogonalProjectionPtr;
+    typedef spark::shared_ptr< const OrthogonalProjection > ConstOrthogonalProjectionPtr;
 
+    class Renderable;
+    typedef spark::shared_ptr< Renderable > RenderablePtr;
+    typedef spark::shared_ptr< const Renderable > ConstRenderablePtr;
+    typedef std::vector< RenderablePtr >  Renderables;
+    typedef std::string RenderableName;
+    
     class RenderCommand;
-    typedef std::shared_ptr< RenderCommand > RenderCommandPtr;
+    typedef spark::shared_ptr< RenderCommand > RenderCommandPtr;
     struct RenderCommandCompare;
     typedef std::priority_queue< RenderCommand, std::vector< RenderCommand >, RenderCommandCompare > RenderCommandQueue;
 
     class RenderPass;
-    typedef std::shared_ptr< RenderPass > RenderPassPtr;
-    typedef std::shared_ptr< const RenderPass > ConstRenderPassPtr;
+    typedef spark::shared_ptr< RenderPass > RenderPassPtr;
+    typedef spark::shared_ptr< const RenderPass > ConstRenderPassPtr;
     typedef std::list< RenderPassPtr > RenderPassList;
     typedef std::string RenderPassName;
 
     class Scene;
-    typedef std::shared_ptr< Scene > ScenePtr;
-    typedef std::shared_ptr< const Scene > ConstScenePtr;
+    typedef spark::shared_ptr< Scene > ScenePtr;
+    typedef spark::shared_ptr< const Scene > ConstScenePtr;
 
     class RenderTarget;
-    typedef std::shared_ptr< RenderTarget > RenderTargetPtr;
-    typedef std::shared_ptr< const RenderTarget > ConstRenderTargetPtr;
+    typedef spark::shared_ptr< RenderTarget > RenderTargetPtr;
+    typedef spark::shared_ptr< const RenderTarget > ConstRenderTargetPtr;
 
     class ShaderInstance;
-    typedef std::shared_ptr< ShaderInstance > ShaderInstancePtr;
-    typedef std::shared_ptr< const ShaderInstance > ConstShaderInstancePtr;
-
-    class Material;
-    typedef std::shared_ptr< Material > MaterialPtr;
-    typedef std::shared_ptr< const Material > ConstMaterialPtr;
-    typedef std::string MaterialName;
-    typedef std::string ShaderUniformName;
-
-    class TextureUnit;
-    typedef std::shared_ptr< TextureUnit > TextureUnitPtr;
-    typedef std::shared_ptr< const TextureUnit> ConstTextureUnitPtr;
-
-    class TextureManager;
-    typedef std::shared_ptr< TextureManager > TextureManagerPtr;
-    typedef std::string TextureName;
+    typedef spark::shared_ptr< ShaderInstance > ShaderInstancePtr;
+    typedef spark::shared_ptr< const ShaderInstance > ConstShaderInstancePtr;
 
     class ShaderManager;
-    typedef std::shared_ptr< ShaderManager > ShaderManagerPtr;
+    typedef spark::shared_ptr< ShaderManager > ShaderManagerPtr;
     typedef std::string ShaderName;
+    
+    class TextureUnit;
+    typedef spark::shared_ptr< TextureUnit > TextureUnitPtr;
+    typedef spark::shared_ptr< const TextureUnit> ConstTextureUnitPtr;
 
-    class FileAssetFinder;
-    typedef std::shared_ptr< FileAssetFinder > FileAssetFinderPtr;
-
-    class Mesh;
-    typedef std::shared_ptr< Mesh > MeshPtr;
-
+    class TextureManager;
+    typedef spark::shared_ptr< TextureManager > TextureManagerPtr;
+    typedef std::string TextureName;
+    
     class VolumeData;
-    typedef std::shared_ptr< VolumeData > VolumeDataPtr;
+    typedef spark::shared_ptr< VolumeData > VolumeDataPtr;
 
     // Define standard names for common render passes
     const RenderPassName g_opaqueRenderPassName = "OpaquePass";

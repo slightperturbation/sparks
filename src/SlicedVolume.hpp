@@ -10,14 +10,15 @@ namespace spark
 {
     /// Encapsulates the rendering of a VolumeData object using many 
     /// textured slices.  Relies on hardware support for 3D textures.
-    class SlicedVolume : public Renderable, public Updatable
+    class SlicedVolume : public Renderable
     {
     public:
-        SlicedVolume( TextureManagerPtr tm, ShaderManagerPtr sm, 
+        SlicedVolume( TextureManagerPtr tm, ShaderManagerPtr sm,
+                     const RenderPassName& renderPassName,
                      unsigned int sliceCount, VolumeDataPtr data );
         virtual ~SlicedVolume() {}
         void attachVolumeData( VolumeDataPtr data ) { m_volumeData = data; }
-        virtual void render( void ) const override;
+        virtual void render( const RenderCommand& rc ) const override;
         virtual void update( float dt ) override;
         virtual void attachShaderAttributes( GLuint shaderIndex ) override;
         void setCameraDirection( const glm::vec3& dir );

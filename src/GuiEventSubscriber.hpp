@@ -13,7 +13,7 @@ namespace spark
         virtual void resizeViewport( int left, int bottom,
                                      int width, int height ) {}
     };
-    typedef std::shared_ptr< GuiEventSubscriber > GuiEventSubscriberPtr;
+    typedef spark::shared_ptr< GuiEventSubscriber > GuiEventSubscriberPtr;
     typedef std::weak_ptr< GuiEventSubscriber > GuiEventSubscriberWeakPtr;
 }
 #endif

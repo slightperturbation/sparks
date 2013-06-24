@@ -6,14 +6,14 @@
 
 
 spark::Display
-::Display( PerspectivePtr context )
+::Display( ProjectionPtr context )
     : m_context( context )
 {
 
 }
 
 spark::SimpleDisplay
-::SimpleDisplay( PerspectivePtr context )
+::SimpleDisplay( ProjectionPtr context )
     : Display( context )
 {
 }
@@ -36,7 +36,7 @@ spark::SimpleDisplay
 //////////////////////////////////////////////////////////////////////////
 
 spark::SideBySideDisplay
-::SideBySideDisplay( PerspectivePtr context )
+::SideBySideDisplay( ProjectionPtr context )
     : Display( context ), m_eyeSeparationDistance( 0.0 )
 {
 }

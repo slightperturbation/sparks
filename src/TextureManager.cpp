@@ -74,10 +74,16 @@ spark::TextureManager
     
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA,
                  width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST ); 
 
-    // Do we need to set mipmap level explicitly?
+//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ); 
+    
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+//    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR ); 
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST ); 
+ 
     glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0 );
 }
@@ -494,4 +500,26 @@ spark::TextureManager
     }
     m_registry.clear();
     m_bindingTextureUnitToTextureId.clear();
+}
+
+void
+spark::TextureManager
+::logTextures( void ) const
+{
+    LOG_INFO(g_log) << "TextureManager resources:";
+    for( auto iter = m_registry.begin(); iter != m_registry.end(); ++iter )
+    {
+        TextureName name = iter->first;
+        GLuint id = iter->second;
+        
+        std::string path( "NOT_FILE_BASED" );
+        auto pathIter = m_paths.find( name );
+        if( pathIter != m_paths.end() )
+        {
+            path = pathIter->second;
+        }
+        GLuint unit = getTextureUnitBoundToId( id );
+        LOG_INFO(g_log) << "\tName=\"" << name << "\"\tID=" << id
+                        << "\tUnit=" << unit << "\tPath=\"" << path << "\"";
+    }
 }

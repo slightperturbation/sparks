@@ -31,8 +31,17 @@ namespace spark
         /// OpenGL context, there must be at least one render pass with
         /// target set to display.
         void render( void );
+        
+        /// Update scene objects per-frame
+        void update( float dt );
+
+        /// Print all passes to INFO-level log
+        void logPasses( void ) const;
     private:
         RenderPassList m_passes;
+        /// The current list of commands.  The first command is always
+        /// the highest priority command.  Commands are ordered first
+        /// by RenderPasses.
         RenderCommandQueue m_commands;
         Renderables m_renderables;
     };

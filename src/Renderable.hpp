@@ -20,13 +20,19 @@ namespace spark
     public:
         Renderable( const RenderableName& name );
         virtual ~Renderable();
+        
+        /// Update between renderings.  Used to swap computed data in to be
+        /// rendered on next frame.
+        virtual void update( float dt ) {}
 
         /// Provides the descriptive (not necessarily unique) name
         virtual RenderableName name( void ) const;
         virtual void name( const RenderableName& aName );
 
         /// Emits OpenGL primitives
-        virtual void render( void ) const = 0;
+        /// The RenderCommand provides the "context" in which the scene
+        /// is being rendered.
+        virtual void render( const RenderCommand& rc ) const = 0;
         /// Ties the shader's "in" variables to the channels of this 
         /// Renderable's data, e.g, "in vec3 v_position" in the shader 
         /// needs to point to offset 0, stride 6.
@@ -70,17 +76,7 @@ namespace spark
         glm::mat4 m_objectTransform;
     };
 
-    /// Abstract class for objects that will be updated periodically.
-    class Updatable
-    {
-    public:
-        virtual ~Updatable() {}
 
-        /// Update this object by dtSeconds.
-        /// dtSeconds is the wall-clock time difference between updates. 
-        /// Subclasses are free to ignore it and use a fixed time-step.
-        virtual void update( float dtSeconds ) = 0;
-    };
 } // end namespace spark
 #endif
 

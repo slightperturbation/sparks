@@ -32,6 +32,13 @@ spark::ShaderUniform<unsigned int>
 }
 template<>
 void 
+spark::ShaderUniform<glm::vec2>
+::applyImpl( void ) const
+{
+    GL_CHECK( glUniform2fv( m_locationInShader, 1, glm::value_ptr(m_val) ) );
+}
+template<>
+void 
 spark::ShaderUniform<glm::vec3>
 ::applyImpl( void ) const
 {

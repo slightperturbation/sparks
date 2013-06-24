@@ -36,15 +36,16 @@ spark::RayCastVolume
 
 void
 spark::RayCastVolume
-::render( void ) const
+::render( const RenderCommand& rc ) const
 {
-    m_mesh->render();
+    m_mesh->render( rc );
 }
 
 void
 spark::RayCastVolume
 ::update( float dt )
 {
+    m_volumeData->update( dt );
     /// Push new density data up to graphics card
     m_textureManager->load3DTextureFromVolumeData( m_textureName, m_volumeData );
     m_mesh->update( dt );

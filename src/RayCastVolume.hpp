@@ -12,7 +12,7 @@
 namespace spark
 {
     /// Handles rendering of a data volume using a lighted ray-cast algorithm.
-    class RayCastVolume : public Renderable, public Updatable
+    class RayCastVolume : public Renderable
     {
     public:
         RayCastVolume( const RenderableName& aName,
@@ -21,7 +21,7 @@ namespace spark
                        VolumeDataPtr data );
         virtual ~RayCastVolume() {}
         
-        virtual void render( void ) const override;
+        virtual void render( const RenderCommand& rc ) const override;
         virtual void attachShaderAttributes( GLuint shaderIndex ) override;
         virtual void update( float dt ) override;
         
@@ -87,6 +87,6 @@ namespace spark
         TextureName m_textureName;
         MaterialPtr m_material;
     };
-    typedef std::shared_ptr< RayCastVolume > RayCastVolumePtr;
+    typedef spark::shared_ptr< RayCastVolume > RayCastVolumePtr;
 }
 #endif // RAY_CAST_VOLUME_HPP

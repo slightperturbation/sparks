@@ -131,16 +131,18 @@ namespace spark
 
     // TODO -- template-tize over MeshVertex
     /// Mesh supports rendering of a indexed set of triangles
-    class Mesh : public Renderable, public Updatable
+    class Mesh : public Renderable
     {
     public:
         Mesh( void );
         virtual ~Mesh();
 
         /// Renderable
-        virtual void render( void ) const override;
-        // Updatable
-        virtual void update( float dt ) override;
+        virtual void render( const RenderCommand& rc ) const override;
+
+        /// Update the VBO based on changes to the data.
+        virtual void update( float dt );
+        
         void clearGeometry( void );
         void resizeVertexArray( size_t newSize );
         void setVertex( size_t i, const Eigen::Vector3f& a, 
@@ -190,7 +192,7 @@ namespace spark
         std::vector< GLuint > m_vertexIndicies;
         glm::mat4 m_modelTransform;
     };
-    typedef std::shared_ptr< Mesh > MeshPtr;
+    typedef spark::shared_ptr< Mesh > MeshPtr;
 }
 #endif
 

@@ -37,6 +37,19 @@ spark::PerspectiveProjection
     return out.str();
 }
 
+glm::vec3
+spark::PerspectiveProjection
+::lookAtDirection( const glm::vec3& targetPoint ) const
+{
+    return m_cameraPos - targetPoint;
+}
+
+glm::vec3
+spark::PerspectiveProjection
+::upDirection( void ) const
+{
+    return m_cameraUp;
+}
 
 glm::mat4
 spark::PerspectiveProjection
@@ -68,8 +81,8 @@ spark::OrthogonalProjection
   m_bottom( 0 ),
   m_top( 1 )
 {
-    m_nearPlaneDist = -10.1f;
-    m_farPlaneDist = 10.1f;
+    m_nearPlaneDist = -5.1f;
+    m_farPlaneDist = 5.1f;
 }
 
 std::string
@@ -83,4 +96,18 @@ spark::OrthogonalProjection
     << m_nearPlaneDist << ", F="
     << m_farPlaneDist << ")";
     return out.str();
+}
+
+glm::vec3
+spark::OrthogonalProjection
+::lookAtDirection( const glm::vec3& targetPoint ) const
+{
+    return glm::vec3( 0, 0, -1 );
+}
+
+glm::vec3
+spark::OrthogonalProjection
+::upDirection( void ) const
+{
+    return glm::vec3( 0, 1, 0 );
 }

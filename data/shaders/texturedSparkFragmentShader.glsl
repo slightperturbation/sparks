@@ -19,7 +19,7 @@ uniform vec4 u_color = vec4( 1, 1, 1, 1 );
 
 void main()
 {
-	float cutoff = 0.001;
+	float cutoff = 0.1;
 
 	outColor = u_color * texture( s_color, f_texCoord );
 

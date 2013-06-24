@@ -128,8 +128,8 @@ namespace spark
         // stores the uniform's name, locationInShader, and value.
         std::map< ShaderUniformName, ShaderUniformInterface* > m_uniforms;
     };
-    typedef std::shared_ptr< ShaderUniformHolder > ShaderUniformHolderPtr;
-    typedef std::shared_ptr< const ShaderUniformHolder > ConstShaderUniformHolderPtr;
+    typedef spark::shared_ptr< ShaderUniformHolder > ShaderUniformHolderPtr;
+    typedef spark::shared_ptr< const ShaderUniformHolder > ConstShaderUniformHolderPtr;
 
     /// Responsible for holding the uniforms settings
     /// Caches uniform settings to minimize chatter.

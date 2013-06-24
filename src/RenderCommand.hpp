@@ -25,8 +25,8 @@ namespace spark
         virtual std::string name( void ) const = 0;
         virtual void setShaderUniforms( MaterialPtr material ) = 0;
     };
-    typedef std::shared_ptr< Light > LightPtr;
-    typedef std::shared_ptr< const Light > ConstLightPtr;
+    typedef spark::shared_ptr< Light > LightPtr;
+    typedef spark::shared_ptr< const Light > ConstLightPtr;
 
     class AmbientLight : public Light
     {
@@ -94,8 +94,8 @@ namespace spark
     private:
         std::vector< LightPtr > m_lights;
     };
-    typedef std::shared_ptr< Illumination > IlluminationPtr;
-    typedef std::shared_ptr< const Illumination > ConstIlluminationPtr;
+    typedef spark::shared_ptr< Illumination > IlluminationPtr;
+    typedef spark::shared_ptr< const Illumination > ConstIlluminationPtr;
     ///////////
 
     /// Command that encapsulates all the needed information
@@ -111,7 +111,7 @@ namespace spark
         void operator() ( const RenderCommand& precedingCommand );
 
         ConstRenderPassPtr m_pass;
-        ConstPerspectivePtr m_perspective;
+        ConstProjectionPtr m_perspective;
         ConstRenderablePtr m_renderable;
         ConstMaterialPtr m_material;
         ConstIlluminationPtr m_illumination;

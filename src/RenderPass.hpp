@@ -11,6 +11,7 @@
 
 #include "SoftTestDeclarations.hpp"
 
+#include <glm/glm.hpp>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GL/glfw.h> 
@@ -34,15 +35,16 @@ namespace spark
     public:
         RenderPass( const RenderPassName& aName = "UNLABELED_RENDER_PASS" );
         void initialize( RenderTargetPtr aTarget, 
-                         PerspectivePtr aPerspective );
+                         ProjectionPtr aPerspective );
         void initialize( RenderTargetPtr aTarget, 
-                         PerspectivePtr aPerspective,
+                         ProjectionPtr aPerspective,
                          float aPriority );
 
         ConstMaterialPtr getMaterialForRenderable( ConstRenderablePtr aRenderable ) const;
 
         RenderPassName name( void ) const;
         std::string targetName( void ) const;
+        glm::vec2 targetSize( void ) const;
         void setName( const RenderPassName& aName );
 
         /// Defines how this pass will blend into its target.
@@ -55,7 +57,7 @@ namespace spark
         /// interpolation       : setBlending( GL_SRC_ALPHA, 
         ///                                    GL_ONE_MINUS_SRC_ALPHA );
         /// additive (glow)     : setBlending( GL_ONE, GL_ONE );
-        /// modulated (filter)  : setBlending( GL_DST_COLOR, GL_ZERO );
+        /// max                 : setBlending( GL_ONE, GL_ONE, GL_MAX );
         /// 
         /// Note that some blend modes (e.g., interpolation) are heavily 
         /// dependent on the rendering order.
@@ -65,7 +67,7 @@ namespace spark
                           GLenum equation = GL_FUNC_ADD );
         void useAdditiveBlending( void );
         void useInterpolatedBlending( void );
-        void useModulatedBlending( void );
+        void useMaxBlending( void );
         void disableBlending( void );
         void enableBlending( void );
         
@@ -93,11 +95,13 @@ namespace spark
 
         //TODO-implement per-pass render order
         // void setRenderCommandComparison( )
-
+        // void farToNearRenderOrder()
+        // void nearToFarRenderOrder()
+        
         /// Sets OpenGL state to draw to the render target
         /// (e.g., display device or render-to-texture)
         void preRender(  ConstRenderPassPtr prevPass ) const;
-        void postRender( ConstRenderPassPtr prevPass ) const;
+        void postRender( void ) const;
         void startFrame( ConstRenderPassPtr prevPass ) const;
 
         /// Fill the outRC RenderCommand using the pass and renderable 
@@ -112,7 +116,7 @@ namespace spark
     private:
         RenderPassName m_name;
         RenderTargetPtr m_target;
-        PerspectivePtr m_perspective;
+        ProjectionPtr m_perspective;
 
         /// Orders pass wrt other passes.  Higher priorities render first.
         float m_priority;

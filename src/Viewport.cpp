@@ -8,14 +8,14 @@
 
 void 
 spark::Viewport
-::render( const Renderables& scene, PerspectivePtr context ) const
+::render( const Renderables& scene, ProjectionPtr context ) const
 {
     GL_CHECK( glViewport( (GLsizei)m_left, (GLsizei)m_bottom, 
                           (GLsizei)m_width, (GLsizei)m_height ) );
-    for( auto r = scene.begin(); r != scene.end(); ++r )
-    {
-        (*r)->render();
-    }
+//    for( auto r = scene.begin(); r != scene.end(); ++r )
+//    {
+//        (*r)->render();
+//    }
 }
 
 void 

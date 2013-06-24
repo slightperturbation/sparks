@@ -99,6 +99,8 @@ namespace spark
     template<>
     void ShaderUniform<unsigned int>::applyImpl( void ) const;
     template<>
+    void ShaderUniform<glm::vec2>::applyImpl( void ) const;
+    template<>
     void ShaderUniform<glm::vec3>::applyImpl( void ) const;
     template<>
     void ShaderUniform<glm::vec4>::applyImpl( void ) const;

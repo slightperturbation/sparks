@@ -1,0 +1,4 @@
+Copyright 2013.  Brian F. Allen (Rensselaer Polytechnic Institute)
+
+
+Uses SMAA. Copyright (C) 2011 by Jorge Jimenez, Jose I. Echevarria, Belen Masia, Fernando Navarro and Diego Gutierrez.

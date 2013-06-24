@@ -38,7 +38,6 @@ namespace spark
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
 
-
     /// Lindenmayer-system (L-System) spark, recursively built by random 
     /// splitting and forking.
     class LSpark
@@ -53,31 +52,41 @@ namespace spark
         void create( const Eigen::Vector3f& a_begin,
                      const Eigen::Vector3f& a_end,
                      float a_intensity,
-                     int a_depth );
-
-        // From Spark
+                     float a_scale,
+                     int   a_depth,
+                     float a_forkProb );
+        void setViewProjection( ConstProjectionPtr aCamera );
+        ConstProjectionPtr viewProjection( void ) const;
         const Segments& segments( void ) const { return m_segments; }
         Segments& segments( void ) { return m_segments; }
         void update( float dt );
         /// Move mid-points according to velocity field
         void advect( VelocityFieldInterfacePtr velocityField );
+        /// Returns the total length of the spark, begin to end.
+        float length( void ) const;
     private:
         /// Returns a float in [-1, 1]
         static float unitRandom( void );
         /// Split the segment at a_index, replacing m_segmetn[a_index]
         /// with a new leg, and adding one or more additional segments to
-        /// m_segments.
-        void splitSegment( size_t a_index, float a_scale, int a_depth );
+        /// m_segments.  a_forkProb specifies the probability that this
+        /// segment with be forked with a new branch.
+        void splitSegment( size_t a_index,
+                           float a_scale,
+                           int   a_depth,
+                           float a_forkProb );
         // Forking -- based on a continuation of the earlier segment 
         // (note how this polarizes the spark-- begin is now different for end)
-        void forkSegment( size_t a_index, float a_scale, int a_depth );
-    
+        void forkSegment( size_t a_index,
+                          float  a_scale,
+                          int    a_depth,
+                          float  a_forkProb );
         /// Returns true iff a_index is a segment that is not the
         /// parent of any other segments.
         bool isTerminalSegment( size_t a_index ) const;
-
         Segments m_segments;
+        ConstProjectionPtr m_camera;
     };
-    typedef std::shared_ptr< LSpark > LSparkPtr;
+    typedef spark::shared_ptr< LSpark > LSparkPtr;
 }
 #endif

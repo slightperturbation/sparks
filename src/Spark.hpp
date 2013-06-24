@@ -41,10 +41,10 @@ namespace spark
 
 
     /// Dielectric breakdown model
-    class Spark
+    class DBMSpark
     {
     public:
-        Spark();
+        DBMSpark();
         void setAggregate( const PointCharges& a_ );
         void initializeBoundary( const PointCharges& a_boundary );
     
@@ -97,10 +97,10 @@ namespace spark
         float m_minPhi; //< min electric field of candidate point charges
         float m_maxPhi; //< max electric field of candidate point charges
     };
-    typedef std::shared_ptr< Spark > SparkPtr;
+    typedef spark::shared_ptr< DBMSpark > DBMSparkPtr;
 
     /// Setup the DBM-style scenario with a central negative point aggregate at 0,0,0,
     /// surrounded by a ball of positive charges at radius.
-    SparkPtr buildSpark_pointInBall( float radius );
+    DBMSparkPtr buildSpark_pointInBall( float radius );
 } // end namespace spark
 #endif

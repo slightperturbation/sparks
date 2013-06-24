@@ -22,7 +22,8 @@ namespace spark
     public:
         RenderTarget() : m_clearColor( 0,1,0,0 ) {}
         virtual ~RenderTarget() {}
-        virtual std::string name( void ) = 0;
+        virtual std::string name( void ) const = 0;
+        virtual glm::vec2 size( void ) const = 0;
         virtual void initialize( TextureManagerPtr& mgr ) = 0;
         virtual void preRender( void ) const = 0;
         virtual void postRender( void ) const = 0;
@@ -45,7 +46,9 @@ namespace spark
 
         FrameBufferRenderTarget( int aLeft, int aBottom, int aWidth, int aHeight );
         virtual ~FrameBufferRenderTarget() {}
-        virtual std::string name( void ) override { return "FrameBuffer"; }
+        virtual std::string name( void ) const override
+        { return "FrameBuffer"; }
+        virtual glm::vec2 size( void ) const override;
 
         virtual void resizeViewport( int left, int bottom,
                                      int width, int height ) override;
@@ -61,7 +64,7 @@ namespace spark
         int m_width;
         int m_height;
     };
-    typedef std::shared_ptr< FrameBufferRenderTarget > FrameBufferRenderTargetPtr;
+    typedef spark::shared_ptr< FrameBufferRenderTarget > FrameBufferRenderTargetPtr;
 
     //////////////////////////////////////////////////////////////////////////////
     // TextureRenderTarget
@@ -73,10 +76,11 @@ namespace spark
         TextureRenderTarget( const TextureName& aName,
                              int aWidth, int aHeight );
         virtual ~TextureRenderTarget() {}
-        virtual std::string name( void ) override 
+        virtual std::string name( void ) const override
         { return getTextureName(); }
         const TextureName& getTextureName( void ) const 
         { return m_textureHandle; }
+        virtual glm::vec2 size( void ) const override;
         
         virtual void initialize( TextureManagerPtr& mgr ) override;
         virtual void preRender( void ) const override;
@@ -85,13 +89,14 @@ namespace spark
 
         virtual std::ostream& debugInfo( std::ostream& out ) const override;
     protected:
+        TextureManagerPtr m_textureManager;
         TextureName m_textureHandle;
         int m_width;
         int m_height;
         GLuint m_framebufferId;
         GLuint m_depthRenderbufferId;
     };
-    typedef std::shared_ptr< TextureRenderTarget > TextureRenderTargetPtr;
+    typedef spark::shared_ptr< TextureRenderTarget > TextureRenderTargetPtr;
 
     //////////////////////////////////////////////////////////////////////////////
     // ScaledTextureRenderTarget
@@ -117,11 +122,10 @@ namespace spark
         virtual std::ostream& debugInfo( std::ostream& out ) const override;
     private:
         void resetTexture( void );
-        TextureManagerPtr m_textureManager;
         float m_scaleX;                //< Scale factor vs viewport size
         float m_scaleY;                //< Scale factor vs viewport size
     };
-    typedef std::shared_ptr< ScaledTextureRenderTarget > ScaledTextureRenderTargetPtr;
+    typedef spark::shared_ptr< ScaledTextureRenderTarget > ScaledTextureRenderTargetPtr;
 
 } // end namespace spark
 #endif

@@ -33,7 +33,7 @@ spark::PointSparkRenderable
 
 void
 spark::PointSparkRenderable
-::render( void ) const
+::render( const RenderCommand& rc ) const
 {
     const PointCharges& aggregate = m_spark->aggregate();
     glBegin( GL_POINTS );

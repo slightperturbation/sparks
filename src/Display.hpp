@@ -9,19 +9,19 @@ namespace spark
     class Display
     {
     public:
-        Display( PerspectivePtr context );
+        Display( ProjectionPtr context );
         virtual ~Display() {}
         virtual void render( const Renderables& scene ) = 0;
         virtual void resizeWindow( int width, int height ) = 0;
     protected:
-        PerspectivePtr m_context;
+        ProjectionPtr m_context;
     };
 
     // TODO rename to SingleDisplay
     class SimpleDisplay : public Display
     {
     public:
-        SimpleDisplay( PerspectivePtr context );
+        SimpleDisplay( ProjectionPtr context );
         virtual ~SimpleDisplay() {}
         virtual void render( const Renderables& scene );
         virtual void resizeWindow( int width, int height );
@@ -34,7 +34,7 @@ namespace spark
     class SideBySideDisplay : public Display
     {
     public:
-        SideBySideDisplay( PerspectivePtr context );
+        SideBySideDisplay( ProjectionPtr context );
         virtual ~SideBySideDisplay() {}
         virtual void render( const Renderables& scene );
         virtual void resizeWindow( int width, int height );

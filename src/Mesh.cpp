@@ -93,7 +93,7 @@ spark::Mesh
 
 void
 spark::Mesh
-::render( void ) const
+::render( const RenderCommand& rc ) const
 {
     // bind vertex array OBJECT (VAO)
     GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );

@@ -25,6 +25,7 @@ ENDIF(APPLE)
 if( APPLE )
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+  set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
 else( APPLE )
   if( UNIX )
     set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
@@ -92,6 +93,9 @@ if( Boost_FOUND )
 else()
   message(SEND_ERROR "Failed to find boost!")
 endif()
+LIST( APPEND PROJECT_LINK_LIBRARIES
+  ${Boost_LIBRARIES}
+)
 
 
 #####################################################################
@@ -139,9 +143,16 @@ if( APPLE )
   endif(NOT TBB_FOUND)
   INCLUDE_DIRECTORIES( "${TBB_INCLUDE_DIRS}" )
 endif( APPLE )
+LIST( APPEND PROJECT_LINK_LIBRARIES
+  ${TBB_LIBRARIES}
+)
 
-
-
+#####################################################################
+# Lua and Luabind
+#####################################################################
+INCLUDE( LuaBind )
+LIST( APPEND PROJECT_LINK_LIBRARIES ${LUA_LIBRARIES} )
+source_group( "External Source" FILES ${EXT_SRC} )
 
 #####################################################################
 # GUI Libraries : OpenGL and GLFW (not required)
@@ -219,9 +230,7 @@ ENDIF( ASSIMP_FOUND )
 #  MESSAGE( STATUS "Failed to find AntTweakBar ----------------------")
 #ENDIF( ANT_TWEAK_BAR_FOUND )
 
-SET( PROJECT_LINK_LIBRARIES
-  ${Boost_LIBRARIES}
-  ${TBB_LIBRARIES}
+LIST( APPEND PROJECT_LINK_LIBRARIES 
   ${GLFW_LIBRARY}
   ${GLEW_LIBRARY}
   ${OPENGL_LIBRARIES}
@@ -235,6 +244,7 @@ set( HDRS
   ./src/ArcBall.hpp
   ./src/Display.hpp
   ./src/LSpark.hpp
+  ./src/LuaInterpreter.hpp
   ./src/Exceptions.hpp
   ./src/Fluid.hpp
   ./src/FileAssetFinder.hpp
@@ -256,7 +266,9 @@ set( HDRS
   ./src/ShaderUniform.hpp
   ./src/Simulation.hpp
   ./src/Spark.hpp
+  ./src/SparkFacade.hpp
   ./src/SoftTestDeclarations.hpp
+  ./src/Task.hpp
   ./src/TextureManager.hpp
   ./src/TexturedSparkRenderable.hpp
   ./src/Utilities.hpp
@@ -321,24 +333,26 @@ SET( g_dataPath "${CMAKE_SOURCE_DIR}/data/" )
 configure_file( src/config.hpp.in ${CMAKE_BINARY_DIR}/config/config.hpp )
 # The config directory should be added as a include-searchpath
 include_directories( ${CMAKE_BINARY_DIR}/config/ )
+# Alternatively, could use resources, e.g.:
+# SET_TARGET_PROPERTIES(${APP_NAME} PROPERTIES RESOURCE "${RESOURCES}")
 
 #####################################################################
 # Executables
 #####################################################################
 add_executable( ${PROJECT_NAME} 
-  ${HDRS} ${SRCS} ${GUI_SRCS} ${CPPLOG_HDRS}
+  ${HDRS} ${SRCS} ${GUI_SRCS} ${CPPLOG_HDRS} ${EXT_SRC}
 )
 add_dependencies( ${PROJECT_NAME} TBB )
 
 target_link_libraries(${PROJECT_NAME} 
 	${PROJECT_LINK_LIBRARIES}
 )
-add_executable( ${PROJECT_NAME}_test 
-  ${UNIT_TEST_SRCS} ${HDRS} ${SRCS} ${CPPLOG_HDRS}
-)
-target_link_libraries(${PROJECT_NAME}_test
-  ${PROJECT_LINK_LIBRARIES}
-)
+#add_executable( ${PROJECT_NAME}_test 
+#  ${UNIT_TEST_SRCS} ${HDRS} ${SRCS} ${CPPLOG_HDRS} ${EXT_SRC}
+#)
+#target_link_libraries(${PROJECT_NAME}_test
+#  ${PROJECT_LINK_LIBRARIES}
+#)
 
 #if( MSVC )
 #  MESSAGE( STATUS "Adding autorunner for unit tests for MSVC")
@@ -355,10 +369,10 @@ if(APPLE)
 		${COCOA_LIBRARY}
     ${IOKIT_LIBRARY}
 	)
-  target_link_libraries(${PROJECT_NAME}_test
-    ${COCOA_LIBRARY}
-    ${IOKIT_LIBRARY}
-  )
+#  target_link_libraries(${PROJECT_NAME}_test
+#    ${COCOA_LIBRARY}
+#    ${IOKIT_LIBRARY}
+#  )
 endif(APPLE)
 
 
