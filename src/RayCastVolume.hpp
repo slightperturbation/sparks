@@ -1,7 +1,7 @@
 #ifndef RAY_CAST_VOLUME_HPP
 #define RAY_CAST_VOLUME_HPP
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include "Renderable.hpp"
 #include "Mesh.hpp"

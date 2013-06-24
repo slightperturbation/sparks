@@ -2,7 +2,7 @@
 #ifndef SPARKS_TEXTUREMANAGER_HPP
 #define SPARKS_TEXTUREMANAGER_HPP
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 #include "Utilities.hpp"
 #include "FileAssetFinder.hpp"
 

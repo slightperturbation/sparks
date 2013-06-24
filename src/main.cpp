@@ -1,4 +1,4 @@
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include "Display.hpp"
 #include "Renderable.hpp"
@@ -7,6 +7,7 @@
 #include "TextureManager.hpp"
 #include "RenderTarget.hpp"
 #include "FileAssetFinder.hpp"
+#include "SparkFacade.hpp"
 
 #include "DBMSpark.hpp"
 #include "PointSparkRenderable.hpp"
@@ -251,12 +252,12 @@ int runSimulation(int argc, char** argv)
     frameBufferTarget->setClearColor( glm::vec4( 0,0,0,0 ) );
     g_guiEventPublisher->subscribe( frameBufferTarget );
 
-    SparkFacade* facade = new SparkFacade( scene,
-                                           finder,
-                                           textureManager,
-                                           shaderManager,
-                                           camera,
-                                           frameBufferTarget );
+    SparkFacadePtr facade( new SparkFacade( scene,
+                                            finder,
+                                            textureManager,
+                                            shaderManager,
+                                            cameraPerspective,
+                                            frameBufferTarget ) );
     
     LuaInterpreter lua( finder );
     lua.setFacade( facade );

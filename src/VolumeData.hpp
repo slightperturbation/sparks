@@ -2,7 +2,7 @@
 #ifndef VOLUME_DATA_HPP
 #define VOLUME_DATA_HPP
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include <memory>
 

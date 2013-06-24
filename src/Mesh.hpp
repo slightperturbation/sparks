@@ -1,7 +1,7 @@
 #ifndef MESH_HPP
 #define MESH_HPP
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include "Renderable.hpp"
 #include "Projection.hpp"

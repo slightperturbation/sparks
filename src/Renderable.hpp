@@ -1,7 +1,7 @@
 #ifndef SPARK_RENDERABLE_HPP
 #define SPARK_RENDERABLE_HPP
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include <glm/glm.hpp>
 #define GLEW_STATIC

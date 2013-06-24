@@ -9,7 +9,7 @@
 #ifndef sparks_Scene_hpp
 #define sparks_Scene_hpp
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include "RenderPass.hpp"
 #include "RenderCommand.hpp"

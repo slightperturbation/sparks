@@ -9,7 +9,7 @@
 #ifndef sparks_ShaderUniform_hpp
 #define sparks_ShaderUniform_hpp
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>

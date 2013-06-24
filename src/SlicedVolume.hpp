@@ -1,7 +1,7 @@
 #ifndef SLICED_VOLUME_HPP
 #define SLICED_VOLUME_HPP
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include "Mesh.hpp"
 #include "VolumeData.hpp"

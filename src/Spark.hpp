@@ -1,5 +1,5 @@
-#ifndef SOFTTESTDECLARATIONS_HPP
-#define SOFTTESTDECLARATIONS_HPP
+#ifndef SPARK_SPARK_HPP
+#define SPARK_SPARK_HPP
 
 //#define BOOST_ALL_NO_LIB
 #define _CRT_SECURE_NO_WARNINGS
@@ -47,12 +47,16 @@ extern cpplog::BaseLogger* g_log;
 namespace spark {
     using boost::shared_ptr;
     using boost::const_pointer_cast;
+    using boost::weak_ptr;
+    using boost::enable_shared_from_this;
 };
 #else
 # include <memory>
 namespace spark {
     using std::shared_ptr;
     using std::const_pointer_cast;
+    using std::weak_ptr;
+    using std::enable_shared_from_this;
 };
 #endif
 
@@ -112,6 +116,9 @@ namespace spark
     class ShaderManager;
     typedef spark::shared_ptr< ShaderManager > ShaderManagerPtr;
     typedef std::string ShaderName;
+    
+    class SparkFacade;
+    typedef spark::shared_ptr< SparkFacade > SparkFacadePtr;
     
     class TextureUnit;
     typedef spark::shared_ptr< TextureUnit > TextureUnitPtr;

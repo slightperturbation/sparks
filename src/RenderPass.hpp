@@ -9,7 +9,7 @@
 #ifndef sparks_RenderPass_hpp
 #define sparks_RenderPass_hpp
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include <glm/glm.hpp>
 #define GLEW_STATIC

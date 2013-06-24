@@ -24,7 +24,7 @@ spark::ShaderManager
 {
     ShaderManagerPtr manager = shared_from_this();
     ShaderInstancePtr out( new ShaderInstance( name, manager ) );
-    std::weak_ptr< ShaderInstance > weakOut( out );
+    spark::weak_ptr< ShaderInstance > weakOut( out );
     m_shaderInstances.push_back( weakOut );
     return out;
 }

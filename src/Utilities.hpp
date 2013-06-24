@@ -9,7 +9,7 @@
 #ifndef sparks_Utilities_hpp
 #define sparks_Utilities_hpp
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>

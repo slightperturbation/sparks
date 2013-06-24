@@ -1,7 +1,7 @@
 #ifndef VIEWPORT_HPP
 #define VIEWPORT_HPP
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 namespace spark
 {

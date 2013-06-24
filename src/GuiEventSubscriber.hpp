@@ -1,7 +1,7 @@
 #ifndef SPARK_GUI_EVENT_SUBSCRIBER_HPP
 #define SPARK_GUI_EVENT_SUBSCRIBER_HPP
 
-#include <memory>
+#include "Spark.hpp"
 
 namespace spark
 {
@@ -14,6 +14,6 @@ namespace spark
                                      int width, int height ) {}
     };
     typedef spark::shared_ptr< GuiEventSubscriber > GuiEventSubscriberPtr;
-    typedef std::weak_ptr< GuiEventSubscriber > GuiEventSubscriberWeakPtr;
+    typedef spark::weak_ptr< GuiEventSubscriber > GuiEventSubscriberWeakPtr;
 }
 #endif

@@ -9,7 +9,7 @@
 #ifndef sparks_VelocityFieldInterface_hpp
 #define sparks_VelocityFieldInterface_hpp
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include <Eigen/Dense>
 #include <memory>

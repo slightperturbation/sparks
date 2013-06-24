@@ -17,7 +17,7 @@
 using namespace Eigen;
 
 spark::DBMSpark
-::Spark()
+::DBMSpark()
 : m_h( 0.025f ),
   m_degree( 5 ),
   m_eta( 10 )

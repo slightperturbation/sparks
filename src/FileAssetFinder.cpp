@@ -1,5 +1,5 @@
 #include "FileAssetFinder.hpp"
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include <boost/algorithm/string.hpp>
 

@@ -2,7 +2,7 @@
 #ifndef sparks_RENDER_TARGET_HPP
 #define sparks_RENDER_TARGET_HPP
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 #include "GuiEventSubscriber.hpp"
 
 #define GLEW_STATIC

@@ -10,7 +10,7 @@
 #define sparks_ShaderInstance_hpp
 
 #include "config.hpp"  // Defines DATA_PATH
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 #include "Utilities.hpp"
 #include "ShaderUniform.hpp"
 #include "ShaderManager.hpp"

@@ -46,7 +46,7 @@ if( WINDOWS )
 endif( WINDOWS )
 
 
-set(PROJECT_NAME "sparks")
+set(PROJECT_NAME "sparkGui")
 project(${PROJECT_NAME})
 
 set(CMAKE_MODULE_PATH 
@@ -242,6 +242,7 @@ LIST( APPEND PROJECT_LINK_LIBRARIES
 
 set( HDRS
   ./src/ArcBall.hpp
+  ./src/DBMSpark.hpp
   ./src/Display.hpp
   ./src/LSpark.hpp
   ./src/LuaInterpreter.hpp
@@ -267,7 +268,6 @@ set( HDRS
   ./src/Simulation.hpp
   ./src/Spark.hpp
   ./src/SparkFacade.hpp
-  ./src/SoftTestDeclarations.hpp
   ./src/Task.hpp
   ./src/TextureManager.hpp
   ./src/TexturedSparkRenderable.hpp
@@ -281,6 +281,7 @@ include_directories( ./src/ )  # Move headers to ./include/
 
 set( SRCS
   ./src/ArcBall.cpp
+  ./src/DBMSpark.cpp
   ./src/Display.cpp
   ./src/LSpark.cpp
   ./src/Exceptions.cpp
@@ -300,7 +301,6 @@ set( SRCS
   ./src/ShaderUniform.cpp
   ./src/ShaderManager.cpp
   ./src/Simulation.cpp
-  ./src/Spark.cpp
   ./src/TexturedSparkRenderable.cpp
   ./src/TextureManager.cpp
   ./src/Utilities.cpp

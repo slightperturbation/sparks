@@ -6,10 +6,10 @@
 //
 //
 
-#ifndef sparks_Spark_h
-#define sparks_Spark_h
+#ifndef spark_DBMSpark_h
+#define spark_DBMSpark_h
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include <vector>
 #include <memory>

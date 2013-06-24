@@ -9,7 +9,7 @@
 #ifndef sparks_ShaderManager_hpp
 #define sparks_ShaderManager_hpp
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 #include "FileAssetFinder.hpp"
 
 #include <map>
@@ -23,7 +23,7 @@ namespace spark
     /// when ShaderManager detects a new file and reloads, the Shader Object
     /// needs to call lookupUniformLocations().  Note this breaks the current
     /// attempt to isolate the Manager from the actual shader class...
-    class ShaderManager : public std::enable_shared_from_this< ShaderManager >
+    class ShaderManager : public spark::enable_shared_from_this< ShaderManager >
     {
         struct ShaderFilePaths
         {
@@ -58,7 +58,7 @@ namespace spark
         std::map< const ShaderName, unsigned int > m_registry;
         std::map< const ShaderName, ShaderFilePaths > m_files;
         /// Keep track of all shader instanced generated.
-        std::vector< std::weak_ptr< ShaderInstance > > m_shaderInstances;
+        std::vector< spark::weak_ptr< ShaderInstance > > m_shaderInstances;
     };
 } // end namespace spark
 #endif

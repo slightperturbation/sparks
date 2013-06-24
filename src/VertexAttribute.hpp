@@ -9,7 +9,7 @@
 #ifndef sparks_VertexAttribute_hpp
 #define sparks_VertexAttribute_hpp
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include <string>
 #define GLEW_STATIC

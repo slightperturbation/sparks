@@ -46,8 +46,12 @@ namespace spark
     private:
         // Note-- weak_ptr's operator<() was removed from C++0x to C++11.
         // To use weak_ptr in a set in C++11, specify the owner_less comparator.
-        std::set< GuiEventSubscriberWeakPtr, 
+#ifdef USE_BOOST_SHARED_PTR
+        std::set< GuiEventSubscriberWeakPtr > m_subscribers;
+#else
+        std::set< GuiEventSubscriberWeakPtr,
                   std::owner_less< GuiEventSubscriberWeakPtr > > m_subscribers;
+#endif
     };
     typedef spark::shared_ptr< GuiEventPublisher > GuiEventPublisherPtr;
 }

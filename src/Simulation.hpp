@@ -1,7 +1,7 @@
 #ifndef SPARK_SIMULATION_HPP
 #define SPARK_SIMULATION_HPP
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 #include "Task.hpp"
 
 namespace spark

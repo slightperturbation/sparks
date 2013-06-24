@@ -12,7 +12,7 @@
 #include <Eigen/OpenGLSupport>
 
 spark::PointSparkRenderable
-::PointSparkRenderable( SparkPtr spark,
+::PointSparkRenderable( DBMSparkPtr spark,
                         TextureManagerPtr tm,
                         ShaderManagerPtr sm )
 : Renderable( "PointSparkRenderable" ),

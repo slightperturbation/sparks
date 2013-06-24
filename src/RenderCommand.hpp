@@ -9,7 +9,7 @@
 #ifndef sparks_RenderCommand_hpp
 #define sparks_RenderCommand_hpp
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include <functional>
 #include "Material.hpp"

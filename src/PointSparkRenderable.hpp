@@ -9,7 +9,7 @@
 #ifndef sparks_PointSparkRenderable_hpp
 #define sparks_PointSparkRenderable_hpp
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 
 #include "DBMSpark.hpp"
 #include "Renderable.hpp"
@@ -36,7 +36,7 @@ namespace spark
     class PointSparkRenderable : public Renderable
     {
     public:
-        PointSparkRenderable( SparkPtr spark,
+        PointSparkRenderable( DBMSparkPtr spark,
                               TextureManagerPtr tm,
                               ShaderManagerPtr sm );
         virtual ~PointSparkRenderable() {}
@@ -46,7 +46,7 @@ namespace spark
         virtual void loadTextures() {}
         virtual void loadShaders() {}
     private:
-        SparkPtr m_spark;
+        DBMSparkPtr m_spark;
         std::vector< PointSparkVertex > m_pointData;
     };
     typedef spark::shared_ptr< PointSparkRenderable > PointSparkRenderablePtr;

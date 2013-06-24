@@ -1,7 +1,7 @@
 #ifndef DISPLAY_HPP
 #define DISPLAY_HPP
 
-#include "SoftTestDeclarations.hpp"
+#include "Spark.hpp"
 #include "Viewport.hpp"
 namespace spark
 {
