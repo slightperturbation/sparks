@@ -59,7 +59,7 @@ set(CMAKE_MODULE_PATH
 #####################################################################
 # On windows, looks for env var: BOOST_ROOT
 MESSAGE( STATUS "BOOST ENV{BOOST_ROOT}: " $ENV{BOOST_ROOT})
-set(BOOST_MIN_VERSION "1.44")
+set(BOOST_MIN_VERSION "1.53")
 set( Boost_LIB_DIAGNOSTIC_DEFINITIONS  )
 if( UNIX )
   #MESSAGE( STATUS "BOOST: Boost_USE_STATIC_LIBS Boost_USE_STATIC_RUNTIME" )
@@ -82,7 +82,7 @@ list(APPEND PROJECT_BOOST_COMPONENTS
   thread 
   ) 
 FIND_PACKAGE(Boost ${BOOST_MIN_VERSION} COMPONENTS ${PROJECT_BOOST_COMPONENTS})
-
+MESSAGE( "Using boost from " ${Boost_LIBRARY_DIRS} )
 if( Boost_FOUND )
     add_definitions( -DBOOST_ALL_NO_LIB ) # Don't auto-link in windows
     #############add_definitions( -DBOOST_ALL_DYN_LINK )
@@ -377,3 +377,6 @@ endif(APPLE)
 
 
 
+if(WIN32)
+  MESSAGE( "Executables will require dependency DLLs to be in the path.  E.g., C:/dev_dlls/" )
+endif()

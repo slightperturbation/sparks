@@ -39,7 +39,7 @@ spark::Segment
 
 spark::LSpark
 ::LSpark()
-: m_camera( nullptr )
+: m_camera()
 {
     // Noop
 }

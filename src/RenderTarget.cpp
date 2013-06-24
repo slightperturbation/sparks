@@ -89,7 +89,7 @@ spark::FrameBufferRenderTarget
 spark::TextureRenderTarget
 ::TextureRenderTarget( const TextureName& aName,
                        int aWidth, int aHeight )
-: m_textureManager( nullptr ), m_textureHandle( aName ), 
+: m_textureManager(), m_textureHandle( aName ), 
   m_width( aWidth ), m_height( aHeight ),
   m_framebufferId( -1 ), m_depthRenderbufferId( -1 )
 { }

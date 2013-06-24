@@ -47,14 +47,15 @@ spark::Scene
     int counter = 0;
     
     // Allow passes and their targets to clear and setup buffers
-    ConstRenderPassPtr prevRenderPass( nullptr );
+    ConstRenderPassPtr prevRenderPass;
     for( auto pass = m_passes.begin(); pass != m_passes.end(); ++pass )
     {
-        (*pass)->startFrame( prevRenderPass );
-        prevRenderPass = *pass;
+        ConstRenderPassPtr cp = *pass;
+        cp->startFrame( prevRenderPass );
+        prevRenderPass = cp;
     }
     // Render all accumulated passes
-    prevRenderPass = ConstRenderPassPtr( nullptr );
+    prevRenderPass.reset();
     while( !m_commands.empty() )
     {
         RenderCommand rc = m_commands.top();

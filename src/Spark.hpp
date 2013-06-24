@@ -44,7 +44,10 @@ extern cpplog::BaseLogger* g_log;
 #define USE_BOOST_SHARED_PTR
 #ifdef USE_BOOST_SHARED_PTR
 # include <boost/shared_ptr.hpp>
-namespace spark {
+# include <boost/enable_shared_from_this.hpp>
+# include <boost/weak_ptr.hpp>
+namespace spark 
+{
     using boost::shared_ptr;
     using boost::const_pointer_cast;
     using boost::weak_ptr;
@@ -52,7 +55,8 @@ namespace spark {
 };
 #else
 # include <memory>
-namespace spark {
+namespace spark 
+{
     using std::shared_ptr;
     using std::const_pointer_cast;
     using std::weak_ptr;

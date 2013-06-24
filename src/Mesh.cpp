@@ -391,7 +391,7 @@ spark::Mesh
              const RenderPassName& renderPassName  )
 {
     Mesh* box = new Mesh();
-    if( !box ) return RenderablePtr(nullptr);
+    if( !box ) return RenderablePtr();
     box->unitCube();  // Build geometry and setup VAO
     // Build materials for needed passes
     ShaderName colorShaderName = box->name() + "_Box_ColorShader";

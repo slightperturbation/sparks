@@ -138,7 +138,7 @@ spark::Renderable
     }
     else
     {
-        return ConstMaterialPtr( NULL );
+        return ConstMaterialPtr();
     }
 }
 
