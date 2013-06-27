@@ -110,6 +110,22 @@ spark::Scene
     m_renderables.push_back( r ); 
 }
 
+spark::RenderPassPtr 
+spark::Scene
+::getPass( const RenderPassName& name ) const
+{
+    for( auto iter = m_passes.begin(); iter != m_passes.end(); ++iter )
+    {
+        RenderPassPtr p = *iter;
+        if( p->name() == name )
+        {
+            return p;
+        }
+    }
+    return RenderPassPtr();
+}
+
+
 void
 spark::Scene
 ::prepareRenderCommands( void )
@@ -142,4 +158,13 @@ spark::Scene
         ConstRenderPassPtr p = *piter;
         LOG_INFO(g_log) << "\t" << p->priority() << ": " << p;
     }
+}
+
+void 
+spark::Scene
+::reset( void )
+{
+    LOG_INFO(g_log) << "Resetting Scene";
+    m_passes.clear();
+    m_renderables.clear();
 }

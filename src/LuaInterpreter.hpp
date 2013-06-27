@@ -47,10 +47,11 @@ template<class T> boost::shared_ptr<T> to_boost_ptr(const std::shared_ptr<T> &p)
 
 namespace spark
 {
-    // Populate the error message with full-stack info.
+    //// Populate the error message with full-stack info.
     int reportLuaError( lua_State* L )
     {
         std::string err = lua_tostring( L, -1 );
+
         lua_Debug d;
         int level = 0;
         std::stringstream msg;
@@ -68,7 +69,8 @@ namespace spark
             }
             level++;
         }
-        std::cerr << "Lua Error: " << msg.str() << "\n";
+        LOG_ERROR(g_log) << "Lua Error:\n" << msg.str() << "\n";
+        // Replace original message with the stack trace
         lua_pop( L, 1 );
         lua_pushstring( L, msg.str().c_str() );
         return 0;
@@ -78,9 +80,89 @@ namespace spark
     {
         luabind::module( lua )
         [
+            luabind::class_< RenderPass, RenderPassPtr >( "RenderPass" )
+            .def( "name", &RenderPass::name )
+            .def( "disableBlending", &RenderPass::disableBlending )
+            .def( "useAdditiveBlending", &RenderPass::useAdditiveBlending )
+            .def( "useInterpolatedBlending", &RenderPass::useInterpolatedBlending )
+            .def( "useMaxBlending", &RenderPass::useMaxBlending )
+            .def( "setDepthTest", &RenderPass::setDepthTest )
+            .def( "setDepthWrite", &RenderPass::setDepthWrite )
+            .def( "setColorWrite", &RenderPass::setColorWrite )
+            .def( "priority", &RenderPass::priority )
+            .def( "targetSize", &RenderPass::targetSize )
+            .def( "targetName", &RenderPass::targetName )
+            .def( "useDefaultMaterial",( void (RenderPass::*)( MaterialPtr ) )&RenderPass::useDefaultMaterial )
+        ];
+
+        luabind::module( lua )
+        [
+            luabind::class_< RenderTarget,
+                             RenderTargetPtr >( "RenderTarget" )
+            .def( "setClearColor", &RenderTarget::setClearColor )
+        ];
+
+        luabind::module( lua )
+        [
+            luabind::class_< Projection, ProjectionPtr >( "Projection" )
+        ];
+        luabind::module( lua )
+        [
+            luabind::class_< PerspectiveProjection, 
+                             Projection,
+                             PerspectiveProjectionPtr >( "PerspectiveProjection" )
+            // modifiers
+            .def( "cameraUp", (void (PerspectiveProjection::*)(float,float,float) )&PerspectiveProjection::cameraUp )
+            .def( "cameraPos", (void (PerspectiveProjection::*)(float,float,float) )&PerspectiveProjection::cameraPos )
+            .def( "cameraTarget", (void (PerspectiveProjection::*)(float,float,float) )&PerspectiveProjection::cameraTarget )
+            .def( "fov", (void (PerspectiveProjection::*)(float) )&PerspectiveProjection::fov )
+
+        ];
+
+        luabind::module( lua )
+        [
          luabind::class_< SparkFacade,
                           SparkFacadePtr >( "SparkFacade" )
+         .def( "createPostProcessingRenderPassAndTarget",
+               &SparkFacade::createPostProcessingRenderPassAndTarget )
+         .def( "createPostProcessingRenderPassAndScaledTarget", 
+               &SparkFacade::createPostProcessingRenderPassAndScaledTarget )
+         .def( "createPostProcessingRenderPass", 
+               &SparkFacade::createPostProcessingRenderPass )
+         .def( "getFrameBufferRenderTarget", 
+               &SparkFacade::getFrameBufferRenderTarget )
+         .def( "getCamera", 
+               &SparkFacade::getCamera )
+         .def( "createScaledTextureRenderTarget", 
+               &SparkFacade::createScaledTextureRenderTarget )
+         .def( "createTextureRenderTarget",
+               &SparkFacade::createTextureRenderTarget )
+         .def( "createRenderPass",
+               &SparkFacade::createRenderPass )
+         .def( "createRenderPassWithProjection", 
+               &SparkFacade::createRenderPassWithProjection )
+         .def( "setMainRenderTarget", 
+               &SparkFacade::setMainRenderTarget )
+         .def( "getMainRenderTarget", 
+               &SparkFacade::getMainRenderTarget )
+         .def( "createMaterial", 
+               &SparkFacade::createMaterial )
+
          ];
+ 
+        luabind::module( lua )
+        [
+            luabind::class_< Material,
+                             MaterialPtr >( "Material" )
+//            .property( "name", (std::string& (Material::* const)(void) )&Material::name,
+//                               (void (Material::*)(const std::string&) )&Material::name )
+            .def( "setFloat", &Material::setShaderUniform<float> )
+            .def( "setVec2", &Material::setShaderUniform<glm::vec2> )
+            .def( "setVec3", &Material::setShaderUniform<glm::vec3> )
+            .def( "setVec4", &Material::setShaderUniform<glm::vec4> )
+            .def( "addTexture", &Material::addTexture )
+            .def( "dumpShaderUniforms", &Material::dumpShaderUniforms )
+        ];
     }
     
     void bindTextureManager( lua_State* lua )
@@ -111,6 +193,100 @@ namespace spark
          .def( "releaseAll", &ShaderManager::releaseAll )
         ];
     }
+    /////////////////////////////////////////////////////////////////////
+    // GLM
+
+    // Pseudo member functions for lua accessors
+    // Needed because we can't bind operator[]
+    float vec2_at( glm::vec2* v, int i ) { return (*v)[i]; }
+    float vec2_set( glm::vec2* v, int i, float x) { return (*v)[i] = x; }
+
+    float vec3_at( glm::vec3* v, int i ) { return (*v)[i]; }
+    float vec3_set( glm::vec3* v, int i, float x) { return (*v)[i] = x; }
+
+    float vec4_at( glm::vec4* v, int i ) { return (*v)[i]; }
+    float vec4_set( glm::vec4* v, int i, float x) { return (*v)[i] = x; }
+
+    glm::vec3& mat3_at( glm::mat3* m, int i ) { return (*m)[i]; }
+    float& mat3_at( glm::mat3* m, int i, int j ) { return (*m)[i][j]; }
+    void mat3_set( glm::mat3* m, int i, int j, float x ) { (*m)[i][j] = x; }
+
+    glm::vec4& mat4_at( glm::mat4* m, int i ) { return (*m)[i]; }
+    float& mat4_at( glm::mat4* m, int i, int j ) { return (*m)[i][j]; }
+    void mat4_set( glm::mat4* m, int i, int j, float x ) { (*m)[i][j] = x; }
+
+    void bindGLM( lua_State* lua )
+    {
+        luabind::module( lua )
+        [
+            luabind::class_< glm::vec2 >( "vec2" )
+            .def( luabind::constructor<>() )
+            .def( luabind::constructor<float,float>() )
+            .def_readwrite( "x", &glm::vec2::x )
+            .def_readwrite( "y", &glm::vec2::y )
+            .def_readwrite( "r", &glm::vec2::r )
+            .def_readwrite( "g", &glm::vec2::g )
+            .def_readwrite( "s", &glm::vec2::s )
+            .def_readwrite( "t", &glm::vec2::t )
+            .def( "at", &vec2_at )
+            .def( "set", &vec2_set )
+        ];
+
+        luabind::module( lua )
+        [
+            luabind::class_< glm::vec3 >( "vec3" )
+            .def( luabind::constructor<>() )
+            .def( luabind::constructor<float>() )
+            .def( luabind::constructor<float,float,float>() )
+            .def_readwrite( "x", &glm::vec3::x )
+            .def_readwrite( "y", &glm::vec3::y )
+            .def_readwrite( "z", &glm::vec3::z )
+            .def_readwrite( "r", &glm::vec3::r )
+            .def_readwrite( "g", &glm::vec3::g )
+            .def_readwrite( "b", &glm::vec3::b )
+            .def( "at", &vec3_at )
+            .def( "set", &vec3_set )
+        ];
+        luabind::module( lua )
+        [
+            luabind::class_< glm::vec4 >( "vec4" )
+            .def( luabind::constructor<>() )
+            .def( luabind::constructor<float>() )
+            .def( luabind::constructor<float,float,float,float>() )
+            .def_readwrite( "x", &glm::vec4::x )
+            .def_readwrite( "y", &glm::vec4::y )
+            .def_readwrite( "z", &glm::vec4::z )
+            .def_readwrite( "w", &glm::vec4::w )
+            .def_readwrite( "r", &glm::vec4::r )
+            .def_readwrite( "g", &glm::vec4::g )
+            .def_readwrite( "b", &glm::vec4::b )
+            .def_readwrite( "a", &glm::vec4::a )
+            .def( "at", &vec4_at )
+            .def( "set", &vec4_set )
+        ];
+
+        luabind::module( lua )
+        [
+         luabind::class_< glm::mat3 >( "mat3" )
+         .def( luabind::constructor<>() )
+         .def( luabind::constructor<float>() )
+         .def( luabind::constructor<glm::vec3,glm::vec3,glm::vec3>() )
+         .def( "at", (glm::vec3& (*)(glm::mat3*, int))&mat3_at )
+         .def( "at", (float& (*)(glm::mat3*, int, int))&mat3_at )
+         ];
+
+        luabind::module( lua )
+        [
+            luabind::class_< glm::mat4 >( "mat4" )
+            .def( luabind::constructor<>() )
+            .def( luabind::constructor<float>() )
+            .def( luabind::constructor<glm::vec4,glm::vec4,glm::vec4,glm::vec4>() )
+            .def( "at", (glm::vec4& (*)(glm::mat4*, int))&mat4_at )
+            .def( "at", (float& (*)(glm::mat4*, int, int))&mat4_at )
+            .def( "set", &mat4_set )
+        ];
+    }
+    /////////////////////////////////////////////////////////////////////
     
     /// Responsible for handling calls to and errors from the lua interpreter.
     class LuaInterpreter
@@ -129,9 +305,10 @@ namespace spark
             // Bind classes
             try
             {
-                bindSparkFacade( m_lua );
+                bindGLM( m_lua );
                 bindTextureManager( m_lua );
                 bindShaderManager( m_lua );
+                bindSparkFacade( m_lua );
             }
             catch( luabind::error& err )
             {
@@ -159,14 +336,21 @@ namespace spark
         {
             luabind::globals( m_lua )["shaderManager"] = sm;
         }
-
+        
         void runScriptFromString( const std::string& script )
         {
+            // Push std lib debugging function
+            lua_getglobal( m_lua, "debug");
+            lua_getfield( m_lua, -1,"traceback" );
+            // assuming string is one chunk on stack
+            int errorFuncStack = -2; 
+            lua_remove( m_lua, errorFuncStack );
+
             // Load chunk
             int luaError = luaL_loadstring( m_lua, script.c_str() );
             if( !luaError )
             {
-                callChunkOnStack();
+                callChunkOnStack( errorFuncStack );
             }
             else
             {
@@ -186,6 +370,13 @@ namespace spark
                 assert( false );
                 return;
             }
+            // Push debugging function
+            lua_getglobal( m_lua, "debug");
+            lua_getfield( m_lua, -1,"traceback" );
+            // assuming load file puts it's one chunk on stack
+            int errorFuncStack = -2; 
+            lua_remove( m_lua, errorFuncStack );
+            // load and compile lua
             int fileLoadError = luaL_loadfile( m_lua, filePath.c_str() );
             if( fileLoadError ) 
             {
@@ -202,13 +393,16 @@ namespace spark
                     errType = "Cannot open/read file";
                     break;
                 }
+                std::cerr << "Unable to load lua script from file \""
+                          << filePath << "\":  "
+                          << errType;
                 LOG_ERROR(g_log) << "Unable to load lua script from file \""
                                  << filePath << "\":  "
                                  << errType;
             }
             else
             {
-                callChunkOnStack();
+                callChunkOnStack( errorFuncStack );
             }
             return;
         }
@@ -239,32 +433,36 @@ namespace spark
                             << "\" executed successfully.";
         }
     private:
-        int callChunkOnStack( void )
+        /// errorFuncStack is the stack index of the error function 
+        /// that has already been pushed onto the lua stack (0 if none)
+        /// See:  http://www.gamedev.net/topic/600886-lua-error-handling/
+        /// and: http://www.gamedev.net/topic/446781-lua-more-detailed-error-information/page__view__findpost__p__3960907
+        int callChunkOnStack( int errorFuncStack = 0 )
         {
-            // Instance chunk on stack
-            // Add error-reporting function
-            int nargs = 0;
-            int nresults = 0; // LUA_MULTRET
-            int en = 0;
-            int top = lua_gettop( m_lua );
-            int base = top - nargs;
-            lua_pushcfunction( m_lua, reportLuaError );
-            lua_insert( m_lua, base );  // push pcall_callback under chunk and args
-            en = base;
-            int error = lua_pcall( m_lua, nargs, nresults, en);
-            if( error )
+            int err = 0;
+            try
+            {
+                //err = lua_pcall( m_lua, nargs, nresults, errorFunc );
+                err = lua_pcall( m_lua, 0, 0, errorFuncStack );
+            }
+            catch( std::exception& e )
+            {
+                std::cerr << "Lua exception caught: " << e.what() << '\n';
+                LOG_ERROR(g_log) << "Lua exception caught: " << e.what();
+            }
+            if( err )
             {
                 // Copy error, but leave on stack for caller
-                std::string err( lua_tostring( m_lua, -1 ) );
-                LOG_ERROR(g_log) << "Lua compilation error: "
-                                 << err;
+                std::string errMsg( lua_tostring( m_lua, -1 ) );
+                std::cerr << "Lua runtime error: " << errMsg << '\n';
+                LOG_ERROR(g_log) << "Lua runtime error: " << errMsg;
+                lua_pop( m_lua, 1 ); // pop error off stack
             }
-            if ( en )
+            if( errorFuncStack )
             {
-                lua_remove( m_lua, en );  // remove pcall_callback
+                lua_remove( m_lua, errorFuncStack ); // pop error func
             }
-            //int nresults = lua_gettop( m_lua ) - top;
-            return error;
+            return err;
         }
 
         FileAssetFinderPtr m_finder;

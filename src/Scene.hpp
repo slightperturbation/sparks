@@ -35,8 +35,14 @@ namespace spark
         /// Update scene objects per-frame
         void update( float dt );
 
+        /// Delete all held resources
+        void reset( void );
+
         /// Print all passes to INFO-level log
         void logPasses( void ) const;
+
+        /// Return existing render pass with given name, if registered.
+        RenderPassPtr getPass( const RenderPassName& name ) const;
     private:
         RenderPassList m_passes;
         /// The current list of commands.  The first command is always

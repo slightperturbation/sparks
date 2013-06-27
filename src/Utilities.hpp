@@ -30,7 +30,7 @@ namespace spark
     class OpenGLWindow
     {
     public:
-        OpenGLWindow( const char* programName ); 
+        OpenGLWindow( const char* programName, bool enableLegacyOpenGlLogging ); 
         ~OpenGLWindow();
         bool isOK( void ) { return m_isOK; }
         bool isRunning( void );

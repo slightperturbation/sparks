@@ -19,6 +19,12 @@ spark::RenderPass
     useInterpolatedBlending();
 }
 
+spark::RenderPass
+::~RenderPass()
+{
+    LOG_DEBUG(g_log) << "Dtor - RenderPass \"" << m_name << "\"";
+}
+
 void 
 spark::RenderPass
 ::initialize( RenderTargetPtr aTarget, 
@@ -249,6 +255,13 @@ spark::RenderPass
 void
 spark::RenderPass
 ::useDefaultMaterial( ConstMaterialPtr defaultMaterial )
+{
+    m_defaultMaterial = defaultMaterial;
+}
+
+void
+spark::RenderPass
+::useDefaultMaterial( MaterialPtr defaultMaterial )
 {
     m_defaultMaterial = defaultMaterial;
 }

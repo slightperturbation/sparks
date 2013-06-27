@@ -13,6 +13,10 @@ namespace spark
     class GuiEventPublisher
     {
     public:
+        GuiEventPublisher()  
+        : m_left( 0 ), m_bottom( 0 ), m_width( 800 ), m_height( 600 )
+        { }
+
         /// The given aSubscriber will receive notifications of GUI events.
         /// The publisher holds only a weak pointer to subscriber, so
         /// the lifetime of the subscriber is not bound this publisher.
@@ -32,6 +36,8 @@ namespace spark
         void resizeViewport( int left, int bottom,
                              int width, int height )
         {
+            m_left = left; m_bottom = bottom;
+            m_width = width; m_height = height;
             for( auto i = m_subscribers.begin();
                  i != m_subscribers.end();
                  ++i )
@@ -43,12 +49,22 @@ namespace spark
                 }
             }
         }
+
+        int left( void ) const { return m_left; }
+        int bottom( void ) const { return m_bottom; }
+        int width( void ) const { return m_width; }
+        int height( void ) const { return m_height; }
     private:
-        // Note-- weak_ptr's operator<() was removed from C++0x to C++11.
-        // To use weak_ptr in a set in C++11, specify the owner_less comparator.
+        int m_left;
+        int m_bottom;
+        int m_width;
+        int m_height;
+
 #ifdef USE_BOOST_SHARED_PTR
         std::set< GuiEventSubscriberWeakPtr > m_subscribers;
 #else
+        // Note-- weak_ptr's operator<() was removed from C++0x to C++11.
+        // To use weak_ptr in a set in C++11, specify the owner_less comparator.
         std::set< GuiEventSubscriberWeakPtr,
                   std::owner_less< GuiEventSubscriberWeakPtr > > m_subscribers;
 #endif

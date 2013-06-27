@@ -30,10 +30,13 @@ namespace spark
     /// OpenGL FrameBufferObject that will be used by subsequent passes.
     /// A RenderPass's role is only to create RenderCommands, not to do 
     /// any rendering itself.
+    /// RenderPass must be registered with a Scene object  (via Scene::add)
+    /// to be rendered.
     class RenderPass
     {
     public:
         RenderPass( const RenderPassName& aName = "UNLABELED_RENDER_PASS" );
+        ~RenderPass();
         void initialize( RenderTargetPtr aTarget, 
                          ProjectionPtr aPerspective );
         void initialize( RenderTargetPtr aTarget, 
@@ -74,6 +77,7 @@ namespace spark
         /// If defaultMaterial is non-null, it will be used for all scene
         /// renderables without a material assignment for this pass.
         void useDefaultMaterial( ConstMaterialPtr defaultMaterial );
+        void useDefaultMaterial( MaterialPtr defaultMaterial );
         ConstMaterialPtr defaultMaterial( void ) const;
 
         /// If true (default), this pass will test depth before writing.

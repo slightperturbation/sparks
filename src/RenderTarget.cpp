@@ -3,6 +3,12 @@
 
 ////////////////////////////////////////////////////////////
 // RenderTarget
+spark::RenderTarget
+::~RenderTarget()
+{
+    LOG_DEBUG(g_log) << "Dtor -- RenderTarget.";
+}
+
 std::ostream&
 spark::operator<<( std::ostream& out,
                    RenderTargetPtr target )
@@ -24,6 +30,12 @@ spark::FrameBufferRenderTarget
                            int aWidth, int aHeight )
 {
     resizeViewport( aLeft, aBottom, aWidth, aHeight );
+}
+
+spark::FrameBufferRenderTarget
+::~FrameBufferRenderTarget()
+{
+    LOG_DEBUG(g_log) << "Dtor -- FrameBufferRenderTarget \"" << name() << "\".";
 }
 
 void
@@ -93,6 +105,12 @@ spark::TextureRenderTarget
   m_width( aWidth ), m_height( aHeight ),
   m_framebufferId( -1 ), m_depthRenderbufferId( -1 )
 { }
+
+spark::TextureRenderTarget
+::~TextureRenderTarget()
+{
+    LOG_DEBUG(g_log) << "Dtor -- TextureRenderTarget \"" << name() << "\".";
+}
 
 void
 spark::TextureRenderTarget
@@ -220,6 +238,12 @@ spark::ScaledTextureRenderTarget
 {
 }
 
+spark::ScaledTextureRenderTarget
+::~ScaledTextureRenderTarget()
+{
+    LOG_ERROR(g_log) << "Dtor - ScaledTextureRenderTarget: \"" << name() << "\".";
+}
+
 void
 spark::ScaledTextureRenderTarget
 ::initialize( TextureManagerPtr& mgr )
@@ -292,10 +316,41 @@ spark::ScaledTextureRenderTarget
     GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
     glDrawBuffers( 1, drawBuffers );
     
-    if( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE )
+    GLenum fbStatus = glCheckFramebufferStatus( GL_FRAMEBUFFER );
+    if( fbStatus != GL_FRAMEBUFFER_COMPLETE )
     {
+        std::stringstream msg;
+        switch( fbStatus )
+        {
+            case GL_FRAMEBUFFER_UNDEFINED:
+                msg << "target is the default framebuffer, but the default framebuffer does not exist.";
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                msg << "any of the framebuffer attachment points are framebuffer incomplete.";
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                msg << "the framebuffer does not have at least one image attached to it.";
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+                msg << "the value of GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is GL_NONE for any color attachment point(s) named by GL_DRAW_BUFFERi.";
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+                msg << "GL_READ_BUFFER is not GL_NONE and the value of GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is GL_NONE for the color attachment point named by GL_READ_BUFFER.";
+                break;
+            case GL_FRAMEBUFFER_UNSUPPORTED:
+                msg << "the combination of internal formats of the attached images violates an implementation-dependent set of restrictions.";
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+                msg << "the value of GL_RENDERBUFFER_SAMPLES is not the same for all attached renderbuffers; if the value of GL_TEXTURE_SAMPLES is the not same for all attached textures; or, if the attached images are a mix of renderbuffers and textures, the value of GL_RENDERBUFFER_SAMPLES does not match the value of GL_TEXTURE_SAMPLES.";
+                break;
+            case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+                msg << "any framebuffer attachment is layered, and any populated attachment is not layered, or if all populated color attachments are not from textures of the same target.";
+                break;
+        }
+        
         LOG_ERROR(g_log) << "Couldn't set renderbuffer for TextureRenderTarget \""
         << m_textureHandle << "\".";
+        LOG_ERROR(g_log) << "GL Error: " << msg.str();
     }
 }
 

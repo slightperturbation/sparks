@@ -135,7 +135,7 @@ spark
 
 /// Startup OpenGL and create the rendering context and window.
 spark::OpenGLWindow
-::OpenGLWindow( const char* programName )
+::OpenGLWindow( const char* programName, bool enableLegacyOpenGlLogging )
 : m_isOK( false )
 {
     LOG_DEBUG(g_log) << "glfwInit...";
@@ -207,8 +207,7 @@ spark::OpenGLWindow
         checkOpenGLErrors();
 
         // Must be disabled for gDebugger and similar tools
-        bool logOpenGLMessages = false;
-        if( logOpenGLMessages )
+        if( enableLegacyOpenGlLogging )
         {
             glDebugMessageCallback( debugOpenGLMessageCallback, 0 );
             checkOpenGLErrors();
@@ -448,7 +447,8 @@ spark
     const GLubyte *errString;
     if ((errCode = glGetError()) != GL_NO_ERROR) {
         errString = gluErrorString(errCode);
-        LOG_ERROR(g_log) << "OpenGL Error[" << errCode << "] \"" << errString 
+        LOG_ERROR(g_log) << "OpenGL Error[" << errCode << "] \"" 
+            << ( errString ? (const char*)errString : "UNKNOWN" )
             << "\", at " << aFileName << ":" << aLineNumber << " -- " 
             << aCodeStatement << "\n";
         //assert( false );

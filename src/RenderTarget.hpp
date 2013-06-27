@@ -16,12 +16,13 @@ namespace spark
     /// Concrete targets can be the usual framebuffer (FrameBufferRenderTarget),
     /// shadow maps texture objects, framebuffer object textures for reflections
     /// or full-screen effects.
+    /// RenderTargets are generally held by a RenderPass.
     /// see RenderPass
     class RenderTarget
     {
     public:
         RenderTarget() : m_clearColor( 0,1,0,0 ) {}
-        virtual ~RenderTarget() {}
+        virtual ~RenderTarget();
         virtual std::string name( void ) const = 0;
         virtual glm::vec2 size( void ) const = 0;
         virtual void initialize( TextureManagerPtr& mgr ) = 0;
@@ -43,9 +44,8 @@ namespace spark
     {
     public:
         FrameBufferRenderTarget( int aWidth, int aHeight );
-
         FrameBufferRenderTarget( int aLeft, int aBottom, int aWidth, int aHeight );
-        virtual ~FrameBufferRenderTarget() {}
+        virtual ~FrameBufferRenderTarget();
         virtual std::string name( void ) const override
         { return "FrameBuffer"; }
         virtual glm::vec2 size( void ) const override;
@@ -75,7 +75,7 @@ namespace spark
     public:
         TextureRenderTarget( const TextureName& aName,
                              int aWidth, int aHeight );
-        virtual ~TextureRenderTarget() {}
+        virtual ~TextureRenderTarget();
         virtual std::string name( void ) const override
         { return getTextureName(); }
         const TextureName& getTextureName( void ) const 
@@ -110,7 +110,7 @@ namespace spark
         ScaledTextureRenderTarget( const TextureName& aName,
             int aViewportWidth, int aViewportHeight, 
             float aScaleX, float aScaleY );
-        virtual ~ScaledTextureRenderTarget() {}
+        virtual ~ScaledTextureRenderTarget();
 
         virtual void initialize( TextureManagerPtr& mgr ) override;
 

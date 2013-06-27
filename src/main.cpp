@@ -217,7 +217,8 @@ void loadScene( ScenePtr scene,
 /// Online simulation and display of fluid
 int runSimulation(int argc, char** argv)
 {
-    OpenGLWindow window( "Spark" );
+    bool enableLegacyOpenGlLogging  = false;
+    OpenGLWindow window( "Spark", enableLegacyOpenGlLogging );
     using namespace std;
     InteractionVars vars;
     
@@ -257,7 +258,8 @@ int runSimulation(int argc, char** argv)
                                             textureManager,
                                             shaderManager,
                                             cameraPerspective,
-                                            frameBufferTarget ) );
+                                            frameBufferTarget,
+                                            g_guiEventPublisher ) );
     
     LuaInterpreter lua( finder );
     lua.setFacade( facade );
@@ -266,8 +268,8 @@ int runSimulation(int argc, char** argv)
     
     lua.runScriptFromFile( "defaultScene.lua" );
     
-    
-    return 0;
+    //lua.runScriptFromString( "print('DONE--  at(testVec, 1) = ' .. testVec:at(1) );" );
+
     
     loadScene( scene, finder, textureManager, shaderManager );
     
@@ -280,22 +282,28 @@ int runSimulation(int argc, char** argv)
     // Render a full-screen quad to the framebuffer -- does the final drawing
     // "MainRenderTargetTexture" texture holds the previously rendered scene
     {
-        RenderPassPtr msaaRenderPass( new RenderPass( "MSAAFinalRenderPass" ) );
-        msaaRenderPass->initialize( frameBufferTarget, 
-                                    overlayPerspective,
-                                    0.0f );
-        //msaaRenderPass->disableBlending();  //useInterpolatedBlending();
-        //msaaRenderPass->useAdditiveBlending();
-        //msaaRenderPass->setDepthTest(false);
-        scene->add( msaaRenderPass );
-        // Create full-screen quad to render MainRenderTargetTexture
-        // with the MSAAFinalRenderPass
-        MeshPtr msaaOverlay = createOverlayQuad( textureManager,
-                                                 shaderManager,
-                                                 "MainRenderTargetTexture",
-                                                 "MSAAFinalRenderPass",
-                                                 "texturedOverlayShader" );
-        scene->add( msaaOverlay );
+        //facade->createPostProcessingRenderPass( "MSAAFinalRenderPass",
+        //                                        0.0f, 
+        //                                        frameBufferTarget, 
+        //                                        "MainRenderTargetTexture", 
+        //                                        "texturedOverlayShader" );
+
+        //RenderPassPtr msaaRenderPass( new RenderPass( "MSAAFinalRenderPass" ) );
+        //msaaRenderPass->initialize( frameBufferTarget, 
+        //                            overlayPerspective,
+        //                            0.0f );
+        ////msaaRenderPass->disableBlending();  //useInterpolatedBlending();
+        ////msaaRenderPass->useAdditiveBlending();
+        ////msaaRenderPass->setDepthTest(false);
+        //scene->add( msaaRenderPass );
+        //// Create full-screen quad to render MainRenderTargetTexture
+        //// with the MSAAFinalRenderPass
+        //MeshPtr msaaOverlay = createOverlayQuad( textureManager,
+        //                                         shaderManager,
+        //                                         "MainRenderTargetTexture",
+        //                                         "MSAAFinalRenderPass",
+        //                                         "texturedOverlayShader" );
+        //scene->add( msaaOverlay );
     }
     //////////////////////////////////////////////////////////////////////////
 
@@ -303,145 +311,46 @@ int runSimulation(int argc, char** argv)
     // Setup Standard render passes -- render to "MainRenderTargetTexture"
     //////////////////////////////////////////////////////////////////////////
     // mainRenderTarget is the target for final composition.
-    ScaledTextureRenderTargetPtr mainRenderTarget;
-    {
-        const int multiSampleAntiAliasingFactor = 1;
-        mainRenderTarget = ScaledTextureRenderTargetPtr(
-            new ScaledTextureRenderTarget( "MainRenderTargetTexture",
-                                           width, height,
-                                           multiSampleAntiAliasingFactor,
-                                           multiSampleAntiAliasingFactor ) );
-        mainRenderTarget->initialize( textureManager );
-        mainRenderTarget->setClearColor( glm::vec4( 0.0,0.0,0.0,0 ) );
-        // g_opaqueRenderPassName and g_transparencyRenderPassName
-        if(true)
-        {
-            RenderPassPtr opaqueRenderPass(
-                new RenderPass( g_opaqueRenderPassName ) );
-            opaqueRenderPass->initialize( mainRenderTarget,
-                                          cameraPerspective, 1.0f );
-            opaqueRenderPass->setDepthWrite( true );
-            opaqueRenderPass->setDepthTest( true );
-            opaqueRenderPass->disableBlending();
-            //opaqueRenderPass->nearToFarRenderOrder();
-            scene->add( opaqueRenderPass );
-        }
-        // render transparent objects after opaque
-        if( true )
-        {
-            RenderPassPtr transparencyRenderPass(
-                new RenderPass( g_transparencyRenderPassName ) );
-            transparencyRenderPass->initialize( mainRenderTarget,
-                                                cameraPerspective, 0.9f );
-            transparencyRenderPass->setDepthWrite( false );
-            transparencyRenderPass->setDepthTest( true );
-            transparencyRenderPass->useInterpolatedBlending(); // normal transparency
-            //transparencyRenderPass->useAdditiveBlending(); // glows
-            //transparencyRenderPass->farToNearRenderOrder();
-            scene->add( transparencyRenderPass );
-        }
-    }
+    //ScaledTextureRenderTargetPtr mainRenderTarget;
+    //{
+    //    const int multiSampleAntiAliasingFactor = 1;
+    //    mainRenderTarget = ScaledTextureRenderTargetPtr(
+    //        new ScaledTextureRenderTarget( "MainRenderTargetTexture",
+    //                                       width, height,
+    //                                       multiSampleAntiAliasingFactor,
+    //                                       multiSampleAntiAliasingFactor ) );
+    //    mainRenderTarget->initialize( textureManager );
+    //    mainRenderTarget->setClearColor( glm::vec4( 0.0,0.0,0.0,0 ) );
+    //    // g_opaqueRenderPassName and g_transparencyRenderPassName
+    //    if(true)
+    //    {
+    //        RenderPassPtr opaqueRenderPass(
+    //            new RenderPass( g_opaqueRenderPassName ) );
+    //        opaqueRenderPass->initialize( mainRenderTarget,
+    //                                      cameraPerspective, 1.0f );
+    //        opaqueRenderPass->setDepthWrite( true );
+    //        opaqueRenderPass->setDepthTest( true );
+    //        opaqueRenderPass->disableBlending();
+    //        //opaqueRenderPass->nearToFarRenderOrder();
+    //        scene->add( opaqueRenderPass );
+    //    }
+    //    // render transparent objects after opaque
+    //    if( true )
+    //    {
+    //        RenderPassPtr transparencyRenderPass(
+    //            new RenderPass( g_transparencyRenderPassName ) );
+    //        transparencyRenderPass->initialize( mainRenderTarget,
+    //                                            cameraPerspective, 0.9f );
+    //        transparencyRenderPass->setDepthWrite( false );
+    //        transparencyRenderPass->setDepthTest( true );
+    //        transparencyRenderPass->useInterpolatedBlending(); // normal transparency
+    //        //transparencyRenderPass->useAdditiveBlending(); // glows
+    //        //transparencyRenderPass->farToNearRenderOrder();
+    //        scene->add( transparencyRenderPass );
+    //    }
+    //}
+    RenderTargetPtr mainRenderTarget = facade->getMainRenderTarget();
 
-    //////////////////////////////////////////////////////////////////////////
-    // Setup Glow effect
-    // 10.9: spark -> glowPass -> glowTexture (0.5)
-    // 10.8: glowTexture -> horzBlurPass -> glowTexture2 (0.5)
-    // 10.7: glowTexture2 -> vertBlurPass -> glowTexture3 (0.5)
-    // 0.9 : glowTexture3 -> transparencyPass -> mainTarget
-    if( true )
-    {
-        // Need two target textures
-        const TextureName glowTargetTextureName = "GlowRenderPassTexture1";
-        const TextureName glowTargetTexture2Name = "GlowRenderPassTexture2";
-        const TextureName glowTargetTexture3Name = "GlowRenderPassTexture3";
-        const RenderPassName glowPassName = "GlowRenderPass";
-        const RenderPassName blurHortPassName = "BlurHortRenderPass";
-        const RenderPassName blurVertPassName = "BlurVertRenderPass";
-        const RenderPassName blurFinalCompositePassName = "BlurCompositePass";
-        const float downSampleFactor = 0.5f;
-        ScaledTextureRenderTargetPtr glowRenderTextureTarget;
-        {
-            // Render target to glows to.
-            // Down-sample to get a cheap blur effect
-            glowRenderTextureTarget = ScaledTextureRenderTargetPtr( 
-                new ScaledTextureRenderTarget( glowTargetTextureName,
-                                               width, height,
-                                               downSampleFactor,
-                                               downSampleFactor ) );
-            glowRenderTextureTarget->setClearColor( glm::vec4( 0, 0, 0, 0 ) );
-            glowRenderTextureTarget->initialize( textureManager );
-            // Listen to viewport resize events to resize texture
-            g_guiEventPublisher->subscribe( glowRenderTextureTarget );
-        }
-        ScaledTextureRenderTargetPtr glowRenderTexture2Target;
-        {
-            // Render target to glows to.
-            // Down-sample to get a cheap blur effect
-            glowRenderTexture2Target = ScaledTextureRenderTargetPtr( 
-                new ScaledTextureRenderTarget( glowTargetTexture2Name,
-                width, height,
-                downSampleFactor,
-                downSampleFactor ) );
-            glowRenderTexture2Target->setClearColor( glm::vec4( 0, 0, 0, 0 ) );
-            glowRenderTexture2Target->initialize( textureManager );
-            // Listen to viewport resize events to resize texture
-            g_guiEventPublisher->subscribe( glowRenderTexture2Target );
-        }
-        ScaledTextureRenderTargetPtr glowRenderTexture3Target;
-        {
-            glowRenderTexture3Target = ScaledTextureRenderTargetPtr(
-                new ScaledTextureRenderTarget( glowTargetTexture3Name,
-                                               width, height,
-                                               downSampleFactor,
-                                               downSampleFactor ) );
-            glowRenderTexture3Target->setClearColor( glm::vec4( 0, 0, 0, 0 ) );
-            glowRenderTexture3Target->initialize( textureManager );
-            // Listen to viewport resize events to resize texture
-            g_guiEventPublisher->subscribe( glowRenderTexture3Target );
-        }
-        MaterialPtr blackMaterial = MaterialPtr( new Material( textureManager,
-            ShaderInstancePtr( new ShaderInstance( "constantColorShader",
-            shaderManager ) ) )
-        );
-        blackMaterial->name( "constantBlack" );
-        blackMaterial->setShaderUniform( "u_color", glm::vec4(0,0,0,1) );
-
-        // Render glowing scene objects to the first target
-        RenderPassPtr glowPass( new RenderPass( glowPassName ) );
-        glowPass->initialize( glowRenderTextureTarget, cameraPerspective, 10.9f );
-        glowPass->setBlending( GL_SRC_ALPHA, GL_ONE );
-        glowPass->useDefaultMaterial( blackMaterial );
-        scene->add( glowPass );
-        
-        RenderPassPtr blurHortPass( new RenderPass( blurHortPassName ) );
-        blurHortPass->initialize( glowRenderTexture2Target, overlayPerspective, 10.8f );
-        scene->add( blurHortPass );
-        scene->add( createOverlayQuad( textureManager,
-                                       shaderManager,
-                                       glowTargetTextureName,
-                                       blurHortPassName,
-                                       "blurHortShader" ) );
-        
-        RenderPassPtr blurVertPass( new RenderPass( blurVertPassName ) );
-        blurVertPass->initialize( glowRenderTexture3Target, overlayPerspective, 10.7f );
-        scene->add( blurVertPass );
-        scene->add( createOverlayQuad( textureManager,
-                                       shaderManager,
-                                       glowTargetTexture2Name,
-                                       blurVertPassName,
-                                       "blurVertShader" ) );
-
-        RenderPassPtr blurCompositePass( new RenderPass( blurFinalCompositePassName ) );
-        blurCompositePass->initialize( mainRenderTarget, overlayPerspective, 0.01f );
-        blurCompositePass->useAdditiveBlending();
-        scene->add( blurCompositePass );
-        scene->add( createOverlayQuad( textureManager,
-                                       shaderManager,
-                                       glowTargetTexture3Name,
-                                       blurFinalCompositePassName,
-                                       "texturedOverlayShader" ) );
-    }
-    // Build material for spark
     if( true )
     {
         MaterialPtr sparkColorMaterial;
@@ -574,7 +483,13 @@ int runSimulation(int argc, char** argv)
         //scene->add( rayCastFluid );
         scene->add( slices );
     }
-    
+
+    {
+        // Set window/textures sizes by sending signals to listeners
+        int width = 0; int height = 0; glfwGetWindowSize( &width, &height );
+        g_guiEventPublisher->resizeViewport( 0, 0, width, height );
+    }
+
     const double startTime = glfwGetTime();
     double currTime = startTime;
     double lastTime = startTime;
@@ -644,6 +559,11 @@ int runSimulation(int argc, char** argv)
         if( glfwGetKey( 'P' ) == GLFW_PRESS )
         {
             scene->logPasses();
+        }
+        if( glfwGetKey( 'R' ) == GLFW_PRESS )
+        {
+            scene->reset();
+            lua.runScriptFromFile( "defaultScene.lua" );
         }
         //const float eyeSeparationStep = 0.02;
         if( glfwGetKey( GLFW_KEY_UP ) == GLFW_PRESS )

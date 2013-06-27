@@ -38,7 +38,7 @@ spark::ShaderManager
     {
         LOG_ERROR(g_log) << "Failed to find shader by name \"" << name
             << "\".  Not loaded?";
-        assert( false );
+        return -1;
     }
     return iter->second;
 }

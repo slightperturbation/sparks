@@ -181,6 +181,21 @@ spark::Mesh
 
 void
 spark::Mesh
+::addQuad( const glm::vec3& a, const glm::vec2& aCoord, 
+    const glm::vec3& b, const glm::vec2& bCoord, 
+    const glm::vec3& c, const glm::vec2& cCoord, 
+    const glm::vec3& d, const glm::vec2& dCoord, 
+    const glm::vec3& norm )
+{
+    addQuad(Eigen::Vector3f( a.x, a.y, a.z ),  Eigen::Vector2f( aCoord.x, aCoord.y ), 
+            Eigen::Vector3f( b.x, b.y, b.z ),  Eigen::Vector2f( bCoord.x, bCoord.y ), 
+            Eigen::Vector3f( c.x, c.y, c.z ),  Eigen::Vector2f( cCoord.x, cCoord.y ), 
+            Eigen::Vector3f( d.x, d.y, d.z ),  Eigen::Vector2f( dCoord.x, dCoord.y ),
+            Eigen::Vector3f( norm.x, norm.y, norm.z ) );
+}
+
+void
+spark::Mesh
 ::addQuad( const Eigen::Vector3f& a, const Eigen::Vector2f& aCoord, 
            const Eigen::Vector3f& b, const Eigen::Vector2f& bCoord, 
            const Eigen::Vector3f& c, const Eigen::Vector2f& cCoord, 

@@ -12,7 +12,7 @@ spark::Renderable
 spark::Renderable
 ::~Renderable()
 {
-    LOG_TRACE(g_log) << "Renderable \"" << name() << "\" destructed.";
+    LOG_DEBUG(g_log) << "Dtor - Renderable \"" << name() << "\".";
 }
 
 spark::RenderableName 
