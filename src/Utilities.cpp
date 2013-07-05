@@ -595,14 +595,14 @@ spark
         LOG_ERROR(g_log) << "No scene root found in file \"" << filePath << "\".";
         return;
     }
-    if( root->mNumMeshes < 1 )
+    if( scene->mNumMeshes < 1 )
     {
         LOG_WARN(g_log) << "No mesh found when loading scene file \"" 
             << filePath << "\" using found path \"" << foundPath << "\".";
     }
-    for( size_t meshIndex = 0; meshIndex < root->mNumMeshes; ++meshIndex )
+    for( size_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex )
     {
-        const aiMesh* aimesh = scene->mMeshes[ root->mMeshes[meshIndex] ];
+        const aiMesh* aimesh = scene->mMeshes[ meshIndex ];
         if( !aimesh ) continue;
         LOG_INFO(g_log) << "Processing mesh node \"" << aimesh->mName.C_Str() << "\".";        
         //const aiMaterial* aimaterial = scene->mMaterials[ aimesh->mMaterialIndex ];
