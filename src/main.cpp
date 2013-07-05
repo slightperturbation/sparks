@@ -179,40 +179,6 @@ MaterialPtr loadPhongMaterial( TextureManagerPtr textureManager,
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-void loadScene( ScenePtr scene,
-                FileAssetFinderPtr finder,
-                TextureManagerPtr textureManager,
-                ShaderManagerPtr shaderManager )
-{
-    MaterialPtr phongMaterial = loadPhongMaterial( textureManager,
-                                                   shaderManager );
-    if( false )
-    {
-        std::vector< MeshPtr > meshes;
-        createMeshesFromFile( "stomach.obj", finder, meshes );
-        for( auto meshItr = meshes.begin();
-             meshItr != meshes.end(); ++meshItr )
-        {
-            MeshPtr mesh = *meshItr;
-            mesh->setMaterialForPassName( g_opaqueRenderPassName,
-                                          phongMaterial );
-            scene->add( mesh );
-        }
-    }
-    if( false )
-    {
-        MeshPtr box( new Mesh() );
-        box->unitCube();
-        box->name("TestBox");
-        box->setMaterialForPassName( g_opaqueRenderPassName, phongMaterial );
-        glm::mat4 xform( 1.0f );
-        xform = glm::translate( xform, glm::vec3( -2.0f, 0.0f, -2.0f ) );
-        xform = glm::scale( xform, glm::vec3(5.0f, 0.5f, 5.0f) );
-        xform = glm::rotate( xform, 90.0f, glm::vec3( 1.0f, 0.0f, 0.0f ) ) ;
-        box->setTransform( xform );
-        scene->add( box );
-    }
-}
 
 /// Online simulation and display of fluid
 int runSimulation(int argc, char** argv)
@@ -270,88 +236,9 @@ int runSimulation(int argc, char** argv)
     
     //lua.runScriptFromString( "print('DONE--  at(testVec, 1) = ' .. testVec:at(1) );" );
 
-    
-    loadScene( scene, finder, textureManager, shaderManager );
-    
-
-    //////////////////////////////////////////////////////////////////////////
-    // Define render passes
-    //////////////////////////////////////////////////////////////////////////
-    // Pass to render directly to framebuffer
-
-    // Render a full-screen quad to the framebuffer -- does the final drawing
-    // "MainRenderTargetTexture" texture holds the previously rendered scene
-    {
-        //facade->createPostProcessingRenderPass( "MSAAFinalRenderPass",
-        //                                        0.0f, 
-        //                                        frameBufferTarget, 
-        //                                        "MainRenderTargetTexture", 
-        //                                        "texturedOverlayShader" );
-
-        //RenderPassPtr msaaRenderPass( new RenderPass( "MSAAFinalRenderPass" ) );
-        //msaaRenderPass->initialize( frameBufferTarget, 
-        //                            overlayPerspective,
-        //                            0.0f );
-        ////msaaRenderPass->disableBlending();  //useInterpolatedBlending();
-        ////msaaRenderPass->useAdditiveBlending();
-        ////msaaRenderPass->setDepthTest(false);
-        //scene->add( msaaRenderPass );
-        //// Create full-screen quad to render MainRenderTargetTexture
-        //// with the MSAAFinalRenderPass
-        //MeshPtr msaaOverlay = createOverlayQuad( textureManager,
-        //                                         shaderManager,
-        //                                         "MainRenderTargetTexture",
-        //                                         "MSAAFinalRenderPass",
-        //                                         "texturedOverlayShader" );
-        //scene->add( msaaOverlay );
-    }
-    //////////////////////////////////////////////////////////////////////////
-
-    //////////////////////////////////////////////////////////////////////////
-    // Setup Standard render passes -- render to "MainRenderTargetTexture"
-    //////////////////////////////////////////////////////////////////////////
-    // mainRenderTarget is the target for final composition.
-    //ScaledTextureRenderTargetPtr mainRenderTarget;
-    //{
-    //    const int multiSampleAntiAliasingFactor = 1;
-    //    mainRenderTarget = ScaledTextureRenderTargetPtr(
-    //        new ScaledTextureRenderTarget( "MainRenderTargetTexture",
-    //                                       width, height,
-    //                                       multiSampleAntiAliasingFactor,
-    //                                       multiSampleAntiAliasingFactor ) );
-    //    mainRenderTarget->initialize( textureManager );
-    //    mainRenderTarget->setClearColor( glm::vec4( 0.0,0.0,0.0,0 ) );
-    //    // g_opaqueRenderPassName and g_transparencyRenderPassName
-    //    if(true)
-    //    {
-    //        RenderPassPtr opaqueRenderPass(
-    //            new RenderPass( g_opaqueRenderPassName ) );
-    //        opaqueRenderPass->initialize( mainRenderTarget,
-    //                                      cameraPerspective, 1.0f );
-    //        opaqueRenderPass->setDepthWrite( true );
-    //        opaqueRenderPass->setDepthTest( true );
-    //        opaqueRenderPass->disableBlending();
-    //        //opaqueRenderPass->nearToFarRenderOrder();
-    //        scene->add( opaqueRenderPass );
-    //    }
-    //    // render transparent objects after opaque
-    //    if( true )
-    //    {
-    //        RenderPassPtr transparencyRenderPass(
-    //            new RenderPass( g_transparencyRenderPassName ) );
-    //        transparencyRenderPass->initialize( mainRenderTarget,
-    //                                            cameraPerspective, 0.9f );
-    //        transparencyRenderPass->setDepthWrite( false );
-    //        transparencyRenderPass->setDepthTest( true );
-    //        transparencyRenderPass->useInterpolatedBlending(); // normal transparency
-    //        //transparencyRenderPass->useAdditiveBlending(); // glows
-    //        //transparencyRenderPass->farToNearRenderOrder();
-    //        scene->add( transparencyRenderPass );
-    //    }
-    //}
     RenderTargetPtr mainRenderTarget = facade->getMainRenderTarget();
 
-    if( true )
+    if( false )
     {
         MaterialPtr sparkColorMaterial;
         bool usePhong = false;
@@ -394,7 +281,7 @@ int runSimulation(int argc, char** argv)
         //                                         sparkColorMaterial );
         scene->add( sparkRenderable );
     }
-    if( true )
+    if( false )
     {
         MaterialPtr phongMaterial = loadPhongMaterial( textureManager,
                                                        shaderManager );
@@ -402,7 +289,7 @@ int runSimulation(int argc, char** argv)
             ShaderInstancePtr( new ShaderInstance( "constantColorShader",
                                                    shaderManager ) ) )
                                          );
-        colorMaterial->setShaderUniform( "u_color", glm::vec4(1,1,0.3,1) );
+        colorMaterial->setShaderUniform( "u_color", glm::vec4(0.9,0.9,0.6,1) );
         phongMaterial->addTexture( "s_color", "skinColor" );
         MeshPtr s( new Mesh() );
         s->unitCube();
@@ -419,7 +306,7 @@ int runSimulation(int argc, char** argv)
     }
     
     // Test cube RED
-    if( true )
+    if( false )
     {
         MaterialPtr colorMaterial = MaterialPtr( new Material( textureManager,
             ShaderInstancePtr( new ShaderInstance( "constantColorShader",
@@ -438,7 +325,7 @@ int runSimulation(int argc, char** argv)
         scene->add( s );
     }
     // Test cube BLUE
-    if( true )
+    if( false )
     {
         MaterialPtr colorMaterial = MaterialPtr( new Material( textureManager,
             ShaderInstancePtr( new ShaderInstance( "constantColorShader",
@@ -459,11 +346,14 @@ int runSimulation(int argc, char** argv)
     
     // spark renders to sparkRenderTexture
     // overlay renders to g_transparentRenderPass using a glow shader
-    if( false )
+
+    FluidPtr fluidData;;
+    if( true )
     {
-        FluidPtr fluidData( new Fluid(16) );
-        fluidData->setDiffusion( 0.001 );
-        fluidData->setVorticity(5000.0);
+        fluidData.reset( new Fluid(22) );
+        fluidData->setDiffusion( 0.0 );
+        fluidData->setVorticity( 1e4 );
+        fluidData->setGravityFactor( 0, -5000, 0.0 );
         ////fluidData->loadFromFile( "test.fluid" );
 
         spark::shared_ptr< spark::SlicedVolume > slices( new
@@ -476,8 +366,10 @@ int runSimulation(int argc, char** argv)
     //                                               shaderManager,
     //                                               fluidData ) );
         glm::mat4 xform = glm::translate( glm::mat4( 1.0f ),
-                                          glm::vec3( 0.0f, 2.5f, 0.0f ) );
-        xform = glm::scale( xform, glm::vec3( 5.0f, 5.0f, 5.0f ) );
+                                          glm::vec3( 0.075f, 0.75f, 0.05f ) );
+        //xform = glm::scale( xform, glm::vec3( 0.5f, 0.5f, 0.5f ) );
+        //xform = glm::rotate( xform, 90.0f, glm::vec3(1,0,0) );
+        
         //rayCastFluid->setTransform( xform );
         slices->setTransform( xform );
         //scene->add( rayCastFluid );
@@ -513,6 +405,7 @@ int runSimulation(int argc, char** argv)
         scene->prepareRenderCommands();
         scene->render();
         glfwSwapBuffers();
+        
         LOG_TRACE(g_log) << "Scene end - glfwSwapBuffers()";
 
         scene->update( dt );
@@ -521,6 +414,10 @@ int runSimulation(int argc, char** argv)
 
         ////////////////////////////////////////////////////////////////////////
         // Process Inputs
+        if( glfwGetKey( GLFW_KEY_UP ) == GLFW_PRESS )
+        {
+            fluidData->reset();
+        }
         if( glfwGetKey( GLFW_KEY_ENTER ) == GLFW_PRESS )
         {
             LOG_INFO(g_log) << "Reloading all shaders";
