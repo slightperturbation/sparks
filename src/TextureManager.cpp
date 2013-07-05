@@ -274,6 +274,7 @@ spark::TextureManager
         assert(false);
         return;
     }
+    bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_3D );
     GL_CHECK( glTexImage3D( GL_TEXTURE_3D, 0, GL_R32F,
                            aVolume->dimX(),
                            aVolume->dimY(),
@@ -334,7 +335,9 @@ spark::TextureManager
     GL_CHECK( glBindTexture( aTextureType, aTextureId ) );
     m_bindingTextureUnitToTextureId.push_back( std::make_pair( aTextureUnit,
                                                                aTextureId) );
-    LOG_TRACE(g_log) << "Bound texture ID="
+    LOG_DEBUG(g_log) << "Bound texture \""
+                     << getTextureHandleFromTextureId( aTextureId )
+                     << "\" ID="
                      << aTextureId << " to texture unit "
                      << aTextureUnit << ", type = "
                      << ((aTextureType == GL_TEXTURE_2D) ? "TEXTURE_2D" : "" )
