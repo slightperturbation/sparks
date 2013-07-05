@@ -80,7 +80,7 @@ namespace spark
         void cameraTarget( float x, float y, float z ) { m_cameraTarget = glm::vec3(x,y,z); }
 
         float fov( void ) const                        { return m_fov; }
-        void  fov( float arg )                         { m_fov = arg; }
+        void  fov( float degrees )                     { m_fov = degrees; }
 
         virtual glm::mat4 viewMatrix( void ) const;
         virtual glm::mat4 projectionMatrix( void ) const;
