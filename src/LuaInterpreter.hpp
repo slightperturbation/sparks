@@ -80,6 +80,34 @@ namespace spark
     {
         luabind::module( lua )
         [
+            luabind::class_< Renderable, RenderablePtr >( "Renderable" )
+            .def( "setRequireExplicitMaterial", 
+                  &Renderable::setRequireExplicitMaterial )
+            .def( "requiresExplicitMaterial", 
+                  &Renderable::requiresExplicitMaterial )
+            .def( "getTransform",
+                  &Renderable::getTransform )
+            .def( "setTransform",
+                  &Renderable::setTransform )
+            .def( "applyTransform",
+                  &Renderable::transform )
+            .def( "translate",
+                  (void (Renderable::*)(float,float,float) )
+                  &Renderable::translate )
+            .def( "translate",
+                  (void (Renderable::*)(const glm::vec3&) )
+                  &Renderable::translate )
+            .def( "scale",
+                  (void (Renderable::*)(float))
+                  &Renderable::scale )
+            .def( "rotate", 
+                  &Renderable::rotate )
+            .def( "setMaterialForPassName", 
+                  &Renderable::setMaterialForPassName ) 
+        ];
+
+        luabind::module( lua )
+        [
             luabind::class_< RenderPass, RenderPassPtr >( "RenderPass" )
             .def( "name", &RenderPass::name )
             .def( "disableBlending", &RenderPass::disableBlending )
@@ -92,7 +120,9 @@ namespace spark
             .def( "priority", &RenderPass::priority )
             .def( "targetSize", &RenderPass::targetSize )
             .def( "targetName", &RenderPass::targetName )
-            .def( "useDefaultMaterial",( void (RenderPass::*)( MaterialPtr ) )&RenderPass::useDefaultMaterial )
+            .def( "useDefaultMaterial",
+                  ( void (RenderPass::*)( MaterialPtr ) )
+                  &RenderPass::useDefaultMaterial )
         ];
 
         luabind::module( lua )
@@ -147,8 +177,13 @@ namespace spark
                &SparkFacade::getMainRenderTarget )
          .def( "createMaterial", 
                &SparkFacade::createMaterial )
-
-         ];
+         .def( "loadMesh", 
+               &SparkFacade::loadMesh )
+         .def( "createCube",
+               &SparkFacade::createCube )
+         .def( "createLSpark", 
+               &SparkFacade::createLSpark )
+        ];
  
         luabind::module( lua )
         [
