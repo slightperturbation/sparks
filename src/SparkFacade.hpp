@@ -10,6 +10,10 @@
 #include "Scene.hpp"
 #include "GuiEventPublisher.hpp"
 
+#include "LSpark.hpp"
+#include "TexturedSparkRenderable.hpp"
+
+
 namespace spark
 {
     /// Wrapper for the Spark Rendering library
@@ -136,6 +140,13 @@ namespace spark
             MaterialPtr colorMaterial( new Material( m_textureManager, 
                                                      colorShader ) );
             colorMaterial->addTexture( "s_color", sourceTextureName );
+            
+            
+            ////////
+            // $$$$$ TODO -- pass material in instead of shader naem
+            colorMaterial->setShaderUniform<float>( "u_blurRadius", 0.25f );
+            
+            
             overlay->setMaterialForPassName( name, colorMaterial );
             m_scene->add( overlay );
             return pass;
@@ -182,21 +193,85 @@ namespace spark
                                                        m_shaderManager ) ) ) );
         }
 
-        //        boost::shared_ptr< Material > createMaterial( )
-//        {
-//            
-//        }
-//        
-//        void assignMaterial( boost::shared_ptr< Material > aMaterial,
-//                            boost::shared_ptr< Renderable > aRenderable )
-//        {
-//            
-//        }
-//        
-//        boost::shared_ptr< Mesh > loadMeshFile( const char* filename )
-//        {
-//            
-//        }
+        RenderablePtr loadMesh( const char* filename, 
+                                MaterialPtr material,
+                                const RenderPassName& passName )
+        {
+            std::vector< MeshPtr > meshes;
+            createMeshesFromFile( filename, m_finder, meshes );
+            if( meshes.empty() || meshes.size() > 1 )
+            {
+                LOG_ERROR(g_log) << "Loading meshes from \"" << filename 
+                    << "\", expected one mesh but got " << meshes.size();
+            }
+            MeshPtr lastMesh;
+            for( auto meshItr = meshes.begin(); meshItr != meshes.end();
+                ++meshItr )
+            {
+                MeshPtr mesh = *meshItr;
+                mesh->setMaterialForPassName( passName, material );
+                m_scene->add( mesh );
+                lastMesh = mesh;
+            }
+            return lastMesh;
+        }
+
+        RenderablePtr createCube( const glm::vec3& position, 
+                         const glm::vec3& size,
+                         const RenderPassName& pass,
+                         MaterialPtr material )
+        {
+            MeshPtr cube( new Mesh() );
+            cube->unitCube();
+            cube->name( "Cube" );
+            cube->setMaterialForPassName( pass, material );
+            glm::mat4 xform( 1.0f );
+            xform = glm::translate( xform, position );
+            xform = glm::scale( xform, size );
+            cube->setTransform( xform );
+            m_scene->add( cube );
+            return cube;
+        }
+
+        RenderablePtr createLSpark( const glm::vec3& from, const glm::vec3& to,
+            float intensity,
+            float scale,
+            float recursiveDepth,
+            float forkProb,
+            const RenderPassName& pass, MaterialPtr material )
+        {
+            LSparkPtr theSpark( new LSpark );
+            theSpark->setViewProjection( m_cameraPerspective );
+            theSpark->create( Eigen::Vector3f(from.x,from.y,from.z),
+                Eigen::Vector3f(to.x,to.y,to.z),
+                intensity, // intensity
+                scale, // scale
+                recursiveDepth,    // recursive depth
+                forkProb // fork probability
+                );
+            TexturedSparkRenderablePtr sparkRenderable( 
+                new TexturedSparkRenderable( theSpark ) );
+            sparkRenderable->name( "Spark" );
+            sparkRenderable->setMaterialForPassName( pass,
+                material );
+            //sparkRenderable->setMaterialForPassName( g_transparencyRenderPassName,
+            //                                         sparkColorMaterial );
+            m_scene->add( sparkRenderable );
+            return sparkRenderable;
+        }
+
+        /// Delete all owned resources, release all linked resources.
+        void reset( void ) 
+        {
+            m_mainRenderTarget.reset();
+            m_scene.reset();
+            m_textureManager.reset();
+            m_shaderManager.reset();
+            m_overlayPerspective.reset();
+            m_cameraPerspective.reset();
+            m_frameBufferTarget.reset();
+            m_guiEventPublisher.reset();
+        }
         
     private:
         RenderTargetPtr m_mainRenderTarget; // tmp -- for debugging
