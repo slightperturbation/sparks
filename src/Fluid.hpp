@@ -57,7 +57,12 @@ namespace spark
         void setDiffusion( float diff ) { m_diff = diff; }
         void setVorticity( float vort ) { m_vorticityConfinementFactor = vort; }
         void setAbsorption( float absorption ) { m_absorption = absorption; }
-        void setGravityFactor( float grav ) { m_gravityFactor = grav; }
+        void setGravityFactor( float gravX, float gravY, float gravZ ) 
+        { 
+            m_gravityFactor[0] = gravX; 
+            m_gravityFactor[1] = gravY; 
+            m_gravityFactor[2] = gravZ; 
+        }
 
         /// Used to update and/or clear the source of density
         const float* getDensitySource( void );
@@ -214,7 +219,7 @@ namespace spark
         float* m_pressure; //< temporary storage for pressure field (only used in projection)
         float m_ambientTemp; //< the temp of the embedding medium that the fluid is in.  (Celsius)
         float m_tempFactor; //< tuning factor that converts a temperature difference to a buoyancy force.
-        float m_gravityFactor; //< tuning factor that converts particle density to gravitational force
+        float m_gravityFactor[3]; //< tuning factor that converts particle density to gravitational force
         float m_vorticityConfinementFactor; //< tuning factor for the amount of vorticity to be restored
         float m_absorption; //< rate at which light is absorbed per unit density
     };

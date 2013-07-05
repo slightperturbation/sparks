@@ -73,10 +73,12 @@ spark::Fluid
     m_div( NULL ), m_pressure( NULL ),
     m_ambientTemp( 20.0f ),
     m_tempFactor( 1.0f ), 
-    m_gravityFactor( 0.3f ),
     m_vorticityConfinementFactor( size * 60.0f ),
     m_absorption( 1.0 )
 {
+    m_gravityFactor[0] = 0;
+    m_gravityFactor[1] = 0;
+    m_gravityFactor[2] = 0.3f;
     // enforce a minimum size
     const int minSize = 8;
     if( size < minSize )
@@ -248,7 +250,7 @@ spark::Fluid
                 {
                     m_density[index(i,j,k)] = 0.5;
                     m_density_source[index(i,j,k)] = 0;
-                    m_temp[index(i,j,k)] = 5 + m_ambientTemp;
+                    m_temp[index(i,j,k)] = 20 + m_ambientTemp;
                 }
                 // grid is nice for understanding shape of volume
                 if( (!(i%8) || !(k%8)) && j==m_N/2 )
@@ -268,9 +270,9 @@ spark::Fluid
 ::addBottomSource( void )
 {
     int cx  = m_N/2;
-    int cy  = 2;///m_N/2;
-    int cz  = m_N/4;
-    float r = (float)m_N/8.0f;
+    int cy  = 0;//m_N/4;
+    int cz  = m_N/2;
+    float r = (float)m_N/12.0f;
 
     for( int x=1; x<m_N; ++x )
     {
@@ -286,9 +288,9 @@ spark::Fluid
                 if( d <= r )
                 {
                     int i = index(x,y,z);
-                    m_density[i] = 0.25f;
+                    m_density[i] = 0.5f;
                     //m_density_source[i] = 10.0;
-                    m_temp[i] = 2.2f * m_ambientTemp;
+                    //m_temp[i] = 4.2f * m_ambientTemp;
                     //m_temp_source[i] = 1.8f * m_ambientTemp;
                 }
             }
@@ -417,8 +419,8 @@ spark::Fluid
             for( size_t i = 1; i <= m_N; i++ )
             {
                 const size_t ind = index(i,j,k);
-                m_velV[ind]    += dt * m_velV_source[ind];
                 m_velU[ind]    += dt * m_velU_source[ind];
+                m_velV[ind]    += dt * m_velV_source[ind];
                 m_velW[ind]    += dt * m_velW_source[ind];
 
                 // Buoyancy force
@@ -427,7 +429,9 @@ spark::Fluid
 
                 // Gravity force
                 // assume z = 0,0,1
-                m_velW[ind]    -= dt * m_density[ind] * m_gravityFactor;
+                m_velU[ind]    -= dt * m_density[ind] * m_gravityFactor[0];
+                m_velV[ind]    -= dt * m_density[ind] * m_gravityFactor[1];
+                m_velW[ind]    -= dt * m_density[ind] * m_gravityFactor[2];
 
                 // Vorticity confinement term
                 m_velU[ind]    += dt * m_vorticityForceU[ind];
@@ -483,8 +487,6 @@ spark::Fluid
             }
         }
     }
-    
-    
     enforceConcentrationBoundary( 1, vx );
     enforceConcentrationBoundary( 2, vy );
     enforceConcentrationBoundary( 3, vz );
@@ -837,20 +839,6 @@ spark::Fluid
         }
     }
 
-    
-    
-    
-    
-    
-    return;
-    
-    
-    
-    
-    
-    
-
-    
     // 12 edges
     for( size_t a = 1; a <= N; ++a )
     {
