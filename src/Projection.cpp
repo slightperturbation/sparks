@@ -11,8 +11,8 @@
 spark::Projection
 ::Projection( void )
 : m_aspectRatio( 800.0f/600.0f ),
-  m_nearPlaneDist( 0.25f ),
-  m_farPlaneDist( 20.0f )
+  m_nearPlaneDist( 0.1f ),
+  m_farPlaneDist( 100.0f )
 {
 }
 
