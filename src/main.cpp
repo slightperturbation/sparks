@@ -21,6 +21,7 @@
 
 #include "Scene.hpp"
 #include "ArcBall.hpp"
+#include "EyeTracker.hpp"
 
 #include "GuiEventPublisher.hpp"
 
@@ -205,6 +206,10 @@ int runSimulation(int argc, char** argv)
     g_arcBall = ArcBallPtr( new spark::ArcBall );
     g_arcBall->resizeViewport( 0, 0, width, height );
     g_guiEventPublisher->subscribe( g_arcBall );
+    
+    EyeTrackerPtr eyeTracker( new NetworkEyeTracker );
+    eyeTracker->resizeViewport( 0, 0, width, height );
+    g_guiEventPublisher->subscribe( eyeTracker );
 
     ScenePtr scene( new Scene );
     
@@ -400,6 +405,10 @@ int runSimulation(int argc, char** argv)
         if( g_arcBall )
         {
             g_arcBall->updatePerspective( cameraPerspective );
+        }
+        if( eyeTracker )
+        {
+            eyeTracker->updatePerspective( cameraPerspective );
         }
 
         scene->prepareRenderCommands();

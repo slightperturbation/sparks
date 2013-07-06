@@ -247,6 +247,7 @@ set( HDRS
   ./src/LSpark.hpp
   ./src/LuaInterpreter.hpp
   ./src/Exceptions.hpp
+  ./src/EyeTracker.hpp
   ./src/Fluid.hpp
   ./src/FileAssetFinder.hpp
   ./src/GuiEventSubscriber.hpp
@@ -285,6 +286,7 @@ set( SRCS
   ./src/Display.cpp
   ./src/LSpark.cpp
   ./src/Exceptions.cpp
+  ./src/EyeTracker.cpp
   ./src/Fluid.cpp
   ./src/FileAssetFinder.cpp
   ./src/Material.cpp
