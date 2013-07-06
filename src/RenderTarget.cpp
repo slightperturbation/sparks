@@ -241,7 +241,7 @@ spark::ScaledTextureRenderTarget
 spark::ScaledTextureRenderTarget
 ::~ScaledTextureRenderTarget()
 {
-    LOG_ERROR(g_log) << "Dtor - ScaledTextureRenderTarget: \"" << name() << "\".";
+    LOG_DEBUG(g_log) << "Dtor - ScaledTextureRenderTarget: \"" << name() << "\".";
 }
 
 void

@@ -60,7 +60,8 @@ namespace spark
         void rotate( float angleInDegrees, const glm::vec3& axis );
         void alignZAxisWithVector( const glm::vec3& dir );
 
-        ConstMaterialPtr getMaterialForPassName( const RenderPassName& renderPassName ) const;
+        ConstMaterialPtr getMaterialForPassName(
+            const RenderPassName& renderPassName ) const;
         void setMaterialForPassName( const RenderPassName& renderPassName, 
                                      MaterialPtr material );
 

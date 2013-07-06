@@ -36,7 +36,8 @@ void
 spark::TexturedSparkRenderable
 ::render( const RenderCommand& rc ) const
 {
-    const float width = 0.005f * m_spark->length();
+    //    const float width = 0.005f * m_spark->length();
+    const float width = 0.025f * m_spark->length();
     m_mesh->clearGeometry();
     Segments& segments = m_spark->segments();
     // two verts per segment, so vertexIndex = (2i, 2i+1)  (bottom, top)
