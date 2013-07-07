@@ -249,7 +249,8 @@ namespace spark
     glm::vec4& mat4_at( glm::mat4* m, int i ) { return (*m)[i]; }
     float& mat4_at( glm::mat4* m, int i, int j ) { return (*m)[i][j]; }
     void mat4_set( glm::mat4* m, int i, int j, float x ) { (*m)[i][j] = x; }
-
+    
+    /// Bind to lua the glm library classes (vec3, mat4, etc.)
     void bindGLM( lua_State* lua )
     {
         luabind::module( lua )
@@ -321,9 +322,18 @@ namespace spark
             .def( "set", &mat4_set )
         ];
     }
+    
+    void bindInterpreter( lua_State* lua );
+    
     /////////////////////////////////////////////////////////////////////
     
+    
     /// Responsible for handling calls to and errors from the lua interpreter.
+    /// Finder's paths are added to Lua's package.path at the point of
+    /// construction, subsequent changes to finder will not affect lua's paths.
+    /// However, runScriptFromFile (aka, in lua "interp:load()") *does*
+    /// query the finder directly, so will be affected by changes to finder's
+    /// paths after the creation of the LuaInterpreter.
     class LuaInterpreter
     {
     public:
@@ -344,11 +354,29 @@ namespace spark
                 bindTextureManager( m_lua );
                 bindShaderManager( m_lua );
                 bindSparkFacade( m_lua );
+                bindInterpreter( m_lua );
             }
             catch( luabind::error& err )
             {
                 LOG_ERROR(g_log) << "Error in Lua bindings: " << err.what();
             }
+            
+            luabind::globals( m_lua )["interp"] = this;
+            
+            /// Add m_finder's paths to lua's package.path for finding
+            /// modules.
+            std::vector< std::string >  paths = m_finder->getSearchPaths();
+            std::stringstream cmd;
+            for( auto pathIter = paths.begin(); pathIter != paths.end(); ++pathIter )
+            {
+                const std::string& path = *pathIter;
+                //cmd << "package.path = package.path .. '"
+                //    << path << "/?;'\n";
+                cmd << "package.path = package.path .. '"
+                    << path << "/?.lua;'\n";
+            }
+            LOG_DEBUG(g_log) << "Adding paths:\n" << cmd.str();
+            runScriptFromString( cmd.str() );
         }
         ~LuaInterpreter()
         {
@@ -503,6 +531,16 @@ namespace spark
         FileAssetFinderPtr m_finder;
         lua_State* m_lua;
     };
+
+    void bindInterpreter( lua_State* lua )
+    {
+        luabind::module( lua )
+        [
+         luabind::class_< LuaInterpreter >( "LuaInterpreter" )
+         .def( "load", &LuaInterpreter::runScriptFromFile )
+         ];
+    }
+
 }
 
 

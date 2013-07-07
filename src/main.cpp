@@ -237,123 +237,18 @@ int runSimulation(int argc, char** argv)
     lua.setTextureManager( textureManager );
     lua.setShaderManager( shaderManager );
     
-    lua.runScriptFromFile( "defaultScene.lua" );
+    //lua.runScriptFromFile( "defaultScene.lua" );
+    lua.runScriptFromFile( "main.lua" );
     
     //lua.runScriptFromString( "print('DONE--  at(testVec, 1) = ' .. testVec:at(1) );" );
 
     RenderTargetPtr mainRenderTarget = facade->getMainRenderTarget();
-
-    if( false )
-    {
-        MaterialPtr sparkColorMaterial;
-        bool usePhong = false;
-        if( usePhong )
-        {
-            sparkColorMaterial = loadPhongMaterial( textureManager,
-                                                   shaderManager );
-            //sparkColorMaterial = MaterialPtr( new Material( textureManager,
-            //    ShaderInstancePtr( new ShaderInstance( "constantColorShader",
-            //    shaderManager ) ) ) );
-            sparkColorMaterial->addTexture( "s_color", "sparkColor" );
-            sparkColorMaterial->setShaderUniform( "u_color",
-                                                  glm::vec4(1,0.3,0.8,1) );
-        }
-        else
-        {
-            sparkColorMaterial = MaterialPtr( new Material( textureManager,
-                ShaderInstancePtr( new ShaderInstance( "texturedSparkShader",
-                    shaderManager ) ) ) );
-        }
-        sparkColorMaterial->addTexture( "s_color", "sparkColor" );
-        sparkColorMaterial->name( "sparkTextureMaterial" );
-        
-        LSparkPtr theSpark( new LSpark );
-        theSpark->setViewProjection( cameraPerspective );
-        theSpark->create( Vector3f(0.2f,2.5,0),
-                          Vector3f(0.0f,0.25,0),
-                          5.0f, // intensity
-                          0.1f, // scale
-                          8,    // recursive depth
-                          0.2f // fork probability
-                         );
-        TexturedSparkRenderablePtr sparkRenderable( 
-            new TexturedSparkRenderable( theSpark ) );
-        sparkRenderable->name( "Spark" );
-        sparkRenderable->setRequireExplicitMaterial( true );
-        sparkRenderable->setMaterialForPassName( "GlowRenderPass",
-                                                 sparkColorMaterial );
-        //sparkRenderable->setMaterialForPassName( g_transparencyRenderPassName,
-        //                                         sparkColorMaterial );
-        scene->add( sparkRenderable );
-    }
-    if( false )
-    {
-        MaterialPtr phongMaterial = loadPhongMaterial( textureManager,
-                                                       shaderManager );
-        MaterialPtr colorMaterial = MaterialPtr( new Material( textureManager,
-            ShaderInstancePtr( new ShaderInstance( "constantColorShader",
-                                                   shaderManager ) ) )
-                                         );
-        colorMaterial->setShaderUniform( "u_color", glm::vec4(0.9,0.9,0.6,1) );
-        phongMaterial->addTexture( "s_color", "skinColor" );
-        MeshPtr s( new Mesh() );
-        s->unitCube();
-        s->name( "SkinSurface" );
-        //s->setMaterialForPassName( g_opaqueRenderPassName, colorMaterial );
-        s->setMaterialForPassName( g_opaqueRenderPassName, phongMaterial );
-        //s->setMaterialForPassName( "GlowRenderPass", phongMaterial );
-        glm::mat4 xform( 1.0f );
-        xform = glm::translate( xform, glm::vec3( -2.5f, 0.25, -2.5f ) );
-        xform = glm::scale( xform, glm::vec3( 5.0f, 0.5f, 5.0f ) );
-        xform = glm::rotate( xform, 90.0f, glm::vec3( 1.0f, 0.0f, 0.0f ) ) ;
-        s->setTransform( xform );
-        scene->add( s );
-    }
-    
-    // Test cube RED
-    if( false )
-    {
-        MaterialPtr colorMaterial = MaterialPtr( new Material( textureManager,
-            ShaderInstancePtr( new ShaderInstance( "constantColorShader",
-                                                   shaderManager ) ) )
-                                                 );
-        colorMaterial->setShaderUniform( "u_color", glm::vec4(1,0.3,0.3,1) );
-        colorMaterial->name( "constantRed" );
-        MeshPtr s( new Mesh() );
-        s->unitCube();
-        s->name( "Red Cube" );
-        s->setMaterialForPassName( g_opaqueRenderPassName, colorMaterial );
-        s->setMaterialForPassName( "GlowRenderPass", colorMaterial );
-        glm::mat4 xform( 1.0f );
-        xform = glm::translate( xform, glm::vec3( 0.0f, 0.25, 0.75f ) );
-        s->setTransform( xform );
-        scene->add( s );
-    }
-    // Test cube BLUE
-    if( false )
-    {
-        MaterialPtr colorMaterial = MaterialPtr( new Material( textureManager,
-            ShaderInstancePtr( new ShaderInstance( "constantColorShader",
-                                                   shaderManager ) ) )
-                                                );
-        colorMaterial->setShaderUniform( "u_color", glm::vec4(0.3,0.3,1,1) );
-        colorMaterial->name( "constantBlue" );
-        MeshPtr s( new Mesh() );
-        s->unitCube();
-        s->name( "Blue Cube" );
-        s->setMaterialForPassName( g_opaqueRenderPassName, colorMaterial );
-        //s->setMaterialForPassName( "GlowRenderPass", colorMaterial );
-        glm::mat4 xform( 1.0f );
-        xform = glm::translate( xform, glm::vec3( 0.0f, 0.25, -0.75f ) );
-        s->setTransform( xform );
-        scene->add( s );
-    }
     
     // spark renders to sparkRenderTexture
     // overlay renders to g_transparentRenderPass using a glow shader
 
     FluidPtr fluidData;;
-    if( true )
+    if( false )
     {
         fluidData.reset( new Fluid(22) );
         fluidData->setDiffusion( 0.0 );
