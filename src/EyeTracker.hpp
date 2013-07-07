@@ -1,12 +1,8 @@
 #include "Spark.hpp"
 #include "GuiEventSubscriber.hpp"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include <boost/asio.hpp>
-
+#include <boost/thread.hpp>
 
 namespace spark
 {
@@ -23,14 +19,17 @@ namespace spark
         /// Update the viewport
         virtual void resizeViewport( int left, int bottom,
                                      int right, int top ) = 0;
-
-
     };
     typedef spark::shared_ptr< EyeTracker > EyeTrackerPtr;
     
+    /// Concrete EyeTracker that gets data from a UDP connection.
+    /// Responsible for turning normalized camera coords ([0-1],[0-1])
+    /// into changes to the PerspectiveProjection during updatePerspective
     class NetworkEyeTracker : public EyeTracker
     {
+        /// Helper class
         /// Server listens on a UDP port for eye pos updates
+        /// Thead-safe
         class EyeTrackerServer
         {
         public:
@@ -38,7 +37,7 @@ namespace spark
             : socket_(io_service,
                       boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(),
                                                      port)),
-              m_x( 0.5 ), m_y( )
+              m_x( 0.5f ), m_y( 0.5f )
             {
                 socket_.async_receive_from(
                     boost::asio::buffer(data_, max_length),
@@ -58,8 +57,8 @@ namespace spark
                     std::istringstream iss( data_ );
                     iss >> m_x;
                     iss >> m_y;
-                    std::cerr << "Pos=[" << m_x << ", " << m_y << "]\n";
                 }
+                boost::this_thread::interruption_point( );
                 socket_.async_receive_from(
                     boost::asio::buffer(data_, max_length),
                     sender_endpoint_,
@@ -81,12 +80,10 @@ namespace spark
                 float m_x;
                 float m_y;
         };
-
-
     public:
-        NetworkEyeTracker(  /* display size & viewport pos */ );
-        virtual ~NetworkEyeTracker() {}
-        
+        NetworkEyeTracker( short listeningUdpPort = 5005 /* display size & viewport pos */ );
+        virtual ~NetworkEyeTracker();
+    
         /// Modify the given perspective to reflect recent input.
         virtual void updatePerspective( PerspectiveProjectionPtr persp ) override;
         
@@ -95,6 +92,9 @@ namespace spark
                                     int right, int top ) override;
     private:
         std::unique_ptr< EyeTrackerServer > m_server;
+        std::unique_ptr< boost::thread > m_listenerThread;
         boost::asio::io_service m_ioService;
+        float m_prevX;
+        float m_prevY;
     };
 }
