@@ -111,3 +111,40 @@ spark::FileAssetFinder
     }
     return false;
 }
+
+std::vector< std::string >
+spark::FileAssetFinder
+::getSearchPaths( void ) const
+{
+    std::vector< std::string > outPaths;
+    namespace bfs = boost::filesystem;
+    for( auto path = m_paths.begin(); path != m_paths.end(); ++path )
+    {
+        std::string dir = (*path).first;
+        outPaths.push_back( dir );
+
+        bool searchRecursively = (*path).second;
+        if( searchRecursively )
+        {
+            try
+            {
+                for( bfs::recursive_directory_iterator itr( dir ), end;
+                    itr != end; ++itr )
+                {
+                    if( bfs::is_directory( itr->path() ) )
+                    {
+                        outPaths.push_back( itr->path().string() );
+                    }
+                }
+            }
+            catch( bfs::filesystem_error& err )
+            {
+                LOG_ERROR(g_log) << "Unable to recurse on paths: " << err.what();
+            }
+        }
+    }
+    return outPaths;
+}
+
+
+

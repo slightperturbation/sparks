@@ -22,6 +22,10 @@ namespace spark
         /// Return full path in aFoundPath and return true iff found.
         /// Return false if file not found.
         bool findFile( const std::string& aFilename, std::string& aFoundPath ) const;
+        
+        /// Returns all of the current search paths, expanding
+        /// recursive directories.
+        std::vector< std::string > getSearchPaths( void ) const;
     private:
         /// String for the path to search in, flag for recursively or not
         std::vector< std::pair< std::string, bool > > m_paths;
