@@ -335,7 +335,7 @@ spark::TextureManager
     GL_CHECK( glBindTexture( aTextureType, aTextureId ) );
     m_bindingTextureUnitToTextureId.push_back( std::make_pair( aTextureUnit,
                                                                aTextureId) );
-    LOG_DEBUG(g_log) << "Bound texture \""
+    LOG_TRACE(g_log) << "Bound texture \""
                      << getTextureHandleFromTextureId( aTextureId )
                      << "\" ID="
                      << aTextureId << " to texture unit "
