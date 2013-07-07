@@ -217,9 +217,9 @@ namespace spark
         }
 
         RenderablePtr createCube( const glm::vec3& position, 
-                         const glm::vec3& size,
-                         const RenderPassName& pass,
-                         MaterialPtr material )
+                                  const glm::vec3& size,
+                                  MaterialPtr material,
+                                  const RenderPassName& pass )
         {
             MeshPtr cube( new Mesh() );
             cube->unitCube();
