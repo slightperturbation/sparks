@@ -3,6 +3,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
 
 namespace spark
 {
@@ -29,16 +30,18 @@ namespace spark
     {
         /// Helper class
         /// Server listens on a UDP port for eye pos updates
-        /// Thead-safe
+        /// Thread-safe
         class EyeTrackerServer
         {
         public:
             EyeTrackerServer(boost::asio::io_service& io_service, short port)
             : socket_(io_service,
-                      boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(),
+                      boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(),
                                                      port)),
               m_x( 0.5f ), m_y( 0.5f )
             {
+
+                socket_.set_option(boost::asio::socket_base::reuse_address(true));
                 socket_.async_receive_from(
                     boost::asio::buffer(data_, max_length),
                     sender_endpoint_,
@@ -53,10 +56,17 @@ namespace spark
             {
                 if (!error && bytes_recvd > 0)
                 {
-                    data_[bytes_recvd+1] = '\0';
-                    std::istringstream iss( data_ );
+                    std::string data;
+                    for( int i = 0; i < bytes_recvd; ++i ) data += data_[i];
+                    std::istringstream iss( data );
+                    boost::lock_guard<boost::mutex> guard( lock_ );
                     iss >> m_x;
                     iss >> m_y;
+                }
+                if( error )
+                {
+                    LOG_ERROR(g_log) << "Error on recving network packet: "
+                        << error;
                 }
                 boost::this_thread::interruption_point( );
                 socket_.async_receive_from(
@@ -70,9 +80,11 @@ namespace spark
 
             void getEyePos( float& x, float& y ) const
             {
+                boost::lock_guard<boost::mutex> guard( lock_ );
                 x = m_x;  y = m_y;
             }
             private:
+                mutable boost::mutex lock_;
                 boost::asio::ip::udp::socket socket_;
                 boost::asio::ip::udp::endpoint sender_endpoint_;
                 enum { max_length = 1024 };
@@ -94,6 +106,7 @@ namespace spark
         std::unique_ptr< EyeTrackerServer > m_server;
         std::unique_ptr< boost::thread > m_listenerThread;
         boost::asio::io_service m_ioService;
+        std::unique_ptr< boost::asio::io_service::work > m_work;
         float m_prevX;
         float m_prevY;
     };
