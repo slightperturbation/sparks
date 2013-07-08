@@ -84,6 +84,11 @@ list(APPEND PROJECT_BOOST_COMPONENTS
 FIND_PACKAGE(Boost ${BOOST_MIN_VERSION} COMPONENTS ${PROJECT_BOOST_COMPONENTS})
 MESSAGE( "Using boost from " ${Boost_LIBRARY_DIRS} )
 if( Boost_FOUND )
+  if( WIN32 )
+    # Define WIN32_LEAN_AND_MEAN here to make sure it's defined before WinSock.h is included
+    # Needed for ASIO lib
+    add_definitions( -DWIN32_LEAN_AND_MEAN )
+  endif( WIN32 )
     add_definitions( -DBOOST_ALL_NO_LIB ) # Don't auto-link in windows
     #############add_definitions( -DBOOST_ALL_DYN_LINK )
   INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )
