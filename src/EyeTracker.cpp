@@ -10,6 +10,7 @@
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
+#include <boost/asio/signal_set.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -21,6 +22,11 @@ spark::NetworkEyeTracker
 {
     try
     {
+        // Register signal handlers so that the daemon may be shut down. You may
+        // also want to register for other signals.
+        boost::asio::signal_set signals( m_ioService, SIGINT, SIGTERM );
+        signals.async_wait(
+            boost::bind( &boost::asio::io_service::stop, &m_ioService ) );
         m_server.reset( new EyeTrackerServer( m_ioService,
                                               listeningUdpPort ) );
         // Dispatch m_ioService.run() on its own thread
