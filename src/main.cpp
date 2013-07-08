@@ -237,10 +237,8 @@ int runSimulation(int argc, char** argv)
     lua.setTextureManager( textureManager );
     lua.setShaderManager( shaderManager );
     
-    //lua.runScriptFromFile( "defaultScene.lua" );
     lua.runScriptFromFile( "main.lua" );
     
-    //lua.runScriptFromString( "print('DONE--  at(testVec, 1) = ' .. testVec:at(1) );" );
 
     RenderTargetPtr mainRenderTarget = facade->getMainRenderTarget();
     
