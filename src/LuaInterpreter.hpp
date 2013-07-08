@@ -10,6 +10,8 @@
 #include "luabind/function.hpp"
 #include "luabind/class.hpp"
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include <utility>
 #include <sstream>
 
@@ -209,7 +211,6 @@ namespace spark
          .def( "loadTextureFromImageFile", &TextureManager::loadTextureFromImageFile )
          .def( "loadCheckerTexture", &TextureManager::loadCheckerTexture )
          .def( "loadTestTexture", &TextureManager::loadTestTexture )
-         
          .def( "releaseAll", &TextureManager::releaseAll )
          .def( "deleteTexture", &TextureManager::deleteTexture )
          .def( "exists", &TextureManager::exists )
@@ -370,13 +371,20 @@ namespace spark
             for( auto pathIter = paths.begin(); pathIter != paths.end(); ++pathIter )
             {
                 const std::string& path = *pathIter;
+                // Do we want to allow arbitrary extensions?  No for now.
                 //cmd << "package.path = package.path .. '"
-                //    << path << "/?;'\n";
+                //    << path << "\\\\?;'\n";
                 cmd << "package.path = package.path .. '"
-                    << path << "/?.lua;'\n";
+                    << path << "\\?.lua;'\n";
             }
-            LOG_DEBUG(g_log) << "Adding paths:\n" << cmd.str();
-            runScriptFromString( cmd.str() );
+            std::string cmdClean = cmd.str();
+            // replace back-slashes with forward slashes
+            boost::replace_all( cmdClean, "\\", "/" );
+            // get rid of double forward slashes
+            boost::replace_all( cmdClean, "//", "/" );
+
+            LOG_DEBUG(g_log) << "Adding paths:\n" << cmdClean;
+            runScriptFromString( cmdClean );
         }
         ~LuaInterpreter()
         {
@@ -400,6 +408,9 @@ namespace spark
             luabind::globals( m_lua )["shaderManager"] = sm;
         }
         
+        /// Excute the given script in the current lua context.
+        /// Example:
+        /// lua.runScriptFromString( "print('DONE--  at(testVec, 1) = ' .. testVec:at(1) );" );
         void runScriptFromString( const std::string& script )
         {
             // Push std lib debugging function
@@ -421,6 +432,9 @@ namespace spark
             } 
         }
 
+        /// Find a lua script with aScriptFilename using the current
+        /// FileAssetFinder.
+        /// Runs the script in the current lua context.
         void runScriptFromFile( const char* aScriptFilename )
         {
             LOG_DEBUG(g_log) << "Searching for lua script file \""
@@ -469,7 +483,7 @@ namespace spark
             }
             return;
         }
-
+    private:
         void runScriptFromFile_NoErrorStack( const char* aScriptFilename )
         {
             LOG_DEBUG(g_log) << "Searching for lua script file \""
