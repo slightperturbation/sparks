@@ -33,6 +33,7 @@ namespace spark
     class ShaderUniformHolder
     {
     public:
+        ShaderUniformHolder() : m_isDirty( true ) { }
         virtual ~ShaderUniformHolder();
         template< typename T >
         ShaderUniform<T>* operator[]( const ShaderUniformName& name )
@@ -52,7 +53,7 @@ namespace spark
             {
                 createUniform<T>( name );
             }
-            return m_uniforms[name]->as<T>(); 
+            return m_uniforms[name]->as<T>();
         }
 
         /// Throws exception if name hasn't been created yet.
@@ -87,19 +88,28 @@ namespace spark
         {
             LOG_TRACE(g_log) << "Creating uniform " << name << " with default value.";
             m_uniforms[name] = new ShaderUniform<T>();
+            m_isDirty = true;
         }
-
+        
+        /// ShaderManager markDirty() when the underlying shader code is reloaded.
+        friend class ShaderManager;
     protected:
+        /// Mark the uniform locations as dirty, needing to be looked up.
+        /// Should only be called by ShaderManager.
+        void markDirty( void ) { m_isDirty = true; }
+
         /// Set uniforms on this shader (when dirty)
         /// OpenGL state change:  current program is set.
         void applyShaderUniforms( GLint a_shaderProgramIndex ) const
         {
-            lookupUniformLocations( a_shaderProgramIndex );
-            //GL_CHECK( glUseProgram( a_shaderProgramIndex ) );
+            if( m_isDirty )
+            {
+                lookupUniformLocations( a_shaderProgramIndex );
+            }
             for( auto sumap = m_uniforms.begin(); sumap != m_uniforms.end(); ++sumap )
             {
                 LOG_TRACE(g_log) << "Applying ShaderUniform " << (*sumap).first
-                << " = " << (*sumap).second->toString();
+                                 << " = " << (*sumap).second->toString();
                 (*sumap).second->apply();
             }
         }
@@ -112,19 +122,27 @@ namespace spark
             for( auto sumap = m_uniforms.begin(); sumap != m_uniforms.end(); ++sumap )
             {
                 GL_CHECK( loc = glGetUniformLocation( a_shaderProgramIndex, 
-                                                      (*sumap).first.c_str() ) );
+                    (*sumap).first.c_str() ) );
                 if( loc == GL_INVALID_VALUE || loc == GL_INVALID_OPERATION )
                 {
                     LOG_DEBUG(g_log) << "Failed to find shader uniform of name \""
-                                    << sumap->first << "\" in shader #"
-                                    << a_shaderProgramIndex << "\n";
+                        << sumap->first << "\" in shader #"
+                        << a_shaderProgramIndex << "\n";
                 }
                 else
                 {
                     (*sumap).second->m_locationInShader = loc;
                 }
             }
+            m_isDirty = false;
         }
+    private:
+        /// m_isDirty tracks if the shader's knowledge of the uniform *locations*
+        /// are new, requiring lookupUniformLocations()
+        /// m_isDirty is set if a new uniform is created, not if a uniform value changes.
+        /// Of course, locations also change if the shader is recompiled,
+        /// but that is the responsibility of the owning ShaderManager.
+        mutable bool m_isDirty;
         // stores the uniform's name, locationInShader, and value.
         std::map< ShaderUniformName, ShaderUniformInterface* > m_uniforms;
     };
@@ -139,9 +157,9 @@ namespace spark
         ShaderInstance( const ShaderName& name, ShaderManagerPtr manager )
         : m_name( name ),
           m_manager( manager )
-        {
-        }
-
+        { }
+        virtual ~ShaderInstance() { }
+        
         /// Notified by ShaderManager when
         /// our shader is reloaded so we can call lookupUniformLocations()
         void refreshUniformLocations( void )
@@ -150,7 +168,6 @@ namespace spark
             lookupUniformLocations( getGLProgramIndex() );
         }
     
-        virtual ~ShaderInstance() { }
         const ShaderName& name( void ) const { return m_name; }
         
         /// TODO -- Currently looks up uniform locations for each use

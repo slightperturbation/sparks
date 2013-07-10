@@ -149,7 +149,21 @@ spark::ShaderManager
         LOG_WARN(g_log) << "Using Error Shader in place of shader \"" 
                         << aHandle << "\".";
         glDeleteProgram( shaderProgram );
+        /// Exception loading, so show the error shader in place
         m_registry[aHandle] = getErrorShader();
+    }
+    // Error or not, mark all instances of this shader as dirty
+    for( auto shaderIter = m_shaderInstances.begin();
+         shaderIter != m_shaderInstances.end();
+         ++shaderIter )
+    {
+        if( ShaderInstancePtr shader = shaderIter->lock() )
+        {
+            if( shader->name() == aHandle )
+            {
+                shader->markDirty();
+            }
+        }
     }
 }
 
@@ -174,7 +188,7 @@ spark::ShaderManager
     {
         if( ShaderInstancePtr shader = shaderIter->lock() )
         {
-            shader->refreshUniformLocations();
+            shader->markDirty();
         }
     }
 }

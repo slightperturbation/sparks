@@ -19,10 +19,6 @@ namespace spark
     /// ShaderManager keeps track of the OpenGL shader resources
     /// and the original files used to load those shaders.
     /// Note:  automatically binds output fragment buffer 0 to "outColor"
-    ///TODO $$$ Need to own or allow callbacks to Shader objects, because
-    /// when ShaderManager detects a new file and reloads, the Shader Object
-    /// needs to call lookupUniformLocations().  Note this breaks the current
-    /// attempt to isolate the Manager from the actual shader class...
     class ShaderManager : public spark::enable_shared_from_this< ShaderManager >
     {
         struct ShaderFilePaths
@@ -46,14 +42,15 @@ namespace spark
         void loadShaderFromFiles( const ShaderName& aHandle,
                                   const char* aVertexFilePath,
                                   const char* aFragmentFilePath );
-        /// Reload the shader from original files.
-        void reloadShader( const ShaderName& aHandle );
+        /// Reload all shaders (resetting shaderInstances) from original files.
         void reloadAllShaders( void );
         void refreshUniformLocations( void );
         /// Clients must call releaseAll() explicitly (rather than to rely on
         /// destructor) to ensure order of release.
         void releaseAll( void );
     private:
+        /// Reload the shader from original files.
+        void reloadShader( const ShaderName& aHandle );
         FileAssetFinderPtr m_finder;
         std::map< const ShaderName, unsigned int > m_registry;
         std::map< const ShaderName, ShaderFilePaths > m_files;
