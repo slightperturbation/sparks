@@ -100,5 +100,5 @@ spark::Material
         location = glGetUniformLocation(programHandle, name);
         LOG_TRACE(g_log) << "\t\"" << name << "\" at location: " << location;
     }
-    delete name;
+    delete[] name;
 }
