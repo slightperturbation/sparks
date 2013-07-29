@@ -84,8 +84,53 @@ spark::TextureManager
 //    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR ); 
     //    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST );
  
+    
+    ////////////
+    /// TODO $$$$$ MUST BIND the FBO before this next call????
+    
     glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0 );
+}
+
+void
+spark::TextureManager
+::createDepthTargetTexture( const TextureName& aHandle,
+                              int width, int height )
+{
+    GLuint textureId;
+    deleteTexture( aHandle );
+    GL_CHECK( glGenTextures( 1, &textureId ) );
+    if( -1 == textureId )
+    {
+        LOG_ERROR(g_log) << "OpenGL failed to allocate a texture id.";
+        assert(false);
+        return;
+    }
+    m_registry[aHandle] = textureId;
+    GLint textureUnit = reserveTextureUnit();
+    bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
+    
+    // GL_LINEAR for simple shadow maps (make an argument?)
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    
+    // Remove artifact on the edges of the shadowmap
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+                 width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL );
+    
+    ////////////
+    /// TODO $$$$$ MUST BIND the FBO before this next call????
+    
+
+    // Attach this texture to a FBO target (depth)
+    glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER,
+                            GL_DEPTH_ATTACHMENT,
+                            GL_TEXTURE_2D,
+                            textureId,
+                            0 );
 }
 
 void
@@ -104,6 +149,9 @@ spark::TextureManager
         assert(false);
         return;
     }
+    m_registry[aHandle] = textureId;
+
+
     bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
 
     spark::loadTestTexture();
@@ -123,9 +171,6 @@ spark::TextureManager
         GL_TEXTURE_MAG_FILTER,
         GL_LINEAR ) );
 
-    m_registry[aHandle] = textureId;
-    m_bindingTextureUnitToTextureId.push_back( std::make_pair( textureUnit,
-                                                               textureId) );
     LOG_INFO(g_log) << "Created Checkered texture \"" << aHandle
     << "\" with id=" << textureId
     << " into texture unit=" << textureUnit;
@@ -147,7 +192,10 @@ spark::TextureManager
         assert(false);
         return;
     }
+
+    m_registry[aHandle] = textureId;
     bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
+    
     GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
     //Set default texture state
     //TODO-- Can be overridden by TextureUnit?
@@ -162,13 +210,26 @@ spark::TextureManager
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     
     spark::loadCheckerTexture();
-    
-    m_registry[aHandle] = textureId;
-    m_bindingTextureUnitToTextureId.push_back( std::make_pair( textureUnit,
-                                                               textureId) );
+
     LOG_INFO(g_log) << "Created Checkered texture \"" << aHandle
                     << "\" with id=" << textureId
                     << " into texture unit=" << textureUnit;
+}
+
+void 
+spark::TextureManager
+::acquireExternallyAllocatedTexture( const TextureName& aName,
+                                     GLuint aTextureId,
+                                     GLenum aTextureType,
+                                     GLint aTextureUnit )
+{
+    GLint textureUnit = aTextureUnit;
+    if( textureUnit == -1 )
+    {
+        textureUnit = reserveTextureUnit();
+    }
+    m_registry[aName] = aTextureId;
+    bindTextureIdToUnit( aTextureId, textureUnit, GL_TEXTURE_2D );
 }
 
 void spark::TextureManager::loadTextureFromImageFile( const TextureName& aHandle, const char* aTextureFileName )
@@ -193,6 +254,7 @@ void spark::TextureManager::loadTextureFromImageFile( const TextureName& aHandle
         assert(false);
         return;
     }
+    m_registry[aHandle] = textureId;
     bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
 
     bool success = loadTextureFromFile( filePath.c_str() );
@@ -218,7 +280,6 @@ void spark::TextureManager::loadTextureFromImageFile( const TextureName& aHandle
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
                                GL_TEXTURE_MAG_FILTER,
                                GL_LINEAR ) );
-    m_registry[aHandle] = textureId;
     m_paths[aHandle] = filePath;
     LOG_INFO(g_log) << "Texture \"" << aHandle << "\" loaded with id=" 
         << textureId << " into texture unit=" << textureUnit << " from path \""
@@ -324,6 +385,14 @@ spark::TextureManager
         return -1;
     }
     return ensureTextureUnitBoundToId( texId );
+}
+
+void
+spark::TextureManager
+::activateTextureUnitForHandle( const TextureName& aHandle )
+{
+    GLint unit = getTextureUnitForHandle( aHandle );
+    GL_CHECK( glActiveTexture( GL_TEXTURE0 + unit ) );
 }
 
 void

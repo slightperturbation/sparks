@@ -36,8 +36,14 @@ namespace spark
         
         /// Create a 2D texture with the given handle that serves as a
         /// texture to render to.
+        /// Before calling, the FBO must be bound using glBindFramebuffer()
         void createTargetTexture( const TextureName& aHandle,
                                   int width, int height );
+
+        /// Create a depth-only texture-target.  E.g., for shadow mapping
+        /// Before calling, the FBO must be bound using glBindFramebuffer()
+        void createDepthTargetTexture( const TextureName& aHandle,
+                                       int width, int height );
         
         /// Load a simple test texture.
         void loadTestTexture( const TextureName& aHandle,
@@ -47,9 +53,24 @@ namespace spark
         void loadCheckerTexture( const TextureName& aHandle,
                                  GLint textureUnit = -1 );
 
+        /// Allows a texture that has already been loaded into OpenGL
+        /// to be tracked by TextureManager.
+        /// Note that this texture is now owned by TextureManager,
+        /// and will be freed on TextureManager's releaseAll()
+        void acquireExternallyAllocatedTexture( const TextureName& aName,
+                                                GLuint aTextureId,
+                                                GLenum aTextureType = GL_TEXTURE_2D,
+                                                GLint aTextureUnit = -1 );
+        /// Returns a texture unit that is ready to be bound.
+        /// Useful for loading externally managed textures.
+        /// Calling may invalidate old texture bindings, but unbinding
+        /// occurs on a least-recently bound basis.
+        GLint reserveTextureUnit( void );
+
         /// Load the image file at aTextureFilePath and associate it with 
         /// aHandle.
-        void loadTextureFromImageFile( const TextureName& aHandle, const char* aTextureFileName );
+        void loadTextureFromImageFile( const TextureName& aHandle, 
+                                       const char* aTextureFileName );
         /// Load a 3D texture from the given volume data.
         /// Can be used to reload the texture from changed data.
         void load3DTextureFromVolumeData( const TextureName& aHandle,
@@ -65,7 +86,14 @@ namespace spark
         /// Returns the Texture Unit that the given texture is currently bound to.
         /// If handle is valid and texture is not currently bound to a unit, 
         /// then the next unit will be assigned on a least-recently used basis.
-        GLint getTextureUnitForHandle( const TextureName& aHandle );    
+        /// Note: Changes OpenGL state ActiveTexture unit.
+        GLint getTextureUnitForHandle( const TextureName& aHandle );  
+
+        /// Changes OpenGL's state of ActiveTexture to the unit containing
+        /// aHandle.  aHandle is assigned a unit if not already.
+        /// Primarily useful for working with non-spark code.
+        /// See acquireExternallyAllocatedTexture()
+        void activateTextureUnitForHandle( const TextureName& aHandle );
     
         /// Returns OpenGL's texture ID (aka texture name) for the given handle.
         /// Returns -1 if handle is not found.
@@ -100,10 +128,6 @@ namespace spark
         void bindTextureIdToUnit( GLint aTextureId, 
                                   GLint aTextureUnit, 
                                   GLenum aTextureType = GL_TEXTURE_2D );
-        /// Returns a texture unit that is ready to be bound.
-        /// Calling may invalidate old texture bindings, but unbinding
-        /// occurs on a least-recently bound basis.
-        GLint reserveTextureUnit( void );
         /// Returns (unsigned int)-1 if texture unit has not been bound to a texture id yet.
         GLuint getTextureIdBoundToUnit( GLint aTextureUnit ) const;
         /// Returns (unsigned int)-1 if texture id has not been bound to a texture unit yet.
