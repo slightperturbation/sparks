@@ -80,6 +80,7 @@ namespace spark
     
     void bindSparkFacade( lua_State* lua )
     {
+        // Renderable
         luabind::module( lua )
         [
             luabind::class_< Renderable, RenderablePtr >( "Renderable" )
@@ -107,7 +108,17 @@ namespace spark
             .def( "setMaterialForPassName", 
                   &Renderable::setMaterialForPassName ) 
         ];
-
+        
+#if 0
+        // TextRenderable
+        luabind::module( lua )
+        [
+         luabind::class_< TextRenderable, Renderable, TextRenderablePtr >( "TextRenderable" )
+            .def( "initialize", &TextRenderable::initialize )
+            .def( "setText", &TextRenderable::setText )
+         ];
+#endif        
+        // RenderPass
         luabind::module( lua )
         [
             luabind::class_< RenderPass, RenderPassPtr >( "RenderPass" )
@@ -116,6 +127,12 @@ namespace spark
             .def( "useAdditiveBlending", &RenderPass::useAdditiveBlending )
             .def( "useInterpolatedBlending", &RenderPass::useInterpolatedBlending )
             .def( "useMaxBlending", &RenderPass::useMaxBlending )
+            .def( "setBlending",
+                 (void (RenderPass::*)(GLenum, GLenum) )
+                 &RenderPass::setBlending )
+            .def( "setBlending",
+                 (void (RenderPass::*)(GLenum, GLenum, GLenum) )
+                 &RenderPass::setBlending )
             .def( "setDepthTest", &RenderPass::setDepthTest )
             .def( "setDepthWrite", &RenderPass::setDepthWrite )
             .def( "setColorWrite", &RenderPass::setColorWrite )
@@ -127,20 +144,25 @@ namespace spark
                   &RenderPass::useDefaultMaterial )
         ];
 
+        // RenderTarget
         luabind::module( lua )
         [
             luabind::class_< RenderTarget,
                              RenderTargetPtr >( "RenderTarget" )
             .def( "setClearColor", &RenderTarget::setClearColor )
         ];
-
+        // Projection
         luabind::module( lua )
         [
             luabind::class_< Projection, ProjectionPtr >( "Projection" )
         ];
+        // PerspectiveProjection
         luabind::module( lua )
         [
-            luabind::class_< PerspectiveProjection, 
+         // Note! The luabind docs explicitly say to bind with the base-class's
+         // smart pointer.  This is *wrong*, bind to the concrete class's
+         // smart pointer.
+            luabind::class_< PerspectiveProjection,
                              Projection,
                              PerspectiveProjectionPtr >( "PerspectiveProjection" )
             // modifiers
@@ -151,6 +173,14 @@ namespace spark
 
         ];
 
+        // OrthogonalProjection
+        luabind::module( lua )
+        [
+         luabind::class_< OrthogonalProjection,
+                          Projection,
+                          OrthogonalProjectionPtr >( "OrthogonalProjection" )
+        ];
+        
         luabind::module( lua )
         [
          luabind::class_< SparkFacade,
@@ -159,9 +189,20 @@ namespace spark
                &SparkFacade::createPostProcessingRenderPassAndTarget )
          .def( "createPostProcessingRenderPassAndScaledTarget", 
                &SparkFacade::createPostProcessingRenderPassAndScaledTarget )
-         .def( "createPostProcessingRenderPass", 
+         .def( "createPostProcessingRenderPass",
+               (RenderPassPtr (SparkFacade::*)(float,
+                                              const RenderPassName&,
+                                              RenderTargetPtr,
+                                              MaterialPtr ))
                &SparkFacade::createPostProcessingRenderPass )
-         .def( "getFrameBufferRenderTarget", 
+         .def( "createPostProcessingRenderPass",
+               (RenderPassPtr (SparkFacade::*)(float,
+                                               const RenderPassName&,
+                                               const TextureName&,
+                                               RenderTargetPtr,
+                                               const ShaderName& ))
+                &SparkFacade::createPostProcessingRenderPass )
+         .def( "getFrameBufferRenderTarget",
                &SparkFacade::getFrameBufferRenderTarget )
          .def( "getCamera", 
                &SparkFacade::getCamera )
@@ -173,6 +214,8 @@ namespace spark
                &SparkFacade::createRenderPass )
          .def( "createRenderPassWithProjection", 
                &SparkFacade::createRenderPassWithProjection )
+         .def( "createOverlayRenderPass",
+               &SparkFacade::createOverlayRenderPass )
          .def( "setMainRenderTarget", 
                &SparkFacade::setMainRenderTarget )
          .def( "getMainRenderTarget", 
@@ -183,6 +226,8 @@ namespace spark
                &SparkFacade::loadMesh )
          .def( "createCube",
                &SparkFacade::createCube )
+         .def( "createQuad",
+               &SparkFacade::createQuad )
          .def( "createLSpark", 
                &SparkFacade::createLSpark )
         ];
@@ -200,6 +245,9 @@ namespace spark
             .def( "addTexture", &Material::addTexture )
             .def( "dumpShaderUniforms", &Material::dumpShaderUniforms )
         ];
+        
+        
+        
     }
     
     void bindTextureManager( lua_State* lua )
@@ -224,7 +272,6 @@ namespace spark
          luabind::class_< ShaderManager, 
                           ShaderManagerPtr >( "ShaderManager" )
          .def( "loadShaderFromFiles", &ShaderManager::loadShaderFromFiles)
-         .def( "reloadShader", &ShaderManager::reloadShader )
          .def( "reloadAllShaders", &ShaderManager::reloadAllShaders )
          .def( "releaseAll", &ShaderManager::releaseAll )
         ];
@@ -324,6 +371,31 @@ namespace spark
         ];
     }
     
+    void bindConstants( lua_State* lua )
+    {
+        luabind::globals( lua )["GL_ONE"] = GL_ONE;
+        luabind::globals( lua )["GL_ZERO"] = GL_ZERO;
+        luabind::globals( lua )["GL_SRC_COLOR"] = GL_SRC_COLOR;
+        luabind::globals( lua )["GL_DST_COLOR"] = GL_DST_COLOR;
+        luabind::globals( lua )["GL_SRC_ALPHA"] = GL_SRC_ALPHA;
+        luabind::globals( lua )["GL_DST_ALPHA"] = GL_DST_ALPHA;
+        luabind::globals( lua )["GL_ONE_MINUS_SRC_ALPHA"] = GL_ONE_MINUS_SRC_ALPHA;
+        luabind::globals( lua )["GL_ONE_MINUS_DST_ALPHA"] = GL_ONE_MINUS_DST_ALPHA;
+        luabind::globals( lua )["GL_ONE_MINUS_SRC_COLOR"] = GL_ONE_MINUS_SRC_COLOR;
+        luabind::globals( lua )["GL_ONE_MINUS_DST_COLOR"] = GL_ONE_MINUS_DST_COLOR;
+        luabind::globals( lua )["GL_CONSTANT_COLOR"] = GL_CONSTANT_COLOR;
+        luabind::globals( lua )["GL_CONSTANT_ALPHA"] = GL_CONSTANT_ALPHA;
+        
+        // BlendEquations
+        // http://www.opengl.org/sdk/docs/man/xhtml/glBlendEquation.xml
+        luabind::globals( lua )["GL_FUNC_ADD"] = GL_FUNC_ADD;
+        luabind::globals( lua )["GL_FUNC_SUBTRACT​"] = GL_FUNC_SUBTRACT;
+        luabind::globals( lua )["GL_FUNC_REVERSE_SUBTRACT"] = GL_FUNC_REVERSE_SUBTRACT;
+        luabind::globals( lua )["GL_MIN"] = GL_MIN;
+        luabind::globals( lua )["GL_MAX"] = GL_MAX;
+        
+    }
+    
     void bindInterpreter( lua_State* lua );
     
     /////////////////////////////////////////////////////////////////////
@@ -356,6 +428,7 @@ namespace spark
                 bindShaderManager( m_lua );
                 bindSparkFacade( m_lua );
                 bindInterpreter( m_lua );
+                bindConstants( m_lua );
             }
             catch( luabind::error& err )
             {
