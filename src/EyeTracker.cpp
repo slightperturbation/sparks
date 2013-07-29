@@ -1,7 +1,7 @@
 #include "EyeTracker.hpp"
 #include "Projection.hpp"
 
-#include <cstdlib>
+//#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -45,7 +45,6 @@ spark::NetworkEyeTracker
     catch (std::exception& e)
     {
         std::cerr << "Exception: " << e.what() << "\n";
-        throw;
     }
 }
 
