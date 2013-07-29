@@ -1,58 +1,8 @@
 
 local utilityPasses = require "utilityPasses"
--- Change the standard error function so that it shows the debug traceback.
 
 print( "Begin defaultScene.lua" );
 
-
-
-
-print( "\tLoading textures..." );
-textureManager:loadCheckerTexture( "checker", -1 );
-textureManager:loadTestTexture( "test", -1 );
-textureManager:loadTextureFromImageFile( "cat", "sample.png" );
-textureManager:loadTextureFromImageFile( "skinColor", "skin_tile.png" );
-textureManager:loadTextureFromImageFile( "sparkColor", "sparkCircularGradient.png" );
-textureManager:loadTextureFromImageFile( "hook_cautery", "hook_cautery_noise.png" )
-textureManager:logTextures();
-
-
-print( "\tLoading shaders..." );
-shaderManager:loadShaderFromFiles( "densityShader",
-                                    "base3DVertexShader.glsl",
-                                    "density3DFragmentShader.glsl" );
-
-shaderManager:loadShaderFromFiles( "rayCastVolumeShader",
-                                    "rayCastVertexShader.glsl",
-                                    "rayCastFragmentShader.glsl" );
-
-shaderManager:loadShaderFromFiles( "colorShader",
-                                    "baseVertexShader.glsl",
-                                    "colorFragmentShader.glsl" );
-
-shaderManager:loadShaderFromFiles( "constantColorShader",
-                                    "baseVertexShader.glsl",
-                                    "constantColorFragmentShader.glsl" );
-
-shaderManager:loadShaderFromFiles( "phongShader",
-                                    "baseVertexShader.glsl",
-                                    "phongFragmentShader.glsl" );
-
-shaderManager:loadShaderFromFiles( "texturedOverlayShader",
-                                    "baseVertexShader.glsl",
-                                    "texturedOverlayFragmentShader.glsl" );
-
-shaderManager:loadShaderFromFiles( "texturedSparkShader", 
-                                    "baseVertexShader.glsl",
-                                    "texturedSparkFragmentShader.glsl" );
-
-shaderManager:loadShaderFromFiles( "blurHortShader",
-                                    "blurHortVertexShader.glsl",
-                                    "blurFragmentShader.glsl" );
-
-shaderManager:loadShaderFromFiles( "blurVertShader",
-                                    "blurVertVertexShader.glsl",
-                                    "blurFragmentShader.glsl" );
 
 print( "\tSetting up render passes..." );
 

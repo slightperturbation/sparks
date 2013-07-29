@@ -1,5 +1,5 @@
-require "utilityPasses"
 
---interp:load( "testBoxScene.lua" )
-interp:load( "defaultScene.lua" )
+--interp:load( "glowTestScene.lua" )
+interp:load( "testBoxScene.lua" )
+--interp:load( "defaultScene.lua" )
 
