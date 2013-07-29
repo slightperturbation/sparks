@@ -32,7 +32,7 @@
 /// LOG_WARNING for potential problems
 /// LOG_ERROR for true error conditions, possibly recoverable
 /// LOG_FATAL for unrecoverable errors (always logged)
-extern cpplog::BaseLogger* g_log;
+extern cpplog::FilteringLogger* g_log;
 
 ///////////////////////////////////////////////////////////////////////////
 // Forward Declarations
