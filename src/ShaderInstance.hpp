@@ -17,7 +17,7 @@
 
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include <GL/glfw.h>
+#include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -170,16 +170,37 @@ namespace spark
     
         const ShaderName& name( void ) const { return m_name; }
         
-        /// TODO -- Currently looks up uniform locations for each use
-        /// Should subscribe to updates from ShaderManager!
+        /// Use shader program. Call sets the GL program (glUseProgram) and
+        /// sets the shader uniforms.
         void use( void ) const
         {
             GLuint shaderIndex = getGLProgramIndex();
-            LOG_TRACE(g_log) << "Use Shader Program " << shaderIndex;
+            LOG_TRACE(g_log) << "Use Shader Program " << shaderIndex
+                             << " \"" << name() << "\".";
             GL_CHECK( glUseProgram( shaderIndex ) );
             applyShaderUniforms( shaderIndex);
         }
     
+        void preDrawValidation( void ) const
+        {
+            GLuint shaderIndex = getGLProgramIndex();
+            bool isDebugTests = true;
+            if( isDebugTests )
+            {
+                glValidateProgram( shaderIndex );
+                GLint status = 0;
+                glGetProgramiv( shaderIndex, GL_VALIDATE_STATUS, &status );
+                if( status == GL_FALSE )
+                {
+                    const size_t logSize = 2048;
+                    GLchar errorLog[ logSize ] = {0};
+                    glGetProgramInfoLog( shaderIndex, logSize, NULL, errorLog );
+                    LOG_ERROR(g_log) << "Bad shader program: \""
+                    << name() << "\":\n" << errorLog;
+                }
+            }
+        }
+        
         GLuint getGLProgramIndex( void ) const
         {
             return m_manager->getProgramIndexForShaderName( m_name );

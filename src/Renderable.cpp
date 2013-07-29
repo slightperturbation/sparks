@@ -142,7 +142,29 @@ spark::Renderable
     }
 }
 
-void 
+spark::MaterialPtr
+spark::Renderable
+::getMaterialForPassName( const RenderPassName& renderPassName )
+{
+    auto itr = m_materials.find( renderPassName );
+    if( itr != m_materials.end() )
+    {
+        LOG_TRACE(g_log) << "Using material \""
+        << (*itr).second->name()
+        << "\" for pass \""
+        << renderPassName
+        << "\" for renderable \""
+        << m_name << "\".";
+        return (*itr).second;
+    }
+    else
+    {
+        return MaterialPtr();
+    }
+}
+
+
+void
 spark::Renderable
 ::setMaterialForPassName( const spark::RenderPassName& renderPassName, 
                           spark::MaterialPtr material )

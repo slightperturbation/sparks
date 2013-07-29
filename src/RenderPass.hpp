@@ -11,10 +11,10 @@
 
 #include "Spark.hpp"
 
-#include <glm/glm.hpp>
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include <GL/glfw.h> 
+#include <GLFW/glfw3.h> 
+#include <glm/glm.hpp>
 
 namespace spark
 {
@@ -105,7 +105,7 @@ namespace spark
         /// Sets OpenGL state to draw to the render target
         /// (e.g., display device or render-to-texture)
         void preRender(  ConstRenderPassPtr prevPass ) const;
-        void postRender( void ) const;
+        void postRender( ConstRenderPassPtr nextPass ) const;
         void startFrame( ConstRenderPassPtr prevPass ) const;
 
         /// Fill the outRC RenderCommand using the pass and renderable 

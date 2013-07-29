@@ -170,9 +170,10 @@ spark::RenderPass
 
 void 
 spark::RenderPass
-::postRender( void ) const
+::postRender( ConstRenderPassPtr nextPass ) const
 {
-    if( m_target ) 
+    if(    m_target 
+        && ( !nextPass || (nextPass->m_target != m_target) ) ) 
     { 
         m_target->postRender(); 
     }
@@ -182,7 +183,7 @@ void
 spark::RenderPass
 ::startFrame( ConstRenderPassPtr prevPass ) const
 {
-    if( m_target 
+    if(    m_target 
         && ( !prevPass || (prevPass->m_target != m_target) ) ) 
     { 
         m_target->startFrame(); 

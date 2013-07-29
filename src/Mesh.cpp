@@ -8,7 +8,7 @@
 
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include <GL/glfw.h>
+#include <GLFW/glfw3.h>
 
 #include <iostream>
 #include <fstream>
@@ -95,14 +95,18 @@ void
 spark::Mesh
 ::render( const RenderCommand& rc ) const
 {
+    MeshVertex::addVertexAttributes( (std::vector<VertexAttributePtr>&)m_attributes );
+
     // bind vertex array OBJECT (VAO)
     GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
+
     //GL_CHECK( glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId ) );
     GL_CHECK( glDrawElements( GL_TRIANGLES,
                    ((GLsizei)m_vertexIndicies.size()),
                    GL_UNSIGNED_INT,
                    nullptr ) );  // start at the beginning
     LOG_TRACE(g_log) << "Mesh \"" << name() << "\"  glDrawElements( " << m_vertexIndicies.size() << " );\n";
+    GL_CHECK( glBindVertexArray( 0 ) );
 }
 
 void
@@ -368,6 +372,10 @@ spark::Mesh
     GL_CHECK( glBufferDataFromVector( GL_ARRAY_BUFFER, m_vertexData, GL_STATIC_DRAW ) );
     GL_CHECK( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_elementBufferId ) );
     GL_CHECK( glBufferDataFromVector( GL_ELEMENT_ARRAY_BUFFER, m_vertexIndicies, GL_STATIC_DRAW ) );
+
+    GL_CHECK( glBindVertexArray( 0 ) );
+    //GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, 0 ) );
+    //GL_CHECK( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 ) );
 }
 
 void 

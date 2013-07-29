@@ -103,9 +103,10 @@ spark
 {
     static unsigned int frameNumber = 1;
 
-    int width = 0;
-    int height = 0;
-    glfwGetWindowSize( &width, &height );
+    // TODO
+    int width = 800;
+    int height = 600;
+    //glfwGetFramebufferSize( &width, &height );
 
     unsigned char* frameBuffer = new unsigned char[ 3 * width * height * sizeof(unsigned char) ];
 
@@ -145,43 +146,52 @@ spark::OpenGLWindow
     }
     LOG_DEBUG(g_log) << "done.\n";
 
-#ifdef _DEBUG
-    glfwOpenWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE );
-#endif
-
     // OpenGL 3.2 or higher only
-    //glfwOpenWindowHint( GLFW_FSAA_SAMPLES, 8 ); // 8x anti aliasing
-#ifdef __APPLE__
+    glfwWindowHint( GLFW_SAMPLES, 8 ); // 8x anti aliasing
+
     // Need to force the 3.2 for mac -- note
     // that this breaks the AntTweak menus
-    glfwOpenWindowHint( GLFW_OPENGL_VERSION_MAJOR, 3 );
-    glfwOpenWindowHint( GLFW_OPENGL_VERSION_MINOR, 2 );
-    //glfwOpenWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );  // Core profile not compatible with GLEW(?)
-#endif
-    glfwOpenWindowHint( GLFW_WINDOW_NO_RESIZE, GL_FALSE );
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 2 );
+    // Remove deprecated functionality if true
+    glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
+    glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 
+    glfwWindowHint( GLFW_VISIBLE, GL_TRUE );
+    glfwWindowHint( GLFW_DECORATED, GL_TRUE );
+    glfwWindowHint( GLFW_RESIZABLE, GL_TRUE );
+    
+#ifdef _DEBUG
+    glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE );
+#endif
+    
+    // For stereo outptu
+    //glfwWindowHint( GLFW_STEREO, GL_TRUE );
+    
     LOG_DEBUG(g_log) << "glfwOpenWindow...";
 
-    if( glfwOpenWindow( 800, 600, 0, 0, 0, 0, 24, 0, GLFW_WINDOW ) != GL_TRUE )
+    m_glfwWindow = glfwCreateWindow( 800, 600, programName, NULL, NULL );
+    if( !m_glfwWindow )
     {
         LOG_FATAL(g_log) << "Unable to open GLFW window.";
         glfwTerminate();
         return;
     }
-    glfwEnable( GLFW_MOUSE_CURSOR );
-    glfwSetWindowTitle( programName );
+    glfwMakeContextCurrent( m_glfwWindow );
+    
     checkOpenGLErrors();
     LOG_DEBUG(g_log) << " done.\n";
     LOG_DEBUG(g_log) << "glewInit... ";
     glewExperimental = GL_TRUE;
     GLenum err = glewInit();
-    // according to http://www.opengl.org/wiki/OpenGL_Loading_Library
-    // glewInit may throw invalid enumerant error
-    glGetError(); // eat glew's spurious error
     if( err != GLEW_OK )
     {
         LOG_DEBUG(g_log) << "glewInit() failed!\n";
     }
+    
+    // according to http://www.opengl.org/wiki/OpenGL_Loading_Library
+    // glewInit may throw invalid enumerant error
+    glGetError(); // eat glew's spurious error
     if( !glewIsSupported("GL_VERSION_3_2") )
     {
         LOG_DEBUG(g_log) << "OpenGL Version 3.2 Required!\n";
@@ -241,7 +251,29 @@ bool
 spark::OpenGLWindow
 ::isRunning( void )
 {
-    return glfwGetWindowParam( GLFW_OPENED );
+    return !glfwWindowShouldClose( m_glfwWindow );
+}
+
+int
+spark::OpenGLWindow
+::getKey( int key )
+{
+    return glfwGetKey( m_glfwWindow, key );
+}
+
+void
+spark::OpenGLWindow
+::swapBuffers( void )
+{
+    glfwSwapBuffers( m_glfwWindow );
+    glfwPollEvents();
+}
+
+void
+spark::OpenGLWindow
+::getSize( int* width, int* height )
+{
+    glfwGetWindowSize( m_glfwWindow, width, height );
 }
 
 bool

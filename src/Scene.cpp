@@ -67,7 +67,7 @@ spark::Scene
             // New render pass, allow both old and new to change GL state.
             if( prevRenderPass ) 
             {
-                prevRenderPass->postRender( );
+                prevRenderPass->postRender( currRenderPass );
             }
             if( currRenderPass ) 
             {
@@ -82,7 +82,7 @@ spark::Scene
     }
     if( prevRenderPass )
     {
-        prevRenderPass->postRender();
+        prevRenderPass->postRender( ConstRenderPassPtr(nullptr) );
     }
 }
 

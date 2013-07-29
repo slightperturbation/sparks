@@ -5,8 +5,11 @@
 #include "Material.hpp"
 #include "Renderable.hpp"
 
+
+#define GLEW_STATIC
+#include <GL/glew.h>
+#include <GLFW/glfw3.h> // for time
 #include <glm/glm.hpp>
-#include <GL/glfw.h>  // for time
 
 void
 spark::RenderCommand
@@ -72,9 +75,12 @@ spark::RenderCommand
     // Lights
     //m_illumination->use( mutableMaterial );
     //mutableMaterial->setShaderUniform<glm::vec4>( "u_")
-    
-    // Show all the uniforms that have been set above for debugging
-    m_material->dumpShaderUniforms();    
+
+    const bool isVerboseDebug = false;
+    if( isVerboseDebug )
+    {
+        m_material->dumpShaderUniforms();
+    }
     m_material->use();
     m_renderable->render( *this );
 }

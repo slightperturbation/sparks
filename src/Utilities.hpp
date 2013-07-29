@@ -13,7 +13,7 @@
 
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include <GL/glfw.h>
+#include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -34,7 +34,12 @@ namespace spark
         ~OpenGLWindow();
         bool isOK( void ) { return m_isOK; }
         bool isRunning( void );
+        int getKey( int key );
+        void swapBuffers( void );
+        void getSize( int* width, int* height );
+        GLFWwindow* glfwWindow( void ) { return m_glfwWindow; }
     private:
+        GLFWwindow* m_glfwWindow;
         bool m_isOK;
     };
 

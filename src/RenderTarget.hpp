@@ -7,7 +7,7 @@
 
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include <GL/glfw.h>
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
 namespace spark
@@ -73,8 +73,11 @@ namespace spark
     class TextureRenderTarget : public RenderTarget
     {
     public:
+        enum BufferType { ColorOnly, ColorAndDepth, DepthOnly };
+
         TextureRenderTarget( const TextureName& aName,
-                             int aWidth, int aHeight );
+                             int aWidth, int aHeight,
+                             BufferType bufferType = ColorAndDepth );
         virtual ~TextureRenderTarget();
         virtual std::string name( void ) const override
         { return getTextureName(); }
@@ -95,10 +98,11 @@ namespace spark
         int m_height;
         GLuint m_framebufferId;
         GLuint m_depthRenderbufferId;
+        BufferType m_bufferType;
     };
     typedef spark::shared_ptr< TextureRenderTarget > TextureRenderTargetPtr;
 
-    //////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // ScaledTextureRenderTarget
 
     /// A ScaledTexureRenderTarget that maintains a size that is a scale factor
@@ -109,7 +113,8 @@ namespace spark
     public:
         ScaledTextureRenderTarget( const TextureName& aName,
             int aViewportWidth, int aViewportHeight, 
-            float aScaleX, float aScaleY );
+            float aScaleX, float aScaleY,
+            BufferType bufferType = ColorAndDepth );
         virtual ~ScaledTextureRenderTarget();
 
         virtual void initialize( TextureManagerPtr& mgr ) override;
@@ -125,7 +130,10 @@ namespace spark
         float m_scaleX;                //< Scale factor vs viewport size
         float m_scaleY;                //< Scale factor vs viewport size
     };
-    typedef spark::shared_ptr< ScaledTextureRenderTarget > ScaledTextureRenderTargetPtr;
+    typedef spark::shared_ptr< ScaledTextureRenderTarget >
+        ScaledTextureRenderTargetPtr;
 
+
+    void checkFramebufferStatus( const TextureName& textureHandle );
 } // end namespace spark
 #endif

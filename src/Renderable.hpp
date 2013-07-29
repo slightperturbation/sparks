@@ -3,10 +3,10 @@
 
 #include "Spark.hpp"
 
-#include <glm/glm.hpp>
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include <GL/glfw.h>
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 namespace spark
 {
@@ -23,15 +23,18 @@ namespace spark
         
         /// Update between renderings.  Used to swap computed data in to be
         /// rendered on next frame.
+        /// Note that OpenGL state may be changed by update() 
         virtual void update( float dt ) {}
 
         /// Provides the descriptive (not necessarily unique) name
         virtual RenderableName name( void ) const;
+        /// Sets a descriptive name for the Renderable
         virtual void name( const RenderableName& aName );
 
         /// Emits OpenGL primitives
         /// The RenderCommand provides the "context" in which the scene
         /// is being rendered.
+        /// Updates are required to not change the OpenGL state.
         virtual void render( const RenderCommand& rc ) const = 0;
         /// Ties the shader's "in" variables to the channels of this 
         /// Renderable's data, e.g, "in vec3 v_position" in the shader 
@@ -56,13 +59,24 @@ namespace spark
         void scale( float scaleFactor );
         void translate( const glm::vec3& x );
         void translate( float x, float y, float z );
-        
         void rotate( float angleInDegrees, const glm::vec3& axis );
+        
+        /// Align this Renderable's z-axis with the given dir vector.
         void alignZAxisWithVector( const glm::vec3& dir );
 
+        /// Returns the material used for renderPassName
+        /// See setMaterialForPassName()
         ConstMaterialPtr getMaterialForPassName(
             const RenderPassName& renderPassName ) const;
-        void setMaterialForPassName( const RenderPassName& renderPassName, 
+        /// Returns the material used for renderPassName
+        /// See setMaterialForPassName()
+        MaterialPtr getMaterialForPassName(
+            const RenderPassName& renderPassName ) ;
+        
+        /// Specifies that this Renderable should be rendered using
+        /// material in the given RenderPass.  This will override the
+        /// RenderPass's default material.
+        void setMaterialForPassName( const RenderPassName& renderPassName,
                                      MaterialPtr material );
 
         friend std::ostream& operator<<( std::ostream& out, 

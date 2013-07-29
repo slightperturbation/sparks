@@ -60,6 +60,7 @@ spark::FrameBufferRenderTarget
         << "framebufferId=0";
     // Bind to zero is a magic number to draw to the display FB
     GL_CHECK( glBindFramebuffer( GL_FRAMEBUFFER, 0 ) );
+    checkFramebufferStatus( "FrameBuffer0" );
     glViewport( m_left, m_bottom, m_width, m_height );
 }
 
@@ -74,9 +75,9 @@ spark::FrameBufferRenderTarget
 ::startFrame( void ) const
 {
     LOG_TRACE(g_log) << "TextureRenderTarget::startFrame(): clearing framebufferId = 0";
-
     // Bind to zero is a magic number to draw to the display FB
     GL_CHECK( glBindFramebuffer( GL_FRAMEBUFFER, 0 ) );
+    checkFramebufferStatus( "FrameBuffer0" );
     glViewport( m_left, m_bottom, m_width, m_height );
     glClearColor( m_clearColor[0],
                   m_clearColor[1],
@@ -100,7 +101,8 @@ spark::FrameBufferRenderTarget
 
 spark::TextureRenderTarget
 ::TextureRenderTarget( const TextureName& aName,
-                       int aWidth, int aHeight )
+                       int aWidth, int aHeight,
+                       BufferType bufferType )
 : m_textureManager(), m_textureHandle( aName ), 
   m_width( aWidth ), m_height( aHeight ),
   m_framebufferId( -1 ), m_depthRenderbufferId( -1 )
@@ -130,13 +132,21 @@ spark::TextureRenderTarget
     m_textureManager->createTargetTexture( m_textureHandle, m_width, m_height );
     
     // Setup render target for depth buffer
+    // Need a depth-buffer if you want to render with z-buffer-testing
     glGenRenderbuffers( 1, &m_depthRenderbufferId );
     GL_CHECK( glBindRenderbuffer( GL_RENDERBUFFER, m_depthRenderbufferId ) );
-    glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT24,
-                           m_width, m_height );
-    glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                               GL_RENDERBUFFER, m_depthRenderbufferId);
-    
+    GL_CHECK( glRenderbufferStorage( GL_RENDERBUFFER,
+                                     GL_DEPTH_COMPONENT24,
+                                     m_width, m_height ) );
+    GL_CHECK( glFramebufferRenderbuffer( GL_FRAMEBUFFER,
+                                         GL_DEPTH_ATTACHMENT,
+                                         GL_RENDERBUFFER,
+                                         m_depthRenderbufferId ) );
+
+    //////////////////////////////////////
+    // TODO Honor BufferType
+    //////////////////////////////////////
+
     // Set target texture as our color attachement #0
     glFramebufferTexture( GL_FRAMEBUFFER,
                           GL_COLOR_ATTACHMENT0,
@@ -147,11 +157,7 @@ spark::TextureRenderTarget
     GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
     glDrawBuffers( 1, drawBuffers ); // "1" is the size of DrawBuffers
     
-    if( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE )
-    {
-        LOG_ERROR(g_log) << "Couldn't set renderbuffer for TextureRenderTarget \""
-        << m_textureHandle << "\".";
-    }
+    checkFramebufferStatus( getTextureName() );
 }
 
 glm::vec2
@@ -170,6 +176,7 @@ spark::TextureRenderTarget
                      << getTextureName() << "\".";
     // Render to our framebuffer
     glBindFramebuffer( GL_FRAMEBUFFER, m_framebufferId );
+    checkFramebufferStatus( getTextureName() );
     glViewport( 0, 0, m_width, m_height );
 }
 
@@ -177,8 +184,12 @@ void
 spark::TextureRenderTarget
 ::postRender( void ) const
 {
-    LOG_TRACE(g_log) << "Generate Mipmap for TextureRenderTarget \"" 
-                     << name() << "\".";
+    
+    //////////////////////////////////////
+    // TODO Honor BufferType
+    //////////////////////////////////////
+
+    
     if( !m_textureManager )
     {
         LOG_ERROR(g_log) << "TextureRenderTarget (" 
@@ -187,9 +198,13 @@ spark::TextureRenderTarget
         return;
     }
     GLint texUnit = m_textureManager->getTextureUnitForHandle( getTextureName() );
+    LOG_TRACE(g_log) << "TextureRenderTarget activating texture unit GL_TEXTURE0 + " 
+        << texUnit;
     // Make the target texture active
     GL_CHECK( glActiveTexture( GL_TEXTURE0 + texUnit ) );
     // generate using the active texture unit
+    LOG_TRACE(g_log) << "Generate Mipmap for TextureRenderTarget \"" 
+        << name() << "\".";
     glGenerateMipmap( GL_TEXTURE_2D );
 }
 
@@ -204,7 +219,12 @@ spark::TextureRenderTarget
         // TODO Create a structured exception for uninitialized
         throw "TextureRenderTarget not initialized or OpenGL error occurred.";
     }
+    
+    //////////////////////////////////////
+    // TODO Honor BufferType
+    //////////////////////////////////////
     glBindFramebuffer( GL_FRAMEBUFFER, m_framebufferId );
+    checkFramebufferStatus( m_textureHandle );
     glViewport( 0, 0, m_width, m_height );
 
     //TODO setup rendering to depth buffer!
@@ -232,8 +252,11 @@ spark::TextureRenderTarget
 spark::ScaledTextureRenderTarget
 ::ScaledTextureRenderTarget( const TextureName& aName,
                              int aViewportWidth, int aViewportHeight,
-                             float aScaleX, float aScaleY )
-: TextureRenderTarget( aName, aViewportWidth*aScaleX, aViewportHeight*aScaleY ),
+                             float aScaleX, float aScaleY,
+                             BufferType bufferType )
+: TextureRenderTarget( aName, 
+                       aViewportWidth*aScaleX, aViewportHeight*aScaleY, 
+                       bufferType ),
   m_scaleX( aScaleX ), m_scaleY( aScaleY )
 {
 }
@@ -294,8 +317,11 @@ spark::ScaledTextureRenderTarget
         LOG_ERROR(g_log) << "Unable to allocate framebuffer.";
     }
     glBindFramebuffer( GL_FRAMEBUFFER, m_framebufferId );
-    
     m_textureManager->createTargetTexture( m_textureHandle, m_width, m_height );
+    
+    
+    // TODO Honor BufferType
+    
     
     // Setup render target for depth buffer
     glGenRenderbuffers( 1, &m_depthRenderbufferId );
@@ -316,6 +342,25 @@ spark::ScaledTextureRenderTarget
     GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
     glDrawBuffers( 1, drawBuffers );
     
+    checkFramebufferStatus( m_textureHandle );
+}
+
+std::ostream&
+spark::ScaledTextureRenderTarget
+::debugInfo( std::ostream& out ) const
+{
+    out << "ScaledTextureRenderTarget[Texture=\"" << m_textureHandle << "\"@"
+    << m_width << ", " << m_height << ", scale="
+    << m_scaleX << "," << m_scaleY << "]";
+    return out;    
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Functions
+void
+spark
+::checkFramebufferStatus( const TextureName& textureHandle )
+{
     GLenum fbStatus = glCheckFramebufferStatus( GL_FRAMEBUFFER );
     if( fbStatus != GL_FRAMEBUFFER_COMPLETE )
     {
@@ -349,20 +394,7 @@ spark::ScaledTextureRenderTarget
         }
         
         LOG_ERROR(g_log) << "Couldn't set renderbuffer for TextureRenderTarget \""
-        << m_textureHandle << "\".";
+        << textureHandle << "\".";
         LOG_ERROR(g_log) << "GL Error: " << msg.str();
     }
 }
-
-std::ostream&
-spark::ScaledTextureRenderTarget
-::debugInfo( std::ostream& out ) const
-{
-    out << "ScaledTextureRenderTarget[Texture=\"" << m_textureHandle << "\"@"
-    << m_width << ", " << m_height << ", scale="
-    << m_scaleX << "," << m_scaleY << "]";
-    return out;    
-}
-
-
-

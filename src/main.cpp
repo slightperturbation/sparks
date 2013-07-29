@@ -15,6 +15,8 @@
 #include "LSpark.hpp"
 #include "TexturedSparkRenderable.hpp"
 
+#include "TextRenderable.hpp"
+
 #include "SlicedVolume.hpp"
 #include "RayCastVolume.hpp"
 #include "Fluid.hpp"
@@ -29,7 +31,7 @@
 
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include <GL/glfw.h>
+#include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -48,12 +50,16 @@
 #include <stdlib.h>
 
 
+#include "freetype-gl.h"
+
+
+
 using namespace std;
 using namespace Eigen;
 using namespace spark;
 
 // Define the global Logger
-cpplog::BaseLogger* g_log = NULL;
+cpplog::FilteringLogger* g_log = NULL;
 boost::mutex g_logGuard;
 cpplog::BaseLogger* g_baseLogger = NULL;
 
@@ -81,7 +87,7 @@ public:
     bool isSavingFrames;
 };
 
-void GLFWCALL resizeWindowCallback( int width, int height )
+void resizeWindowCallback( GLFWwindow* glfwWindow, int width, int height )
 {
     if( g_guiEventPublisher )
     {
@@ -89,17 +95,18 @@ void GLFWCALL resizeWindowCallback( int width, int height )
     }
 }
 
-void GLFWCALL mousePosCallback( int x, int y )
+void mousePosCallback( GLFWwindow* glfwWindow, double x, double y )
 {
     if( !g_arcBall ) return;
     g_arcBall->onMouseMove( x, y );
 }
 
-void GLFWCALL mouseButtonCallback( int button, int action )
+void mouseButtonCallback( GLFWwindow* glfwWindow,
+                          int button, int action, int modifiers )
 {
     if( !g_arcBall ) return;
-    int x, y;
-    glfwGetMousePos( &x, &y );
+    double x, y;
+    glfwGetCursorPos( glfwWindow, &x, &y );
     if( button == GLFW_MOUSE_BUTTON_LEFT )
     {
         g_arcBall->onMouseRotationButton( x, y, GLFW_PRESS == action );
@@ -114,41 +121,20 @@ void GLFWCALL mouseButtonCallback( int button, int action )
     }
 }
 
-void setGLFWCallbacks( void )
+void setGLFWCallbacks( GLFWwindow* glfwWindow )
 {
     // Set GLFW event callbacks
     // - Redirect window size changes to the callback function WindowSizeCB
-    glfwSetWindowSizeCallback( resizeWindowCallback );
-    glfwSetMousePosCallback( mousePosCallback );
-    glfwSetMouseButtonCallback( mouseButtonCallback );
+    glfwSetCursorPosCallback( glfwWindow, mousePosCallback );
+    glfwSetMouseButtonCallback( glfwWindow, mouseButtonCallback );
+    
+    glfwSetWindowSizeCallback( glfwWindow, resizeWindowCallback );
 #ifdef __APPLE__
-    glGetError(); // eat spurious GLFW-caused OpenGL errors on OSX/iOS
+    //glGetError(); // eat spurious GLFW-caused OpenGL errors on OSX/iOS
 #endif
 }
 
-/// Example of creating a full-screen quad for HUD-style overlay
-MeshPtr createOverlayQuad( TextureManagerPtr tm,
-                           ShaderManagerPtr sm,
-                           const TextureName& textureName,
-                           const RenderPassName& renderPassName,
-                           const ShaderName& shaderName )
-{
-    using namespace Eigen;
-    MeshPtr overlay( new Mesh() );
-    overlay->name( std::string("OverlayQuad-") + textureName 
-        + "-" + renderPassName + "-" + shaderName );
-    overlay->addQuad( Vector3f(0,0,0), Vector2f(0,1), // Lower Left
-                      Vector3f(1,0,0), Vector2f(1,1), // Lower Right
-                      Vector3f(0,1,0), Vector2f(0,0), // Upper Left
-                      Vector3f(1,1,0), Vector2f(1,0), // Upper Right
-                      Vector3f(0,0,-1) ); // Normal points according to right-hand system
-    overlay->setRequireExplicitMaterial( true );
-    ShaderInstancePtr colorShader = sm->createShaderInstance( shaderName );
-    MaterialPtr colorMaterial( new Material( tm, colorShader ) );
-    colorMaterial->addTexture( "s_color", textureName );
-    overlay->setMaterialForPassName( renderPassName, colorMaterial );
-    return overlay;
-}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // TODO Replace with loading from file (or running a script, python? lua?)
@@ -184,14 +170,14 @@ MaterialPtr loadPhongMaterial( TextureManagerPtr textureManager,
 /// Online simulation and display of fluid
 int runSimulation(int argc, char** argv)
 {
-    bool enableLegacyOpenGlLogging  = false;
+    bool enableLegacyOpenGlLogging  = true;
     OpenGLWindow window( "Spark", enableLegacyOpenGlLogging );
     using namespace std;
     InteractionVars vars;
     
     // Setup Gui Callbacks
     g_guiEventPublisher = GuiEventPublisherPtr( new GuiEventPublisher );
-    setGLFWCallbacks();
+    setGLFWCallbacks( window.glfwWindow() );
         
     // Tell managers where to find file resources
     FileAssetFinderPtr finder( new FileAssetFinder );
@@ -201,15 +187,18 @@ int runSimulation(int argc, char** argv)
     TextureManagerPtr textureManager( new TextureManager );
     textureManager->setAssetFinder( finder );
     
-    int width = 0; int height = 0; glfwGetWindowSize( &width, &height );
+    int width = 0; int height = 0;
+    window.getSize( &width, &height );
 
     g_arcBall = ArcBallPtr( new spark::ArcBall );
     g_arcBall->resizeViewport( 0, 0, width, height );
     g_guiEventPublisher->subscribe( g_arcBall );
     
-    EyeTrackerPtr eyeTracker( new NetworkEyeTracker );
-    eyeTracker->resizeViewport( 0, 0, width, height );
-    g_guiEventPublisher->subscribe( eyeTracker );
+    // Eye Tracker
+    EyeTrackerPtr eyeTracker;
+    //EyeTrackerPtr eyeTracker( new NetworkEyeTracker );
+    //eyeTracker->resizeViewport( 0, 0, width, height );
+    //g_guiEventPublisher->subscribe( eyeTracker );
 
     ScenePtr scene( new Scene );
     
@@ -238,14 +227,39 @@ int runSimulation(int argc, char** argv)
     lua.setShaderManager( shaderManager );
     
     lua.runScriptFromFile( "main.lua" );
-    
 
-    RenderTargetPtr mainRenderTarget = facade->getMainRenderTarget();
-    
+        RenderPassPtr hudPass = scene->getPass( "HUDPass" );
+
+        TextRenderablePtr textMsg( new TextRenderable("TestText") );
+        textMsg->initialize( textureManager, "FontTexture" );
+        MaterialPtr textMaterial = facade->createMaterial( "TextShader" );
+        textMaterial->setShaderUniform("u_color", glm::vec4( 1, 0.3, 0.3, 1 ) );
+        textMaterial->addTexture( "s_color", "FontTexture" );
+        textMsg->requiresExplicitMaterial();
+        textMsg->setMaterialForPassName( "HUDPass", textMaterial );
+        scene->add( textMsg );
+        
+        glm::vec4 color( 0.067,0.333, 0.486, 1.0 );
+        float scalex = 1;//1.0 / width ;
+        float scaley = 1;// / height;
+        float angle = 0;
+        float x = 0.0;//100.5;// ( .05 + .9*(rand()/(float)(RAND_MAX)))*width;
+        float y = 0.1;//100.5;// (-.05 + .9*(rand()/(float)(RAND_MAX)))*height;
+        float a =  1;//0.1+.8*(pow((1.0-scale/5),2));
+        
+        glm::mat4 xform;
+        angle += 0.01;
+        xform = glm::rotate( xform, angle, 0.0f, 0.0f, 1.0f );
+        xform = glm::scale( xform, scalex, scaley, 1.0f );
+        xform = glm::translate( xform, x, y, 0.0f );
+        textMsg->setTransform( xform );
+        MaterialPtr textMat = textMsg->getMaterialForPassName( "HUDPass" );
+        textMat->setShaderUniform( "u_color", color );
+
     // spark renders to sparkRenderTexture
     // overlay renders to g_transparentRenderPass using a glow shader
 
-    FluidPtr fluidData;;
+    FluidPtr fluidData;
     if( false )
     {
         fluidData.reset( new Fluid(22) );
@@ -276,7 +290,8 @@ int runSimulation(int argc, char** argv)
 
     {
         // Set window/textures sizes by sending signals to listeners
-        int width = 0; int height = 0; glfwGetWindowSize( &width, &height );
+        int width = 0; int height = 0;
+        window.getSize( &width, &height );
         g_guiEventPublisher->resizeViewport( 0, 0, width, height );
     }
 
@@ -286,12 +301,22 @@ int runSimulation(int argc, char** argv)
     while( window.isRunning() )
     {
         LOG_TRACE(g_log) << ".................................................";
+        if( g_log->isTrace() )
+        {
+            textureManager->logTextures();
+            scene->logPasses();
+        }
 
+ 
         glm::mat4 viewTransform;
 
         lastTime = currTime;
         currTime = glfwGetTime();
         vars.fps = 1.0f/(currTime - lastTime);
+
+        std::stringstream ss;
+        ss << "FPS: " << vars.fps ;
+        textMsg->setText( ss.str(), 40.0f );
 
         // UPDATE
         const float dt = 1.0f/60.0f;
@@ -306,7 +331,7 @@ int runSimulation(int argc, char** argv)
 
         scene->prepareRenderCommands();
         scene->render();
-        glfwSwapBuffers();
+        window.swapBuffers();
         
         LOG_TRACE(g_log) << "Scene end - glfwSwapBuffers()";
 
@@ -316,56 +341,57 @@ int runSimulation(int argc, char** argv)
 
         ////////////////////////////////////////////////////////////////////////
         // Process Inputs
-        if( glfwGetKey( GLFW_KEY_UP ) == GLFW_PRESS )
+        // See: http://www.glfw.org/docs/3.0/group__keys.html
+        if( window.getKey( GLFW_KEY_UP ) == GLFW_PRESS )
         {
             fluidData->reset();
         }
-        if( glfwGetKey( GLFW_KEY_ENTER ) == GLFW_PRESS )
+        if( window.getKey( GLFW_KEY_ENTER ) == GLFW_PRESS )
         {
             LOG_INFO(g_log) << "Reloading all shaders";
             shaderManager->reloadAllShaders();
         }
-        if( glfwGetKey( GLFW_KEY_ESC ) == GLFW_PRESS )
+        if( window.getKey( GLFW_KEY_ESCAPE  ) == GLFW_PRESS )
         {
             break;
         }
-        if( glfwGetKey( GLFW_KEY_BACKSPACE ) == GLFW_PRESS )
+        if( window.getKey( GLFW_KEY_BACKSPACE ) == GLFW_PRESS )
         {
             LOG_DEBUG(g_log) << "Reset sim.\n";
         }
-        if( glfwGetKey( GLFW_KEY_F1 ) == GLFW_PRESS )
+        if( window.getKey( GLFW_KEY_F1 ) == GLFW_PRESS )
         {
             boost::mutex::scoped_lock lock( g_logGuard );
             delete g_log;
             g_log = new cpplog::FilteringLogger( LL_TRACE, g_baseLogger );
         }
-        if( glfwGetKey( GLFW_KEY_F2 ) == GLFW_PRESS )
+        if( window.getKey( GLFW_KEY_F2 ) == GLFW_PRESS )
         {
             boost::mutex::scoped_lock lock( g_logGuard );
             delete g_log;
             g_log = new cpplog::FilteringLogger( LL_DEBUG, g_baseLogger );
         }
-        if( glfwGetKey( GLFW_KEY_F3 ) == GLFW_PRESS )
+        if( window.getKey( GLFW_KEY_F3 ) == GLFW_PRESS )
         {
             boost::mutex::scoped_lock lock( g_logGuard );
             delete g_log;
             g_log = new cpplog::FilteringLogger( LL_INFO, g_baseLogger );
         }
-        if( glfwGetKey( 'T' ) == GLFW_PRESS )
+        if( window.getKey( 'T' ) == GLFW_PRESS )
         {
             textureManager->logTextures();
         }
-        if( glfwGetKey( 'P' ) == GLFW_PRESS )
+        if( window.getKey( 'P' ) == GLFW_PRESS )
         {
             scene->logPasses();
         }
-        if( glfwGetKey( 'R' ) == GLFW_PRESS )
+        if( window.getKey( 'R' ) == GLFW_PRESS )
         {
             scene->reset();
             lua.runScriptFromFile( "defaultScene.lua" );
         }
         //const float eyeSeparationStep = 0.02;
-        if( glfwGetKey( GLFW_KEY_UP ) == GLFW_PRESS )
+        if( window.getKey( GLFW_KEY_UP ) == GLFW_PRESS )
         {
             //SideBySideDisplay* d = dynamic_cast<SideBySideDisplay*>(g_display);
             //if( d )
@@ -375,7 +401,7 @@ int runSimulation(int argc, char** argv)
             //    LOG_DEBUG(g_log) << "Increasing interoccular distance to " << dist << "\n";
             //}
         }
-        if( glfwGetKey( GLFW_KEY_DOWN ) == GLFW_PRESS )
+        if( window.getKey( GLFW_KEY_DOWN ) == GLFW_PRESS )
         {
             //SideBySideDisplay* d = dynamic_cast<SideBySideDisplay*>(g_display);
             //if( d )
@@ -406,13 +432,14 @@ int main( int argc, char* argv[] )
         cpplog::BackgroundLogger backgroundLogger( g_baseLogger );
         g_baseLogger = &backgroundLogger;
 #endif // CPPLOG_THREADING
-        if( argc > 2 && std::string(argv[1]) == std::string("-stderr") )
+        if( argc > 1 && std::string(argv[1]) == std::string("-stderr") )
         {
             g_baseLogger = new cpplog::StdErrLogger;
         } else {
             g_baseLogger = new cpplog::FileLogger( "sparks.log" );
         }
-        if( argc > 2 && std::string(argv[1]) == std::string("-trace") )
+        
+        if( argc > 1 && std::string(argv[1]) == std::string("-trace") )
         {
             g_log = new cpplog::FilteringLogger( LL_TRACE, g_baseLogger );
             LOG_INFO(g_log) << "TRACE level logging.";

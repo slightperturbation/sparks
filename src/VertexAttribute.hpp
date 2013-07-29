@@ -14,7 +14,7 @@
 #include <string>
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include <GL/glfw.h>
+#include <GLFW/glfw3.h>
 namespace spark
 {
     /// VertexAttribute ties together a channel in the vertex data stream
