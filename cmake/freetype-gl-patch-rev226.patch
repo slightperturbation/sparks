@@ -1,0 +1,12 @@
+Index: CMakeLists.txt
+===================================================================
+44c46
+< 	SET( GLUT_INCLUDE_DIR
+---
+> 	SET( GLUT_INCLUDE_DIRS
+48c50
+<     SET( GLEW_INCLUDE_DIR
+---
+>     SET( GLEW_INCLUDE_DIRS
+55a58
+> SET( FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR_ft2build} ${FREETYPE_INCLUDE_DIR_freetype2} )
