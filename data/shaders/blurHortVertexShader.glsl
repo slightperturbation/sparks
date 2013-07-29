@@ -18,7 +18,7 @@ uniform vec2  u_targetSizeInPixels;   // size in pixels of the current render ta
 //////////////////////////////////////////////////////////////////////
 
 // Shader parameters
-uniform float u_blurRadius = 1.0;
+uniform float u_blurRadius = 0.05; // Fraction of target blur will extend to
 
 // Out to fragment shader
 out vec4 f_fragColor;      // interpolated color of fragment from vertex colors 
@@ -37,7 +37,7 @@ void main()
     f_texCoord = vec2( v_texCoord.s, 1 - v_texCoord.t );// flip tex coord to orient vs render
     f_vertex_screen = u_projViewModelMat * vec4( v_position, 1.0 );
 
-    float scale = u_blurRadius / u_targetSizeInPixels[1];
+    float scale = 0.142857143 * u_blurRadius;
     f_blurTexCoords[ 0] = f_texCoord + vec2(-7*scale, 0.0);
     f_blurTexCoords[ 1] = f_texCoord + vec2(-6*scale, 0.0);
     f_blurTexCoords[ 2] = f_texCoord + vec2(-5*scale, 0.0);

@@ -20,27 +20,25 @@ uniform vec2  u_targetSizeInPixels;   // size in pixels of the current render ta
 //////////////////////////////////////////////////////////////////////
 
 uniform vec4 u_color = vec4( 1, 1, 1, 1 );
-
 uniform sampler2D s_color;
 
 void main()
 {
     outColor = vec4(0.0);
-    outColor += texture(s_color, f_blurTexCoords[ 0])*0.0044299121055113265;
-    outColor += texture(s_color, f_blurTexCoords[ 1])*0.00895781211794;
-    outColor += texture(s_color, f_blurTexCoords[ 2])*0.0215963866053;
-    outColor += texture(s_color, f_blurTexCoords[ 3])*0.0443683338718;
-    outColor += texture(s_color, f_blurTexCoords[ 4])*0.0776744219933;
-    outColor += texture(s_color, f_blurTexCoords[ 5])*0.115876621105;
-    outColor += texture(s_color, f_blurTexCoords[ 6])*0.147308056121;
-    outColor += texture(s_color, f_texCoord         )*0.159576912161;
-    outColor += texture(s_color, f_blurTexCoords[ 7])*0.147308056121;
-    outColor += texture(s_color, f_blurTexCoords[ 8])*0.115876621105;
-    outColor += texture(s_color, f_blurTexCoords[ 9])*0.0776744219933;
-    outColor += texture(s_color, f_blurTexCoords[10])*0.0443683338718;
-    outColor += texture(s_color, f_blurTexCoords[11])*0.0215963866053;
-    outColor += texture(s_color, f_blurTexCoords[12])*0.00895781211794;
-    outColor += texture(s_color, f_blurTexCoords[13])*0.0044299121055113265;
-    // outColor = texture(s_color, f_texCoord         );
-    // outColor *= u_color;
+    outColor += texture(s_color, f_blurTexCoords[ 0])*0.008846951;
+    outColor += texture(s_color, f_blurTexCoords[ 1])*0.018215906;
+    outColor += texture(s_color, f_blurTexCoords[ 2])*0.033562395;
+    outColor += texture(s_color, f_blurTexCoords[ 3])*0.055335035;
+    outColor += texture(s_color, f_blurTexCoords[ 4])*0.081638025;
+    outColor += texture(s_color, f_blurTexCoords[ 5])*0.107777932;
+    outColor += texture(s_color, f_blurTexCoords[ 6])*0.127324582;
+    outColor += texture(s_color, f_texCoord         )*0.134598348;
+    outColor += texture(s_color, f_blurTexCoords[ 7])*0.127324582;
+    outColor += texture(s_color, f_blurTexCoords[ 8])*0.107777932;
+    outColor += texture(s_color, f_blurTexCoords[ 9])*0.081638025;
+    outColor += texture(s_color, f_blurTexCoords[10])*0.055335035;
+    outColor += texture(s_color, f_blurTexCoords[11])*0.033562395;
+    outColor += texture(s_color, f_blurTexCoords[12])*0.018215906;
+    outColor += texture(s_color, f_blurTexCoords[13])*0.008846951;
+    outColor *= u_color;
 }
