@@ -181,28 +181,31 @@ set( FREETYPEGL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/ext/FreeTypeGL" )
 set( FREETYPEGL_SVN_URL "http://freetype-gl.googlecode.com/svn/trunk/"
      CACHE STRING "SVN Repository for FreeType-GL library." )
 
+# Fix bugs in REV 227 of FreeTypeGL's build on windows and an opengl bug on mac
+# Note that we need to stick this in a temporary batch file because
+# the expanded patch command can easily be too long for widows CMD 
+SET( FREETYPEGL_PATCH_BATCH ${CMAKE_SOURCE_DIR}/cmake/freetype-gl-patch-rev227.patch )
+
 if( WIN32 )
-  # Fix bugs in REV 226 of FreeTypeGL's build on windows
-  # Need to stick this in a temporary batch file because
-  # the patch command can easily be too long for widows CMD 
-  SET( PATCH_BATCH_FILE ${FREETYPEGL_PREFIX}/freetypegl_patch_wrap.bat )
+  # Batch file to be created by this CMake
+  SET( FREETYPE_PATCH_BATCH_FILE ${FREETYPEGL_PREFIX}/freetypegl_patch_wrap.bat )
+  # Lock file to prevent re-patching with every build
   SET( FREETYPEGL_PATCH_GUARDFILE ${FREETYPEGL_PREFIX}/freetypegl_patch_guardfile.txt )
 
   # Batch file uses a guard file to avoid patching multiple times (e.g., for Debug and Release builds)
-  FILE( WRITE  ${PATCH_BATCH_FILE} "echo FreeTypeGL patching...\n" )
-  FILE( APPEND ${PATCH_BATCH_FILE} "@ECHO OFF\n" )
-  FILE( APPEND ${PATCH_BATCH_FILE} ":BEGIN\n" )
-  FILE( APPEND ${PATCH_BATCH_FILE} "if exist \"${FREETYPEGL_PATCH_GUARDFILE}\" GOTO HASPATCHED\n" )
-  FILE( APPEND ${PATCH_BATCH_FILE} "  \"${PATCH_CMD}\" -d \"${FREETYPEGL_PREFIX}/src/FREETYPEGL/\" -p0 -t -i \"${CMAKE_SOURCE_DIR}/cmake/freetype-gl-patch-rev226.patch\"\n" )
-  FILE( APPEND ${PATCH_BATCH_FILE} "  copy /y nul \"${FREETYPEGL_PATCH_GUARDFILE}\"\n" )
-  FILE( APPEND ${PATCH_BATCH_FILE} "  echo File patched.\n" )
-  FILE( APPEND ${PATCH_BATCH_FILE} ":HASPATCHED\n" )
-  FILE( APPEND ${PATCH_BATCH_FILE} "echo Done.\n" )
+  FILE( WRITE  ${FREETYPE_PATCH_BATCH_FILE} "echo FreeTypeGL patching...\n" )
+  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "@ECHO OFF\n" )
+  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} ":BEGIN\n" )
+  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "if exist \"${FREETYPEGL_PATCH_GUARDFILE}\" GOTO HASPATCHED\n" )
+  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "  \"${PATCH_CMD}\" -d \"${FREETYPEGL_PREFIX}/src/FREETYPEGL/\" -p0 -t -i \"${FREETYPEGL_PATCH_BATCH}\"\n" )
+  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "  copy /y nul \"${FREETYPEGL_PATCH_GUARDFILE}\"\n" )
+  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "  echo File patched.\n" )
+  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} ":HASPATCHED\n" )
+  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "echo Done.\n" )
 
-  set( FREETYPEGL_PATCH_CMD "${PATCH_BATCH_FILE}" )
+  set( FREETYPEGL_PATCH_CMD "${FREETYPE_PATCH_BATCH_FILE}" )
 else( WIN32 )
-  # Batch for patch needed on unix-style platforms
-  #set( FREETYPEGL_PATCH_CMD "${PATCH_CMD} -d \"${FREETYPEGL_PREFIX}/src/FREETYPEGL/\" -p0 -t -i \"${CMAKE_SOURCE_DIR}/cmake/freetype-gl-patch-rev226.patch\"" )
+  #set( FREETYPEGL_PATCH_CMD "${PATCH_CMD} -d \"${FREETYPEGL_PREFIX}/src/FREETYPEGL/\" -p0 -t -i  \"${FREETYPEGL_PATCH_BATCH}\"" )
 endif( WIN32 )
 
 ExternalProject_Add(

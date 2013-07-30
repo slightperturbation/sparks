@@ -1,0 +1,14 @@
+Index: CMakeLists.txt
+===================================================================
+61a61
+>     SET( FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR_ft2build} ${FREETYPE_INCLUDE_DIR_freetype2} )
+Index: texture-atlas.c
+===================================================================
+341c341
+<         glTexImage2D( GL_TEXTURE_2D, 0, GL_ALPHA, self->width, self->height,
+---
+>         glTexImage2D( GL_TEXTURE_2D, 0, GL_RED, self->width, self->height,
+342c342
+<                       0, GL_ALPHA, GL_UNSIGNED_BYTE, self->data );
+---
+>                       0, GL_RED, GL_UNSIGNED_BYTE, self->data );
