@@ -382,6 +382,7 @@ spark::TextureManager
     {
         LOG_ERROR(g_log) << "Unable to provide texture unit for unknown texture \""
             << aHandle << "\".";
+        throw "getTextureUnitForHandle called for unknown texture";
         return -1;
     }
     return ensureTextureUnitBoundToId( texId );

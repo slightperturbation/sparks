@@ -1,99 +1,87 @@
 
 #include "TextRenderable.hpp"
 
-
 // Freetype-GL
 #include "freetype-gl.h"
 #include "edtaa3func.h"
 #include "font-manager.h"
 #include "vertex-buffer.h"
 #include "text-buffer.h"
-//#include "markup.h"
 
 #include <boost/algorithm/string.hpp>
-
 
 spark::TextRenderable
 ::TextRenderable( const RenderableName& name )
 : Renderable( name ),
-  m_fontTextureName( "_UNASSIGNED_FONT_TEXTURE" ),
-  m_vertexBuffer( nullptr ),
-  m_fontAtlas( nullptr ),
-  m_font( nullptr ),
   m_vao( -1 ),
-  m_text( "TextRenderable" ),
-  m_linesPerViewport( 24.0 ),
+  m_text( "Lorem ipsum dolor sit amet, consectetur adipisicing elit,\nsed do eiusmod tempor incididunt ut labore\net dolore magna aliqua." ),
   m_isDirty( true )
 {
 }
 
-void 
+void
 spark::TextRenderable
-::initialize( TextureManagerPtr tm, const TextureName& fontTextureName /* FontManagerPtr */ )
+::initialize( FontManagerPtr fontManager,
+              const std::string& fontName,
+              int fontSize )
 {
     if( m_vao == -1 )
     {
         glGenVertexArrays( 1, &m_vao );
     }
-    m_fontTextureName = fontTextureName;
-    m_textureManager = tm;
-    m_finder = m_textureManager->assetFinder();
-    // Load font from file
-    std::string filename;
-    m_finder->findFile( "Vera.ttf", filename );
-    if( m_fontAtlas ) 
-    {
-        texture_atlas_delete( m_fontAtlas );
-    }
-    m_fontAtlas = texture_atlas_new( 512, 512, 1 );
-    // 72pts in a 512x512 texture is a good compromise
-    // giant letters look good, tiny fonts look OK
-    m_font = texture_font_new( m_fontAtlas, filename.c_str(), 72 );
-    { // Create the distance map and copy it to the font atlas
-        unsigned char *map = make_distance_map( m_fontAtlas->data,
-                                                m_fontAtlas->width,
-                                                m_fontAtlas->height);
-        memcpy( m_fontAtlas->data, map,
-                m_fontAtlas->width*m_fontAtlas->height*sizeof(unsigned char) );
-        free(map);
-    }
+    m_fontManager = fontManager;
     
-    // activate the next texture unit to create a new texture with
-    // avoids clobbering existing unit->texture mappings
-    GLint textureUnit = m_textureManager->reserveTextureUnit();
-    GL_CHECK( glActiveTexture( GL_TEXTURE0 + textureUnit ) );
-
-    // creates texture on current texture unit
-    texture_atlas_upload( m_fontAtlas );
-
-    // bind texture with id=atlas->id
-    if( m_fontAtlas->id == GL_FALSE )
+    if( !m_fontManager->m_fontManager )
     {
-        std::stringstream msg;
-        msg << "Font atlas failed to load using font at filename\""
-        << filename << "\".  TextureID for FontAtlas is 0 (GL_FALSE).";
-        LOG_ERROR(g_log) << msg.str();
-        throw msg.str();
+        LOG_ERROR(g_log) << "TextRenderable[\"" << name() 
+            << "\"] failed to initialize due to null fontManager.";
+        throw "TextRenderable failed to init due to null fontManager";
     }
-    else
+    // Init text-buffer
+    // can't use text_buffer_new because we want to have our own font_manager
+    m_textBuffer.manager = m_fontManager->m_fontManager;
+    m_textBuffer.line_start = 0;
+    m_textBuffer.line_ascender = 0;
+    m_textBuffer.base_color.r = 0.0;
+    m_textBuffer.base_color.g = 0.0;
+    m_textBuffer.base_color.b = 0.0;
+    m_textBuffer.base_color.a = 1.0;
+    m_textBuffer.line_descender = 0;
+    m_textBuffer.buffer = vertex_buffer_new( "v_position:3f,v_texCoord:2f,v_color:4f,ashift:1f,agamma:1f ");
+
+    // Default markup
+    vec4 black  = {{0.0, 0.0, 0.0, 1.0}};
+    vec4 white  = {{1.0, 1.0, 1.0, 1.0}};
+    vec4 none   = {{1.0, 1.0, 1.0, 0.0}};
+    vec4 color = white;
+    m_markup.family  = strdup( fontName.c_str() );
+    m_markup.size    = fontSize;
+    m_markup.bold    = 0;
+    m_markup.italic  = 0;
+    m_markup.rise    = 0.0;
+    m_markup.spacing = 0;
+    m_markup.gamma   = 0;
+    m_markup.foreground_color    = color;
+    m_markup.background_color    = none;
+    m_markup.underline           = 0;
+    m_markup.underline_color     = color;
+    m_markup.overline            = 0;
+    m_markup.overline_color      = color;
+    m_markup.strikethrough       = 0;
+    m_markup.strikethrough_color = color;
+    m_markup.font = m_fontManager->getFont( fontName, fontSize );
+    if( !m_markup.font )
     {
-        LOG_DEBUG(g_log) << "FontAtlas TextureId = " << m_fontAtlas->id;
-        // Let texture manager know about the font texture
-        // this name is used by shaders
-        m_textureManager->acquireExternallyAllocatedTexture( m_fontTextureName,
-                                                             m_fontAtlas->id,
-                                                             GL_TEXTURE_2D,
-                                                             textureUnit );
-        GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
+        LOG_ERROR(g_log) << "markup.font was null. aborting TextRenderable::update()";
+        throw "markup.font was null. aborting TextRenderable::update()";
     }
 }
 
 void
 spark::TextRenderable
-::setText( const std::string& msg, float linesPerViewport )
+::setText( const std::string& msg )
 {
     m_text = msg;
-    m_linesPerViewport = linesPerViewport;
     m_isDirty = true;
 }
 
@@ -101,12 +89,21 @@ void
 spark::TextRenderable
 ::render( const RenderCommand& rc ) const
 {
-    if( m_vertexBuffer )
+    if( m_textBuffer.buffer )
     {
         glBindVertexArray( m_vao );
-        vertex_buffer_render( m_vertexBuffer, GL_TRIANGLES );
+        vertex_buffer_render( m_textBuffer.buffer, GL_TRIANGLES );
         glBindVertexArray( 0 );
     }
+}
+
+void
+spark::TextRenderable
+::filterText( std::string& str )
+{
+    std::string out;
+    // Tabs to four spaces
+    boost::replace_all( str, "\t", "    " );
 }
 
 void 
@@ -117,56 +114,49 @@ spark::TextRenderable
     {
         return;
     }
-    if( m_vertexBuffer )
+    if( !m_markup.font )
     {
-        vertex_buffer_delete( m_vertexBuffer );
+        LOG_ERROR(g_log) << "markup.font was null. aborting TextRenderable::update()";
+        throw "markup.font was null. aborting TextRenderable::update()";
     }
-    // create the texture and vertex buffer
-    m_vertexBuffer = vertex_buffer_new( "v_position:3f,v_texCoord:2f,v_color:4f" );
-
     vec2 pen = {{0,0}};
-    vec4 black = {{1,1,1,1}};
-    
-    // Need to select the correct texture unit for add_text
-    m_textureManager->activateTextureUnitForHandle( m_fontTextureName );
-
-    std::vector< std::string > lines;
-    boost::split( lines, m_text, boost::is_any_of("\n") );
     vec4 bbox = {{0,0,0,0}};
-    for( auto lineIter = lines.begin(); lineIter != lines.end(); ++lineIter )
-    {
-        std::wstring wline( lineIter->begin(), lineIter->end() );
-        add_text( m_vertexBuffer, m_font, wline.c_str(), &black, &pen, bbox );
-        
-        // drop pen to next line
-        pen.y -= m_font->height;
-        pen.x  = 0;
-    }
-//    
-//    //wchar_t *text = L"The quick brown fox jumps over the lazy dog. THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG-!@#$%^&*()_+{}[];:'.,?/\|012345678905";
-//    wchar_t *text = L"A";
-//    add_text( m_vertexBuffer, m_font, text, &black, &pen, bbox );
-//
-//    pen.y -= m_font->height;
-//    pen.x  = 0;
-//    add_text( m_vertexBuffer, m_font, L"B", &black, &pen, bbox );
+    text_buffer_clear( &m_textBuffer );
+    filterText( m_text );
+    std::wstring wtext( m_text.begin(), m_text.end() );
+    text_buffer_add_text( &m_textBuffer, &pen, &m_markup,
+                          const_cast<wchar_t*>(wtext.c_str()),
+                          wtext.size() );
+    // Deprecated method for writing multiple lines, text_buffer replaces this:
+    //vec4 black = {{1,1,1,1}};
+    //std::vector< std::string > lines;
+    //boost::split( lines, m_text, boost::is_any_of("\n") );
+    //for( auto lineIter = lines.begin(); lineIter != lines.end(); ++lineIter )
+    //{
+    //    std::wstring wline( lineIter->begin(), lineIter->end() );
+    //    //add_text( m_vertexBuffer, m_font, wline.c_str(), &black, &pen, bbox );
+    //    //text_buffer_printf( &m_textBuffer, &pen, &m_markup, wline.c_str(), NULL );
+    //    // drop pen to next line
+    //    pen.y -= m_markup.font->height;
+    //    pen.x  = 0;
+    //}
 
-    // normalize size of vertex buffer to [0,1]
+    // Scale the text buffer's vertex
+    if( true )
     {
-        vector_t * vertices = m_vertexBuffer->vertices;
-
-        float maxDim = std::max<float>( bbox.width, bbox.height );
-        // convert pts to fraction of framebuffer
-        float scale = 1.0f / (m_linesPerViewport*53.0f);  
+        vector_t * vertices = m_textBuffer.buffer->vertices;
+        // convert pts to fraction of frame buffer
+        float scaleW = 1.0f / m_fontManager->m_fontManager->atlas->width;
+        float scaleH = 1.0f / m_fontManager->m_fontManager->atlas->height;
         for( size_t i = 0; i < vector_size(vertices); ++i )
         {
             vertex_t * vertex = (vertex_t *) vector_get(vertices,i);
             vertex->x -= (int)bbox.x;
-            vertex->x *= scale;
+            vertex->x *= scaleW;
             vertex->y -= (int)bbox.y;
-            vertex->y *= scale;
+            vertex->y *= scaleH;
         }
-    }    
+    }
     m_isDirty = false;
 }
 
@@ -226,73 +216,3 @@ spark
     }
 }
 
-
-// ------------------------------------------------------ make_distance_map ---
-unsigned char *
-spark
-::make_distance_map( unsigned char *img,
-                     unsigned int width, unsigned int height )
-{
-    short * xdist = (short *)  malloc( width * height * sizeof(short) );
-    short * ydist = (short *)  malloc( width * height * sizeof(short) );
-    double * gx   = (double *) calloc( width * height, sizeof(double) );
-    double * gy      = (double *) calloc( width * height, sizeof(double) );
-    double * data    = (double *) calloc( width * height, sizeof(double) );
-    double * outside = (double *) calloc( width * height, sizeof(double) );
-    double * inside  = (double *) calloc( width * height, sizeof(double) );
-    int i;
-
-    // Convert img into double (data)
-    double img_min = 255, img_max = -255;
-    for( i=0; i<width*height; ++i)
-    {
-        double v = img[i];
-        data[i] = v;
-        if (v > img_max) img_max = v;
-        if (v < img_min) img_min = v;
-    }
-    // Rescale image levels between 0 and 1
-    for( i=0; i<width*height; ++i)
-    {
-        data[i] = (img[i]-img_min)/img_max;
-    }
-
-    // Compute outside = edtaa3(bitmap); % Transform background (0's)
-    computegradient( data, height, width, gx, gy);
-    edtaa3(data, gx, gy, height, width, xdist, ydist, outside);
-    for( i=0; i<width*height; ++i)
-        if( outside[i] < 0 )
-            outside[i] = 0.0;
-
-    // Compute inside = edtaa3(1-bitmap); % Transform foreground (1's)
-    memset(gx, 0, sizeof(double)*width*height );
-    memset(gy, 0, sizeof(double)*width*height );
-    for( i=0; i<width*height; ++i)
-        data[i] = 1 - data[i];
-    computegradient( data, height, width, gx, gy);
-    edtaa3(data, gx, gy, height, width, xdist, ydist, inside);
-    for( i=0; i<width*height; ++i)
-        if( inside[i] < 0 )
-            inside[i] = 0.0;
-
-    // distmap = outside - inside; % Bipolar distance field
-    unsigned char *out = (unsigned char *) malloc( width * height * sizeof(unsigned char) );
-    for( i=0; i<width*height; ++i)
-    {
-        outside[i] -= inside[i];
-        outside[i] = 128+outside[i]*16;
-        if( outside[i] < 0 ) outside[i] = 0;
-        if( outside[i] > 255 ) outside[i] = 255;
-        out[i] = 255 - (unsigned char) outside[i];
-        //out[i] = (unsigned char) outside[i];
-    }
-
-    free( xdist );
-    free( ydist );
-    free( gx );
-    free( gy );
-    free( data );
-    free( outside );
-    free( inside );
-    return out;
-}

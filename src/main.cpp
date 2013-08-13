@@ -228,34 +228,70 @@ int runSimulation(int argc, char** argv)
     
     lua.runScriptFromFile( "main.lua" );
 
-        RenderPassPtr hudPass = scene->getPass( "HUDPass" );
+    RenderPassPtr hudPass = scene->getPass( "HUDPass" );
+    
+    
+    /// FontManager fm( textureManager, "TextureAtlas" );
+    /// const std::string fontName = "Sans";
+    /// const int fontSize = 72;
+    /// fm->addFont( fontName, fontSize, "HelveticaNeue.ttf" );
+    /// TextRenderable tr( fm, "Message" );
+    /// tr.intialize( fm, fontName, fontSize );
+    /// tr.setText( "Hello, World" );
+    
+    FontManagerPtr fontManager( new FontManager(textureManager, 
+        "FontAtlasTexture" ) );
+    
+    TextRenderablePtr textMsg( new TextRenderable("TestText") );
+    const std::string fontName = "Sans";
+    const int fontSize = 72;
+    fontManager->addFont( fontName, fontSize, "Vera.ttf" );
+    textMsg->initialize( fontManager, fontName, fontSize );
+    
+    MaterialPtr textMaterial = facade->createMaterial( "TextShader" );
+    textMaterial->setShaderUniform("u_color", glm::vec4( 1, 1, 1, 1 ) );
+    textMaterial->addTexture( "s_color", fontManager->getFontAtlasTextureName() );
+    textMsg->requiresExplicitMaterial();
+    textMsg->setMaterialForPassName( "HUDPass", textMaterial );
+    scene->add( textMsg );
+    
+    glm::vec4 color( 0.067,0.833, 0.086, 0.85 );
+    float x = 0.0;
+    float y = 0.5;
+    glm::mat4 xform;
+    xform = glm::translate( xform, x, y, 0.0f );
+    textMsg->setTransform( xform );
+    MaterialPtr textMat = textMsg->getMaterialForPassName( "HUDPass" );
+    textMat->setShaderUniform( "u_color", color );
+    //////////
 
-        TextRenderablePtr textMsg( new TextRenderable("TestText") );
-        textMsg->initialize( textureManager, "FontTexture" );
-        MaterialPtr textMaterial = facade->createMaterial( "TextShader" );
-        textMaterial->setShaderUniform("u_color", glm::vec4( 1, 0.3, 0.3, 1 ) );
-        textMaterial->addTexture( "s_color", "FontTexture" );
-        textMsg->requiresExplicitMaterial();
-        textMsg->setMaterialForPassName( "HUDPass", textMaterial );
-        scene->add( textMsg );
-        
-        glm::vec4 color( 0.067,0.333, 0.486, 1.0 );
-        float scalex = 1;//1.0 / width ;
-        float scaley = 1;// / height;
-        float angle = 0;
-        float x = 0.0;//100.5;// ( .05 + .9*(rand()/(float)(RAND_MAX)))*width;
-        float y = 0.1;//100.5;// (-.05 + .9*(rand()/(float)(RAND_MAX)))*height;
-        float a =  1;//0.1+.8*(pow((1.0-scale/5),2));
-        
-        glm::mat4 xform;
-        angle += 0.01;
-        xform = glm::rotate( xform, angle, 0.0f, 0.0f, 1.0f );
-        xform = glm::scale( xform, scalex, scaley, 1.0f );
-        xform = glm::translate( xform, x, y, 0.0f );
-        textMsg->setTransform( xform );
-        MaterialPtr textMat = textMsg->getMaterialForPassName( "HUDPass" );
-        textMat->setShaderUniform( "u_color", color );
+//    // Second text using same font -- make sure doesn't get reloaded
+//    TextRenderablePtr text2Msg( new TextRenderable("TestText") );
+//    text2Msg->initialize( fontManager );
+//    MaterialPtr text2Material = facade->createMaterial( "TextShader" );
+//    text2Material->setShaderUniform("u_color", glm::vec4( 1, 0.3, 0.3, 1 ) );
+//    text2Material->addTexture( "s_color", fontManager->getFontAtlasTextureName() );
+//    text2Msg->requiresExplicitMaterial();
+//    text2Msg->setMaterialForPassName( "HUDPass", text2Material );
+//    scene->add( text2Msg );
+//    
+//    {
+//        glm::vec4 color( 1,1,1,1 );
+//        float x = 0.5;
+//        float y = 0.5;
+//        glm::mat4 xform;
+//        xform = glm::translate( xform, x, y, 0.0f );
+//        text2Msg->setTransform( xform );
+//        MaterialPtr text2Mat = text2Msg->getMaterialForPassName( "HUDPass" );
+//        text2Mat->setShaderUniform( "u_color", color );
+//        text2Msg->setText( "VEST" );
+//        
+//    }
+    //////////
 
+    
+    
+    
     // spark renders to sparkRenderTexture
     // overlay renders to g_transparentRenderPass using a glow shader
 
@@ -315,8 +351,10 @@ int runSimulation(int argc, char** argv)
         vars.fps = 1.0f/(currTime - lastTime);
 
         std::stringstream ss;
-        ss << "FPS: " << vars.fps ;
-        textMsg->setText( ss.str(), 40.0f );
+        ss << "FPS: " << vars.fps << "\nThis is a test\n\tAnd another";
+        textMsg->setText( ss.str() );
+
+        //text2Msg->setText( "VEST", 1.0f);//*((int)(currTime) % 10) );
 
         // UPDATE
         const float dt = 1.0f/60.0f;
