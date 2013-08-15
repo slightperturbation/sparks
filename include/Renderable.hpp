@@ -36,15 +36,7 @@ namespace spark
         /// is being rendered.
         /// Updates are required to not change the OpenGL state.
         virtual void render( const RenderCommand& rc ) const = 0;
-        /// Ties the shader's "in" variables to the channels of this 
-        /// Renderable's data, e.g, "in vec3 v_position" in the shader 
-        /// needs to point to offset 0, stride 6.
-        /// Need be done only after reloading shader or re-assigning 
-        /// Renderable to shader, or after changing the vertex type 
-        /// used by the Renderable
-        /// Must be called for each shader that uses this Renderable
-        virtual void attachShaderAttributes( GLuint shaderIndex ) = 0;
-        
+
         /// If set to true, this Renderable will ignore RenderPass's default
         /// Materials, only rendering if a material is explicitly assigned
         /// to this material for that RenderPass.
@@ -76,6 +68,8 @@ namespace spark
         /// Specifies that this Renderable should be rendered using
         /// material in the given RenderPass.  This will override the
         /// RenderPass's default material.
+        /// The Material's shader must be loaded so vertex positions
+        /// can be set.
         void setMaterialForPassName( const RenderPassName& renderPassName,
                                      MaterialPtr material );
 
@@ -85,6 +79,15 @@ namespace spark
             RenderablePtr renderable );
 
     protected:
+        /// Ties the shader's "in" variables to the channels of this
+        /// Renderable's data, e.g, "in vec3 v_position" in the shader
+        /// needs to point to offset 0, stride 6.
+        /// Need be done only after reloading shader or re-assigning
+        /// Renderable to shader, or after changing the vertex type
+        /// used by the Renderable
+        /// Must be called for each shader that uses this Renderable
+        virtual void attachShaderAttributes( GLuint shaderIndex ) = 0;
+        
         RenderableName m_name;
         bool m_requiresExplicitMaterial;
         std::map< const RenderPassName, MaterialPtr > m_materials;
