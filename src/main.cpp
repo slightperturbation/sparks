@@ -170,7 +170,7 @@ MaterialPtr loadPhongMaterial( TextureManagerPtr textureManager,
 /// Online simulation and display of fluid
 int runSimulation(int argc, char** argv)
 {
-    bool enableLegacyOpenGlLogging  = true;
+    bool enableLegacyOpenGlLogging  = false;
     OpenGLWindow window( "Spark", enableLegacyOpenGlLogging );
     using namespace std;
     InteractionVars vars;
@@ -201,6 +201,7 @@ int runSimulation(int argc, char** argv)
     //g_guiEventPublisher->subscribe( eyeTracker );
 
     ScenePtr scene( new Scene );
+    ScenePtr sceneTwo( new Scene );
     
     OrthogonalProjectionPtr overlayPerspective( new OrthogonalProjection );
     PerspectiveProjectionPtr cameraPerspective( new PerspectiveProjection );
@@ -220,15 +221,30 @@ int runSimulation(int argc, char** argv)
                                             cameraPerspective,
                                             frameBufferTarget,
                                             g_guiEventPublisher ) );
-    
     LuaInterpreter lua( finder );
     lua.setFacade( facade );
     lua.setTextureManager( textureManager );
     lua.setShaderManager( shaderManager );
-    
+    lua.runScriptFromFile( "loadShaders.lua" );
+    lua.runScriptFromFile( "loadTextures.lua" );
+    lua.runScriptFromFile( "loadRenderPasses.lua" );
     lua.runScriptFromFile( "main.lua" );
 
-    RenderPassPtr hudPass = scene->getPass( "HUDPass" );
+///////////////////////
+    // sceneTwo only needs minimal passes
+    SparkFacadePtr facadeTwo( new SparkFacade( sceneTwo,
+        finder,
+        textureManager,
+        shaderManager,
+        cameraPerspective,
+        frameBufferTarget,
+        g_guiEventPublisher ) );
+
+    LuaInterpreter luaTwo( finder );
+    luaTwo.setFacade( facadeTwo );
+    luaTwo.setTextureManager( textureManager );
+    luaTwo.setShaderManager( shaderManager );
+    luaTwo.runScriptFromFile( "loadRenderPasses.lua" );
     
     
     /// FontManager fm( textureManager, "TextureAtlas" );
@@ -241,19 +257,19 @@ int runSimulation(int argc, char** argv)
     
     FontManagerPtr fontManager( new FontManager(textureManager, 
         "FontAtlasTexture" ) );
-    
-    TextRenderablePtr textMsg( new TextRenderable("TestText") );
     const std::string fontName = "Sans";
     const int fontSize = 72;
     fontManager->addFont( fontName, fontSize, "Vera.ttf" );
+
+    TextRenderablePtr textMsg( new TextRenderable("TestText") );
     textMsg->initialize( fontManager, fontName, fontSize );
     
-    MaterialPtr textMaterial = facade->createMaterial( "TextShader" );
+    MaterialPtr textMaterial = facadeTwo->createMaterial( "TextShader" );
     textMaterial->setShaderUniform("u_color", glm::vec4( 1, 1, 1, 1 ) );
     textMaterial->addTexture( "s_color", fontManager->getFontAtlasTextureName() );
     textMsg->requiresExplicitMaterial();
     textMsg->setMaterialForPassName( "HUDPass", textMaterial );
-    scene->add( textMsg );
+    sceneTwo->add( textMsg );
     
     glm::vec4 color( 0.067,0.833, 0.086, 0.85 );
     float x = 0.0;
@@ -323,7 +339,6 @@ int runSimulation(int argc, char** argv)
         //scene->add( rayCastFluid );
         scene->add( slices );
     }
-
     {
         // Set window/textures sizes by sending signals to listeners
         int width = 0; int height = 0;
@@ -331,19 +346,28 @@ int runSimulation(int argc, char** argv)
         g_guiEventPublisher->resizeViewport( 0, 0, width, height );
     }
 
+    ScenePtr currScene = sceneTwo;
+    LuaInterpreter* currLua = &luaTwo;
+
     const double startTime = glfwGetTime();
+    double nextSceneTime = startTime + 10.0;
     double currTime = startTime;
     double lastTime = startTime;
     while( window.isRunning() )
     {
+        if( currTime > nextSceneTime )
+        {
+            currScene = (currScene == scene) ? sceneTwo : scene ;
+            nextSceneTime = currTime + 10;
+        }
+
         LOG_TRACE(g_log) << ".................................................";
         if( g_log->isTrace() )
         {
             textureManager->logTextures();
-            scene->logPasses();
+            currScene->logPasses();
         }
 
- 
         glm::mat4 viewTransform;
 
         lastTime = currTime;
@@ -351,7 +375,7 @@ int runSimulation(int argc, char** argv)
         vars.fps = 1.0f/(currTime - lastTime);
 
         std::stringstream ss;
-        ss << "FPS: " << vars.fps << "\nThis is a test\n\tAnd another";
+        ss << "Time: " << currTime << "\nFPS: " << vars.fps << "\nThis is a test\n\tAnd another";
         textMsg->setText( ss.str() );
 
         //text2Msg->setText( "VEST", 1.0f);//*((int)(currTime) % 10) );
@@ -367,13 +391,13 @@ int runSimulation(int argc, char** argv)
             eyeTracker->updatePerspective( cameraPerspective );
         }
 
-        scene->prepareRenderCommands();
-        scene->render();
+        currScene->prepareRenderCommands();
+        currScene->render();
         window.swapBuffers();
         
         LOG_TRACE(g_log) << "Scene end - glfwSwapBuffers()";
 
-        scene->update( dt );
+        currScene->update( dt );
         
         if( vars.isSavingFrames ) writeFrameBufferToFile( "sparks_" );
 
@@ -421,11 +445,11 @@ int runSimulation(int argc, char** argv)
         }
         if( window.getKey( 'P' ) == GLFW_PRESS )
         {
-            scene->logPasses();
+            currScene->logPasses();
         }
         if( window.getKey( 'R' ) == GLFW_PRESS )
         {
-            scene->reset();
+            currScene->reset();
             lua.runScriptFromFile( "defaultScene.lua" );
         }
         //const float eyeSeparationStep = 0.02;

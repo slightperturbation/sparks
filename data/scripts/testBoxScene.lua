@@ -8,37 +8,6 @@ textureManager:logTextures();
 
 print( "\tSetting up render passes..." );
 
-frameBufferTarget = spark:getFrameBufferRenderTarget()
-camera = spark:getCamera()
-
--- Create the final pass, render texture MainRenderTargetTexture using
--- the standard texturedOverlayShader.  Provides supersampling
--- based on the size of the source texture (MainRenderTargetTexture)
---
--- MSAAFinalRenderPass: MainRenderTargetTexture -> frameBufferTarget
---
-spark:createPostProcessingRenderPass( 0.0, 
-      "MSAAFinalRenderPass",
-      "MainRenderTargetTexture", frameBufferTarget, 
-      "texturedOverlayShader" )
-
-mainRenderTarget = spark:createTextureRenderTarget( "MainRenderTargetTexture" )
-spark:setMainRenderTarget( mainRenderTarget )
-mainRenderTarget:setClearColor( vec4( 0,0,0,0 ) )
-
-opaqueRenderPass = spark:createRenderPass( 1.0, "OpaquePass", mainRenderTarget )
-opaqueRenderPass:setDepthWrite( true )
-opaqueRenderPass:setDepthTest( true )
-opaqueRenderPass:disableBlending()
-
-HUDRenderPass = spark:createOverlayRenderPass( 0.25, "HUDPass", mainRenderTarget )
-HUDRenderPass:setDepthTest( false )
-HUDRenderPass:setDepthWrite( false )
-HUDRenderPass:useInterpolatedBlending()
---HUDRenderPass:disableBlending()
-
-
-
 -- Make floor box
 -- floorMat = spark:createMaterial( "phongShader" )
 -- floorMat:setVec4( "u_light.position_camera", vec4(5,10,0,1) )
@@ -65,3 +34,4 @@ camera:cameraTarget( 0.06, 0.1, 0.0 )
 camera:fov( 48 )
 
 print( "end defaultScene.lua" );
+
