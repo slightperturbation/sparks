@@ -70,6 +70,10 @@ spark::TextRenderable
     m_markup.strikethrough       = 0;
     m_markup.strikethrough_color = color;
     m_markup.font = m_fontManager->getFont( fontName, fontSize );
+    m_markup.font->kerning = 1;
+    m_markup.font->hinting = 1;
+    //m_markup.font->filtering = 1; // Purpose?
+    
     if( !m_markup.font )
     {
         LOG_ERROR(g_log) << "markup.font was null. aborting TextRenderable::update()";
@@ -121,12 +125,13 @@ spark::TextRenderable
     }
     vec2 pen = {{0,0}};
     vec4 bbox = {{0,0,0,0}};
-    text_buffer_clear( &m_textBuffer );
     filterText( m_text );
+    
+    text_buffer_clear( &m_textBuffer );
     std::wstring wtext( m_text.begin(), m_text.end() );
     text_buffer_add_text( &m_textBuffer, &pen, &m_markup,
-                          const_cast<wchar_t*>(wtext.c_str()),
-                          wtext.size() );
+        const_cast<wchar_t*>(wtext.c_str()),
+        wtext.size() );
     // Deprecated method for writing multiple lines, text_buffer replaces this:
     //vec4 black = {{1,1,1,1}};
     //std::vector< std::string > lines;
@@ -134,7 +139,8 @@ spark::TextRenderable
     //for( auto lineIter = lines.begin(); lineIter != lines.end(); ++lineIter )
     //{
     //    std::wstring wline( lineIter->begin(), lineIter->end() );
-    //    //add_text( m_vertexBuffer, m_font, wline.c_str(), &black, &pen, bbox );
+    //    
+    //    add_text( m_textBuffer.buffer, m_markup.font, wline.c_str(), &black, &pen, bbox );
     //    //text_buffer_printf( &m_textBuffer, &pen, &m_markup, wline.c_str(), NULL );
     //    // drop pen to next line
     //    pen.y -= m_markup.font->height;

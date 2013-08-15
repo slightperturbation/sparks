@@ -259,7 +259,7 @@ int runSimulation(int argc, char** argv)
         "FontAtlasTexture" ) );
     const std::string fontName = "Sans";
     const int fontSize = 72;
-    fontManager->addFont( fontName, fontSize, "Vera.ttf" );
+    fontManager->addFont( fontName, fontSize, "HelveticaNeueLight.ttf" );
 
     TextRenderablePtr textMsg( new TextRenderable("TestText") );
     textMsg->initialize( fontManager, fontName, fontSize );

@@ -414,46 +414,47 @@ LIST( APPEND PROJECT_LINK_LIBRARIES
 
 ###########################################################################
 set( HDRS
-  ./src/ArcBall.hpp
-  ./src/DBMSpark.hpp
-  ./src/Display.hpp
-  ./src/LSpark.hpp
-  ./src/LuaInterpreter.hpp
-  ./src/Exceptions.hpp
-  ./src/EyeTracker.hpp
-  ./src/Fluid.hpp
-  ./src/FileAssetFinder.hpp
-  ./src/GuiEventSubscriber.hpp
-  ./src/GuiEventPublisher.hpp
-  ./src/FontManager.hpp
-  ./src/Material.hpp
-  ./src/Mesh.hpp
-  ./src/PointSparkRenderable.hpp
-  ./src/Projection.hpp
-  ./src/RayCastVolume.hpp
-  ./src/Renderable.hpp
-  ./src/RenderPass.hpp
-  ./src/RenderCommand.hpp
-  ./src/RenderTarget.hpp
-  ./src/Scene.hpp
-  ./src/SlicedVolume.hpp
-  ./src/ShaderManager.hpp
-  ./src/ShaderInstance.hpp
-  ./src/ShaderUniform.hpp
-  ./src/Simulation.hpp
-  ./src/Spark.hpp
-  ./src/SparkFacade.hpp
-  ./src/Task.hpp
-  ./src/TextRenderable.hpp
-  ./src/TextureManager.hpp
-  ./src/TexturedSparkRenderable.hpp
-  ./src/Utilities.hpp
-  ./src/Viewport.hpp
-  ./src/VolumeData.hpp
-  ./src/VertexAttribute.hpp
-  ./src/VelocityFieldInterface.hpp
+  ./include/ArcBall.hpp
+  ./include/DBMSpark.hpp
+  ./include/Display.hpp
+  ./include/LSpark.hpp
+  ./include/LuaInterpreter.hpp
+  ./include/Exceptions.hpp
+  ./include/EyeTracker.hpp
+  ./include/Fluid.hpp
+  ./include/FileAssetFinder.hpp
+  ./include/GuiEventSubscriber.hpp
+  ./include/GuiEventPublisher.hpp
+  ./include/FontManager.hpp
+  ./include/Material.hpp
+  ./include/Mesh.hpp
+  ./include/PointSparkRenderable.hpp
+  ./include/Projection.hpp
+  ./include/RayCastVolume.hpp
+  ./include/Renderable.hpp
+  ./include/RenderPass.hpp
+  ./include/RenderCommand.hpp
+  ./include/RenderTarget.hpp
+  ./include/Scene.hpp
+  ./include/SlicedVolume.hpp
+  ./include/ShaderManager.hpp
+  ./include/ShaderInstance.hpp
+  ./include/ShaderUniform.hpp
+  ./include/Simulation.hpp
+  ./include/Spark.hpp
+  ./include/SparkFacade.hpp
+  ./include/Task.hpp
+  ./include/TextRenderable.hpp
+  ./include/TextureManager.hpp
+  ./include/TexturedSparkRenderable.hpp
+  ./include/TransformGroup.hpp
+  ./include/Utilities.hpp
+  ./include/Viewport.hpp
+  ./include/VolumeData.hpp
+  ./include/VertexAttribute.hpp
+  ./include/VelocityFieldInterface.hpp
 )
-include_directories( ./src/ )  # Move headers to ./include/
+include_directories( ./include/ )  # Move headers to ./include/
 
 set( SRCS
   ./src/ArcBall.cpp
