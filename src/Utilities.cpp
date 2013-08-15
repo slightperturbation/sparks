@@ -94,7 +94,7 @@ void APIENTRY debugOpenGLMessageCallback( GLenum source,
     }
     LOG_ERROR(g_log) << msg.str() << "[" << id 
                      << "] Message: \"" << message << "\".\n";
-    //assert(false);
+    assert(false);
 }
 
 void 
