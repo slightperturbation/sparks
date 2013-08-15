@@ -100,14 +100,28 @@ void
 spark::Scene
 ::add( RenderPassPtr rp ) 
 { 
-    m_passes.push_back( rp ); 
+    if( rp )
+    {
+        m_passes.push_back( rp ); 
+    }
+    else
+    {
+        LOG_ERROR(g_log) << "Scene::add(RenderPassPtr) called with a nullptr.";
+    }
 }
 
 void 
 spark::Scene
 ::add( RenderablePtr r ) 
-{ 
-    m_renderables.push_back( r ); 
+{
+    if( r )
+    {
+        m_renderables.push_back( r ); 
+    }
+    else
+    {
+        LOG_ERROR(g_log) << "Scene::add(RenderablePtr) called with a nullptr.";
+    }
 }
 
 spark::RenderPassPtr 
@@ -157,6 +171,17 @@ spark::Scene
     {
         ConstRenderPassPtr p = *piter;
         LOG_INFO(g_log) << "\t" << p->priority() << ": " << p;
+    }
+}
+
+void
+spark::Scene
+::logRenderables( void ) const 
+{
+    LOG_INFO(g_log) << "Renderables:";
+    for( auto r = m_renderables.begin(); r != m_renderables.end(); ++r )
+    {
+        LOG_TRACE(g_log) << "\t" << *r;
     }
 }
 

@@ -15,7 +15,9 @@
 #include "RenderCommand.hpp"
 namespace spark
 {
-    //// Scene manages the set of renderables to be drawn with render()
+    /// Scene manages the set of renderables to be drawn with 
+    /// Renderable::render() and updated with Renderable::update().
+    /// Different instances of Scene can share Renderables and RenderPasses
     class Scene
     {
     public:
@@ -35,12 +37,15 @@ namespace spark
         /// Update scene objects per-frame
         void update( float dt );
 
-        /// Delete all held resources
+        /// Delete references to all held resources
         void reset( void );
 
         /// Print all passes to INFO-level log
         void logPasses( void ) const;
 
+        /// Print all renderables known to this scene to INFO-level log.
+        void logRenderables( void ) const;
+        
         /// Return existing render pass with given name, if registered.
         RenderPassPtr getPass( const RenderPassName& name ) const;
     private:
