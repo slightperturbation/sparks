@@ -24,6 +24,7 @@ namespace spark
     public:
         Material( TextureManagerPtr tm );
         Material( TextureManagerPtr tm, ShaderInstancePtr aShader );
+        ~Material();
         void setShader( ShaderInstancePtr aShader );
         /// Returns the OpenGL Shader ID used by this material.
         GLuint getGLShaderIndex( void ) const;

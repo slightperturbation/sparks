@@ -11,12 +11,23 @@
 
 spark::Material
 ::Material( TextureManagerPtr tm ) : m_textureManager( tm )
-{ }
+{
+    LOG_TRACE(g_log) << "Material created (no shader set yet).";
+}
 
 spark::Material
 ::Material( TextureManagerPtr tm, ShaderInstancePtr aShader )
     : m_textureManager( tm )
-{ setShader(aShader); }
+{
+    setShader(aShader); 
+    LOG_TRACE(g_log) << "Material created \"" << name() << "\".";
+}
+
+spark::Material
+    ::~Material()
+{
+    LOG_TRACE(g_log) << "Material dtor: \"" << name() << "\".";
+}
 
 void 
 spark::Material
