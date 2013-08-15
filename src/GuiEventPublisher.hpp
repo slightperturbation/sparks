@@ -36,6 +36,13 @@ namespace spark
         void resizeViewport( int left, int bottom,
                              int width, int height )
         {
+            if(    left   == m_left 
+                && bottom == m_bottom
+                && width  == m_width
+                && height == m_height ) 
+            {
+                return;
+            }
             m_left = left; m_bottom = bottom;
             m_width = width; m_height = height;
             for( auto i = m_subscribers.begin();
