@@ -59,6 +59,15 @@ spark::TextureManager
 ::createTargetTexture( const TextureName& aHandle,
                       int width, int height )
 {
+    auto iter = m_registry.find( aHandle );
+    if( iter != m_registry.end() )
+    {
+        LOG_WARN(g_log) << "Attempt to createTargetTexture(\""
+            << aHandle 
+            << "\") but texture with that name already exists.  "
+            << "Ignoring attempt and preserving existing texture.";
+        return;
+    }
     GLuint textureId;
     deleteTexture( aHandle );
     GL_CHECK( glGenTextures( 1, &textureId ) );
