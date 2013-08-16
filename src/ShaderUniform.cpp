@@ -2,13 +2,6 @@
 #include "Utilities.hpp"
 #include "ShaderInstance.hpp"
 
-
-spark::ShaderUniformHolder
-::~ShaderUniformHolder()
-{
-    // Noop
-}
-
 template<>
 void 
 spark::ShaderUniform<float>

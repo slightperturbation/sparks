@@ -47,6 +47,12 @@ spark::FontManager
     }
 }
 
+spark::FontManager
+::~FontManager()
+{
+    font_manager_delete( m_fontManager );
+}
+
 
 void
 spark::FontManager

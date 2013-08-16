@@ -34,7 +34,13 @@ namespace spark
     {
     public:
         ShaderUniformHolder() : m_isDirty( true ) { }
-        virtual ~ShaderUniformHolder();
+        virtual ~ShaderUniformHolder()
+        {
+            for( auto sumap = m_uniforms.begin(); sumap != m_uniforms.end(); ++sumap )
+            {
+                delete sumap->second;
+            }
+        }
         template< typename T >
         ShaderUniform<T>* operator[]( const ShaderUniformName& name )
         {

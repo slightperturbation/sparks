@@ -19,6 +19,16 @@ spark::TextRenderable
 {
 }
 
+spark::TextRenderable
+::~TextRenderable()
+{
+    vertex_buffer_delete( m_textBuffer.buffer );
+    if( m_markup.family )
+    {
+        free( m_markup.family );
+    }
+}
+
 void
 spark::TextRenderable
 ::initialize( FontManagerPtr fontManager,

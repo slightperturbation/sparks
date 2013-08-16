@@ -35,6 +35,7 @@ namespace spark
     public:
         /// Creates an atlas for managing fonts with the given texture name.
         FontManager( TextureManagerPtr tm, const TextureName& atlasTextureName );
+        ~FontManager();
 
         /// Build the atlas and upload to the video card
         /// Will be automatically called if getFont() is called after addFont()

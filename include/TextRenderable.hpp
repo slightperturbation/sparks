@@ -39,7 +39,7 @@ namespace spark
     {
     public:
         TextRenderable( const RenderableName& name );
-        virtual ~TextRenderable() {}
+        virtual ~TextRenderable();
 
         /// Sets the font manager to use for resources. Must be called
         /// before other methods.
