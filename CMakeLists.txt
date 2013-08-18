@@ -436,6 +436,8 @@ set( HDRS
   ./include/RenderCommand.hpp
   ./include/RenderTarget.hpp
   ./include/Scene.hpp
+  ./include/SceneState.hpp
+  ./include/ScriptState.hpp
   ./include/SlicedVolume.hpp
   ./include/ShaderManager.hpp
   ./include/ShaderInstance.hpp
@@ -443,10 +445,13 @@ set( HDRS
   ./include/Simulation.hpp
   ./include/Spark.hpp
   ./include/SparkFacade.hpp
+  ./include/State.hpp
+  ./include/StateManager.hpp
   ./include/Task.hpp
   ./include/TextRenderable.hpp
   ./include/TextureManager.hpp
   ./include/TexturedSparkRenderable.hpp
+  ./include/Time.hpp
   ./include/TransformGroup.hpp
   ./include/Utilities.hpp
   ./include/Viewport.hpp
@@ -461,6 +466,7 @@ set( SRCS
   ./src/DBMSpark.cpp
   ./src/Display.cpp
   ./src/LSpark.cpp
+  ./src/LuaInterpreter.cpp
   ./src/Exceptions.cpp
   ./src/EyeTracker.cpp
   ./src/Fluid.cpp
@@ -476,10 +482,14 @@ set( SRCS
   ./src/RenderPass.cpp
   ./src/RenderTarget.cpp
   ./src/Scene.cpp
+  ./src/SceneState.cpp
+  ./src/ScriptState.cpp
   ./src/SlicedVolume.cpp
   ./src/ShaderUniform.cpp
   ./src/ShaderManager.cpp
   ./src/Simulation.cpp
+  ./src/State.cpp
+  ./src/StateManager.cpp
   ./src/TextRenderable.cpp
   ./src/TexturedSparkRenderable.cpp
   ./src/TextureManager.cpp

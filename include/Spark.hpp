@@ -69,6 +69,15 @@ namespace spark
     class FileAssetFinder;
     typedef spark::shared_ptr< FileAssetFinder > FileAssetFinderPtr;
     
+    class FrameBufferRenderTarget;
+    typedef spark::shared_ptr< FrameBufferRenderTarget > FrameBufferRenderTargetPtr;
+    
+    class GuiEventPublisher;
+    typedef spark::shared_ptr< GuiEventPublisher > GuiEventPublisherPtr;
+    
+    class LuaInterpreter;
+    typedef spark::shared_ptr<LuaInterpreter> LuaInterpreterPtr;
+    
     class Material;
     typedef spark::shared_ptr< Material > MaterialPtr;
     typedef spark::shared_ptr< const Material > ConstMaterialPtr;
@@ -123,6 +132,14 @@ namespace spark
     
     class SparkFacade;
     typedef spark::shared_ptr< SparkFacade > SparkFacadePtr;
+    
+    class State;
+    typedef spark::shared_ptr< State > StatePtr;
+    typedef spark::shared_ptr< const State > ConstStatePtr;
+    typedef std::string StateName;
+
+    class Time;
+    typedef spark::shared_ptr< Time > TimePtr;
     
     class TextureUnit;
     typedef spark::shared_ptr< TextureUnit > TextureUnitPtr;

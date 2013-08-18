@@ -13,6 +13,7 @@
 
 #include "RenderPass.hpp"
 #include "RenderCommand.hpp"
+
 namespace spark
 {
     /// Scene manages the set of renderables to be drawn with 
@@ -25,8 +26,10 @@ namespace spark
         ~Scene();
         void add( RenderPassPtr rp );
         void add( RenderablePtr r );
+        
         /// Build render commands for this frame.
         void prepareRenderCommands( void );
+        
         /// Send all queued render commands to the graphics card in-order.
         /// Render command queue is empty when this function exits.
         /// Note that for the render to display anything to the default
@@ -35,7 +38,10 @@ namespace spark
         void render( void );
         
         /// Update scene objects per-frame
-        void update( float dt );
+        void update( double dt );
+
+        /// Update scene objects per-frame
+        void fixedUpdate( double dt );
 
         /// Delete references to all held resources
         void reset( void );

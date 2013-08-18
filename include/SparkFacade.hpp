@@ -43,11 +43,41 @@ namespace spark
         {
             return m_frameBufferTarget;
         }
+        
+        ScenePtr getScene( void )
+        {
+            return m_scene;
+        }
+        
+        FileAssetFinderPtr getFinder( void )
+        {
+            return m_finder;
+        }
+        
+        TextureManagerPtr getTextureManager( void )
+        {
+            return m_textureManager;
+        }
+
+        ShaderManagerPtr getShaderManager( void )
+        {
+            return m_shaderManager;
+        }
 
         /// Returns the "main" camera as a PerspectiveProjection.
         PerspectiveProjectionPtr getCamera( void )
         {
             return m_cameraPerspective;
+        }
+        
+        void setMainRenderTarget( RenderTargetPtr target )
+        {
+            m_mainRenderTarget = target;
+        }
+
+        RenderTargetPtr getMainRenderTarget( void )
+        {
+            return m_mainRenderTarget;
         }
         
         RenderTargetPtr createTextureRenderTarget( 
@@ -219,15 +249,6 @@ namespace spark
             return pass;
         }
 
-
-        void setMainRenderTarget( RenderTargetPtr target )
-        {
-            m_mainRenderTarget = target;
-        }
-        RenderTargetPtr getMainRenderTarget( void )
-        {
-            return m_mainRenderTarget;
-        }
 
         MaterialPtr createMaterial( const ShaderName& shaderName )
         {

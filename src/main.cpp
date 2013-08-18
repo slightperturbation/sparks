@@ -53,6 +53,10 @@
 #include "freetype-gl.h"
 
 
+#include "StateManager.hpp"
+#include "State.hpp"
+#include "SceneState.hpp"
+#include "ScriptState.hpp"
 
 using namespace std;
 using namespace Eigen;
@@ -178,8 +182,8 @@ int runSimulation(int argc, char** argv)
     // Setup Gui Callbacks
     g_guiEventPublisher = GuiEventPublisherPtr( new GuiEventPublisher );
     setGLFWCallbacks( window.glfwWindow() );
-        
-    // Tell managers where to find file resources
+    
+    // Create common managers and tell them how to find file resources
     FileAssetFinderPtr finder( new FileAssetFinder );
     finder->addRecursiveSearchPath( DATA_PATH );
     ShaderManagerPtr shaderManager( new ShaderManager );
@@ -200,8 +204,8 @@ int runSimulation(int argc, char** argv)
     //eyeTracker->resizeViewport( 0, 0, width, height );
     //g_guiEventPublisher->subscribe( eyeTracker );
 
-    ScenePtr scene( new Scene );
-    ScenePtr sceneTwo( new Scene );
+    StateManager stateManager;
+
     
     OrthogonalProjectionPtr overlayPerspective( new OrthogonalProjection );
     PerspectiveProjectionPtr cameraPerspective( new PerspectiveProjection );
@@ -214,6 +218,7 @@ int runSimulation(int argc, char** argv)
     frameBufferTarget->setClearColor( glm::vec4( 0,0,0,0 ) );
     g_guiEventPublisher->subscribe( frameBufferTarget );
 
+    ScenePtr scene( new Scene );
     SparkFacadePtr facade( new SparkFacade( scene,
                                             finder,
                                             textureManager,
@@ -221,6 +226,7 @@ int runSimulation(int argc, char** argv)
                                             cameraPerspective,
                                             frameBufferTarget,
                                             g_guiEventPublisher ) );
+    // lua handles loading default objects
     LuaInterpreter lua( finder );
     lua.setFacade( facade );
     lua.setTextureManager( textureManager );
@@ -228,10 +234,26 @@ int runSimulation(int argc, char** argv)
     lua.runScriptFromFile( "loadShaders.lua" );
     lua.runScriptFromFile( "loadTextures.lua" );
     lua.runScriptFromFile( "loadRenderPasses.lua" );
-    lua.runScriptFromFile( "main.lua" );
+    //lua.runScriptFromFile( "main.lua" );
+    stateManager.addState( StatePtr(new SceneState( "sceneOne", scene )) );
+    
+    ScenePtr loadingScene( new Scene );
+    SparkFacadePtr loadingFacade( new SparkFacade( loadingScene,
+                                            finder,
+                                            textureManager,
+                                            shaderManager,
+                                            cameraPerspective,
+                                            frameBufferTarget,
+                                            g_guiEventPublisher ) );
+    StatePtr loadingState( new ScriptState( "Loading", loadingFacade ) );
+    stateManager.addState( loadingState );
+    stateManager.setCurrState( "Loading" );
+    
 
-///////////////////////
+    
+    ///////////////////////
     // sceneTwo only needs minimal passes
+    ScenePtr sceneTwo( new Scene );
     SparkFacadePtr facadeTwo( new SparkFacade( sceneTwo,
         finder,
         textureManager,
@@ -245,6 +267,7 @@ int runSimulation(int argc, char** argv)
     luaTwo.setTextureManager( textureManager );
     luaTwo.setShaderManager( shaderManager );
     luaTwo.runScriptFromFile( "loadRenderPasses.lua" );
+    stateManager.addState( StatePtr(new SceneState( "sceneTwo", sceneTwo )) );
     
     
     /// FontManager fm( textureManager, "TextureAtlas" );
@@ -346,26 +369,34 @@ int runSimulation(int argc, char** argv)
         g_guiEventPublisher->resizeViewport( 0, 0, width, height );
     }
 
-    ScenePtr currScene = sceneTwo;
-    LuaInterpreter* currLua = &luaTwo;
-
     const double startTime = glfwGetTime();
-    double nextSceneTime = startTime + 10.0;
+    double nextSceneTime = startTime ;
     double currTime = startTime;
     double lastTime = startTime;
+    double prevUpdateTime = 0;
     while( window.isRunning() )
     {
-        if( currTime > nextSceneTime )
+//        if( currTime > nextSceneTime )
+//        {
+//            if( stateManager.currStateName() == "sceneOne" )
+//            {
+//                stateManager.setCurrState( "sceneTwo" );
+//            }
+//            else
+//            {
+//                stateManager.setCurrState( "sceneOne" );
+//            }
+//            nextSceneTime = currTime + 0.25;
+//        }
+        if( currTime > 30.0 )
         {
-            currScene = (currScene == scene) ? sceneTwo : scene ;
-            nextSceneTime = currTime + 10;
+            break;
         }
-
         LOG_TRACE(g_log) << ".................................................";
         if( g_log->isTrace() )
         {
             textureManager->logTextures();
-            currScene->logPasses();
+            //currScene->logPasses();
         }
 
         glm::mat4 viewTransform;
@@ -375,13 +406,28 @@ int runSimulation(int argc, char** argv)
         vars.fps = 1.0f/(currTime - lastTime);
 
         std::stringstream ss;
-        ss << "Time: " << currTime << "\nFPS: " << vars.fps << "\nThis is a test\n\tAnd another";
+        ss << "Time: " << currTime << "\nFPS: " << vars.fps
+        << "\nThis is a test\n\tAnd another";
         textMsg->setText( ss.str() );
 
-        //text2Msg->setText( "VEST", 1.0f);//*((int)(currTime) % 10) );
 
         // UPDATE
         const float dt = 1.0f/60.0f;
+        
+        ////////////////////////////////////////////////////////////////////////
+        // Update System (physics, collisions, etc.
+        if( (currTime - prevUpdateTime) > dt )
+        {
+            LOG_TRACE(g_log) << "Fixed update at " << currTime;
+            stateManager.fixedUpdate( dt );
+            prevUpdateTime = currTime;
+        }
+        LOG_TRACE(g_log) << "Update at " << currTime;
+        stateManager.update( currTime - lastTime );
+
+        
+        ////////////////////////////////////////////////////////////////////////
+        // Render
         if( g_arcBall )
         {
             g_arcBall->updatePerspective( cameraPerspective );
@@ -390,17 +436,13 @@ int runSimulation(int argc, char** argv)
         {
             eyeTracker->updatePerspective( cameraPerspective );
         }
-
-        currScene->prepareRenderCommands();
-        currScene->render();
+        stateManager.render();
         window.swapBuffers();
-        
         LOG_TRACE(g_log) << "Scene end - glfwSwapBuffers()";
-
-        currScene->update( dt );
-        
         if( vars.isSavingFrames ) writeFrameBufferToFile( "sparks_" );
-
+        
+        stateManager.updateState( currTime );
+        
         ////////////////////////////////////////////////////////////////////////
         // Process Inputs
         // See: http://www.glfw.org/docs/3.0/group__keys.html
@@ -445,12 +487,12 @@ int runSimulation(int argc, char** argv)
         }
         if( window.getKey( 'P' ) == GLFW_PRESS )
         {
-            currScene->logPasses();
+            //currScene->logPasses();
         }
         if( window.getKey( 'R' ) == GLFW_PRESS )
         {
-            currScene->reset();
-            lua.runScriptFromFile( "defaultScene.lua" );
+            //currScene->reset();
+            //lua.runScriptFromFile( "defaultScene.lua" );
         }
         //const float eyeSeparationStep = 0.02;
         if( window.getKey( GLFW_KEY_UP ) == GLFW_PRESS )

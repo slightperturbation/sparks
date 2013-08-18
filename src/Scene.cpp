@@ -88,13 +88,21 @@ spark::Scene
 
 void
 spark::Scene
-::update( float dt )
+::update( double dt )
 {
     for( auto i = m_renderables.begin(); i != m_renderables.end(); ++i )
     {
         (*i)->update( dt );
     }
 }
+
+void
+spark::Scene
+::fixedUpdate( double dt )
+{
+    // Noop -- renderables don't need fixedUpdate
+}
+
 
 void 
 spark::Scene
