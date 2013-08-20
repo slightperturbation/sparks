@@ -436,6 +436,7 @@ set( HDRS
   ./include/RenderCommand.hpp
   ./include/RenderTarget.hpp
   ./include/Scene.hpp
+  ./include/SceneFacade.hpp
   ./include/SceneState.hpp
   ./include/ScriptState.hpp
   ./include/SlicedVolume.hpp
@@ -444,7 +445,6 @@ set( HDRS
   ./include/ShaderUniform.hpp
   ./include/Simulation.hpp
   ./include/Spark.hpp
-  ./include/SparkFacade.hpp
   ./include/State.hpp
   ./include/StateManager.hpp
   ./include/Task.hpp
@@ -482,6 +482,7 @@ set( SRCS
   ./src/RenderPass.cpp
   ./src/RenderTarget.cpp
   ./src/Scene.cpp
+  ./src/SceneFacade.cpp
   ./src/SceneState.cpp
   ./src/ScriptState.cpp
   ./src/SlicedVolume.cpp

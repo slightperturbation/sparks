@@ -40,3 +40,7 @@ shaderManager:loadShaderFromFiles( "rayCastVolumeShader",
                                     "rayCastVertexShader.glsl",
                                     "rayCastFragmentShader.glsl" );
 
+shaderManager:loadShaderFromFiles( "tissueShader",
+                                    "tissueVertexShader.glsl",
+                                    "tissueFragmentShader.glsl" );
+

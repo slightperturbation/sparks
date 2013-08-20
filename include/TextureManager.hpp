@@ -69,6 +69,7 @@ namespace spark
 
         /// Load the image file at aTextureFilePath and associate it with 
         /// aHandle.
+        /// TODO provide aspect ratio (and size?) for loaded texture.
         void loadTextureFromImageFile( const TextureName& aHandle, 
                                        const char* aTextureFileName );
         /// Load a 3D texture from the given volume data.

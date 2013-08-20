@@ -1,7 +1,7 @@
 
 #include "SceneState.hpp"
 #include "Scene.hpp"
-#include "SparkFacade.hpp"
+#include "SceneFacade.hpp"
 #include "LuaInterpreter.hpp"
 
 spark::SceneState
@@ -14,6 +14,13 @@ spark::SceneState
 
 spark::SceneState
 ::~SceneState()
+{
+    // Noop
+}
+
+void
+spark::SceneState
+::load( void )
 {
     // Noop
 }

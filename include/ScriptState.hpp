@@ -20,6 +20,9 @@ namespace spark
     ///	  return setmetatable(newObj, self)
     /// end
     ///
+    /// function ExampleState:load()
+    /// end
+    ///
     /// function ExampleState:activate()
     /// end
     ///
@@ -32,17 +35,24 @@ namespace spark
     /// function ExampleState:deactivate()
     /// end
     ///
-    /// function ExampleState:nextState()
-    ///   	if currTime > 20 then return "nextState" end
-	///     return "" -- Keep current state
+    /// function ExampleState:nextState( currTime )
+    ///   	if currTime > 20 then
+    ///       theNextState = "nextStateName"
+    ///     else
+    ///       theNextState = "" -- Keep current state
+    ///     end
     /// end
     ///
     /// theState = ExampleState:new()
-    ///
+    /// theNextState = ""
+    //////////
+    /// TODO - should hold the luabind::object and call methods on that
+    /// instead of relying on the name of the state object ("theState")
+    /// but luabind method calls not working yet.
     class ScriptState : public SceneState
     {
     public:
-        ScriptState( const StateName& name, SparkFacadePtr facade );
+        ScriptState( const StateName& name, SceneFacadePtr facade );
         ScriptState( const StateName& name,
                     ScenePtr scene,
                     FileAssetFinderPtr finder,
@@ -52,15 +62,21 @@ namespace spark
                     FrameBufferRenderTargetPtr frameBufferTarget,
                     GuiEventPublisherPtr guiEventPublisher );
         virtual ~ScriptState();
-        void runScriptFromFile( const std::string& filename );
+        virtual void load( void )             override;
         virtual void activate( void )         override;
         virtual void update( double dt )      override;
         virtual void fixedUpdate( double dt ) override;
         virtual void deactivate( void )       override;
         boost::optional<spark::StateName> nextState( double currTime ) override;
     private:
-        SparkFacadePtr m_facade;
+        void runScriptFromFile( const std::string& filename );
+        std::string fileNameFromStateName( const StateName& name );
+        SceneFacadePtr m_facade;
         LuaInterpreterPtr m_lua;
+        
+        // Disallow copy ctor and assignment by private & undefined
+        ScriptState( const ScriptState& );
+        void operator=( const ScriptState& );
     };
 }
 

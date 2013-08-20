@@ -51,8 +51,12 @@ namespace spark
         /// Ask the current state if we should change states.
         void updateState( double currTime );
     private:
+        /// Returns true iff the state of name has had load() called already.
+        bool isLoaded( const StateName& name );
+        
         StatePtr m_currState;
         std::map< StateName, StatePtr > m_states;
+        std::map< StateName, bool > m_isLoaded;
         /// If true, holds a StateName of a state to removed when possible.
         /// Used when removeStateByName() is called on the current state,
         /// so the state is removed after deactivate().

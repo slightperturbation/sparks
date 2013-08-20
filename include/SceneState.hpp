@@ -13,6 +13,7 @@ namespace spark
     public:
         SceneState( const StateName& name, ScenePtr scene );
         virtual ~SceneState();
+        virtual void load( void )             override;
         virtual void activate( void )         override;
         virtual void deactivate( void )       override;
         virtual void update( double dt )      override;

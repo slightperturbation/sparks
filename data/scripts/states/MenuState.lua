@@ -1,16 +1,16 @@
 
 
-LoadingState = {}
+MenuState = {}
 
-function LoadingState:new()
-	print( "LoadingState:new" )
-	newObj = { angle = 45, theNextState = "" }
+function MenuState:new()
+	print( "MenuState:new" )
+	newObj = { angle = 45, hasRunOnce = false, startTime = -1 }
 	self.__index = self
 	return setmetatable(newObj, self)
 end
 
-function LoadingState:activate()
-	print( "LoadingState:activate" )
+function MenuState:load()
+	print( "MenuState:load" )
 
 	spark:createPostProcessingRenderPass( 0.0, 
 	      "MSAAFinalRenderPass",
@@ -37,40 +37,48 @@ function LoadingState:activate()
 	self.boxB = spark:createCube( vec3(-0.5,0,0), vec3(0.25,0.25,0.25), boxMat, "OpaquePass" )
 	self.boxB:rotate( self.angle, vec3(0,1,0) )
 
+end
+
+function MenuState:activate()
+	print( "MenuState:activate" )
+	self.startTime = -1
+
 	camera = spark:getCamera()
 	camera:cameraPos( 0.2, 1.2, -0.9 )
 	camera:cameraTarget( 0.06, 0.1, 0.0 )
 	camera:fov( 48 )
 end
 
-function LoadingState:update( dt )
-	print( "LoadingState:update" )
+function MenuState:update( dt )
+	print( "MenuState:update" )
 end
 
-function LoadingState:fixedUpdate( dt )
-	print( "LoadingState:fixedUpdate" )	
-	self.boxB:rotate( 1, vec3(0,1,0) )
+function MenuState:fixedUpdate( dt )
+	print( "MenuState:fixedUpdate" )	
+	self.boxB:rotate( -5, vec3(0,1,0) )
 end
 
-function LoadingState:deactivate()
-	print( "LoadingState:deactivate" )
+function MenuState:deactivate()
+	print( "MenuState:deactivate" )
 end
 
-function LoadingState:nextState( currTime )
+function MenuState:nextState( currTime )
 	-- For now, theNextState global is used to pass
 	-- the next desired state back to the app
 	-- TODO should be changed to use the return value
-	print( "LoadingState:nextState( " .. currTime .. " )")
-	if currTime > 10 then 
-		theNextState = "menu" 
-		print "Changing state to menu!"
+	print( "MenuState:nextState( " .. currTime .. " )")
+	if self.startTime == -1 then
+		self.startTime = currTime
+	end
+
+	if (currTime - self.startTime) > 10 then 
+		theNextState = "Loading" 
+		print( "Changing state to menu!" )
 	else
 		theNextState = ""
 	end
 end
 
-theState = LoadingState:new()
+theState = MenuState:new()
 theNextState = ""
 
-
-s

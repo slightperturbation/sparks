@@ -80,6 +80,14 @@ spark::StateManager
         removeStateByName( m_pendingRemoval.get() );
     }
     m_currState = m_states[nextState];
+    
+    // Load if needed
+    if( ! isLoaded(m_currState->name()) )
+    {
+        m_currState->load();
+        m_isLoaded[m_currState->name()] = true;
+    }
+    
     m_currState->activate();
     LOG_INFO(g_log) << "Switched to State \"" << m_currState->name() << "\".";
 }
@@ -155,7 +163,12 @@ spark::StateManager
     }
 }
 
-
-
+bool
+spark::StateManager
+::isLoaded( const StateName& name )
+{
+    auto iter = m_isLoaded.find( name );
+    return ( iter == m_isLoaded.end() ) ? false : (*iter).second;
+}
 
 

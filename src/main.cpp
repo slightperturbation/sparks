@@ -7,7 +7,7 @@
 #include "TextureManager.hpp"
 #include "RenderTarget.hpp"
 #include "FileAssetFinder.hpp"
-#include "SparkFacade.hpp"
+#include "SceneFacade.hpp"
 
 #include "DBMSpark.hpp"
 #include "PointSparkRenderable.hpp"
@@ -174,6 +174,8 @@ MaterialPtr loadPhongMaterial( TextureManagerPtr textureManager,
 /// Online simulation and display of fluid
 int runSimulation(int argc, char** argv)
 {
+    
+    // Create Window
     bool enableLegacyOpenGlLogging  = false;
     OpenGLWindow window( "Spark", enableLegacyOpenGlLogging );
     using namespace std;
@@ -218,8 +220,8 @@ int runSimulation(int argc, char** argv)
     frameBufferTarget->setClearColor( glm::vec4( 0,0,0,0 ) );
     g_guiEventPublisher->subscribe( frameBufferTarget );
 
-    ScenePtr scene( new Scene );
-    SparkFacadePtr facade( new SparkFacade( scene,
+    ScenePtr sceneOne( new Scene );
+    SceneFacadePtr facade( new SceneFacade( sceneOne,
                                             finder,
                                             textureManager,
                                             shaderManager,
@@ -234,41 +236,71 @@ int runSimulation(int argc, char** argv)
     lua.runScriptFromFile( "loadShaders.lua" );
     lua.runScriptFromFile( "loadTextures.lua" );
     lua.runScriptFromFile( "loadRenderPasses.lua" );
-    //lua.runScriptFromFile( "main.lua" );
-    stateManager.addState( StatePtr(new SceneState( "sceneOne", scene )) );
+    stateManager.addState( StatePtr(new SceneState( "sceneOne", sceneOne )) );
+
+    //std::vector<std::string> states = { "Loading", "Menu", "Simulation" } ;
+    std::vector<std::string> states;
+    states.push_back( "Loading" );
+    states.push_back( "Menu" );
+    states.push_back( "Simulation" );
+    for( auto iter = states.begin(); iter != states.end(); ++iter )
+    {
+        StatePtr newState( new ScriptState( *iter,
+                                               ScenePtr( new Scene ),
+                                               finder,
+                                               textureManager,
+                                               shaderManager,
+                                               cameraPerspective,
+                                               frameBufferTarget,
+                                               g_guiEventPublisher ) );
+        stateManager.addState( newState );
+        
+    }
+    // Loading State
+//    StatePtr loadingState( new ScriptState( "Loading",
+//                                            ScenePtr( new Scene ),
+//                                            finder,
+//                                            textureManager,
+//                                            shaderManager,
+//                                            cameraPerspective,
+//                                            frameBufferTarget,
+//                                            g_guiEventPublisher ) );
+//    stateManager.addState( loadingState );
+//
+//    // Menu State
+//    StatePtr menuState( new ScriptState( "Menu",
+//                                         ScenePtr( new Scene ),
+//                                         finder,
+//                                         textureManager,
+//                                         shaderManager,
+//                                         cameraPerspective,
+//                                         frameBufferTarget,
+//                                         g_guiEventPublisher ) );
+//    stateManager.addState( menuState );
     
-    ScenePtr loadingScene( new Scene );
-    SparkFacadePtr loadingFacade( new SparkFacade( loadingScene,
-                                            finder,
-                                            textureManager,
-                                            shaderManager,
-                                            cameraPerspective,
-                                            frameBufferTarget,
-                                            g_guiEventPublisher ) );
-    StatePtr loadingState( new ScriptState( "Loading", loadingFacade ) );
-    stateManager.addState( loadingState );
-    stateManager.setCurrState( "Loading" );
     
+    
+    stateManager.setCurrState( "Simulation" );
 
     
     ///////////////////////
     // sceneTwo only needs minimal passes
-    ScenePtr sceneTwo( new Scene );
-    SparkFacadePtr facadeTwo( new SparkFacade( sceneTwo,
-        finder,
-        textureManager,
-        shaderManager,
-        cameraPerspective,
-        frameBufferTarget,
-        g_guiEventPublisher ) );
-
-    LuaInterpreter luaTwo( finder );
-    luaTwo.setFacade( facadeTwo );
-    luaTwo.setTextureManager( textureManager );
-    luaTwo.setShaderManager( shaderManager );
-    luaTwo.runScriptFromFile( "loadRenderPasses.lua" );
-    stateManager.addState( StatePtr(new SceneState( "sceneTwo", sceneTwo )) );
-    
+//    ScenePtr sceneTwo( new Scene );
+//    SceneFacadePtr facadeTwo( new SceneFacade( sceneTwo,
+//        finder,
+//        textureManager,
+//        shaderManager,
+//        cameraPerspective,
+//        frameBufferTarget,
+//        g_guiEventPublisher ) );
+//
+//    LuaInterpreter luaTwo( finder );
+//    luaTwo.setFacade( facadeTwo );
+//    luaTwo.setTextureManager( textureManager );
+//    luaTwo.setShaderManager( shaderManager );
+//    luaTwo.runScriptFromFile( "loadRenderPasses.lua" );
+//    stateManager.addState( StatePtr(new SceneState( "sceneTwo", sceneTwo )) );
+//    
     
     /// FontManager fm( textureManager, "TextureAtlas" );
     /// const std::string fontName = "Sans";
@@ -278,30 +310,37 @@ int runSimulation(int argc, char** argv)
     /// tr.intialize( fm, fontName, fontSize );
     /// tr.setText( "Hello, World" );
     
-    FontManagerPtr fontManager( new FontManager(textureManager, 
-        "FontAtlasTexture" ) );
-    const std::string fontName = "Sans";
-    const int fontSize = 72;
-    fontManager->addFont( fontName, fontSize, "HelveticaNeueLight.ttf" );
+    
+    if( false )
+    {
+    
+        FontManagerPtr fontManager( new FontManager(textureManager,
+            "FontAtlasTexture" ) );
+        const std::string fontName = "Sans";
+        const int fontSize = 72;
+        fontManager->addFont( fontName, fontSize, "HelveticaNeueLight.ttf" );
 
-    TextRenderablePtr textMsg( new TextRenderable("TestText") );
-    textMsg->initialize( fontManager, fontName, fontSize );
+        TextRenderablePtr textMsg( new TextRenderable("TestText") );
+        textMsg->initialize( fontManager, fontName, fontSize );
+        
+        MaterialPtr textMaterial = facade->createMaterial( "TextShader" );
+        textMaterial->setShaderUniform("u_color", glm::vec4( 1, 1, 1, 1 ) );
+        textMaterial->addTexture( "s_color", fontManager->getFontAtlasTextureName() );
+        textMsg->requiresExplicitMaterial();
+        textMsg->setMaterialForPassName( "HUDPass", textMaterial );
+        sceneOne->add( textMsg );
+
+        glm::vec4 color( 0.067,0.833, 0.086, 0.85 );
+        float x = 0.0;
+        float y = 0.5;
+        glm::mat4 xform;
+        xform = glm::translate( xform, x, y, 0.0f );
+        textMsg->setTransform( xform );
+        MaterialPtr textMat = textMsg->getMaterialForPassName( "HUDPass" );
+        textMat->setShaderUniform( "u_color", color );
+    }
     
-    MaterialPtr textMaterial = facadeTwo->createMaterial( "TextShader" );
-    textMaterial->setShaderUniform("u_color", glm::vec4( 1, 1, 1, 1 ) );
-    textMaterial->addTexture( "s_color", fontManager->getFontAtlasTextureName() );
-    textMsg->requiresExplicitMaterial();
-    textMsg->setMaterialForPassName( "HUDPass", textMaterial );
-    sceneTwo->add( textMsg );
     
-    glm::vec4 color( 0.067,0.833, 0.086, 0.85 );
-    float x = 0.0;
-    float y = 0.5;
-    glm::mat4 xform;
-    xform = glm::translate( xform, x, y, 0.0f );
-    textMsg->setTransform( xform );
-    MaterialPtr textMat = textMsg->getMaterialForPassName( "HUDPass" );
-    textMat->setShaderUniform( "u_color", color );
     //////////
 
 //    // Second text using same font -- make sure doesn't get reloaded
@@ -360,7 +399,7 @@ int runSimulation(int argc, char** argv)
         //rayCastFluid->setTransform( xform );
         slices->setTransform( xform );
         //scene->add( rayCastFluid );
-        scene->add( slices );
+        sceneOne->add( slices );
     }
     {
         // Set window/textures sizes by sending signals to listeners
@@ -370,7 +409,6 @@ int runSimulation(int argc, char** argv)
     }
 
     const double startTime = glfwGetTime();
-    double nextSceneTime = startTime ;
     double currTime = startTime;
     double lastTime = startTime;
     double prevUpdateTime = 0;
@@ -405,10 +443,10 @@ int runSimulation(int argc, char** argv)
         currTime = glfwGetTime();
         vars.fps = 1.0f/(currTime - lastTime);
 
-        std::stringstream ss;
-        ss << "Time: " << currTime << "\nFPS: " << vars.fps
-        << "\nThis is a test\n\tAnd another";
-        textMsg->setText( ss.str() );
+//        std::stringstream ss;
+//        ss << "Time: " << currTime << "\nFPS: " << vars.fps
+//        << "\nThis is a test\n\tAnd another";
+//        textMsg->setText( ss.str() );
 
 
         // UPDATE

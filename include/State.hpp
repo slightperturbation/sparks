@@ -20,8 +20,11 @@ namespace spark
         /// Returns the name of this state, which should be a unique
         /// identifier among all instances held by a StateManager.
         virtual StateName name( void ) const;
-
+        
         /// Called once when state is first entered/activated.
+        virtual void load( void ) = 0;
+
+        /// Called each time the state is entered/activated.
         virtual void activate( void ) = 0;
         
         /// Called once when leaving this state to enter another state.

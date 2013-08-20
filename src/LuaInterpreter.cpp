@@ -1,5 +1,7 @@
 #include "LuaInterpreter.hpp"
 
+#include "TextRenderable.hpp"
+
 int
 spark
 ::reportLuaError( lua_State* L )
@@ -32,7 +34,7 @@ spark
 
 void
 spark
-::bindSparkFacade( lua_State* lua )
+::bindSceneFacade( lua_State* lua )
 {
     // Renderable
     luabind::module( lua )
@@ -63,7 +65,6 @@ spark
           &Renderable::setMaterialForPassName )
      ];
     
-#if 0
     // TextRenderable
     luabind::module( lua )
     [
@@ -71,7 +72,14 @@ spark
      .def( "initialize", &TextRenderable::initialize )
      .def( "setText", &TextRenderable::setText )
      ];
-#endif
+    
+    // FontManager
+    luabind::module( lua )
+    [
+     luabind::class_< FontManager, FontManagerPtr >( "FontManager" )
+     .def( "addFont", &FontManager::addFont )
+    ];
+
     // RenderPass
     luabind::module( lua )
     [
@@ -137,53 +145,53 @@ spark
     
     luabind::module( lua )
     [
-     luabind::class_< SparkFacade,
-     SparkFacadePtr >( "SparkFacade" )
+     luabind::class_< SceneFacade,
+     SceneFacadePtr >( "SceneFacade" )
      .def( "createPostProcessingRenderPassAndTarget",
-          &SparkFacade::createPostProcessingRenderPassAndTarget )
+          &SceneFacade::createPostProcessingRenderPassAndTarget )
      .def( "createPostProcessingRenderPassAndScaledTarget",
-          &SparkFacade::createPostProcessingRenderPassAndScaledTarget )
+          &SceneFacade::createPostProcessingRenderPassAndScaledTarget )
      .def( "createPostProcessingRenderPass",
-          (RenderPassPtr (SparkFacade::*)(float,
+          (RenderPassPtr (SceneFacade::*)(float,
                                           const RenderPassName&,
                                           RenderTargetPtr,
                                           MaterialPtr ))
-          &SparkFacade::createPostProcessingRenderPass )
+          &SceneFacade::createPostProcessingRenderPass )
      .def( "createPostProcessingRenderPass",
-          (RenderPassPtr (SparkFacade::*)(float,
+          (RenderPassPtr (SceneFacade::*)(float,
                                           const RenderPassName&,
                                           const TextureName&,
                                           RenderTargetPtr,
                                           const ShaderName& ))
-          &SparkFacade::createPostProcessingRenderPass )
+          &SceneFacade::createPostProcessingRenderPass )
      .def( "getFrameBufferRenderTarget",
-          &SparkFacade::getFrameBufferRenderTarget )
+          &SceneFacade::getFrameBufferRenderTarget )
      .def( "getCamera",
-          &SparkFacade::getCamera )
+          &SceneFacade::getCamera )
      .def( "createScaledTextureRenderTarget",
-          &SparkFacade::createScaledTextureRenderTarget )
+          &SceneFacade::createScaledTextureRenderTarget )
      .def( "createTextureRenderTarget",
-          &SparkFacade::createTextureRenderTarget )
+          &SceneFacade::createTextureRenderTarget )
      .def( "createRenderPass",
-          &SparkFacade::createRenderPass )
+          &SceneFacade::createRenderPass )
      .def( "createRenderPassWithProjection",
-          &SparkFacade::createRenderPassWithProjection )
+          &SceneFacade::createRenderPassWithProjection )
      .def( "createOverlayRenderPass",
-          &SparkFacade::createOverlayRenderPass )
+          &SceneFacade::createOverlayRenderPass )
      .def( "setMainRenderTarget",
-          &SparkFacade::setMainRenderTarget )
+          &SceneFacade::setMainRenderTarget )
      .def( "getMainRenderTarget",
-          &SparkFacade::getMainRenderTarget )
+          &SceneFacade::getMainRenderTarget )
      .def( "createMaterial",
-          &SparkFacade::createMaterial )
+          &SceneFacade::createMaterial )
      .def( "loadMesh",
-          &SparkFacade::loadMesh )
+          &SceneFacade::loadMesh )
      .def( "createCube",
-          &SparkFacade::createCube )
+          &SceneFacade::createCube )
      .def( "createQuad",
-          &SparkFacade::createQuad )
+          &SceneFacade::createQuad )
      .def( "createLSpark",
-          &SparkFacade::createLSpark )
+          &SceneFacade::createLSpark )
      ];
     
     luabind::module( lua )
@@ -199,6 +207,7 @@ spark
      .def( "addTexture", &Material::addTexture )
      .def( "dumpShaderUniforms", &Material::dumpShaderUniforms )
      ];
+    
 }
 
 void
@@ -365,7 +374,7 @@ spark::LuaInterpreter
         bindGLM( m_lua );
         bindTextureManager( m_lua );
         bindShaderManager( m_lua );
-        bindSparkFacade( m_lua );
+        bindSceneFacade( m_lua );
         bindInterpreter( m_lua );
         bindConstants( m_lua );
     }

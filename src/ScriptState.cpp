@@ -1,53 +1,62 @@
 
 #include "ScriptState.hpp"
 #include "Scene.hpp"
-#include "SparkFacade.hpp"
+#include "SceneFacade.hpp"
 #include "LuaInterpreter.hpp"
+
+#include <sstream>
 
 spark::ScriptState
 ::ScriptState( const spark::StateName& name,
-              spark::SparkFacadePtr facade )
+               spark::SceneFacadePtr facade )
 : SceneState( name, facade->getScene() ),
-m_facade( facade ),
-m_lua( new LuaInterpreter( facade->getFinder() ) )
+  m_facade( facade ),
+  m_lua( new LuaInterpreter( facade->getFinder() ) )
 {
     m_lua->setFacade( facade );
-    runScriptFromFile( "LoadingState.lua" );
+    runScriptFromFile( fileNameFromStateName( name ) );
 }
 
 spark::ScriptState
 ::ScriptState( const StateName& name,
-              ScenePtr scene,
-              FileAssetFinderPtr finder,
-              TextureManagerPtr tm,
-              ShaderManagerPtr sm,
-              PerspectiveProjectionPtr camera,
-              FrameBufferRenderTargetPtr frameBufferTarget,
-              GuiEventPublisherPtr guiEventPublisher )
-: SceneState( name, scene )
+               ScenePtr scene,
+               FileAssetFinderPtr finder,
+               TextureManagerPtr tm,
+               ShaderManagerPtr sm,
+               PerspectiveProjectionPtr camera,
+               FrameBufferRenderTargetPtr frameBufferTarget,
+               GuiEventPublisherPtr guiEventPublisher )
+: SceneState( name, scene ),
+  m_lua( new LuaInterpreter( finder ) )
 {
-    SparkFacadePtr facade( new SparkFacade( scene,
-                                           finder,
-                                           tm, sm,
-                                           camera,
-                                           frameBufferTarget,
-                                           guiEventPublisher
-                                           ) );
-    m_facade = facade;
-    runScriptFromFile( "ScriptState.lua" );
+    m_facade = SceneFacadePtr( new SceneFacade( scene,
+                                                finder,
+                                                tm, sm,
+                                                camera,
+                                                frameBufferTarget,
+                                                guiEventPublisher )
+                              );
+    m_lua->setFacade( m_facade );
+    runScriptFromFile( fileNameFromStateName( name ) );
 }
 
 spark::ScriptState
 ::~ScriptState()
-{
-    
-}
+{ }
 
 void
 spark::ScriptState
 ::runScriptFromFile( const std::string& filename )
 {
     m_lua->runScriptFromFile( filename.c_str() );
+}
+
+void
+spark::ScriptState
+::load( void )
+{
+    //TODO spawn a thread to run the script
+    m_lua->runScriptFromString( "theState:load()" );
 }
 
 void
@@ -98,7 +107,8 @@ spark::ScriptState
     }
     else
     {
-        LOG_ERROR(g_log) << "ScriptState should build a global object called theState";
+        LOG_ERROR(g_log) << "ScriptState \"" << name()
+        << "\" should build a global object called theState";
     }
 }
 
@@ -157,4 +167,14 @@ spark::ScriptState
         return boost::optional<spark::StateName>( next );
     }
 }
+
+std::string
+spark::ScriptState
+::fileNameFromStateName( const StateName& name )
+{
+    std::stringstream filename;
+    filename << name << "State.lua";
+    return filename.str();
+}
+
 

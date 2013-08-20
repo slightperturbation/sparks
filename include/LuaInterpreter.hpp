@@ -3,7 +3,7 @@
 
 #include "TextureManager.hpp"
 #include "ShaderManager.hpp"
-#include "SparkFacade.hpp"
+#include "SceneFacade.hpp"
 
 #include "lua.hpp"
 #include "luabind/luabind.hpp"
@@ -54,7 +54,7 @@ namespace spark
     
     //// Populate the error message with full-stack info.
     int reportLuaError( lua_State* L );
-    void bindSparkFacade( lua_State* lua );
+    void bindSceneFacade( lua_State* lua );
     void bindTextureManager( lua_State* lua );
     void bindShaderManager( lua_State* lua );
     /// Bind to lua the glm library classes (vec3, mat4, etc.)
@@ -106,7 +106,7 @@ namespace spark
         /// Sets the facade and also the textureManager and shaderManager
         /// (to the facade's versions to ensure consistency)
         /// Can override if needed.
-        void setFacade( SparkFacadePtr facade )
+        void setFacade( SceneFacadePtr facade )
         {
             luabind::globals( m_lua )["spark"] = facade;
             setTextureManager( facade->getTextureManager() );
@@ -185,7 +185,7 @@ namespace spark
                 }
                 std::cerr << "Unable to load lua script from file \""
                           << filePath << "\":  "
-                          << errType;
+                          << errType << "\n\n";
                 LOG_ERROR(g_log) << "Unable to load lua script from file \""
                                  << filePath << "\":  "
                                  << errType;

@@ -130,8 +130,8 @@ namespace spark
     typedef spark::shared_ptr< ShaderManager > ShaderManagerPtr;
     typedef std::string ShaderName;
     
-    class SparkFacade;
-    typedef spark::shared_ptr< SparkFacade > SparkFacadePtr;
+    class SceneFacade;
+    typedef spark::shared_ptr< SceneFacade > SceneFacadePtr;
     
     class State;
     typedef spark::shared_ptr< State > StatePtr;
