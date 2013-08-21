@@ -1,46 +1,46 @@
 -- Load Common Shaders
 
 shaderManager:loadShaderFromFiles( "colorShader",
-                                    "baseVertexShader.glsl",
-                                    "colorFragmentShader.glsl" );
+                                    "base.vert",
+                                    "color.frag" );
 
 shaderManager:loadShaderFromFiles( "constantColorShader",
-                                    "baseVertexShader.glsl",
-                                    "constantColorFragmentShader.glsl" );
+                                    "base.vert",
+                                    "constantColor.frag" );
 
 shaderManager:loadShaderFromFiles( "phongShader",
-                                    "baseVertexShader.glsl",
-                                    "phongFragmentShader.glsl" );
+                                    "base.vert",
+                                    "phong.frag" );
 
 shaderManager:loadShaderFromFiles( "texturedOverlayShader",
-                                    "baseVertexShader.glsl",
-                                    "texturedOverlayFragmentShader.glsl" );
+                                    "base.vert",
+                                    "texturedOverlay.frag" );
 
 shaderManager:loadShaderFromFiles( "blurHortShader",
-                                    "blurHortVertexShader.glsl",
-                                    "blurFragmentShader.glsl" );
+                                    "blurHort.vert",
+                                    "blur.frag" );
 
 shaderManager:loadShaderFromFiles( "blurVertShader",
-                                    "blurVertVertexShader.glsl",
-                                    "blurFragmentShader.glsl" );
+                                    "blurVert.vert",
+                                    "blur.frag" );
 
 shaderManager:loadShaderFromFiles( "TextShader",
-                                    "textVertexShader.glsl",
-                                    "distanceFieldFragmentShader.glsl" );
+                                    "text.vert",
+                                    "distanceField.frag" );
 
 shaderManager:loadShaderFromFiles( "texturedSparkShader", 
-                                    "baseVertexShader.glsl",
-                                    "texturedSparkFragmentShader.glsl" );
+                                    "base.vert",
+                                    "texturedSpark.frag" );
 
 shaderManager:loadShaderFromFiles( "densityShader",
-                                    "base3DVertexShader.glsl",
-                                    "density3DFragmentShader.glsl" );
+                                    "base3D.vert",
+                                    "density3D.frag" );
 
 shaderManager:loadShaderFromFiles( "rayCastVolumeShader",
-                                    "rayCastVertexShader.glsl",
-                                    "rayCastFragmentShader.glsl" );
+                                    "rayCast.vert",
+                                    "rayCast.frag" );
 
-shaderManager:loadShaderFromFiles( "tissueShader",
-                                    "tissueVertexShader.glsl",
-                                    "tissueFragmentShader.glsl" );
+--shaderManager:loadShaderFromFiles( "tissueShader",
+--                                    "tissue.vert",
+--                                    "tissue.frag" );
 

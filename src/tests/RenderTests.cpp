@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE( CreateRenderCommands )
     scene->add( primaryRenderPass );
 
     std::shared_ptr< TestRenderable > testObject( new TestRenderable( textureManager, shaderManager ) );
-    shaderManager->loadShaderFromFiles( "ColorShader", "colorVertexShader.glsl", "colorFragmentShader.glsl" );
+    shaderManager->loadShaderFromFiles( "ColorShader", "color.vert", "color.frag" );
     ShaderInstancePtr testShader( new ShaderInstance( "ColorShader", shaderManager ) );
     MaterialPtr material( new Material( textureManager, testShader ) );
     testObject->setMaterialForPassName( "TestRenderPass", material );

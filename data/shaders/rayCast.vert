@@ -1,6 +1,6 @@
 #version 150
 //
-// TODO -- same as base3DVertexShader.glsl ?
+// TODO -- same as base3D.vert ?
 //
 // MeshVertex attributes (see Mesh.hpp)
 in vec3 v_position;

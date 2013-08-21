@@ -15,8 +15,8 @@ spark::RayCastVolume
   m_textureManager( tm ),
   m_textureName( "RayCastTexture3D" )
 {
-    //    : Mesh( SHADER_DIR "rayCastVertexShader.glsl",
-    //       SHADER_DIR "rayCastFragmentShader.glsl" ),
+    //    : Mesh( SHADER_DIR "rayCast.vert",
+    //       SHADER_DIR "rayCast.frag" ),
 
     m_mesh->unitCube();
     ShaderInstancePtr shader = sm->createShaderInstance( "rayCastVolumeShader" );

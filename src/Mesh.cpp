@@ -419,8 +419,8 @@ spark::Mesh
     // Build materials for needed passes
     ShaderName colorShaderName = box->name() + "_Box_ColorShader";
     sm->loadShaderFromFiles( colorShaderName, 
-        "colorVertexShader.glsl",
-        "colorFragmentShader.glsl" );
+        "color.vert",
+        "color.frag" );
     ShaderInstancePtr colorShader( new ShaderInstance( colorShaderName, sm ) );
     MaterialPtr colorMaterial( new Material( tm, colorShader ) );
     box->setMaterialForPassName( renderPassName, colorMaterial );

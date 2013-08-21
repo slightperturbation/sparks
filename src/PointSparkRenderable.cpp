@@ -23,8 +23,8 @@ spark::PointSparkRenderable
     sm->loadShaderFromFiles( colorShaderName, 
 //        "PointSparkVertex.glsl",
 //        "PointSparkFragment.glsl" );
-"colorVertexShader.glsl",
-"colorFragmentShader.glsl" );
+"color.vert",
+"color.frag" );
 
     ShaderInstancePtr colorShader( new ShaderInstance( colorShaderName, sm ) );
     MaterialPtr sparkColorMaterial( new Material( tm, colorShader ) );

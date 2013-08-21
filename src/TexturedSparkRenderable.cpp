@@ -7,8 +7,8 @@ using namespace std;
 using namespace Eigen;
 
 // "texturedSpark"
-const std::string g_defaultVertexShaderFilename = "colorVertexShader.glsl"; 
-const std::string g_defaultFragmentShaderFilename = "colorFragmentShader.glsl";
+const std::string g_defaultVertexShaderFilename = "color.vert"; 
+const std::string g_defaultFragmentShaderFilename = "color.frag";
 
 spark::TexturedSparkRenderable
 ::TexturedSparkRenderable( LSparkPtr a_spark )
