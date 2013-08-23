@@ -36,11 +36,11 @@ namespace spark
         public:
             EyeTrackerServer(boost::asio::io_service& io_service, short port)
             : socket_(io_service,
-                      boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(),
+                      boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(),
+                                                     //boost::asio::ip::address_v4::any(),
                                                      port)),
               m_x( 0.5f ), m_y( 0.5f )
             {
-
                 socket_.set_option(boost::asio::socket_base::reuse_address(true));
                 socket_.async_receive_from(
                     boost::asio::buffer(data_, max_length),

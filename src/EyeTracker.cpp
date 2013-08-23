@@ -17,9 +17,9 @@
 
 spark::NetworkEyeTracker
 ::NetworkEyeTracker( short listeningUdpPort )
-: m_prevX( 0.5f ), m_prevY( 0.5f )
+: m_work( new boost::asio::io_service::work( m_ioService ) ),
+  m_prevX( 0.5f ), m_prevY( 0.5f )
 {
-    m_work.reset( new boost::asio::io_service::work( m_ioService ) );
     try
     {
         // Register signal handlers so that the daemon may be shut down. You may
@@ -29,10 +29,11 @@ spark::NetworkEyeTracker
         // the code below seems to be catching signals quickly 
         // after startup.
 #else
-        boost::asio::signal_set signals( m_ioService, SIGINT, SIGTERM );
-        signals.async_wait(
-            boost::bind( &boost::asio::io_service::stop, &m_ioService ) );
-#endif        
+        // uncommenting causes handle_receive_from to not be called on OSX
+//        boost::asio::signal_set signals( m_ioService, SIGINT, SIGTERM );
+//        signals.async_wait(
+//            boost::bind( &boost::asio::io_service::stop, &m_ioService ) );
+#endif
         m_server.reset( new EyeTrackerServer( m_ioService,
                                               listeningUdpPort ) );
         // Dispatch m_ioService.run() on its own thread
