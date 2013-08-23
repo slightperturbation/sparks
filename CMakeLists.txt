@@ -423,9 +423,13 @@ set( HDRS
   ./include/EyeTracker.hpp
   ./include/Fluid.hpp
   ./include/FileAssetFinder.hpp
+  ./include/GlfwInput.hpp
   ./include/GuiEventSubscriber.hpp
   ./include/GuiEventPublisher.hpp
   ./include/FontManager.hpp
+  ./include/Input.hpp
+  ./include/InputDevice.hpp
+  ./include/InputFactory.hpp
   ./include/Material.hpp
   ./include/Mesh.hpp
   ./include/PointSparkRenderable.hpp
@@ -458,6 +462,9 @@ set( HDRS
   ./include/VolumeData.hpp
   ./include/VertexAttribute.hpp
   ./include/VelocityFieldInterface.hpp
+
+  ./include/SixenseInputDevice.hpp
+  ./include/TissueMesh.hpp
 )
 include_directories( ./include/ )  # Move headers to ./include/
 
@@ -472,6 +479,8 @@ set( SRCS
   ./src/Fluid.cpp
   ./src/FileAssetFinder.cpp
   ./src/FontManager.cpp
+  ./src/GlfwInput.cpp
+  ./src/Input.cpp
   ./src/Material.cpp
   ./src/Mesh.cpp
   ./src/PointSparkRenderable.cpp
@@ -496,10 +505,36 @@ set( SRCS
   ./src/TextureManager.cpp
   ./src/Utilities.cpp
   ./src/Viewport.cpp
+
+  ./src/SixenseInputDevice.cpp
+  ./src/TissueMesh.cpp
+  
  )
 set( GUI_SRCS 
   ./src/main.cpp
 )
+
+set( SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data/shaders" )
+file(GLOB VERT_SHADER_FILES RELATIVE 
+  ${SHADER_DIR} "${SHADER_DIR}/*.vert" )
+file(GLOB FRAG_SHADER_FILES RELATIVE 
+  ${SHADER_DIR} "${SHADER_DIR}/*.frag" )
+
+foreach( shaderFile ${VERT_SHADER_FILES} )
+  LIST(APPEND VERT_SHADERS "${SHADER_DIR}/${shaderFile}" )
+  SET_SOURCE_FILES_PROPERTIES( ${SHADER_DIR}/${shaderFile} PROPERTIES HEADER_FILE_ONLY TRUE )
+endforeach()
+foreach( shaderFile ${FRAG_SHADER_FILES} )
+  LIST(APPEND FRAG_SHADERS "${SHADER_DIR}/${shaderFile}" )
+  SET_SOURCE_FILES_PROPERTIES( ${SHADER_DIR}/${shaderFile} PROPERTIES HEADER_FILE_ONLY TRUE )
+endforeach()
+
+#MESSAGE( STATUS "VERT_SHADERS: ${VERT_SHADERS} " )
+#MESSAGE( STATUS "FRAG_SHADERS: ${FRAG_SHADERS} " )
+
+source_group(vertex_shaders FILES ${VERT_SHADERS} )
+source_group(frag_shaders FILES ${FRAG_SHADERS} )
+
 
 set( UNIT_TEST_SRCS
 	./src/tests/UnitTests.cpp
@@ -531,7 +566,7 @@ include_directories( ${CMAKE_BINARY_DIR}/config/ )
 # Executables
 #####################################################################
 add_executable( ${PROJECT_NAME} 
-  ${HDRS} ${SRCS} ${GUI_SRCS} ${CPPLOG_HDRS} ${EXT_SRC}
+  ${HDRS} ${SRCS} ${GUI_SRCS} ${CPPLOG_HDRS} ${EXT_SRC} ${VERT_SHADERS} ${FRAG_SHADERS}
 )
 #add_dependencies( ${PROJECT_NAME} TBB )
 add_dependencies( ${PROJECT_NAME} FREETYPEGL )
