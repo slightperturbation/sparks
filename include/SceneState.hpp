@@ -7,7 +7,9 @@
 namespace spark
 {
     /// Concrete State that delegates to a single Scene object.
-    /// Not practically useful
+    /// Use only for scenes that are nothing more than an unchanging Scene.
+    /// Concrete implementations written in C++ should inherit from this,
+    /// and concrete implementations in Lua should instance ScriptState.
     class SceneState : public State
     {
     public:
@@ -20,12 +22,13 @@ namespace spark
         virtual void fixedUpdate( double dt ) override;
         virtual void render()      override;
         boost::optional<spark::StateName> nextState( double currTime ) override;
+        
+        /// Add the given Renderable to the Scene held by this SceneState.
+        void add( RenderablePtr renderable );
+        /// Add the given RenderPass to the Scene held by this SceneState.
+        void add( RenderPassPtr renderPass );
     protected:
         ScenePtr m_scene;
     };
-    
-
 }
-
 #endif
-

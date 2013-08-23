@@ -84,6 +84,8 @@ spark::TextRenderable
     m_markup.font->hinting = 1;
     //m_markup.font->filtering = 1; // Purpose?
     
+    scale( glm::vec3(0.75, 1, 1) ); // TODO match screen aspect ratio
+
     if( !m_markup.font )
     {
         LOG_ERROR(g_log) << "markup.font was null. aborting TextRenderable::update()";
@@ -99,7 +101,16 @@ spark::TextRenderable
     m_isDirty = true;
 }
 
-void 
+spark::TextureName
+spark::TextRenderable
+::getFontTextureName( void ) const
+{
+    return ( m_fontManager ) ?
+    m_fontManager->getFontAtlasTextureName()
+    : TextureName("INVALID_FONT_ATLAS_TEXTURE_NAME_IN_TEXT_RENDERABLE");
+}
+
+void
 spark::TextRenderable
 ::render( const RenderCommand& rc ) const
 {

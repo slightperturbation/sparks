@@ -24,7 +24,14 @@ namespace spark
     public:
         Scene( void );
         ~Scene();
+        
+        /// Render the given renderpass when this Scene object's render()
+        /// method is called.
         void add( RenderPassPtr rp );
+        /// Render the given renderable when this Scene object's render()
+        /// method is called.  Note that the Renderable must also be
+        /// associated with a material (see Renderable::setMaterialForPassName())
+        /// for a RenderPass that has been Scene::add()'d to this Scene.
         void add( RenderablePtr r );
         
         /// Build render commands for this frame.

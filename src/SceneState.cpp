@@ -69,3 +69,17 @@ spark::SceneState
     return SceneState;
 }
 
+void
+spark::SceneState
+::add( RenderablePtr renderable )
+{
+    m_scene->add( renderable );
+}
+
+void
+spark::SceneState
+::add( RenderPassPtr renderPass )
+{
+    m_scene->add( renderPass );
+}
+

@@ -59,12 +59,8 @@ namespace spark
         /// linesPerViewport will fill up the vertical height of the current
         /// viewport.
         void setText( const std::string& msg );
-        TextureName getFontTextureName( void ) const
-        { 
-            return ( m_fontManager ) ?
-                m_fontManager->getFontAtlasTextureName()
-                : TextureName("INVALID_FONT_ATLAS_TEXTURE_NAME_IN_TEXT_RENDERABLE");
-        }
+        TextureName getFontTextureName( void ) const;
+    
     private:
         /// Replace unsupported characters
         static void filterText( std::string& str );

@@ -9,6 +9,7 @@
 #include "FileAssetFinder.hpp"
 #include "Scene.hpp"
 #include "GuiEventPublisher.hpp"
+#include "TextRenderable.hpp"
 
 #include "LSpark.hpp"
 #include "TexturedSparkRenderable.hpp"
@@ -21,6 +22,7 @@ spark::SceneFacade
                ShaderManagerPtr sm,
                PerspectiveProjectionPtr camera,
                FrameBufferRenderTargetPtr frameBufferTarget,
+               InputPtr inputManager,
                GuiEventPublisherPtr guiEventPublisher
               )
 
@@ -28,6 +30,7 @@ spark::SceneFacade
   m_finder( finder ),
   m_textureManager( tm ),
   m_shaderManager( sm ),
+  m_input( inputManager ),
   m_overlayPerspective( new OrthogonalProjection ),
   m_cameraPerspective( camera ),
   m_frameBufferTarget( frameBufferTarget ),
@@ -67,6 +70,13 @@ spark::SceneFacade
 ::getShaderManager( void )
 {
     return m_shaderManager;
+}
+
+spark::InputPtr
+spark::SceneFacade
+::getInput( void )
+{
+    return m_input;
 }
 
 /// Returns the "main" camera as a PerspectiveProjection.
@@ -377,7 +387,38 @@ spark::SceneFacade
     m_guiEventPublisher.reset();
 }
 
-//getFontManager
+spark::FontManagerPtr
+spark::SceneFacade
+::getFontManager( void )
+{
+    if( !m_fontManager )
+    {
+        m_fontManager = FontManagerPtr(
+            new FontManager( m_textureManager,
+                            "FontAtlasTexture" ) );
+    }
+    return m_fontManager;
+}
+
+spark::TextRenderablePtr
+spark::SceneFacade
+::createText( const std::string& fontName,
+              int fontSize,
+              MaterialPtr material,
+              const RenderPassName& pass,
+              const std::string& msg )
+{
+    std::stringstream uniqueName;
+    uniqueName << fontName << "_" << fontSize << "_"
+        << pass << "_" << msg;
+    TextRenderablePtr text( new TextRenderable(uniqueName.str()) );
+    text->initialize( m_fontManager, fontName, fontSize );
+    text->requiresExplicitMaterial();
+    text->setMaterialForPassName( pass, material );
+    text->setText( msg );
+    m_scene->add( text );
+    return text;
+}
 
 
 ///// Example of creating a full-screen quad for HUD-style overlay

@@ -4,7 +4,7 @@ Loading state loads the resources that take substantial time,
 e.g., fonts, big meshes, etc.
 
 ]]
-
+ 
 LoadingState = {}
 
 function LoadingState:new()

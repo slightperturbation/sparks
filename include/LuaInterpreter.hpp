@@ -4,6 +4,7 @@
 #include "TextureManager.hpp"
 #include "ShaderManager.hpp"
 #include "SceneFacade.hpp"
+#include "Input.hpp"
 
 #include "lua.hpp"
 #include "luabind/luabind.hpp"
@@ -119,6 +120,10 @@ namespace spark
         void setShaderManager( ShaderManagerPtr sm )
         {
             luabind::globals( m_lua )["shaderManager"] = sm;
+        }
+        void setInputManager( InputPtr input )
+        {
+            luabind::globals( m_lua )["input"] = input;
         }
         
         /// Excute the given script in the current lua context.
@@ -245,9 +250,10 @@ namespace spark
             {
                 // Copy error, but leave on stack for caller
                 std::string errMsg( lua_tostring( m_lua, -1 ) );
-                std::cerr << "Lua runtime error: " << errMsg << '\n';
+                std::cerr << "Lua runtime error:\n" << errMsg << '\n';
                 LOG_ERROR(g_log) << "Lua runtime error: " << errMsg;
                 lua_pop( m_lua, 1 ); // pop error off stack
+                assert( false );
             }
             if( errorFuncStack )
             {

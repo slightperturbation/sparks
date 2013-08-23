@@ -92,6 +92,13 @@ spark::StateManager
     LOG_INFO(g_log) << "Switched to State \"" << m_currState->name() << "\".";
 }
 
+spark::StatePtr
+spark::StateManager
+::currState( void )
+{
+    return m_currState;
+}
+
 spark::StateName
 spark::StateManager
 ::currStateName( void ) const
@@ -105,6 +112,13 @@ spark::StateManager
         LOG_ERROR(g_log) << "currStateName() requested, but null current state";
         return "";
     }
+}
+
+spark::StatePtr
+spark::StateManager
+::operator[]( const StateName& name )
+{
+    return m_states[name];
 }
 
 void

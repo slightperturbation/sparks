@@ -1,7 +1,7 @@
 
 
 MenuState = {}
-
+ 
 function MenuState:new()
 	print( "MenuState:new" )
 	newObj = { angle = 45, hasRunOnce = false, startTime = -1 }

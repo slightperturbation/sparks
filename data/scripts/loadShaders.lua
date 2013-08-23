@@ -40,7 +40,7 @@ shaderManager:loadShaderFromFiles( "rayCastVolumeShader",
                                     "rayCast.vert",
                                     "rayCast.frag" );
 
---shaderManager:loadShaderFromFiles( "tissueShader",
---                                    "tissue.vert",
---                                    "tissue.frag" );
+shaderManager:loadShaderFromFiles( "tissueShader",
+                                    "tissue.vert",
+                                    "tissue.frag" );
 

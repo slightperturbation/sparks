@@ -34,8 +34,14 @@ namespace spark
         /// then activate() on nextState.
         void setCurrState( const StateName& nextState );
         
+        /// Returns the current state.
+        StatePtr currState( void );
+        
         /// Returns the name of the current State.
         StateName currStateName( void ) const;
+        
+        /// Returns the state associated with the given name.
+        StatePtr operator[]( const StateName& name );
         
         /// Allow the state to update its internal state.
         /// Called once per graphics frame.

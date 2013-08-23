@@ -75,6 +75,10 @@ namespace spark
     class GuiEventPublisher;
     typedef spark::shared_ptr< GuiEventPublisher > GuiEventPublisherPtr;
     
+    class Input;
+    typedef spark::shared_ptr< Input > InputPtr;
+    typedef std::string InputDeviceName;
+    
     class LuaInterpreter;
     typedef spark::shared_ptr<LuaInterpreter> LuaInterpreterPtr;
     
@@ -102,6 +106,9 @@ namespace spark
     typedef spark::shared_ptr< const Renderable > ConstRenderablePtr;
     typedef std::vector< RenderablePtr >  Renderables;
     typedef std::string RenderableName;
+    
+    class TextRenderable;
+    typedef spark::shared_ptr< TextRenderable > TextRenderablePtr;
     
     class RenderCommand;
     typedef spark::shared_ptr< RenderCommand > RenderCommandPtr;

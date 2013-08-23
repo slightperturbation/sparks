@@ -29,9 +29,14 @@
 
 #include "LuaInterpreter.hpp"
 
-#define GLEW_STATIC
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "Input.hpp"
+#include "InputFactory.hpp"
+#include "GlfwInput.hpp"
+
+#include "StateManager.hpp"
+#include "State.hpp"
+#include "SceneState.hpp"
+#include "ScriptState.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -51,12 +56,6 @@
 
 
 #include "freetype-gl.h"
-
-
-#include "StateManager.hpp"
-#include "State.hpp"
-#include "SceneState.hpp"
-#include "ScriptState.hpp"
 
 using namespace std;
 using namespace Eigen;
@@ -135,47 +134,16 @@ void setGLFWCallbacks( GLFWwindow* glfwWindow )
     glfwSetWindowSizeCallback( glfwWindow, resizeWindowCallback );
 #ifdef __APPLE__
     //glGetError(); // eat spurious GLFW-caused OpenGL errors on OSX/iOS
+    // commented out because it violates the core profile
 #endif
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// TODO Replace with loading from file (or running a script, python? lua?)
-
-MaterialPtr loadPhongMaterial( TextureManagerPtr textureManager,
-                               ShaderManagerPtr shaderManager )
-{
-    ShaderInstancePtr phongShader = shaderManager
-        ->createShaderInstance( "phongShader" );
-    MaterialPtr phongMaterial( new Material( textureManager, phongShader ) );
-    // Bind texture to the color sampler (s_color is used in shader)
-    phongMaterial->addTexture( "s_color", "checker" );
-    //Todo these uniforms should be set by illumination in scene?
-    phongMaterial->setShaderUniform( "u_light.position_camera",
-                                    glm::vec4(5.0f,10.0f,0.0f,1.0f) );
-    phongMaterial->setShaderUniform( "u_light.diffuse",
-                                    glm::vec4(0.8f,0.8f,0.8f,1.0f) );
-    phongMaterial->setShaderUniform( "u_ambientLight",
-                                    glm::vec4(0.3f,0.1f,0.1f,1.0f) );
-    // Phong/Blinn material properties
-    phongMaterial->setShaderUniform( "u_ka",
-                                    glm::vec4(1.0f,1.0f,1.0f,1.0f) );
-    phongMaterial->setShaderUniform( "u_kd",
-                                    glm::vec4(1.0f,1.0f,1.0f,1.0f) );
-    phongMaterial->setShaderUniform( "u_ks",
-                                    glm::vec4(1.0f,1.0f,1.0f,1.0f) );
-    phongMaterial->setShaderUniform( "u_ns", 100.0f );
-    return phongMaterial;
-}
-////////////////////////////////////////////////////////////////////////////////
-
 
 /// Online simulation and display of fluid
 int runSimulation(int argc, char** argv)
 {
     
     // Create Window
+    // legacy logging is great, but conlicts with nSight debugger
     bool enableLegacyOpenGlLogging  = false;
     OpenGLWindow window( "Spark", enableLegacyOpenGlLogging );
     using namespace std;
@@ -184,6 +152,15 @@ int runSimulation(int argc, char** argv)
     // Setup Gui Callbacks
     g_guiEventPublisher = GuiEventPublisherPtr( new GuiEventPublisher );
     setGLFWCallbacks( window.glfwWindow() );
+    
+    // And Input manager
+    // Choose windowing library -- glfw for now
+    InputPtr inputManager( new Input );
+    std::unique_ptr<InputFactory> inputFactory(
+        new GlfwInputFactory( window.glfwWindow() ) );
+    inputManager->acquireKeyboardDevice( inputFactory->createKeyboard() );
+    inputManager->acquireInputDevice( "mouse",
+                                     inputFactory->createDevice(0) );
     
     // Create common managers and tell them how to find file resources
     FileAssetFinderPtr finder( new FileAssetFinder );
@@ -202,13 +179,16 @@ int runSimulation(int argc, char** argv)
     
     // Eye Tracker
     EyeTrackerPtr eyeTracker;
-    //EyeTrackerPtr eyeTracker( new NetworkEyeTracker );
-    //eyeTracker->resizeViewport( 0, 0, width, height );
-    //g_guiEventPublisher->subscribe( eyeTracker );
+    const bool isEyeTrackingWithVision = true;
+    if( isEyeTrackingWithVision )
+    {
+        eyeTracker = EyeTrackerPtr( new NetworkEyeTracker );
+        eyeTracker->resizeViewport( 0, 0, width, height );
+        g_guiEventPublisher->subscribe( eyeTracker );
+    }
 
     StateManager stateManager;
 
-    
     OrthogonalProjectionPtr overlayPerspective( new OrthogonalProjection );
     PerspectiveProjectionPtr cameraPerspective( new PerspectiveProjection );
     cameraPerspective->cameraPos( 1.0f, 4.0f, -5.0f );
@@ -220,6 +200,7 @@ int runSimulation(int argc, char** argv)
     frameBufferTarget->setClearColor( glm::vec4( 0,0,0,0 ) );
     g_guiEventPublisher->subscribe( frameBufferTarget );
 
+    // Dummy scene for loading common resources
     ScenePtr sceneOne( new Scene );
     SceneFacadePtr facade( new SceneFacade( sceneOne,
                                             finder,
@@ -227,6 +208,7 @@ int runSimulation(int argc, char** argv)
                                             shaderManager,
                                             cameraPerspective,
                                             frameBufferTarget,
+                                            inputManager,
                                             g_guiEventPublisher ) );
     // lua handles loading default objects
     LuaInterpreter lua( finder );
@@ -246,146 +228,35 @@ int runSimulation(int argc, char** argv)
     for( auto iter = states.begin(); iter != states.end(); ++iter )
     {
         StatePtr newState( new ScriptState( *iter,
-                                               ScenePtr( new Scene ),
-                                               finder,
-                                               textureManager,
-                                               shaderManager,
-                                               cameraPerspective,
-                                               frameBufferTarget,
-                                               g_guiEventPublisher ) );
+                                            ScenePtr( new Scene ),
+                                            finder,
+                                            textureManager,
+                                            shaderManager,
+                                            cameraPerspective,
+                                            frameBufferTarget,
+                                            inputManager,
+                                            g_guiEventPublisher ) );
         stateManager.addState( newState );
         
     }
-    // Loading State
-//    StatePtr loadingState( new ScriptState( "Loading",
-//                                            ScenePtr( new Scene ),
-//                                            finder,
-//                                            textureManager,
-//                                            shaderManager,
-//                                            cameraPerspective,
-//                                            frameBufferTarget,
-//                                            g_guiEventPublisher ) );
-//    stateManager.addState( loadingState );
-//
-//    // Menu State
-//    StatePtr menuState( new ScriptState( "Menu",
-//                                         ScenePtr( new Scene ),
-//                                         finder,
-//                                         textureManager,
-//                                         shaderManager,
-//                                         cameraPerspective,
-//                                         frameBufferTarget,
-//                                         g_guiEventPublisher ) );
-//    stateManager.addState( menuState );
-    
-    
-    
     stateManager.setCurrState( "Simulation" );
 
-    
-    ///////////////////////
-    // sceneTwo only needs minimal passes
-//    ScenePtr sceneTwo( new Scene );
-//    SceneFacadePtr facadeTwo( new SceneFacade( sceneTwo,
-//        finder,
-//        textureManager,
-//        shaderManager,
-//        cameraPerspective,
-//        frameBufferTarget,
-//        g_guiEventPublisher ) );
-//
-//    LuaInterpreter luaTwo( finder );
-//    luaTwo.setFacade( facadeTwo );
-//    luaTwo.setTextureManager( textureManager );
-//    luaTwo.setShaderManager( shaderManager );
-//    luaTwo.runScriptFromFile( "loadRenderPasses.lua" );
-//    stateManager.addState( StatePtr(new SceneState( "sceneTwo", sceneTwo )) );
-//    
-    
-    /// FontManager fm( textureManager, "TextureAtlas" );
-    /// const std::string fontName = "Sans";
-    /// const int fontSize = 72;
-    /// fm->addFont( fontName, fontSize, "HelveticaNeue.ttf" );
-    /// TextRenderable tr( fm, "Message" );
-    /// tr.intialize( fm, fontName, fontSize );
-    /// tr.setText( "Hello, World" );
-    
-    
-    if( false )
-    {
-    
-        FontManagerPtr fontManager( new FontManager(textureManager,
-            "FontAtlasTexture" ) );
-        const std::string fontName = "Sans";
-        const int fontSize = 72;
-        fontManager->addFont( fontName, fontSize, "HelveticaNeueLight.ttf" );
-
-        TextRenderablePtr textMsg( new TextRenderable("TestText") );
-        textMsg->initialize( fontManager, fontName, fontSize );
-        
-        MaterialPtr textMaterial = facade->createMaterial( "TextShader" );
-        textMaterial->setShaderUniform("u_color", glm::vec4( 1, 1, 1, 1 ) );
-        textMaterial->addTexture( "s_color", fontManager->getFontAtlasTextureName() );
-        textMsg->requiresExplicitMaterial();
-        textMsg->setMaterialForPassName( "HUDPass", textMaterial );
-        sceneOne->add( textMsg );
-
-        glm::vec4 color( 0.067,0.833, 0.086, 0.85 );
-        float x = 0.0;
-        float y = 0.5;
-        glm::mat4 xform;
-        xform = glm::translate( xform, x, y, 0.0f );
-        textMsg->setTransform( xform );
-        MaterialPtr textMat = textMsg->getMaterialForPassName( "HUDPass" );
-        textMat->setShaderUniform( "u_color", color );
-    }
-    
-    
-    //////////
-
-//    // Second text using same font -- make sure doesn't get reloaded
-//    TextRenderablePtr text2Msg( new TextRenderable("TestText") );
-//    text2Msg->initialize( fontManager );
-//    MaterialPtr text2Material = facade->createMaterial( "TextShader" );
-//    text2Material->setShaderUniform("u_color", glm::vec4( 1, 0.3, 0.3, 1 ) );
-//    text2Material->addTexture( "s_color", fontManager->getFontAtlasTextureName() );
-//    text2Msg->requiresExplicitMaterial();
-//    text2Msg->setMaterialForPassName( "HUDPass", text2Material );
-//    scene->add( text2Msg );
-//    
-//    {
-//        glm::vec4 color( 1,1,1,1 );
-//        float x = 0.5;
-//        float y = 0.5;
-//        glm::mat4 xform;
-//        xform = glm::translate( xform, x, y, 0.0f );
-//        text2Msg->setTransform( xform );
-//        MaterialPtr text2Mat = text2Msg->getMaterialForPassName( "HUDPass" );
-//        text2Mat->setShaderUniform( "u_color", color );
-//        text2Msg->setText( "VEST" );
-//        
-//    }
-    //////////
-
-    
-    
-    
     // spark renders to sparkRenderTexture
     // overlay renders to g_transparentRenderPass using a glow shader
 
     FluidPtr fluidData;
-    if( false )
+    if( true )
     {
         fluidData.reset( new Fluid(22) );
         fluidData->setDiffusion( 0.0 );
         fluidData->setVorticity( 1e4 );
-        fluidData->setGravityFactor( 0, -5000, 0.0 );
+        fluidData->setGravityFactor( 0, -4000, 0.0 );
         ////fluidData->loadFromFile( "test.fluid" );
 
         spark::shared_ptr< spark::SlicedVolume > slices( new
                 SlicedVolume( textureManager,
                              shaderManager,
-                             g_transparencyRenderPassName,
+                             "TransparentPass",
                              256, fluidData ) );
     //    RayCastVolumePtr rayCastFluid( new RayCastVolume( "fluid_raycastvolume",
     //                                               textureManager,
@@ -393,13 +264,18 @@ int runSimulation(int argc, char** argv)
     //                                               fluidData ) );
         glm::mat4 xform = glm::translate( glm::mat4( 1.0f ),
                                           glm::vec3( 0.075f, 0.75f, 0.05f ) );
+        
+        
         //xform = glm::scale( xform, glm::vec3( 0.5f, 0.5f, 0.5f ) );
         //xform = glm::rotate( xform, 90.0f, glm::vec3(1,0,0) );
         
         //rayCastFluid->setTransform( xform );
         slices->setTransform( xform );
         //scene->add( rayCastFluid );
-        sceneOne->add( slices );
+        //sceneOne->add( slices );
+        // 
+        SceneState* ssp =  (SceneState*)(stateManager.currState().get());
+        ssp->add( slices );
     }
     {
         // Set window/textures sizes by sending signals to listeners
@@ -454,14 +330,19 @@ int runSimulation(int argc, char** argv)
         
         ////////////////////////////////////////////////////////////////////////
         // Update System (physics, collisions, etc.
-        if( (currTime - prevUpdateTime) > dt )
+        // 
+        if( currTime > 1.2 )
         {
-            LOG_TRACE(g_log) << "Fixed update at " << currTime;
-            stateManager.fixedUpdate( dt );
-            prevUpdateTime = currTime;
+            if( (currTime - prevUpdateTime) > dt )
+            {
+                LOG_TRACE(g_log) << "Fixed update at " << currTime;
+                stateManager.fixedUpdate( dt );
+                prevUpdateTime = currTime;
+            }
+            LOG_TRACE(g_log) << "Update at " << currTime;
+            stateManager.update( currTime - lastTime );
+
         }
-        LOG_TRACE(g_log) << "Update at " << currTime;
-        stateManager.update( currTime - lastTime );
 
         
         ////////////////////////////////////////////////////////////////////////
@@ -487,6 +368,7 @@ int runSimulation(int argc, char** argv)
         if( window.getKey( GLFW_KEY_UP ) == GLFW_PRESS )
         {
             fluidData->reset();
+            currTime = 1.2;
         }
         if( window.getKey( GLFW_KEY_ENTER ) == GLFW_PRESS )
         {

@@ -30,6 +30,7 @@ namespace spark
                       ShaderManagerPtr sm,
                       PerspectiveProjectionPtr camera,
                       FrameBufferRenderTargetPtr frameBufferTarget,
+                      InputPtr inputManager,
                       GuiEventPublisherPtr guiEventPublisher
                     );
         RenderTargetPtr getFrameBufferRenderTarget( void );
@@ -41,6 +42,8 @@ namespace spark
         TextureManagerPtr getTextureManager( void );
         
         ShaderManagerPtr getShaderManager( void );
+        
+        InputPtr getInput( void );
         
         /// Returns the camera used as a default PerspectiveProjection.
         /// This is the camera that will be jittered for 3d rendering.
@@ -165,20 +168,17 @@ namespace spark
             float forkProb,
             const RenderPassName& pass, MaterialPtr material );
 
+        FontManagerPtr getFontManager( void );
+        
+        TextRenderablePtr createText( const std::string& fontName,
+                                      int fontSize,
+                                      MaterialPtr material,
+                                      const RenderPassName& pass,
+                                      const std::string& msg );
+        
         /// Release all held resources, release all linked resources.
         void reset( void );
         
-        FontManagerPtr getFontManager( void )
-        {
-            if( !m_fontManager )
-            {
-                m_fontManager = FontManagerPtr( new FontManager(
-                    m_textureManager,
-                    "FontAtlasTexture" ) );
-            }
-            return m_fontManager;
-        }
-
     private:
         RenderTargetPtr m_mainRenderTarget;
 
@@ -188,6 +188,7 @@ namespace spark
         TextureManagerPtr m_textureManager;
         ShaderManagerPtr m_shaderManager;
         FontManagerPtr m_fontManager;
+        InputPtr m_input;
         // Common projections
         OrthogonalProjectionPtr m_overlayPerspective;
         PerspectiveProjectionPtr m_cameraPerspective;

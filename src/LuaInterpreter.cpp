@@ -59,6 +59,9 @@ spark
      .def( "scale",
           (void (Renderable::*)(float))
           &Renderable::scale )
+     .def( "scale",
+          (void (Renderable::*)(const glm::vec3&) )
+          &Renderable::scale )
      .def( "rotate",
           &Renderable::rotate )
      .def( "setMaterialForPassName",
@@ -78,6 +81,7 @@ spark
     [
      luabind::class_< FontManager, FontManagerPtr >( "FontManager" )
      .def( "addFont", &FontManager::addFont )
+     .def( "getFontAtlasTextureName", &FontManager::getFontAtlasTextureName )
     ];
 
     // RenderPass
@@ -133,6 +137,16 @@ spark
      .def( "cameraTarget", (void (PerspectiveProjection::*)(float,float,float) )&PerspectiveProjection::cameraTarget )
      .def( "fov", (void (PerspectiveProjection::*)(float) )&PerspectiveProjection::fov )
      
+     ];
+    
+    // Input
+    luabind::module( lua )
+    [
+     luabind::class_< Input, InputPtr >( "Input" )
+     .def( "isKeyDown", &Input::isKeyDown )
+     .def( "getTransform", &Input::getTransform )
+     .def( "getPosition", &Input::getPosition )
+     .def( "isButtonPressed", &Input::isButtonPressed )
      ];
     
     // OrthogonalProjection
@@ -192,6 +206,10 @@ spark
           &SceneFacade::createQuad )
      .def( "createLSpark",
           &SceneFacade::createLSpark )
+     .def( "createText",
+          &SceneFacade::createText )
+     .def( "getFontManager",
+          &SceneFacade::getFontManager )
      ];
     
     luabind::module( lua )

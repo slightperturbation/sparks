@@ -60,6 +60,7 @@ namespace spark
                     ShaderManagerPtr sm,
                     PerspectiveProjectionPtr camera,
                     FrameBufferRenderTargetPtr frameBufferTarget,
+                    InputPtr inputManager,
                     GuiEventPublisherPtr guiEventPublisher );
         virtual ~ScriptState();
         virtual void load( void )             override;
