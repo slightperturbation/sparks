@@ -39,7 +39,8 @@ namespace spark
                       boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(),
                                                      //boost::asio::ip::address_v4::any(),
                                                      port)),
-              m_x( 0.5f ), m_y( 0.5f )
+              m_x( 0.5f ), m_y( 0.5f ),
+              m_isListening( true )
             {
                 socket_.set_option(boost::asio::socket_base::reuse_address(true));
                 socket_.async_receive_from(
@@ -66,16 +67,19 @@ namespace spark
                 if( error )
                 {
                     LOG_ERROR(g_log) << "Error on recving network packet: "
-                        << error;
+                        << error << " - " << error.message() << " - " << error.category().name();
                 }
-                boost::this_thread::interruption_point( );
-                socket_.async_receive_from(
-                    boost::asio::buffer(data_, max_length),
-                    sender_endpoint_,
-                    boost::bind(&EyeTrackerServer::handle_receive_from,
-                                this,
-                                boost::asio::placeholders::error,
-                                boost::asio::placeholders::bytes_transferred) );
+                if( m_isListening )
+                {
+                    boost::this_thread::interruption_point( );
+                    socket_.async_receive_from(
+                        boost::asio::buffer(data_, max_length),
+                        sender_endpoint_,
+                        boost::bind(&EyeTrackerServer::handle_receive_from,
+                        this,
+                        boost::asio::placeholders::error,
+                        boost::asio::placeholders::bytes_transferred) );
+                }
             }
 
             void getEyePos( float& x, float& y ) const
@@ -83,6 +87,7 @@ namespace spark
                 boost::lock_guard<boost::mutex> guard( lock_ );
                 x = m_x;  y = m_y;
             }
+            void stop( void ) { m_isListening = false; }
             private:
                 mutable boost::mutex lock_;
                 boost::asio::ip::udp::socket socket_;
@@ -91,6 +96,7 @@ namespace spark
                 char data_[max_length];
                 float m_x;
                 float m_y;
+                bool m_isListening; 
         };
     public:
         NetworkEyeTracker( short listeningUdpPort = 5005 /* display size & viewport pos */ );

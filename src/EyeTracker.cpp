@@ -54,10 +54,13 @@ spark::NetworkEyeTracker
 {
     try
     {
+        m_server->stop();
         // clear work holder to allow service to exit
         m_work.reset();
         m_ioService.stop();
+        m_server.reset();
         m_listenerThread->interrupt();
+        m_ioService.reset();
     }
     catch( ... )
     {
