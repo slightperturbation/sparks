@@ -74,6 +74,7 @@ spark
      luabind::class_< TextRenderable, Renderable, TextRenderablePtr >( "TextRenderable" )
      .def( "initialize", &TextRenderable::initialize )
      .def( "setText", &TextRenderable::setText )
+     .def( "getSizeInPixels", &TextRenderable::getSizeInPixels )
      ];
     
     // FontManager
@@ -147,6 +148,7 @@ spark
      .def( "getTransform", &Input::getTransform )
      .def( "getPosition", &Input::getPosition )
      .def( "isButtonPressed", &Input::isButtonPressed )
+     .def( "getPositionRange", &Input::getPositionRange )
      ];
     
     // OrthogonalProjection
@@ -210,6 +212,8 @@ spark
           &SceneFacade::createText )
      .def( "getFontManager",
           &SceneFacade::getFontManager )
+     .def( "getRenderPassByName",
+          &SceneFacade::getRenderPassByName )
      ];
     
     luabind::module( lua )

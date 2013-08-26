@@ -213,8 +213,6 @@ int runSimulation(int argc, char** argv)
     // lua handles loading default objects
     LuaInterpreter lua( finder );
     lua.setFacade( facade );
-    lua.setTextureManager( textureManager );
-    lua.setShaderManager( shaderManager );
     lua.runScriptFromFile( "loadShaders.lua" );
     lua.runScriptFromFile( "loadTextures.lua" );
     lua.runScriptFromFile( "loadRenderPasses.lua" );
@@ -240,6 +238,7 @@ int runSimulation(int argc, char** argv)
         
     }
     stateManager.setCurrState( "Simulation" );
+    //stateManager.setCurrState( "Loading" );
 
     // spark renders to sparkRenderTexture
     // overlay renders to g_transparentRenderPass using a glow shader
@@ -302,10 +301,10 @@ int runSimulation(int argc, char** argv)
 //            }
 //            nextSceneTime = currTime + 0.25;
 //        }
-        if( currTime > 30.0 )
-        {
-            break;
-        }
+//        if( currTime > 30.0 )
+//        {
+//            break;
+//        }
         LOG_TRACE(g_log) << ".................................................";
         if( g_log->isTrace() )
         {

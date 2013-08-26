@@ -18,6 +18,7 @@ namespace spark
         virtual glm::vec3 getPosition( void ) const = 0;
         virtual glm::mat4 getTransform( void ) const = 0;
         virtual bool isButtonPressed( int buttonNumber ) const = 0;
+        virtual glm::vec3 getPositionRange( void ) const = 0;
     };
 
     /// Interface for handling keyboard queries

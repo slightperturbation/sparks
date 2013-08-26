@@ -84,7 +84,8 @@ spark::TextRenderable
     m_markup.font->hinting = 1;
     //m_markup.font->filtering = 1; // Purpose?
     
-    scale( glm::vec3(0.75, 1, 1) ); // TODO match screen aspect ratio
+    // TODO!  Inverse scale by screen resolution!
+    //scale( glm::vec3( 1.0f/800.0f, 1.0f/600.0f, 1.0f ) );
 
     if( !m_markup.font )
     {
@@ -145,7 +146,6 @@ spark::TextRenderable
         throw "markup.font was null. aborting TextRenderable::update()";
     }
     vec2 pen = {{0,0}};
-    vec4 bbox = {{0,0,0,0}};
     filterText( m_text );
     
     text_buffer_clear( &m_textBuffer );
@@ -153,38 +153,44 @@ spark::TextRenderable
     text_buffer_add_text( &m_textBuffer, &pen, &m_markup,
         const_cast<wchar_t*>(wtext.c_str()),
         wtext.size() );
-    // Deprecated method for writing multiple lines, text_buffer replaces this:
-    //vec4 black = {{1,1,1,1}};
-    //std::vector< std::string > lines;
-    //boost::split( lines, m_text, boost::is_any_of("\n") );
-    //for( auto lineIter = lines.begin(); lineIter != lines.end(); ++lineIter )
-    //{
-    //    std::wstring wline( lineIter->begin(), lineIter->end() );
-    //    
-    //    add_text( m_textBuffer.buffer, m_markup.font, wline.c_str(), &black, &pen, bbox );
-    //    //text_buffer_printf( &m_textBuffer, &pen, &m_markup, wline.c_str(), NULL );
-    //    // drop pen to next line
-    //    pen.y -= m_markup.font->height;
-    //    pen.x  = 0;
-    //}
-
-    // Scale the text buffer's vertex
-    if( true )
-    {
-        vector_t * vertices = m_textBuffer.buffer->vertices;
-        // convert pts to fraction of frame buffer
-        float scaleW = 1.0f / m_fontManager->m_fontManager->atlas->width;
-        float scaleH = 1.0f / m_fontManager->m_fontManager->atlas->height;
-        for( size_t i = 0; i < vector_size(vertices); ++i )
-        {
-            vertex_t * vertex = (vertex_t *) vector_get(vertices,i);
-            vertex->x -= (int)bbox.x;
-            vertex->x *= scaleW;
-            vertex->y -= (int)bbox.y;
-            vertex->y *= scaleH;
-        }
-    }
+    
+    calculateBoundingBox();
     m_isDirty = false;
+}
+
+/// returns four-vector holding: ( minx, miny, maxx, maxy )
+glm::vec2
+spark::TextRenderable
+::getSizeInPixels( void ) const
+{
+    return m_sizeInPixels;
+}
+
+void
+spark::TextRenderable
+::calculateBoundingBox( void )
+{
+    float maxFloat = 1e10;
+    // bounding box is based on the vertices times the renderable xform
+    vector_t * vertices = m_textBuffer.buffer->vertices;
+    float minx = maxFloat;
+    float miny = maxFloat;
+    float maxx = -maxFloat;
+    float maxy = -maxFloat;
+    
+    for( size_t i = 0; i < vector_size(vertices); ++i )
+    {
+        vertex_t * vertex = (vertex_t *) vector_get(vertices,i);
+        
+        //std::cerr << "VERTEX : " << vertex->x << "\t\t" << vertex->y << "\n";
+        glm::vec4 p( vertex->x, vertex->y, 0, 0 );
+        minx = std::min( minx, p.x );
+        miny = std::min( miny, p.y );
+        maxx = std::max( maxx, p.x );
+        maxy = std::max( maxy, p.y );
+    }
+    m_sizeInPixels.x = maxx - minx;
+    m_sizeInPixels.y = maxy - miny;
 }
 
 void 
@@ -192,54 +198,5 @@ spark::TextRenderable
 ::attachShaderAttributes( GLuint shaderIndex )
 {
     // Nothing.  This is handled by the freetype-gl vertextbuffer
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// From FreeType-GL demo-distance-field-2.c
-///////////////////////////////////////////////////////////////////////////
-
-
-// --------------------------------------------------------------- add_text ---
-void
-spark
-::add_text( vertex_buffer_t * buffer, texture_font_t * font,
-            const wchar_t * text, vec4 * color, vec2 * pen, vec4& bbox )
-{
-    size_t i;
-    float r = color->red, g = color->green, b = color->blue, a = color->alpha;
-    for( i=0; i<wcslen(text); ++i )
-    {
-        texture_glyph_t *glyph = texture_font_get_glyph( font, text[i] );
-        if( glyph != NULL )
-        {
-            int kerning = 0;
-            if( i > 0)
-            {
-                kerning = texture_glyph_get_kerning( glyph, text[i-1] );
-            }
-            pen->x += kerning;
-            float x0  = (int)( pen->x + glyph->offset_x );
-            float y0  = (int)( pen->y + glyph->offset_y );
-            float x1  = (int)( x0 + glyph->width );
-            float y1  = (int)( y0 - glyph->height );
-            float s0 = glyph->s0;
-            float t0 = glyph->t0;
-            float s1 = glyph->s1;
-            float t1 = glyph->t1;
-            GLuint indices[6] = {0,1,2, 0,2,3};
-            vertex_t vertices[4] = { { x0,y0,0,  s0,t0,  r,g,b,a },
-            { x0,y1,0,  s0,t1,  r,g,b,a },
-            { x1,y1,0,  s1,t1,  r,g,b,a },
-            { x1,y0,0,  s1,t0,  r,g,b,a } };
-            vertex_buffer_push_back( buffer, vertices, 4, indices, 6 );
-            pen->x += glyph->advance_x;
-
-            if  (x0 < bbox.x)                bbox.x = x0;
-            if  (y1 < bbox.y)                bbox.y = y1;
-            if ((x1 - bbox.x) > bbox.width)  bbox.width  = x1-bbox.x;
-            if ((y0 - bbox.y) > bbox.height) bbox.height = y0-bbox.y;
-        }
-    }
 }
 

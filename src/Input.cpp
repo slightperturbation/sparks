@@ -77,6 +77,21 @@ spark::Input
     return iter->second->isButtonPressed( buttonNumber );
 }
 
+glm::vec3 
+spark::Input
+::getPositionRange( const InputDeviceName& name ) const
+{
+    auto iter = m_devices.find( name );
+    if( iter == m_devices.end() )
+    {
+        LOG_ERROR(g_log) << "Can't find input device with name \""
+            << name << "\" in call to Input::getPositionRange().";
+        assert(false);
+        return glm::vec3();
+    }
+    return iter->second->getPositionRange();
+}
+
 void
 spark::Input
 ::acquireInputDevice( const InputDeviceName& name,

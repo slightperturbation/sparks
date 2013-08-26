@@ -54,6 +54,16 @@ spark::GlfwMouseInputDevice
     return glfwGetMouseButton( m_window, buttonNumber );
 }
 
+glm::vec3 
+spark::GlfwMouseInputDevice
+::getPositionRange( void ) const 
+{
+    int width = 0;
+    int height = 0;
+    glfwGetFramebufferSize( m_window, &width, &height);
+    return glm::vec3( width, height, 0 );
+}
+
 //////////////////////////////////////////////////////////////////////
 
 bool

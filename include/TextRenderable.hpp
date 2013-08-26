@@ -60,8 +60,10 @@ namespace spark
         /// viewport.
         void setText( const std::string& msg );
         TextureName getFontTextureName( void ) const;
-    
+        glm::vec2 getSizeInPixels( void ) const;
+
     private:
+        void calculateBoundingBox( void );
         /// Replace unsupported characters
         static void filterText( std::string& str );
         FontManagerPtr m_fontManager;
@@ -73,20 +75,13 @@ namespace spark
         std::string m_text;
         markup_t m_markup;
         bool m_isDirty;
+        glm::vec2 m_sizeInPixels;
     };
     typedef spark::shared_ptr< TextRenderable > TextRenderablePtr;
 
     //////////////////////////////////////////////////////////////////
     // Font Helpers
-    
-    /// Adds vertices to the buffer, adding the given text.
-    /// Updates the bounding box (bbox).
-    void add_text( vertex_buffer_t * buffer, 
-                   texture_font_t * font,
-                   const wchar_t * text,
-                   vec4 * color, 
-                   vec2 * pen,
-                   vec4& bbox );
+
     /// vertex format used by freetype-gl
     typedef struct {
         float x, y, z;    // position

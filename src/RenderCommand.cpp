@@ -47,7 +47,8 @@ spark::RenderCommand
     //uniform mat4 u_inverseViewModelMat;  // inverse of the model-view matrix, can give camera position
     //uniform mat4 u_projMat;              // projects camera(eye) space to clip(screen) space
     //uniform mat3 u_normalMat;            // transpose(inverse(viewModelMat))
-    //uniform float u_time;                // current time (in seconds) 
+    //uniform float u_time;                // current time (in seconds)
+    //uniform vec2 u_targetSizeInPixels;   // Size of the render target in pixels
     ///////////////////////////////////////////////////////////////////
     const glm::mat4 model = m_renderable->getTransform();
     const glm::mat4 view = m_perspective->viewMatrix();

@@ -36,6 +36,9 @@ namespace spark
         /// Returns the position of the device's cursor. For 2d controllers, the
         /// z coordinate will be set to zero and can be ignored.
         virtual glm::vec3 getPosition( const InputDeviceName& name ) const;
+        /// Returns the size of the viewport
+        virtual glm::vec3 getPositionRange( const InputDeviceName& name ) const;
+        /// Returns true if the button is currently pressed
         virtual bool isButtonPressed( const InputDeviceName& name,
                                       int buttonNumber ) const;
         

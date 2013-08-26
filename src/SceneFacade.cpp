@@ -420,31 +420,12 @@ spark::SceneFacade
     return text;
 }
 
-
-///// Example of creating a full-screen quad for HUD-style overlay
-//MeshPtr createOverlayQuad( TextureManagerPtr tm,
-//                           ShaderManagerPtr sm,
-//                           const TextureName& textureName,
-//                           const RenderPassName& renderPassName,
-//                           const ShaderName& shaderName )
-//{
-//    using namespace Eigen;
-//    MeshPtr overlay( new Mesh() );
-//    overlay->name( std::string("OverlayQuad-") + textureName
-//        + "-" + renderPassName + "-" + shaderName );
-//    overlay->addQuad( Vector3f(0,0,0), Vector2f(0,1), // Lower Left
-//                      Vector3f(1,0,0), Vector2f(1,1), // Lower Right
-//                      Vector3f(0,1,0), Vector2f(0,0), // Upper Left
-//                      Vector3f(1,1,0), Vector2f(1,0), // Upper Right
-//                      Vector3f(0,0,-1) ); // Normal points according to right-hand system
-//    overlay->setRequireExplicitMaterial( true );
-//    ShaderInstancePtr colorShader = sm->createShaderInstance( shaderName );
-//    MaterialPtr colorMaterial( new Material( tm, colorShader ) );
-//    colorMaterial->addTexture( "s_color", textureName );
-//    overlay->setMaterialForPassName( renderPassName, colorMaterial );
-//    return overlay;
-//}
-
+spark::RenderPassPtr
+spark::SceneFacade
+::getRenderPassByName( const RenderPassName& name )
+{
+    return m_scene->getPass( name );
+}
 
 
 

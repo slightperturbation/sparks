@@ -176,6 +176,8 @@ namespace spark
                                       const RenderPassName& pass,
                                       const std::string& msg );
         
+        RenderPassPtr getRenderPassByName( const RenderPassName& name );
+        
         /// Release all held resources, release all linked resources.
         void reset( void );
         

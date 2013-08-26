@@ -1,12 +1,43 @@
 
 
+local Button = require "button"
+-----------------------------
+
+
 SimulationState = {}
 
 function SimulationState:new()
 	print( "SimulationState:new" )
-	newObj = { angle = 45, hasRunOnce = false, startTime = -1, startActivation = 4, stopActivation = 5.22, currTime = 0 }
+	newObj = 
+	{ 
+		buttons = {}, 
+		angle = 45, 
+		hasRunOnce = false, 
+		startTime = -1, 
+		currWattage = 20,
+		startActivation = 4, 
+		stopActivation = 5.22, 
+		currTime = 0 
+	}
 	self.__index = self
 	return setmetatable(newObj, self)
+end
+
+function incrWattage( simState )
+	print( "Change wattage up" )
+	if( simState.currWattage < 65 ) then
+		simState.currWattage = simState.currWattage + 10
+		print( "New Wattage: "..simState.currWattage )
+		simState.buttons["wattage"].text:setText( string.format("%2.0f watts", simState.currWattage) )
+	end
+end
+function decrWattage( simState )
+	print( "Change wattage up" )
+	if( simState.currWattage > 15 ) then
+		simState.currWattage = simState.currWattage - 10
+		print( "New Wattage: "..simState.currWattage )
+		simState.buttons["wattage"].text:setText( string.format("%2.0f watts", simState.currWattage) )
+	end
 end
 
 function SimulationState:load()
@@ -19,7 +50,7 @@ function SimulationState:load()
  
 	mainRenderTarget = spark:createTextureRenderTarget( "MainRenderTargetTexture" )
 	spark:setMainRenderTarget( mainRenderTarget )
-	mainRenderTarget:setClearColor( vec4( 0,1,0,0.5 ) )
+	mainRenderTarget:setClearColor( vec4( 0.2,0.2,0.2,1.0 ) )
 
 	opaqueRenderPass = spark:createRenderPass( 1.0, "OpaquePass", mainRenderTarget )
 	opaqueRenderPass:setDepthWrite( true )
@@ -54,34 +85,39 @@ function SimulationState:load()
 	local skin = spark:createCube( vec3(-2.5, .25, -2.5), vec3(5, 0.5, 5), self.tissueMat, "OpaquePass" )
 	skin:rotate( 90, vec3(1,0,0) )
 
+	local mainFontSize = 24
+	local smallFontSize = 12
 	local fontMgr = spark:getFontManager()
-	local mainFontSize = 64
-	local smallFontSize = 36
 	fontMgr:addFont( "Sans", mainFontSize, "HelveticaNeueLight.ttf" );
 	fontMgr:addFont( "Sans", smallFontSize, "HelveticaNeueLight.ttf" );
 
-	----
-	local readoutTextMat = spark:createMaterial( "TextShader" )
-	readoutTextMat:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
-	readoutTextMat:setVec4( "u_color", vec4(0.8,0.8,0.8,1) )
+	local fontDesc = {}
+	fontDesc.name = "Sans"
+	fontDesc.size = mainFontSize
 
-	local wattageText = spark:createText( "Sans", mainFontSize, 
-		readoutTextMat, "HUDPass", "45 watts" )
-	wattageText:translate( 0.01, 0.85, 0 )
+	fontDesc.material = spark:createMaterial( "TextShader" )
+	fontDesc.material:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
+	fontDesc.material:setVec4( "u_color", vec4( 0.7, 0.7, 0.7, 1 ) )
 
-	local waveText = spark:createText( "Sans", mainFontSize, 
-		readoutTextMat, "HUDPass", "Coag" )
-	waveText:translate( 0.01, 0.75, 0 )
+	fontDesc.rolloverMaterial = spark:createMaterial( "TextShader" )
+	fontDesc.rolloverMaterial:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
+	fontDesc.rolloverMaterial:setVec4( "u_color", vec4( 1.0, 0.7, 0.7, 1 ) )
 
-	self.activationText = spark:createText( "Sans", mainFontSize, 
-		readoutTextMat, "HUDPass", "0 sec" )
-	self.activationText:translate( 0.01, 0.65, 0 )
+	local fontMgr = spark:getFontManager()
+	fontMgr:addFont( fontDesc.name, fontDesc.size, "HelveticaNeueLight.ttf" );
 
-	local waveText = spark:createText( "Sans", smallFontSize, 
-		readoutTextMat, "HUDPass", "Current task:\nDessicate region" )
-	waveText:translate( 0.01, 0.25, 0 )
 
-	--backgrd quad
+	self.buttons["wattage"] = Button:new( 0.02, 0.85, 
+		string.format("%2.0f watts", self.currWattage), fontDesc )
+	self.buttons["wattage"].onClick = incrWattage
+	self.buttons["wattage"].onClick2 = decrWattage
+
+	self.buttons["waveText"] = Button:new( 0.02, 0.75, "Cut", fontDesc )
+	self.buttons["activation"] = Button:new( 0.02, 0.5, "0.0 secs", fontDesc )
+	self.buttons["task"] = Button:new( 0.02, 0.25, "Dessicate", fontDesc )
+
+
+	--Highlight GUI side w/ quad
 	local bgAccentMat = spark:createMaterial( "constantColorShader" )
 	bgAccentMat:setVec4( "u_color", vec4(1,1,1,0.33) )
 	local bgQuad = spark:createQuad( vec2(0,0), vec2(0.225,1.0),
@@ -117,26 +153,51 @@ function SimulationState:activate()
 	camera:fov( 48 )
 end
 
+
 function SimulationState:update( dt )
-	print( "SimulationState:update" )
-	self.currTime = self.currTime + dt
-	if self.startTime == -1 then
-		self.startTime = self.currTime
+
+	if( input:isButtonPressed("mouse", 0) ) then
+		for name,button in pairs(self.buttons) do
+			if( button:isOver( input:getPosition("mouse") ) ) then
+				button.onClick(self)
+			end
+		end
+	elseif( input:isButtonPressed("mouse", 1) ) then
+		for name,button in pairs(self.buttons) do
+			if( button:isOver( input:getPosition("mouse") ) ) then
+				button.onClick2(self)
+			end
+		end
 	else
-		actTime = (self.currTime - self.startTime) - self.startActivation
-		if self.startActivation < (self.currTime - self.startTime) and self.stopActivation >  (self.currTime - self.startTime) then
-			self.activationText:setText( string.format("%1.1f sec", actTime) )
-			self.tissueMat:setFloat( "u_activationTime", actTime )
-		else
-			self.tissueMat:setFloat( "u_activationTime", 0 )
+		for name,button in pairs(self.buttons) do
+			if( button:isOver( input:getPosition("mouse") ) ) then
+				--print( "Mouse over: "..name )
+				button:onMouseOver()
+			else
+				--print( "Mouse out : "..name )
+				button:onMouseOut()
+			end
 		end
 	end
+
+	--print( "SimulationState:update" )
+	-- self.currTime = self.currTime + dt
+	-- if self.startTime == -1 then
+	-- 	self.startTime = self.currTime
+	-- else
+	-- 	actTime = (self.currTime - self.startTime) - self.startActivation
+	-- 	if self.startActivation < (self.currTime - self.startTime) and self.stopActivation >  (self.currTime - self.startTime) then
+	-- 		self.activationText:setText( string.format("%1.1f sec", actTime) )
+	-- 		self.tissueMat:setFloat( "u_activationTime", actTime )
+	-- 	else
+	-- 		self.tissueMat:setFloat( "u_activationTime", 0 )
+	-- 	end
+	-- end
+
 end
 
 function SimulationState:fixedUpdate( dt )
-	print( "SimulationState:fixedUpdate" )	
-
-
+	--print( "SimulationState:fixedUpdate" )	
 end
 
 function SimulationState:deactivate()

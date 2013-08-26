@@ -112,21 +112,11 @@ namespace spark
             luabind::globals( m_lua )["spark"] = facade;
             setTextureManager( facade->getTextureManager() );
             setShaderManager( facade->getShaderManager() );
+            setInputManager( facade->getInput() );
         }
-        void setTextureManager( TextureManagerPtr tm )
-        {
-            luabind::globals( m_lua )["textureManager"] = tm;
-        }
-        void setShaderManager( ShaderManagerPtr sm )
-        {
-            luabind::globals( m_lua )["shaderManager"] = sm;
-        }
-        void setInputManager( InputPtr input )
-        {
-            luabind::globals( m_lua )["input"] = input;
-        }
+
         
-        /// Excute the given script in the current lua context.
+        /// Execute the given script in the current lua context.
         /// Example:
         /// lua.runScriptFromString( "print('DONE--  at(testVec, 1) = ' .. testVec:at(1) );" );
         void runScriptFromString( const std::string& script )
@@ -203,6 +193,19 @@ namespace spark
         }
         friend class ScriptState;
     private:
+        void setTextureManager( TextureManagerPtr tm )
+        {
+            luabind::globals( m_lua )["textureManager"] = tm;
+        }
+        void setShaderManager( ShaderManagerPtr sm )
+        {
+            luabind::globals( m_lua )["shaderManager"] = sm;
+        }
+        void setInputManager( InputPtr input )
+        {
+            luabind::globals( m_lua )["input"] = input;
+        }
+
         void runScriptFromFile_NoErrorStack( const char* aScriptFilename )
         {
             LOG_DEBUG(g_log) << "Searching for lua script file \""
