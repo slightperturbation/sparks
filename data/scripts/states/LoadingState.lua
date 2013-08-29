@@ -71,6 +71,14 @@ function LoadingState:update( dt )
 
 	local xform = self.logo:getTransform()
 
+	if( input:isButtonPressed("mouse", 0) ) then
+		local pos3 = input:getPosition("mouse")
+		-- convert device coords to unit coords
+		local width = input:getPositionRange("mouse").x
+		local height = input:getPositionRange("mouse").y
+		print( string.format( "Mouse clicked in pos: %1.2f, %1.2f", pos3.x / width, pos3.y / height ) )
+	end
+
 	if not self.hasRunOnce then
 		print( "\tLoading cemsim logo" )
 		self.hasRunOnce = true
@@ -78,7 +86,7 @@ function LoadingState:update( dt )
 end
 
 function LoadingState:fixedUpdate( dt )
-	print( "LoadingState:fixedUpdate" )	
+	--print( "LoadingState:fixedUpdate" )	
 	self.boxB:rotate( 10, vec3(0,1,0) )
 end
 
@@ -90,9 +98,9 @@ function LoadingState:nextState( currTime )
 	-- For now, theNextState global is used to pass
 	-- the next desired state back to the app
 	-- TODO should be changed to use the return value
-	print( "LoadingState:nextState( " .. currTime .. " )")
+	--print( "LoadingState:nextState( " .. currTime .. " )")
 	if currTime > 10 then 
-		theNextState = "Menu" 
+		theNextState = "Simulation" 
 		print( "Changing state to menu!" )
 	else
 		theNextState = ""

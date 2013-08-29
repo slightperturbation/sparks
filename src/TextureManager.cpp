@@ -369,6 +369,63 @@ spark::TextureManager
                     << " into texture unit=" << textureUnit ;
 }
 
+void
+spark::TextureManager
+::load2DTextureFromData( const TextureName& aHandle,
+                         const std::vector<float>& aData,
+                         size_t dimPerSide )
+{
+    // Ok to call many times, if so, reuse texture id
+    GLuint textureId;
+    if( exists( aHandle ) )
+    {
+        textureId = getTextureIdForHandle( aHandle );
+    }
+    else
+    {
+        GL_CHECK( glGenTextures( 1, &textureId ) );
+        if( -1 == textureId )
+        {
+            LOG_ERROR(g_log) << "OpenGL failed to allocate a texture id.";
+            assert(false);
+            return;
+        }
+        m_registry[aHandle] = textureId;
+        GLint textureUnit = reserveTextureUnit();
+        bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
+    }
+    GLint textureUnit = ensureTextureUnitBoundToId( textureId );
+    if( textureUnit == -1 )
+    {
+        LOG_ERROR(g_log) << "Failed to get a texture unit.";
+        assert(false);
+        return;
+    }
+    bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
+    GL_CHECK( glTexImage2D( GL_TEXTURE_2D, 0, GL_R32F,
+                           dimPerSide,
+                           dimPerSide,
+                           0, GL_RED, GL_FLOAT,
+                           &(aData[0]) ) );
+    
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR ) );
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) );
+    
+    const GLenum edgeParameter = GL_CLAMP_TO_BORDER; //GL_CLAMP_TO_EDGE
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, edgeParameter ) );
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, edgeParameter ) );
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, edgeParameter ) );
+    float borderColor[] = {0,0,0,0};
+    glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
+    
+    GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
+    
+    LOG_TRACE(g_log) << "2DTexture for Volume Data \"" << aHandle
+    << "\" loaded with id=" << textureId
+    << " into texture unit=" << textureUnit ;
+}
+
+
 bool
 spark::TextureManager
 ::isTextureReady( const TextureName& aHandle )

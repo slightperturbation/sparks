@@ -69,7 +69,9 @@ namespace spark
         virtual void fixedUpdate( double dt ) override;
         virtual void deactivate( void )       override;
         boost::optional<spark::StateName> nextState( double currTime ) override;
-    private:
+
+        void reloadScript( void ); // TODO-implement reload
+    protected:
         void runScriptFromFile( const std::string& filename );
         std::string fileNameFromStateName( const StateName& name );
         SceneFacadePtr m_facade;
@@ -79,6 +81,7 @@ namespace spark
         ScriptState( const ScriptState& );
         void operator=( const ScriptState& );
     };
+    typedef spark::shared_ptr< ScriptState > ScriptStatePtr;
 }
 
 #endif

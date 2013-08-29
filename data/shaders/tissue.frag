@@ -14,8 +14,8 @@ in vec4 f_normal_camera;
 in vec4 f_vertex_camera;
 
 // Samplers are named s_TEXTURENAME
-uniform sampler2D s_color;
-uniform sampler2D s_color2;
+uniform sampler2D s_temperature;
+//uniform sampler2D s_color2;
 
 // Phong-specific inputs
 struct Light
@@ -218,6 +218,11 @@ vec3 hotspot( vec2 loc, vec2 uv, vec3 color,
 
 void main()
 {
+    vec4 temp = texture( s_temperature, f_texCoord.xy );
+    outColor = vec4( (temp.r - 37.0), (temp.r - 37.0), (temp.r - 37.0), 1.0 );
+    return;
+
+    
 	const float cutoff = 0.1;
     
 	vec4 normal_camera = normalize( f_normal_camera );
@@ -229,7 +234,7 @@ void main()
     vec2 F = cellular( 200.0*f_vertexPosition.xyz );
     float n = 0.3*(F.y-F.x) + 0.7;
 
-    
+
     float desicationRadius = 0.0185;
     float charRadius = 0.005;
     

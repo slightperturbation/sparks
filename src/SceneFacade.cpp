@@ -10,7 +10,7 @@
 #include "Scene.hpp"
 #include "GuiEventPublisher.hpp"
 #include "TextRenderable.hpp"
-
+#include "TissueMesh.hpp"
 #include "LSpark.hpp"
 #include "TexturedSparkRenderable.hpp"
 
@@ -418,6 +418,19 @@ spark::SceneFacade
     text->setText( msg );
     m_scene->add( text );
     return text;
+}
+
+spark::TissueMeshPtr
+spark::SceneFacade
+::createTissue( const RenderableName& name,
+                float lengthInMeters,
+                size_t numVoxelsPerDim )
+{
+    TissueMeshPtr tissue( new TissueMesh( name,
+                                          m_textureManager,
+                                          lengthInMeters,
+                                          numVoxelsPerDim ) );
+    return tissue;
 }
 
 spark::RenderPassPtr

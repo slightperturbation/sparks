@@ -115,6 +115,12 @@ namespace spark
             setInputManager( facade->getInput() );
         }
 
+        /// Registers a C++-owned object with Lua
+        template< typename ObjectT >
+        void registerObject( const std::string& luaName, ObjectT object )
+        {
+            luabind::globals( m_lua )[luaName.c_str()] = object;
+        }
         
         /// Execute the given script in the current lua context.
         /// Example:

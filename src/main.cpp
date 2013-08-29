@@ -38,6 +38,8 @@
 #include "SceneState.hpp"
 #include "ScriptState.hpp"
 
+#include "states/SimulationState.hpp"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -216,13 +218,15 @@ int runSimulation(int argc, char** argv)
     lua.runScriptFromFile( "loadShaders.lua" );
     lua.runScriptFromFile( "loadTextures.lua" );
     lua.runScriptFromFile( "loadRenderPasses.lua" );
-    stateManager.addState( StatePtr(new SceneState( "sceneOne", sceneOne )) );
+    stateManager.addState( StatePtr(new SceneState( "sceneOne", 
+                                                    sceneOne )) );
+    stateManager.addState( StatePtr(new SimulationState( "Simulation", 
+                                                         facade ) ) ); 
 
     //std::vector<std::string> states = { "Loading", "Menu", "Simulation" } ;
     std::vector<std::string> states;
     states.push_back( "Loading" );
     states.push_back( "Menu" );
-    states.push_back( "Simulation" );
     for( auto iter = states.begin(); iter != states.end(); ++iter )
     {
         StatePtr newState( new ScriptState( *iter,
@@ -244,7 +248,7 @@ int runSimulation(int argc, char** argv)
     // overlay renders to g_transparentRenderPass using a glow shader
 
     FluidPtr fluidData;
-    if( true )
+    if( false )
     {
         fluidData.reset( new Fluid(22) );
         fluidData->setDiffusion( 0.0 );
@@ -289,22 +293,7 @@ int runSimulation(int argc, char** argv)
     double prevUpdateTime = 0;
     while( window.isRunning() )
     {
-//        if( currTime > nextSceneTime )
-//        {
-//            if( stateManager.currStateName() == "sceneOne" )
-//            {
-//                stateManager.setCurrState( "sceneTwo" );
-//            }
-//            else
-//            {
-//                stateManager.setCurrState( "sceneOne" );
-//            }
-//            nextSceneTime = currTime + 0.25;
-//        }
-//        if( currTime > 30.0 )
-//        {
-//            break;
-//        }
+
         LOG_TRACE(g_log) << ".................................................";
         if( g_log->isTrace() )
         {
@@ -317,12 +306,6 @@ int runSimulation(int argc, char** argv)
         lastTime = currTime;
         currTime = glfwGetTime();
         vars.fps = 1.0f/(currTime - lastTime);
-
-//        std::stringstream ss;
-//        ss << "Time: " << currTime << "\nFPS: " << vars.fps
-//        << "\nThis is a test\n\tAnd another";
-//        textMsg->setText( ss.str() );
-
 
         // UPDATE
         const float dt = 1.0f/60.0f;
@@ -343,7 +326,6 @@ int runSimulation(int argc, char** argv)
 
         }
 
-        
         ////////////////////////////////////////////////////////////////////////
         // Render
         if( g_arcBall )

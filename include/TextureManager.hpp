@@ -76,6 +76,10 @@ namespace spark
         /// Can be used to reload the texture from changed data.
         void load3DTextureFromVolumeData( const TextureName& aHandle,
                                           VolumeDataPtr aVolume );
+        /// Load 2D texture from given data source (a vector of floats).
+        void load2DTextureFromData( const TextureName& aHandle,
+                                    const std::vector<float>& aData,
+                                    size_t dimPerSide );
         /// Returns true if the given texture handle is loaded and bound to a
         /// texture unit.
         bool isTextureReady( const TextureName& aHandle );

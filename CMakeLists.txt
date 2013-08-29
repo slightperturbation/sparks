@@ -514,6 +514,16 @@ set( GUI_SRCS
   ./src/main.cpp
 )
 
+
+set( STATES_HDRS
+  ./include/states/SimulationState.hpp
+)
+set( STATES_SRCS 
+  ./src/states/SimulationState.cpp
+)
+source_group( States FILES ${STATES_HDRS} ${STATES_SRCS} )
+
+
 set( SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data/shaders" )
 file(GLOB VERT_SHADER_FILES RELATIVE 
   ${SHADER_DIR} "${SHADER_DIR}/*.vert" )
@@ -566,7 +576,10 @@ include_directories( ${CMAKE_BINARY_DIR}/config/ )
 # Executables
 #####################################################################
 add_executable( ${PROJECT_NAME} 
-  ${HDRS} ${SRCS} ${GUI_SRCS} ${CPPLOG_HDRS} ${EXT_SRC} ${VERT_SHADERS} ${FRAG_SHADERS}
+  ${HDRS} ${SRCS} 
+  ${STATES_SRCS} ${STATES_HDRS} 
+  ${GUI_SRCS} ${CPPLOG_HDRS} ${EXT_SRC} 
+  ${VERT_SHADERS} ${FRAG_SHADERS}
 )
 #add_dependencies( ${PROJECT_NAME} TBB )
 add_dependencies( ${PROJECT_NAME} FREETYPEGL )

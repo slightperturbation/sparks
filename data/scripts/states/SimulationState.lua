@@ -68,7 +68,12 @@ function SimulationState:load()
 	HUDRenderPass:useInterpolatedBlending()
 
 
-	-- Make skin box
+
+	-- Make tissue box
+	-- meters in total length on a side  
+	-- total voxels
+	--self.tissueSim = spark:createTissue( "tissueSim", 0.25, 100 )
+
 	self.tissueMat = spark:createMaterial( "tissueShader" )
 	self.tissueMat:setVec4( "u_light.position_camera", vec4(5,10,0,1) )
 	self.tissueMat:setVec4( "u_light.diffuse", vec4(0.8,0.8,0.8,1) )
@@ -78,7 +83,9 @@ function SimulationState:load()
 	self.tissueMat:setVec4( "u_ks", vec4(1,1,1,1) )
 	self.tissueMat:setFloat( "u_ns", 100.0 )
 	self.tissueMat:setFloat( "u_activationTime", 0.0 )
-	self.tissueMat:addTexture( "s_color", "skinColor" )
+	--self.tissueMat:addTexture( "s_color", "skinColor" )
+	print( "Using temp map: " .. theTissueSim:getTempMapTextureName() )
+	self.tissueMat:addTexture( "s_temperature", theTissueSim:getTempMapTextureName() )
 	--local skin = spark:createCube( vec3(-2.5, .25, -2.5), vec3(5, 0.5, 5), self.tissueMat, "OpaquePass" )
 	--skin:rotate( 90, vec3(1,0,0) )
 	

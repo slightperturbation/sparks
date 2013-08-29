@@ -1,6 +1,7 @@
 #include "LuaInterpreter.hpp"
 
 #include "TextRenderable.hpp"
+#include "TissueMesh.hpp"
 
 int
 spark
@@ -76,7 +77,15 @@ spark
      .def( "setText", &TextRenderable::setText )
      .def( "getSizeInPixels", &TextRenderable::getSizeInPixels )
      ];
-    
+
+    // TissueMesh
+    luabind::module( lua )
+    [
+     luabind::class_< TissueMesh, Renderable, TissueMeshPtr >( "TissueMesh" )
+     .def( "accumulateHeat", &TissueMesh::accumulateHeat )
+     .def( "getTempMapTextureName", &TissueMesh::getTempMapTextureName )
+     ];
+
     // FontManager
     luabind::module( lua )
     [
@@ -206,6 +215,8 @@ spark
           &SceneFacade::createCube )
      .def( "createQuad",
           &SceneFacade::createQuad )
+     .def( "createTissue",
+          &SceneFacade::createTissue )
      .def( "createLSpark",
           &SceneFacade::createLSpark )
      .def( "createText",

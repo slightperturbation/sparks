@@ -107,9 +107,6 @@ namespace spark
     typedef std::vector< RenderablePtr >  Renderables;
     typedef std::string RenderableName;
     
-    class TextRenderable;
-    typedef spark::shared_ptr< TextRenderable > TextRenderablePtr;
-    
     class RenderCommand;
     typedef spark::shared_ptr< RenderCommand > RenderCommandPtr;
     struct RenderCommandCompare;
@@ -121,13 +118,19 @@ namespace spark
     typedef std::list< RenderPassPtr > RenderPassList;
     typedef std::string RenderPassName;
 
+    class RenderTarget;
+    typedef spark::shared_ptr< RenderTarget > RenderTargetPtr;
+    typedef spark::shared_ptr< const RenderTarget > ConstRenderTargetPtr;
+    
     class Scene;
     typedef spark::shared_ptr< Scene > ScenePtr;
     typedef spark::shared_ptr< const Scene > ConstScenePtr;
 
-    class RenderTarget;
-    typedef spark::shared_ptr< RenderTarget > RenderTargetPtr;
-    typedef spark::shared_ptr< const RenderTarget > ConstRenderTargetPtr;
+   class SceneFacade;
+    typedef spark::shared_ptr< SceneFacade > SceneFacadePtr;
+    
+    class ScriptState;
+    typedef spark::shared_ptr< ScriptState > ScriptStatePtr;
 
     class ShaderInstance;
     typedef spark::shared_ptr< ShaderInstance > ShaderInstancePtr;
@@ -136,10 +139,7 @@ namespace spark
     class ShaderManager;
     typedef spark::shared_ptr< ShaderManager > ShaderManagerPtr;
     typedef std::string ShaderName;
-    
-    class SceneFacade;
-    typedef spark::shared_ptr< SceneFacade > SceneFacadePtr;
-    
+
     class State;
     typedef spark::shared_ptr< State > StatePtr;
     typedef spark::shared_ptr< const State > ConstStatePtr;
@@ -148,6 +148,12 @@ namespace spark
     class Time;
     typedef spark::shared_ptr< Time > TimePtr;
     
+    class TissueMesh;
+    typedef spark::shared_ptr< TissueMesh > TissueMeshPtr;
+
+    class TextRenderable;
+    typedef spark::shared_ptr< TextRenderable > TextRenderablePtr;
+
     class TextureUnit;
     typedef spark::shared_ptr< TextureUnit > TextureUnitPtr;
     typedef spark::shared_ptr< const TextureUnit> ConstTextureUnitPtr;

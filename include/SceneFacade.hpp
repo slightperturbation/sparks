@@ -160,6 +160,11 @@ namespace spark
                                   const glm::vec2& size,
                                   MaterialPtr material, 
                                   const RenderPassName& pass );
+        
+        /// Create the simulation tissue
+        TissueMeshPtr createTissue( const RenderableName& name,
+                                    float lengthInMeters,
+                                    size_t numVoxelsPerDim );
 
         RenderablePtr createLSpark( const glm::vec3& from, const glm::vec3& to,
             float intensity,

@@ -42,14 +42,21 @@ namespace spark
               m_x( 0.5f ), m_y( 0.5f ),
               m_isListening( true )
             {
-                socket_.set_option(boost::asio::socket_base::reuse_address(true));
-                socket_.async_receive_from(
-                    boost::asio::buffer(data_, max_length),
-                    sender_endpoint_,
-                    boost::bind(&EyeTrackerServer::handle_receive_from,
-                                this,
-                                boost::asio::placeholders::error,
-                                boost::asio::placeholders::bytes_transferred) );
+                try
+                {
+                    socket_.set_option(boost::asio::socket_base::reuse_address(true));
+                    socket_.async_receive_from(
+                        boost::asio::buffer(data_, max_length),
+                        sender_endpoint_,
+                        boost::bind(&EyeTrackerServer::handle_receive_from,
+                        this,
+                        boost::asio::placeholders::error,
+                        boost::asio::placeholders::bytes_transferred) );
+                }
+                catch( const std::exception& e )
+                {
+                    LOG_WARN(g_log) << "Socket error: " << e.what();
+                }
             }
 
             void handle_receive_from(const boost::system::error_code& error,
@@ -72,13 +79,21 @@ namespace spark
                 if( m_isListening )
                 {
                     boost::this_thread::interruption_point( );
-                    socket_.async_receive_from(
-                        boost::asio::buffer(data_, max_length),
-                        sender_endpoint_,
-                        boost::bind(&EyeTrackerServer::handle_receive_from,
-                        this,
-                        boost::asio::placeholders::error,
-                        boost::asio::placeholders::bytes_transferred) );
+                    try
+                    {
+                        socket_.async_receive_from(
+                            boost::asio::buffer(data_, max_length),
+                            sender_endpoint_,
+                            boost::bind(&EyeTrackerServer::handle_receive_from,
+                            this,
+                            boost::asio::placeholders::error,
+                            boost::asio::placeholders::bytes_transferred) );
+                    }
+                    catch( const std::exception& e )
+                    {
+                        LOG_WARN(g_log) << "Socket error: " << e.what();
+                    }
+                    
                 }
             }
 
