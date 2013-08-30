@@ -11,6 +11,12 @@ namespace spark
     /// 2D model of tissue temperature
     class TissueMesh : public Renderable
     {
+        // Possible states/conditions the tissue can be in 
+        // (not a enum class due to VS2010)
+        enum TissueCondition { normalTissue, 
+                               dessicatedTissue, 
+                               vaporizingTissue, 
+                               charredTissue };
     public:
         TissueMesh( const RenderableName& name,
                     TextureManagerPtr tm,
@@ -57,10 +63,16 @@ namespace spark
 
         /// Mass of tissue at location
         /// Mass loss begins at 70C
+        /// Units: kg
         float mass( size_t x, size_t y ) const;
 
         /// Volume of one voxel element in cubic meters
+        /// Units: m^3
         float volumePerElement( size_t x, size_t y ) const;
+
+        /// Joules/gram required to vaporize the tissue at x,y
+        /// Unites: J/kg
+        float latentHeatOfVaporization( size_t x, size_t y ) const;
     private:
         void swapTempMaps( void )
         {
@@ -121,6 +133,10 @@ namespace spark
         /// 2D map of energy added to surface at current timestep
         /// zero'd after update()
         std::vector< double > m_heatMap;
+        /// Discrete tissue state map, used by shader
+        /// integer component gives the condition of the tissue (see TissueCondition)
+        /// fractional component gives how long 
+        std::vector< unsigned char > m_tissueCondition;
 
         /// Iteration count for SOR diffusion calcs
         size_t m_diffusionIters;
