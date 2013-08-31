@@ -1,4 +1,6 @@
-#include "EyeTracker.hpp"
+
+#include "NetworkEyeTracker.hpp"
+
 #include "Projection.hpp"
 
 //#include <cstdlib>
@@ -15,10 +17,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+
 spark::NetworkEyeTracker
-::NetworkEyeTracker( short listeningUdpPort )
-: m_work( new boost::asio::io_service::work( m_ioService ) ),
-  m_prevX( 0.5f ), m_prevY( 0.5f )
+    ::NetworkEyeTracker( short listeningUdpPort )
+    : m_work( new boost::asio::io_service::work( m_ioService ) ),
+    m_prevX( 0.5f ), m_prevY( 0.5f )
 {
     try
     {
@@ -30,18 +33,18 @@ spark::NetworkEyeTracker
         // after startup.
 #else
         // uncommenting causes handle_receive_from to not be called on OSX
-//        boost::asio::signal_set signals( m_ioService, SIGINT, SIGTERM );
-//        signals.async_wait(
-//            boost::bind( &boost::asio::io_service::stop, &m_ioService ) );
+        //        boost::asio::signal_set signals( m_ioService, SIGINT, SIGTERM );
+        //        signals.async_wait(
+        //            boost::bind( &boost::asio::io_service::stop, &m_ioService ) );
 #endif
         m_server.reset( new EyeTrackerServer( m_ioService,
-                                              listeningUdpPort ) );
+            listeningUdpPort ) );
         // Dispatch m_ioService.run() on its own thread
         // Which runs the EyeTrackerServer to listen for
         // UDP updates.
         m_listenerThread.reset( new boost::thread(
             boost::bind( &boost::asio::io_service::run,
-                         &m_ioService) ) );
+            &m_ioService) ) );
     }
     catch (std::exception& e)
     {
@@ -50,7 +53,7 @@ spark::NetworkEyeTracker
 }
 
 spark::NetworkEyeTracker
-::~NetworkEyeTracker()
+    ::~NetworkEyeTracker()
 {
     try
     {
@@ -69,8 +72,8 @@ spark::NetworkEyeTracker
 }
 
 void
-spark::NetworkEyeTracker
-::updatePerspective( PerspectiveProjectionPtr persp )
+    spark::NetworkEyeTracker
+    ::updatePerspective( PerspectiveProjectionPtr persp, PerspectiveEye eye )
 {
     float x, y;
     m_server->getEyePos( x, y );
@@ -79,23 +82,23 @@ spark::NetworkEyeTracker
     if( dx != 0.0 || dy != 0.0 )
     {
         LOG_DEBUG(g_log) << "NetworkEyeTracker pos delta: "
-                         << dx << ", " << dy ;
+            << dx << ", " << dy ;
     }
     // move camera slightly
     // +y is up relative to viewer
     // +x is to the right from the perspective of the viewer
 
-    
+
     // TODO - unit conversions from face-camera to scene
     // scale factors are arbitrary, but should depend on the size of the
     // scene, screen and the camera's FOV
     float cameraFOV_rad = 1.5f;
     float eyeDist = 1.5f;
-    
+
     glm::vec3 up = persp->cameraUp();
     glm::vec3 in = persp->cameraPos() - persp->cameraTarget();
     glm::vec3 right = glm::normalize( glm::cross( in, up ) );
-    
+
     float xOffset = cameraFOV_rad * eyeDist * dx;
     float yOffset = cameraFOV_rad * eyeDist * dy;
     glm::vec3 offset = xOffset * right;
@@ -104,10 +107,10 @@ spark::NetworkEyeTracker
 }
 
 void
-spark::NetworkEyeTracker
-::resizeViewport( int left, int bottom,
-                  int right, int top )
+    spark::NetworkEyeTracker
+    ::resizeViewport( int left, int bottom,
+    int right, int top )
 {
-    
+
 }
 

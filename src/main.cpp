@@ -33,6 +33,12 @@
 #include "InputFactory.hpp"
 #include "GlfwInput.hpp"
 
+#include "NetworkEyeTracker.hpp"
+
+#ifdef HAS_ZSPACE
+  #include "ZSpaceEyeTracker.hpp"
+#endif
+
 #include "StateManager.hpp"
 #include "State.hpp"
 #include "SceneState.hpp"
@@ -143,11 +149,14 @@ void setGLFWCallbacks( GLFWwindow* glfwWindow )
 /// Online simulation and display of fluid
 int runSimulation(int argc, char** argv)
 {
-    
     // Create Window
-    // legacy logging is great, but conlicts with nSight debugger
+    // legacy logging is great, but conflicts with nSight debugger
     bool enableLegacyOpenGlLogging  = false;
-    OpenGLWindow window( "Spark", enableLegacyOpenGlLogging );
+    bool requireStereo = false;
+#ifdef HAS_ZSPACE
+    requireStereo = true;
+#endif
+    OpenGLWindow window( "Spark", enableLegacyOpenGlLogging, requireStereo );
     using namespace std;
     InteractionVars vars;
     
@@ -181,12 +190,18 @@ int runSimulation(int argc, char** argv)
     
     // Eye Tracker
     EyeTrackerPtr eyeTracker;
-    const bool isEyeTrackingWithVision = true;
+    const bool isEyeTrackingWithVision = false;
     if( isEyeTrackingWithVision )
     {
         eyeTracker = EyeTrackerPtr( new NetworkEyeTracker );
         eyeTracker->resizeViewport( 0, 0, width, height );
         g_guiEventPublisher->subscribe( eyeTracker );
+    }
+    else
+    {
+#ifdef HAS_ZSPACE 
+        eyeTracker = window.getEyeTracker();
+#endif
     }
 
     StateManager stateManager;
@@ -293,12 +308,10 @@ int runSimulation(int argc, char** argv)
     double prevUpdateTime = 0;
     while( window.isRunning() )
     {
-
         LOG_TRACE(g_log) << ".................................................";
         if( g_log->isTrace() )
         {
             textureManager->logTextures();
-            //currScene->logPasses();
         }
 
         glm::mat4 viewTransform;
@@ -313,31 +326,42 @@ int runSimulation(int argc, char** argv)
         ////////////////////////////////////////////////////////////////////////
         // Update System (physics, collisions, etc.
         // 
-        if( currTime > 1.2 )
+        if( (currTime - prevUpdateTime) > dt )
         {
-            if( (currTime - prevUpdateTime) > dt )
-            {
-                LOG_TRACE(g_log) << "Fixed update at " << currTime;
-                stateManager.fixedUpdate( dt );
-                prevUpdateTime = currTime;
-            }
-            LOG_TRACE(g_log) << "Update at " << currTime;
-            stateManager.update( currTime - lastTime );
-
+            LOG_TRACE(g_log) << "Fixed update at " << currTime;
+            stateManager.fixedUpdate( dt );
+            if( eyeTracker ) eyeTracker->fixedUpdate( dt );
+            prevUpdateTime = currTime;
         }
+        LOG_TRACE(g_log) << "Update at " << currTime;
+        stateManager.update( currTime - lastTime );
+        if( eyeTracker ) eyeTracker->update( currTime - lastTime );
 
         ////////////////////////////////////////////////////////////////////////
         // Render
+        bool stereoRender = true;
+
         if( g_arcBall )
         {
             g_arcBall->updatePerspective( cameraPerspective );
         }
-        if( eyeTracker )
+        if( eyeTracker && !stereoRender )
         {
-            eyeTracker->updatePerspective( cameraPerspective );
+            eyeTracker->updatePerspective( cameraPerspective, EyeTracker::monoEye );
+        }
+        if( eyeTracker && stereoRender )
+        {
+            glDrawBuffer( GL_BACK_LEFT );
+            eyeTracker->updatePerspective( cameraPerspective, EyeTracker::leftEye );
+            stateManager.render(); // Extra scene render in stereo mode
+
+            glDrawBuffer( GL_BACK_RIGHT );
+            eyeTracker->updatePerspective( cameraPerspective, EyeTracker::rightEye );
         }
         stateManager.render();
+
         window.swapBuffers();
+
         LOG_TRACE(g_log) << "Scene end - glfwSwapBuffers()";
         if( vars.isSavingFrames ) writeFrameBufferToFile( "sparks_" );
         

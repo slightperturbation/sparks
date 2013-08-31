@@ -11,6 +11,8 @@
 
 #include "Spark.hpp"
 
+#include "EyeTracker.hpp"
+
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -30,7 +32,9 @@ namespace spark
     class OpenGLWindow
     {
     public:
-        OpenGLWindow( const char* programName, bool enableLegacyOpenGlLogging ); 
+        OpenGLWindow( const char* programName, 
+                      bool enableLegacyOpenGlLogging,
+                      bool enableStereo ); 
         ~OpenGLWindow();
         bool isOK( void ) { return m_isOK; }
         bool isRunning( void );
@@ -38,7 +42,9 @@ namespace spark
         void swapBuffers( void );
         void getSize( int* width, int* height );
         GLFWwindow* glfwWindow( void ) { return m_glfwWindow; }
+        EyeTrackerPtr getEyeTracker( void )  { return m_eyeTracker; }
     private:
+        EyeTrackerPtr m_eyeTracker;
         GLFWwindow* m_glfwWindow;
         bool m_isOK;
     };

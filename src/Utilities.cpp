@@ -22,6 +22,25 @@
 #include <sstream>
 #include <iostream>
 
+#ifdef HAS_ZSPACE
+
+#include "ZSpaceEyeTracker.hpp"
+
+#include "ZSpace/Common/Math/MathConverterGl.h"
+#include "ZSpace/Common/Math/Matrix4.h"
+#include "ZSpace/Common/Math/Vector3.h"
+#include "ZSpace/Common/System/DisplayInfo.h"
+
+#include "ZSpace/Stereo/StereoFrustum.h"
+#include "ZSpace/Stereo/StereoLeftRightDetect.h"
+#include "ZSpace/Stereo/StereoViewport.h"
+#include "ZSpace/Stereo/StereoWindow.h"
+
+#include "ZSpace/Tracker/TrackerSystem.h"
+#include "ZSpace/Tracker/TrackerTarget.h"
+
+#endif
+
 void APIENTRY debugOpenGLMessageCallback( GLenum source,
                                           GLenum type,
                                           GLuint id,
@@ -136,7 +155,9 @@ spark
 
 /// Startup OpenGL and create the rendering context and window.
 spark::OpenGLWindow
-::OpenGLWindow( const char* programName, bool enableLegacyOpenGlLogging )
+::OpenGLWindow( const char* programName, 
+                bool enableLegacyOpenGlLogging, 
+                bool enableStereo )
 : m_isOK( false )
 {
     LOG_DEBUG(g_log) << "glfwInit...";
@@ -146,8 +167,31 @@ spark::OpenGLWindow
     }
     LOG_DEBUG(g_log) << "done.\n";
 
+    // Default window position
+    int x = 0;
+    int y = 0;
+    int targetDisplayId = 0;
+#ifdef HAS_ZSPACE
+    // Get the zSpace display
+    zspace::common::DisplayInfo displayInfo;
+    int index = 0;
+    int numDisplays = displayInfo.getNumDisplays();
+    while (index < numDisplays && !displayInfo.getDisplay(index)->isZSpaceDisplay)
+        index++;
+
+    // If a zSpace display was found, then position the window on the zSpace
+    if (index < numDisplays)
+    {
+        const zspace::common::DisplayInfo::Display* display = displayInfo.getDisplay(index);
+        x = display->displayPosition[0];
+        y = display->displayPosition[1];
+        targetDisplayId = index;
+    }
+    m_eyeTracker.reset( new spark::ZSpaceEyeTracker );
+#endif
+
     // OpenGL 3.2 or higher only
-    glfwWindowHint( GLFW_SAMPLES, 8 ); // 8x anti aliasing
+    //glfwWindowHint( GLFW_SAMPLES, 8 ); // 8x anti aliasing
 
     // Need to force the 3.2 for mac -- note
     // that this breaks the AntTweak menus
@@ -157,26 +201,55 @@ spark::OpenGLWindow
     glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
     glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 
-    glfwWindowHint( GLFW_VISIBLE, GL_TRUE );
+    //glfwWindowHint( GLFW_VISIBLE, GL_TRUE );
     glfwWindowHint( GLFW_DECORATED, GL_TRUE );
-    glfwWindowHint( GLFW_RESIZABLE, GL_TRUE );
+    glfwWindowHint( GLFW_RESIZABLE, GL_FALSE );
+
+    if( enableStereo )
+    {
+        glfwWindowHint( GLFW_STEREO, GL_TRUE );
+    }
     
 #ifdef _DEBUG
     glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE );
 #endif
-    
-    // For stereo outptu
-    //glfwWindowHint( GLFW_STEREO, GL_TRUE );
-    
-    LOG_DEBUG(g_log) << "glfwOpenWindow...";
 
-    m_glfwWindow = glfwCreateWindow( 800, 600, programName, NULL, NULL );
+    glfwWindowHint( GLFW_VISIBLE, GL_FALSE );
+    //glfwWindowHint( GLFW_DECORATED, GL_FALSE );
+    
+   
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    int monitorCount = 0;
+    GLFWmonitor** monitors = glfwGetMonitors( &monitorCount );	
+    for( int i = 0; i < monitorCount; ++i )
+    {
+        const GLFWvidmode* mode = glfwGetVideoMode( monitors[i] );
+        std::cerr << "Monitor " << i << " -> " 
+            << glfwGetMonitorName( monitors[i] ) << " ["
+            << mode->width << "x" << mode->height << "] ";
+        if( monitor == monitors[i] ) std::cerr << "*";
+        std::cerr << "\n";
+    }
+    if( targetDisplayId < monitorCount ) 
+    {
+        monitor = monitors[targetDisplayId];
+    }
+    const GLFWvidmode* mode = glfwGetVideoMode( monitor );
+    LOG_DEBUG(g_log) << "glfwOpenWindow...";
+    m_glfwWindow = glfwCreateWindow( 800, 600, 
+                                     programName, 
+                                     //monitor,
+                                     NULL, 
+                                     NULL );
     if( !m_glfwWindow )
     {
         LOG_FATAL(g_log) << "Unable to open GLFW window.";
         glfwTerminate();
         return;
     }
+    glfwSetWindowPos( m_glfwWindow, x, y );
+    glfwShowWindow( m_glfwWindow );
+
     glfwMakeContextCurrent( m_glfwWindow );
     
     checkOpenGLErrors();

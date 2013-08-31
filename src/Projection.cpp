@@ -55,22 +55,43 @@ glm::mat4
 spark::PerspectiveProjection
 ::viewMatrix( void ) const
 {
-    glm::mat4 view = glm::lookAt(m_cameraPos,
-                                 m_cameraTarget,
-                                 m_cameraUp );
-    return view;
+    return m_view;
 }
-
 
 glm::mat4
 spark::PerspectiveProjection
 ::projectionMatrix( void ) const
 {
-    return glm::perspective( m_fov,
-                             m_aspectRatio,
-                             m_nearPlaneDist,
-                             m_farPlaneDist );
+    return m_projection;
 }
+
+void 
+spark::PerspectiveProjection
+::setViewMatrix( const glm::mat4& mat )
+{
+    m_view = mat;
+}
+
+void 
+spark::PerspectiveProjection
+::setProjectionMatrix( const glm::mat4& mat )
+{
+    m_projection = mat;
+}
+
+void 
+spark::PerspectiveProjection
+::setMatricesFromCamera( void )
+{
+    m_view = glm::lookAt( m_cameraPos,
+        m_cameraTarget,
+        m_cameraUp );
+    m_projection = glm::perspective( m_fov,
+        m_aspectRatio,
+        m_nearPlaneDist,
+        m_farPlaneDist );
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 

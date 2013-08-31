@@ -61,14 +61,66 @@ SET( FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR_ft2build} ${FREETYPE_INCLUDE_D
   endif( MSVC )
 endif( WINDOWS )
 
+#####################################################################
 
-set(PROJECT_NAME "sparkGui")
-project(${PROJECT_NAME})
+set(PROJECT_NAME "sparkGui" CACHE STRING "Name of the project." )
+mark_as_advanced( PROJECT_NAME )
+project( ${PROJECT_NAME} )
+
+#set (CMAKE_CONFIGURATION_TYPES Debug Release CACHE INTERNAL "" FORCE)
 
 set(CMAKE_MODULE_PATH 
   "${CMAKE_SOURCE_DIR}/cmake/" 
   ${CMAKE_MODULE_PATH}
 )
+
+FIND_PATH( EIGEN3_INCLUDE_DIR signature_of_eigen3_matrix_library
+          HINTS 
+            /usr/local/include/
+            /usr/include/
+            "C:/libs/"
+            "C:/libs/eigen-3.1.2"
+          PATH_SUFFIXES eigen3 )
+#####################################################################
+# zSpace
+#####################################################################
+if( WIN32 )
+  set( ZSPACE_GUESS_DIR "$ENV{SYSTEMDRIVE}/zspace/zSpaceSDK/2.10.0.19412/Win64/VS2010" CACHE PATH "zSpace SDK root directory for your platform" )
+  string( REGEX REPLACE "\\\\" "/" ZSPACE_GUESS_DIR "${ZSPACE_GUESS_DIR}" )
+
+  MESSAGE( STATUS "Looking for ZSpace SDK...")
+  MESSAGE( STATUS "Guessing at: ${ZSPACE_GUESS_DIR}")
+  FIND_PATH( ZSPACE_HOME NAMES Inc/ZSpace/Common/CommonIncludes.h
+    PATHS  
+      "${ZSPACE_GUESS_DIR}"
+  )
+  # test if valid directory
+  if( ZSPACE_HOME )
+    MESSAGE( STATUS "\t Found at: ${ZSPACE_HOME}" )
+    set( ZSPACE_INCLUDE_DIR "${ZSPACE_HOME}/Inc" )
+    set( ZSPACE_BIN_DIR "${ZSPACE_HOME}/Bin" )
+    set( ZSPACE_LIB_DIR "${ZSPACE_HOME}/Lib" )
+
+    include_directories( ${ZSPACE_INCLUDE_DIR} )
+    link_directories( ${ZSPACE_LIB_DIR} )
+    ADD_DEFINITIONS( "-DHAS_ZSPACE" )
+
+    LIST( APPEND PROJECT_LINK_LIBRARIES 
+      debug ZSCommon_D.lib 
+      debug ZSStereo_D.lib 
+      debug ZSTracker_D.lib 
+      debug ZSCoreInterface_D.lib
+
+      optimized ZSCommon.lib 
+      optimized ZSStereo.lib 
+      optimized ZSTracker.lib 
+      optimized ZSCoreInterface.lib
+    )
+    set( ZSPACE_FOUND true )
+  else( ZSPACE_HOME )
+      MESSAGE( STATUS "\t ------------ FAILED TO FIND ZSPACE! ------------" )
+  endif( ZSPACE_HOME )
+endif( WIN32 )
 
 #####################################################################
 # BOOST
@@ -98,7 +150,7 @@ list(APPEND PROJECT_BOOST_COMPONENTS
   thread 
   ) 
 FIND_PACKAGE(Boost ${BOOST_MIN_VERSION} COMPONENTS ${PROJECT_BOOST_COMPONENTS})
-MESSAGE( "Using boost from " ${Boost_LIBRARY_DIRS} )
+MESSAGE( STATUS "Using boost from " ${Boost_LIBRARY_DIRS} )
 if( Boost_FOUND )
   if( WIN32 )
     # Define WIN32_LEAN_AND_MEAN here to make sure it's defined before WinSock.h is included
@@ -432,6 +484,7 @@ set( HDRS
   ./include/InputFactory.hpp
   ./include/Material.hpp
   ./include/Mesh.hpp
+  ./include/NetworkEyeTracker.hpp
   ./include/PointSparkRenderable.hpp
   ./include/Projection.hpp
   ./include/RayCastVolume.hpp
@@ -457,6 +510,7 @@ set( HDRS
   ./include/TexturedSparkRenderable.hpp
   ./include/Time.hpp
   ./include/TransformGroup.hpp
+  ./include/Updateable.hpp
   ./include/Utilities.hpp
   ./include/Viewport.hpp
   ./include/VolumeData.hpp
@@ -475,7 +529,6 @@ set( SRCS
   ./src/LSpark.cpp
   ./src/LuaInterpreter.cpp
   ./src/Exceptions.cpp
-  ./src/EyeTracker.cpp
   ./src/Fluid.cpp
   ./src/FileAssetFinder.cpp
   ./src/FontManager.cpp
@@ -483,6 +536,7 @@ set( SRCS
   ./src/Input.cpp
   ./src/Material.cpp
   ./src/Mesh.cpp
+  ./src/NetworkEyeTracker.cpp
   ./src/PointSparkRenderable.cpp
   ./src/Projection.cpp
   ./src/RayCastVolume.cpp
@@ -506,14 +560,23 @@ set( SRCS
   ./src/Utilities.cpp
   ./src/Viewport.cpp
 
-  ./src/SixenseInputDevice.cpp
   ./src/TissueMesh.cpp
-  
  )
 set( GUI_SRCS 
   ./src/main.cpp
 )
 
+if( ZSPACE_FOUND )
+  LIST( APPEND HDRS ./include/ZSpaceEyeTracker.hpp )
+  LIST( APPEND SRCS ./src/ZSpaceEyeTracker.cpp )
+  LIST( APPEND SRCS ./src/EyeTrackerZSpace.cpp )
+else( ZSPACE_FOUND )
+  LIST( APPEND SRCS ./src/EyeTrackerNetwork.cpp )
+endif( ZSPACE_FOUND )
+
+if( SIXENSE_FOUND )
+  LIST( APPEND SRCS ./src/SixenseInputDevice.cpp )
+endif( SIXENSE_FOUND )
 
 set( STATES_HDRS
   ./include/states/SimulationState.hpp

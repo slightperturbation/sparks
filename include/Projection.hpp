@@ -27,6 +27,8 @@ namespace spark
     {
     public:
         Projection( void );
+        virtual ~Projection() {}
+
         virtual std::string name( void ) const = 0;
         /// Returns the direction from this "camera" to the given targetPoint.
         virtual glm::vec3 lookAtDirection( const glm::vec3& targetPoint ) const = 0;
@@ -68,27 +70,41 @@ namespace spark
         virtual glm::vec3 upDirection( void ) const override;
         
         glm::vec3 cameraUp( void ) const               { return m_cameraUp; }
-        void cameraUp( const glm::vec3& up )           { m_cameraUp = up; }
-        void cameraUp( float x, float y, float z )     { m_cameraUp = glm::vec3(x,y,z); }
+        void cameraUp( const glm::vec3& up )           { m_cameraUp = up; setMatricesFromCamera(); }
+        void cameraUp( float x, float y, float z )     { m_cameraUp = glm::vec3(x,y,z); setMatricesFromCamera(); }
 
         glm::vec3 cameraPos( void ) const              { return m_cameraPos; }
-        void cameraPos( const glm::vec3& pos )         { m_cameraPos = pos; }
-        void cameraPos( float x, float y, float z )    { m_cameraPos = glm::vec3(x,y,z); }
+        void cameraPos( const glm::vec3& pos )         { m_cameraPos = pos; setMatricesFromCamera(); }
+        void cameraPos( float x, float y, float z )    { m_cameraPos = glm::vec3(x,y,z); setMatricesFromCamera(); }
 
         glm::vec3 cameraTarget( void ) const           { return m_cameraTarget; }
-        void cameraTarget( const glm::vec3& target )   { m_cameraTarget = target; }
-        void cameraTarget( float x, float y, float z ) { m_cameraTarget = glm::vec3(x,y,z); }
+        void cameraTarget( const glm::vec3& target )   { m_cameraTarget = target; setMatricesFromCamera(); }
+        void cameraTarget( float x, float y, float z ) { m_cameraTarget = glm::vec3(x,y,z); setMatricesFromCamera(); }
 
         float fov( void ) const                        { return m_fov; }
-        void  fov( float degrees )                     { m_fov = degrees; }
+        void  fov( float degrees )                     { m_fov = degrees; setMatricesFromCamera(); }
 
         virtual glm::mat4 viewMatrix( void ) const;
         virtual glm::mat4 projectionMatrix( void ) const;
+
+        /// Explicitly set view (aka look-at) matrix 
+        /// Overrides camera settings
+        void setViewMatrix( const glm::mat4& mat );
+
+        /// Explicitly set projection (e.g. perspective) matrix 
+        /// Overrides camera settings
+        void setProjectionMatrix( const glm::mat4& mat );
+
+    protected:
+        void setMatricesFromCamera( void );
     protected:
         glm::vec3 m_cameraPos;
         glm::vec3 m_cameraTarget;
         glm::vec3 m_cameraUp;
         float m_fov;
+
+        glm::mat4 m_view;
+        glm::mat4 m_projection;
     };
 
     ///////////////////////////////////////////////////////////////////////////

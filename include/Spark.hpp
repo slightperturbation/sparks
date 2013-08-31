@@ -162,6 +162,9 @@ namespace spark
     typedef spark::shared_ptr< TextureManager > TextureManagerPtr;
     typedef std::string TextureName;
     
+    class Updateable;
+    typedef spark::shared_ptr< Updateable > UpdateablePtr;
+
     class VolumeData;
     typedef spark::shared_ptr< VolumeData > VolumeDataPtr;
 
