@@ -147,7 +147,7 @@ spark::TextureRenderTarget
     // TODO Honor BufferType
     //////////////////////////////////////
 
-    // Set target texture as our color attachement #0
+    // Set target texture as our color attachment #0
     glFramebufferTexture( GL_FRAMEBUFFER,
                           GL_COLOR_ATTACHMENT0,
                           mgr->getTextureIdForHandle( m_textureHandle ),
@@ -308,13 +308,17 @@ spark::ScaledTextureRenderTarget
         return;
     }
     
-    LOG_TRACE(g_log) << "Initialize TextureRenderTarget \""
+    LOG_TRACE(g_log) << "Resetting Texture for scaled render target: \""
     << getTextureName() << "\".";
-    glGenFramebuffers( 1, &m_framebufferId );
     if( m_framebufferId == -1 )
     {
-        // how to test failure?
-        LOG_ERROR(g_log) << "Unable to allocate framebuffer.";
+        LOG_TRACE(g_log) << "Allocating new Framebuffer ID \""
+            << getTextureName() << "\".";
+        glGenFramebuffers( 1, &m_framebufferId );
+        if( m_framebufferId == -1 )
+        {
+            LOG_ERROR(g_log) << "Unable to allocate framebuffer.";
+        }
     }
     glBindFramebuffer( GL_FRAMEBUFFER, m_framebufferId );
     m_textureManager->createTargetTexture( m_textureHandle, m_width, m_height );
@@ -322,16 +326,19 @@ spark::ScaledTextureRenderTarget
     
     // TODO Honor BufferType
     
-    
     // Setup render target for depth buffer
-    glGenRenderbuffers( 1, &m_depthRenderbufferId );
+    if( m_depthRenderbufferId == -1 )
+    {
+        glGenRenderbuffers( 1, &m_depthRenderbufferId );
+    }
     glBindRenderbuffer( GL_RENDERBUFFER, m_depthRenderbufferId );
+    // renderbufferStorage will delete any existing data
     glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT24,
                           m_width, m_height );
     glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                               GL_RENDERBUFFER, m_depthRenderbufferId);
     
-    // Set target texture as our color attachement #0
+    // Set target texture as our color attachment #0
     glFramebufferTexture( GL_FRAMEBUFFER,
                          GL_COLOR_ATTACHMENT0,
                          m_textureManager->getTextureIdForHandle( m_textureHandle ),

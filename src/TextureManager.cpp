@@ -11,7 +11,7 @@ spark::TextureManager
 {
     GL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS, &m_maxTextureUnits ) );
     // set next to a middle value to catch errors using default unit 0
-    m_nextAvailableTextureUnit = 0;//m_maxTextureUnits / 2;
+    m_nextAvailableTextureUnit = 0;
 }
 
 spark::TextureManager
@@ -53,34 +53,36 @@ spark::TextureManager
     }
 }
 
-
 void
 spark::TextureManager
 ::createTargetTexture( const TextureName& aHandle,
                       int width, int height )
 {
-    auto iter = m_registry.find( aHandle );
-    if( iter != m_registry.end() )
-    {
-        LOG_WARN(g_log) << "Attempt to createTargetTexture(\""
-            << aHandle 
-            << "\") but texture with that name already exists.  "
-            << "Ignoring attempt and preserving existing texture.";
-        return;
-    }
     GLuint textureId;
-    deleteTexture( aHandle );
-    GL_CHECK( glGenTextures( 1, &textureId ) );
-    if( -1 == textureId )
+    if( exists(aHandle) )
     {
-        LOG_ERROR(g_log) << "OpenGL failed to allocate a texture id.";
-        assert(false);
-        return;
+        // Texture already exists-- delete current texture and
+        // recreate new texture
+          activateTextureUnitForHandle( aHandle );
+          textureId = getTextureIdForHandle( aHandle );
     }
-    m_registry[aHandle] = textureId;
-    GLint textureUnit = reserveTextureUnit();
-    bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
-    
+    else
+    {
+        // need to create a new texture
+        GL_CHECK( glGenTextures( 1, &textureId ) );
+        if( -1 == textureId )
+        {
+            LOG_ERROR(g_log) << "OpenGL failed to allocate a texture id.";
+            assert(false);
+            return;
+        }
+        m_registry[aHandle] = textureId;
+        GLint textureUnit = reserveTextureUnit();
+        bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
+    }
+    //<-- texture unit has been activated and textureId != -1
+    assert( textureId != -1 );
+
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA,
                  width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
 //    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );

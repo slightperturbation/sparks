@@ -98,14 +98,6 @@ public:
     bool isSavingFrames;
 };
 
-void resizeWindowCallback( GLFWwindow* glfwWindow, int width, int height )
-{
-    if( g_guiEventPublisher )
-    {
-        g_guiEventPublisher->resizeViewport( 0, 0, width, height );
-    }
-}
-
 void mousePosCallback( GLFWwindow* glfwWindow, double x, double y )
 {
     if( !g_arcBall ) return;
@@ -132,6 +124,22 @@ void mouseButtonCallback( GLFWwindow* glfwWindow,
     }
 }
 
+void frameBufferSizeCallback(GLFWwindow* window, int width, int height)
+{
+    if( g_guiEventPublisher )
+    {
+        g_guiEventPublisher->resizeViewport( 0, 0, width, height );
+    }
+}
+
+void windowPosCallback(GLFWwindow* window, int xpos, int ypos)
+{
+    if( g_guiEventPublisher )
+    {
+        g_guiEventPublisher->moveWindow( xpos, ypos );
+    }
+}
+
 void setGLFWCallbacks( GLFWwindow* glfwWindow )
 {
     // Set GLFW event callbacks
@@ -139,7 +147,9 @@ void setGLFWCallbacks( GLFWwindow* glfwWindow )
     glfwSetCursorPosCallback( glfwWindow, mousePosCallback );
     glfwSetMouseButtonCallback( glfwWindow, mouseButtonCallback );
     
-    glfwSetWindowSizeCallback( glfwWindow, resizeWindowCallback );
+    glfwSetFramebufferSizeCallback( glfwWindow, frameBufferSizeCallback );
+    glfwSetWindowPosCallback( glfwWindow, windowPosCallback );
+
 #ifdef __APPLE__
     //glGetError(); // eat spurious GLFW-caused OpenGL errors on OSX/iOS
     // commented out because it violates the core profile
@@ -295,12 +305,7 @@ int runSimulation(int argc, char** argv)
         SceneState* ssp =  (SceneState*)(stateManager.currState().get());
         ssp->add( slices );
     }
-    {
-        // Set window/textures sizes by sending signals to listeners
-        int width = 0; int height = 0;
-        window.getSize( &width, &height );
-        g_guiEventPublisher->resizeViewport( 0, 0, width, height );
-    }
+
 
     const double startTime = glfwGetTime();
     double currTime = startTime;

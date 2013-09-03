@@ -11,9 +11,17 @@
 spark::Projection
 ::Projection( void )
 : m_aspectRatio( 800.0f/600.0f ),
-  m_nearPlaneDist( 0.1f ),
+  m_nearPlaneDist( 0.001f ),
   m_farPlaneDist( 100.0f )
 {
+}
+
+void 
+spark::Projection
+::resizeViewport( int left, int bottom,
+    int width, int height )
+{
+    aspectRatio( (float)width/(float)height );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,7 +33,9 @@ spark::PerspectiveProjection
   m_cameraTarget( 0, 0, 0 ),
   m_cameraUp( 0.0f, 1.0f, 0.0f ),
   m_fov( 80.0f )
-{ }
+{
+    unsetProjectionMatrix();
+}
 
 std::string
 spark::PerspectiveProjection
