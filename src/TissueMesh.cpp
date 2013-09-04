@@ -8,12 +8,14 @@ spark::TissueMesh
               float totalLengthMeters,
               size_t heatDim )
 : Renderable( name ),
-  m_textureName( name + "_TISSUE_TEMPERATURE_TEXTURE" ),
+  m_tempTextureName( name + "_TISSUE_TEMPERATURE_TEXTURE" ),
+  m_conditionTextureName( name + "_TISSUE_CONDITION_TEXTURE" ),
   m_textureManager( tm ),
   m_N( heatDim + 2 ),
   m_voxelDimMeters( totalLengthMeters / (float)heatDim ),
-  m_diffusionIters( 20 ),
-  m_SORovershoot( 1.00001 )
+  m_diffusionIters( 10 ),
+  m_SORovershoot( 1.00001 ),
+  m_dessicationThresholdTemp( 63.0 )
 {
     m_heatMap.resize( m_N * m_N, 0.0 );
     // body temp is 37C
@@ -40,7 +42,7 @@ spark::TissueMesh
 
 void
 spark::TissueMesh
-::update( float dt )
+::fixedUpdate( float dt )
 {
     // Apply accumulated heat to change tissue temp
     // Q = c m dT
@@ -59,13 +61,14 @@ spark::TissueMesh
     }
     // Diffuse temperature by Fourier's law of thermal conduction
     // q = -k \nabla T
-    const float a = 1e-5; // diffusion rate
-    const float decayRate = 1e-4f;
+    const double a = 1e-5;//1e-7; // diffusion rate
+    const double decayRate = 1e-5f; // 1e-4f
     size_t ind = 0;
-    float k = dt * a / (m_diffusionIters * m_voxelDimMeters * m_voxelDimMeters );
+    double k = dt * a / (m_diffusionIters * m_voxelDimMeters * m_voxelDimMeters );
     if( k > 0.25 ) 
     {
         LOG_WARN(g_log) << "Diffusion likely unstable";
+        k = 0.25;
     }
     for( size_t iter = 0; iter < m_diffusionIters; ++iter )
     {
@@ -105,23 +108,42 @@ spark::TissueMesh
                 //////////////////
                 // Explicit euler w/9-pt Laplacian stencil
                 // Slowest, but fewest artifacts and explicit timestep
-                float delta = 
-                    k * ( 4.0f* ( (*m_currTempMap)[index(x+1,y)]
-                                + (*m_currTempMap)[index(x-1,y)]
-                                + (*m_currTempMap)[index(x,y+1)]
-                                + (*m_currTempMap)[index(x,y-1)] 
-                                )
-                                // Diagonals
-                                + (*m_currTempMap)[index(x+1,y+1)]
-                                + (*m_currTempMap)[index(x+1,y-1)]
-                                + (*m_currTempMap)[index(x-1,y+1)]
-                                + (*m_currTempMap)[index(x-1,y-1)]
-                                - (20.0f* (*m_currTempMap)[index(x,y)])
+                //double delta =
+                //    k * ( 4.0f* ( (*m_currTempMap)[index(x+1,y)]
+                //                + (*m_currTempMap)[index(x-1,y)]
+                //                + (*m_currTempMap)[index(x,y+1)]
+                //                + (*m_currTempMap)[index(x,y-1)] 
+                //                )
+                //                // Diagonals
+                //                + (*m_currTempMap)[index(x+1,y+1)]
+                //                + (*m_currTempMap)[index(x+1,y-1)]
+                //                + (*m_currTempMap)[index(x-1,y+1)]
+                //                + (*m_currTempMap)[index(x-1,y-1)]
+                //                - (20.0f* (*m_currTempMap)[ind])
+                //    );
+                //(*m_nextTempMap)[ind] = (*m_currTempMap)[ind]
+                //    + delta 
+                //        - ( decayRate * dt * (*m_currTempMap)[ind] )
+                //        ;
+
+                // Same, but replacing index calls
+                double delta =
+                    k * ( 4.0f* ( (*m_currTempMap)[ind+1]
+                + (*m_currTempMap)[ind-1]
+                + (*m_currTempMap)[ind+m_N]
+                + (*m_currTempMap)[ind-m_N] 
+                )
+                    // Diagonals
+                    + (*m_currTempMap)[ind+1+m_N]
+                + (*m_currTempMap)[ind+1-m_N]
+                + (*m_currTempMap)[ind-1+m_N]
+                + (*m_currTempMap)[ind-1-m_N]
+                - (20.0f* (*m_currTempMap)[ind])
                     );
                 (*m_nextTempMap)[ind] = (*m_currTempMap)[ind]
-                    + delta 
-                        - ( decayRate * dt * (*m_currTempMap)[ind] )
-                        ;
+                + delta 
+                    - ( decayRate * dt * (*m_currTempMap)[ind] )
+                    ;
             }
         }
     } // End diffusion
@@ -133,11 +155,15 @@ spark::TissueMesh
         {
             ind = index(x,y);
             float temp = (*m_nextTempMap)[ind];
-            if( temp > 45 )
+            if( (m_tissueCondition[ind] == normalTissue) && (temp > m_dessicationThresholdTemp) )
             {
                 m_tissueCondition[ind] = dessicatedTissue;
             }
-            if( (temp >= 100) && (m_tissueCondition[ind] != charredTissue) )
+            if( (m_tissueCondition[ind] == vaporizingTissue) && (temp < 100) )
+            {
+                m_tissueCondition[ind] = charredTissue;
+            }
+            if( (m_tissueCondition[ind] == dessicatedTissue) && (temp >= 100) )
             {
                 m_tissueCondition[ind] = vaporizingTissue;
             }
@@ -155,8 +181,8 @@ spark::TissueMesh
     } // end condition update
 
     // push temp data to graphics card
-    //m_textureManager->load2DByteTextureFromData( m_textureName, *m_nextTempMap, m_N );
-    m_textureManager->load2DByteTextureFromData( m_textureName, m_tissueCondition, m_N );
+    m_textureManager->load2DFloatTextureFromData( m_tempTextureName, *m_nextTempMap, m_N );
+    m_textureManager->load2DByteTextureFromData( m_conditionTextureName, m_tissueCondition, m_N );
     swapTempMaps();
 }
 
@@ -164,7 +190,7 @@ void
 spark::TissueMesh
 ::accumulateHeat( float x, float y, float heatInJoules )
 {
-    size_t centerIndex = indexFromUV( x, y );
+    size_t centerIndex = indexFromXY( x, y );
     m_heatMap[centerIndex] += heatInJoules;
 }
 
@@ -172,10 +198,17 @@ const spark::TextureName&
 spark::TissueMesh
 ::getTempMapTextureName( void ) const
 {
-    return m_textureName;
+    return m_tempTextureName;
 }
 
-float 
+const spark::TextureName&
+spark::TissueMesh
+::getConditionMapTextureName( void ) const
+{
+    return m_conditionTextureName;
+}
+
+float
 spark::TissueMesh
 ::totalLengthPerSide( void ) const
 {
@@ -217,6 +250,21 @@ spark::TissueMesh
 {
     // For water: 
     // http://www.engineeringtoolbox.com/fluids-evaporation-latent-heat-d_147.html
-    return 2.257e6;
+    // assume 10% water
+    return 0.1 * 2.257e6;
 }
 
+void 
+spark::TissueMesh
+::acquireVaporizingLocations( std::vector<glm::vec2>& vaping )
+{
+    float x = 0; float y = 0;
+    for( size_t i = 0; i < m_tissueCondition.size(); ++i )
+    {
+        if( m_tissueCondition[i] == vaporizingTissue )
+        {
+            indexToPosition( i, &x, &y );
+            vaping.push_back( glm::vec2( x, y ) );
+        }
+    }
+}

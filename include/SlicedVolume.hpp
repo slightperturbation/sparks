@@ -2,7 +2,7 @@
 #define SLICED_VOLUME_HPP
 
 #include "Spark.hpp"
-
+#include "Updateable.hpp"
 #include "Mesh.hpp"
 #include "VolumeData.hpp"
 
@@ -10,7 +10,7 @@ namespace spark
 {
     /// Encapsulates the rendering of a VolumeData object using many 
     /// textured slices.  Relies on hardware support for 3D textures.
-    class SlicedVolume : public Renderable
+    class SlicedVolume : public Renderable, public Updateable
     {
     public:
         SlicedVolume( TextureManagerPtr tm, ShaderManagerPtr sm,

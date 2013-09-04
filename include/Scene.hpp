@@ -34,6 +34,10 @@ namespace spark
         /// for a RenderPass that has been Scene::add()'d to this Scene.
         void add( RenderablePtr r );
         
+        /// Dispatch update() with each render() call, and
+        /// also fixedUpdate() at a regular interval.
+        void addUpdateable( UpdateablePtr u );
+        
         /// Build render commands for this frame.
         void prepareRenderCommands( void );
         
@@ -68,6 +72,7 @@ namespace spark
         /// by RenderPasses.
         RenderCommandQueue m_commands;
         Renderables m_renderables;
+        Updateables m_updateables;
     };
 } // end namespace spark
 

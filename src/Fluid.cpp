@@ -229,39 +229,39 @@ spark::Fluid
 
     // Sources are hacked into the initialization code for now
     const bool hasCentralSource = false;
-    const bool hasBottomSource = true;
+    const bool hasBottomSource = false;
     const bool hasBoom = false;
 
-    for( size_t i=1; i<m_N; ++i )
-    {
-        for( size_t j=1; j<m_N; ++j )
-        {
-            for( size_t k=1; k<m_N; ++k )
-            {
-                const int ci = m_N/2; 
-                const int cj = m_N/2;
-                const int ck = 2*m_N/5;
-                float d = std::sqrt( 
-                      (i-(float)ci)*(i-(float)ci)
-                    + (j-(float)cj)*(j-(float)cj)
-                    + (k-(float)ck)*(k-(float)ck)
-                    );
-                if( hasCentralSource && d < m_N/5.0f )
-                {
-                    m_density[index(i,j,k)] = 0.5;
-                    m_density_source[index(i,j,k)] = 0;
-                    m_temp[index(i,j,k)] = 20 + m_ambientTemp;
-                }
-                // grid is nice for understanding shape of volume
-                if( (!(i%8) || !(k%8)) && j==m_N/2 )
-                {
-                    //m_density[index(i,j,k)] = 1.5;
-                }
-            }
-        }
-    }
-    if( hasBottomSource ) addBottomSource();
-    if( hasBoom ) addBoom();
+    //for( size_t i=1; i<m_N; ++i )
+    //{
+    //    for( size_t j=1; j<m_N; ++j )
+    //    {
+    //        for( size_t k=1; k<m_N; ++k )
+    //        {
+    //            const int ci = m_N/2; 
+    //            const int cj = m_N/2;
+    //            const int ck = 2*m_N/5;
+    //            float d = std::sqrt( 
+    //                  (i-(float)ci)*(i-(float)ci)
+    //                + (j-(float)cj)*(j-(float)cj)
+    //                + (k-(float)ck)*(k-(float)ck)
+    //                );
+    //            if( hasCentralSource && d < m_N/5.0f )
+    //            {
+    //                m_density[index(i,j,k)] = 0.5;
+    //                m_density_source[index(i,j,k)] = 0;
+    //                m_temp[index(i,j,k)] = 20 + m_ambientTemp;
+    //            }
+    //            // grid is nice for understanding shape of volume
+    //            if( (!(i%8) || !(k%8)) && j==m_N/2 )
+    //            {
+    //                //m_density[index(i,j,k)] = 1.5;
+    //            }
+    //        }
+    //    }
+    //}
+    //if( hasBottomSource ) addBottomSource();
+    //if( hasBoom ) addBoom();
 }
 
 /// Create a 4x4x1 area at the bottom with high temp and source
@@ -297,6 +297,7 @@ spark::Fluid
         }
     }
 }
+
 
 void
 spark::Fluid
@@ -926,6 +927,50 @@ void
 spark::Fluid
 ::update( float dt )
 {
-    stepVelocity( dt );
-    stepDensity( dt );
+    stepVelocity( dt * 0.1 );
+    stepDensity( dt * 0.1 );
+}
+
+void
+spark::Fluid
+::addSourceAtLocation( float x, float y )
+{
+    const float lenOfCell = 1.0f / (m_N+2);
+    int rx = (int)( (x/lenOfCell) + ( (float)(m_N+2)/2.0f - 0.5f ) );
+    int ry = (int)( (y/lenOfCell) + ( (float)(m_N+2)/2.0f - 0.5f ) );
+    
+    size_t i = index( rx, ry, 1);
+    m_density[ i ] = 0.4;
+    m_density_prev[ i ] = 0.4;
+    m_temp[ i ] = m_ambientTemp + 50.0;
+    m_temp_prev[ i ] = m_ambientTemp + 50.0;
+
+    //m_density[ index( rx, ry, 2) ] = 1;
+    //m_density_prev[ index( rx, ry, 2 ) ] = 1;
+    //m_density[ index( rx, ry, 3) ] = 1;
+    //m_density_prev[ index( rx, ry, 3 ) ] = 1;
+
+
+    //m_density[ index( 1, 1, 1) ] = 1;
+    //m_density_prev[ index( 1, 1, 1 ) ] = 1;
+
+    //m_density[ index( 1, m_N, 1) ] = 1;
+    //m_density_prev[ index( 1, m_N, 1 ) ] = 1;
+
+    //m_density[ index( m_N, 1, 1) ] = 1;
+    //m_density_prev[ index( m_N, 1, 1 ) ] = 1;
+
+    //m_density[ index(x+1,y+1,1) ] = 0.5f;
+    //m_density[ index(x+1,y-1,1) ] = 0.5f;
+    //m_density[ index(x-1,y+1,1) ] = 0.5f;
+    //m_density[ index(x-1,y-1,1) ] = 0.5f;
+
+    //m_density[ index(x,y,2) ] = 0.5f;
+    //m_density[ index(x+1,y+1,2) ] = 0.5f;
+    //m_density[ index(x+1,y-1,2) ] = 0.5f;
+    //m_density[ index(x-1,y+1,2) ] = 0.5f;
+    //m_density[ index(x-1,y-1,2) ] = 0.5f;
+
+    //m_density_source[ index(x,y,1) ] = 0.5f;
+    //m_temp[ index(x,y,1) ] = m_ambientTemp + 50.0f;
 }

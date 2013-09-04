@@ -59,6 +59,15 @@ spark::RenderCommand
     const glm::mat3 normal = glm::transpose( glm::inverse( glm::mat3(viewModel) ) );
     const float time = glfwGetTime();
 
+    if( m_material->name() == "DebugMaterial" )
+    {
+        //LOG_DEBUG(g_log) << "model = \n" << model << "\n";
+        //LOG_DEBUG(g_log) << "view = \n" << view << "\n";
+        //LOG_DEBUG(g_log) << "viewModel = \n" << viewModel << "\n";
+        //LOG_DEBUG(g_log) << "proj = \n" << proj << "\n";
+        //LOG_DEBUG(g_log) << "projViewModel = \n" << projViewModel << "\n";
+    }
+
     mutableMaterial->setShaderUniform<glm::mat4>( "u_projMat", 
                                                   proj );
     mutableMaterial->setShaderUniform<glm::mat4>( "u_viewModelMat", 

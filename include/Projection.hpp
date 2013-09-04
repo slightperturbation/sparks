@@ -4,6 +4,7 @@
 #include "Spark.hpp"
 #include "ShaderInstance.hpp"
 #include "Utilities.hpp"
+#include "GuiEventSubscriber.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -12,6 +13,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include <boost/optional.hpp>
 
 #include <vector>
 #include <memory>
@@ -23,7 +26,7 @@ namespace spark
 {
     /// Projection manages state for the Model, View and Projection transforms
     /// and provides utility functions for setting camera and camera target.
-    class Projection : public ShaderUniformHolder
+    class Projection : public ShaderUniformHolder, public GuiEventSubscriber
     {
     public:
         Projection( void );
@@ -50,6 +53,11 @@ namespace spark
 
         virtual glm::mat4 viewMatrix( void ) const = 0;
         virtual glm::mat4 projectionMatrix( void ) const = 0;
+
+        // Handle GUI Events
+        virtual void resizeViewport( int left, int bottom,
+            int width, int height ) override;
+
     protected:
         glm::mat4 m_modelMatrix;
         float m_aspectRatio;
@@ -70,41 +78,55 @@ namespace spark
         virtual glm::vec3 upDirection( void ) const override;
         
         glm::vec3 cameraUp( void ) const               { return m_cameraUp; }
-        void cameraUp( const glm::vec3& up )           { m_cameraUp = up; setMatricesFromCamera(); }
-        void cameraUp( float x, float y, float z )     { m_cameraUp = glm::vec3(x,y,z); setMatricesFromCamera(); }
+        void cameraUp( const glm::vec3& up )           { m_cameraUp = up; }
+        void cameraUp( float x, float y, float z )     { m_cameraUp = glm::vec3(x,y,z); }
 
         glm::vec3 cameraPos( void ) const              { return m_cameraPos; }
-        void cameraPos( const glm::vec3& pos )         { m_cameraPos = pos; setMatricesFromCamera(); }
-        void cameraPos( float x, float y, float z )    { m_cameraPos = glm::vec3(x,y,z); setMatricesFromCamera(); }
+        void cameraPos( const glm::vec3& pos )         { m_cameraPos = pos; }
+        void cameraPos( float x, float y, float z )    { m_cameraPos = glm::vec3(x,y,z); }
 
         glm::vec3 cameraTarget( void ) const           { return m_cameraTarget; }
-        void cameraTarget( const glm::vec3& target )   { m_cameraTarget = target; setMatricesFromCamera(); }
-        void cameraTarget( float x, float y, float z ) { m_cameraTarget = glm::vec3(x,y,z); setMatricesFromCamera(); }
+        void cameraTarget( const glm::vec3& target )   { m_cameraTarget = target; }
+        void cameraTarget( float x, float y, float z ) { m_cameraTarget = glm::vec3(x,y,z); }
 
         float fov( void ) const                        { return m_fov; }
-        void  fov( float degrees )                     { m_fov = degrees; setMatricesFromCamera(); }
+        void  fov( float degrees )                     { m_fov = degrees; }
 
-        virtual glm::mat4 viewMatrix( void ) const;
-        virtual glm::mat4 projectionMatrix( void ) const;
+        /// View from the current camera, possibly modified by the
+        /// EyeView matrix.  See setEyeViewMatrix() and unsetEyeViewMatrix()
+        virtual glm::mat4 viewMatrix( void ) const override;
 
-        /// Explicitly set view (aka look-at) matrix 
-        /// Overrides camera settings
-        void setViewMatrix( const glm::mat4& mat );
+        /// Can be explicitly set, see setProjectionMatrix()
+        virtual glm::mat4 projectionMatrix( void ) const override;
 
-        /// Explicitly set projection (e.g. perspective) matrix 
-        /// Overrides camera settings
+        /// Explicitly set projection (e.g. perspective) matrix, overriding
+        /// the current camera settings.  Can be reverted to fov-based 
+        /// projection matrix using unsetProjectionMatrix()
         void setProjectionMatrix( const glm::mat4& mat );
 
+        /// Undoes previously called setProjectionMatrix() to revert
+        /// to a fov-defined projection matrix.
+        void unsetProjectionMatrix( void );
+
+        /// Set the currently used eye-view matrix which, if set, will 
+        /// be multiplied by the standard view matrix to get the 
+        /// final viewMatrix()
+        /// Effectively, this transforms from camera/head-space to eye-space
+        void setEyeViewMatrix( const glm::mat4& eyeMat );
+
+        /// Undo the effect of setEyeViewMatrix(), returning to "monoscopic"
+        /// view mode.
+        void unsetEyeViewMatrix( void );
     protected:
-        void setMatricesFromCamera( void );
+        /// return the computed view matrix based on the camera pos/target/up
+        virtual glm::mat4 cameraViewMatrix( void ) const;
     protected:
         glm::vec3 m_cameraPos;
         glm::vec3 m_cameraTarget;
         glm::vec3 m_cameraUp;
         float m_fov;
-
-        glm::mat4 m_view;
-        glm::mat4 m_projection;
+        glm::mat4 m_currEyeView;
+        boost::optional< glm::mat4 > m_projMat;
     };
 
     ///////////////////////////////////////////////////////////////////////////

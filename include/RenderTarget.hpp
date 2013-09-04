@@ -18,7 +18,7 @@ namespace spark
     /// or full-screen effects.
     /// RenderTargets are generally held by a RenderPass.
     /// see RenderPass
-    class RenderTarget
+    class RenderTarget : public GuiEventSubscriber
     {
     public:
         RenderTarget() : m_clearColor( 0,1,0,0 ) {}
@@ -29,6 +29,8 @@ namespace spark
         virtual void preRender( void ) const = 0;
         virtual void postRender( void ) const = 0;
         virtual void startFrame( void ) const = 0;
+        virtual void resizeViewport( int left, int bottom,
+            int width, int height ) override {}
         void setClearColor( const glm::vec4& c ) { m_clearColor = c; }
         virtual std::ostream& debugInfo( std::ostream& out ) const { return out; }
         friend std::ostream& operator<<( std::ostream& out,
@@ -70,7 +72,8 @@ namespace spark
     // TextureRenderTarget
 
     /// Directs render output to a fixed-size texture.
-    class TextureRenderTarget : public RenderTarget
+    class TextureRenderTarget 
+        : public RenderTarget
     {
     public:
         enum BufferType { ColorOnly, ColorAndDepth, DepthOnly };
@@ -84,7 +87,7 @@ namespace spark
         const TextureName& getTextureName( void ) const 
         { return m_textureHandle; }
         virtual glm::vec2 size( void ) const override;
-        
+
         virtual void initialize( TextureManagerPtr& mgr ) override;
         virtual void preRender( void ) const override;
         virtual void postRender( void ) const override;
@@ -120,7 +123,7 @@ namespace spark
         virtual void initialize( TextureManagerPtr& mgr ) override;
 
         virtual void resizeViewport( int left, int bottom,
-                                    int width, int height );
+                                    int width, int height ) override;
 
         void scaleFactor( float x, float y );
 

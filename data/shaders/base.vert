@@ -22,9 +22,10 @@ out vec2 f_texCoord;       // texture coordinate of vertex
 out vec4 f_vertex_screen;  // Projected vertex into the clip-space
 out vec4 f_normal_camera;  // For phong lighting
 out vec4 f_vertex_camera;  // For phong lighting
-
+out vec3 f_normal;
 void main()
 {
+	f_normal = v_normal;
 	f_normal_camera = vec4( u_normalMat * v_normal, 0.0 ); // dir
 	f_vertex_camera = u_viewModelMat * vec4( v_position, 1.0 ); // point
     f_fragColor = v_color ;

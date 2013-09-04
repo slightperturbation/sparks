@@ -17,9 +17,6 @@
 
 #include "TextRenderable.hpp"
 
-#include "SlicedVolume.hpp"
-#include "RayCastVolume.hpp"
-#include "Fluid.hpp"
 
 #include "Scene.hpp"
 #include "ArcBall.hpp"
@@ -161,19 +158,24 @@ int runSimulation(int argc, char** argv)
 {
     // Create Window
     // legacy logging is great, but conflicts with nSight debugger
-    bool enableLegacyOpenGlLogging  = false;
-    bool requireStereo = false;
+    const bool enableLegacyOpenGlLogging  = false;
+
+    bool useStereo = false;
 #ifdef HAS_ZSPACE
-    requireStereo = true;
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// Too slow for testing.  Maybe a cmd line flag?  Setting in GUI?
+    ////useStereo = true;
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
-    OpenGLWindow window( "Spark", enableLegacyOpenGlLogging, requireStereo );
+    OpenGLWindow window( "Spark", enableLegacyOpenGlLogging, useStereo );
+
     using namespace std;
     InteractionVars vars;
     
     // Setup Gui Callbacks
     g_guiEventPublisher = GuiEventPublisherPtr( new GuiEventPublisher );
     setGLFWCallbacks( window.glfwWindow() );
-    
+
     // And Input manager
     // Choose windowing library -- glfw for now
     InputPtr inputManager( new Input );
@@ -200,26 +202,38 @@ int runSimulation(int argc, char** argv)
     
     // Eye Tracker
     EyeTrackerPtr eyeTracker;
-    const bool isEyeTrackingWithVision = false;
-    if( isEyeTrackingWithVision )
+    // Create eyeTracker if desired
     {
-        eyeTracker = EyeTrackerPtr( new NetworkEyeTracker );
-        eyeTracker->resizeViewport( 0, 0, width, height );
-        g_guiEventPublisher->subscribe( eyeTracker );
-    }
-    else
-    {
-#ifdef HAS_ZSPACE 
+#ifdef HAS_ZSPACE
         eyeTracker = window.getEyeTracker();
 #endif
+        if( !eyeTracker )
+        {
+            // by default, use NetworkEyeTracker
+            eyeTracker = EyeTrackerPtr( new NetworkEyeTracker );
+        }
+        if( eyeTracker )
+        {
+            g_guiEventPublisher->subscribe( eyeTracker );
+        }
+    }
+
+    // Set window/textures sizes by sending signals to listeners
+    // Note that the current design has a circular dependency
+    // between guiEventPublisher and textures, calling resize explicitly
+    // helps break the cycle.  -- TODO
+    {
+        int width = 0; int height = 0;
+        int xPos = 0; int yPos = 0;
+        window.getSize( &width, &height );
+        window.getPosition( &xPos, &yPos );
+        g_guiEventPublisher->resizeViewport( 0, 0, width, height );
     }
 
     StateManager stateManager;
 
-    OrthogonalProjectionPtr overlayPerspective( new OrthogonalProjection );
     PerspectiveProjectionPtr cameraPerspective( new PerspectiveProjection );
-    cameraPerspective->cameraPos( 1.0f, 4.0f, -5.0f );
-    cameraPerspective->cameraTarget( 0.5f, 0.5f, 0.0f );
+    g_guiEventPublisher->subscribe( cameraPerspective );
     
     FrameBufferRenderTargetPtr frameBufferTarget(
         new FrameBufferRenderTarget( width, height ) );
@@ -245,13 +259,18 @@ int runSimulation(int argc, char** argv)
     lua.runScriptFromFile( "loadRenderPasses.lua" );
     stateManager.addState( StatePtr(new SceneState( "sceneOne", 
                                                     sceneOne )) );
-    stateManager.addState( StatePtr(new SimulationState( "Simulation", 
-                                                         facade ) ) ); 
-
+    
     //std::vector<std::string> states = { "Loading", "Menu", "Simulation" } ;
     std::vector<std::string> states;
     states.push_back( "Loading" );
     states.push_back( "Menu" );
+    //states.push_back( "Simulation" );  // (If Simulation not already loaded)
+
+    // Create the "special" simulation state from the C++ class
+    //   Note that this class augments the SimulationLua script as well.
+    stateManager.addState( StatePtr(new SimulationState( "Simulation", 
+        facade ) ) ); 
+
     for( auto iter = states.begin(); iter != states.end(); ++iter )
     {
         StatePtr newState( new ScriptState( *iter,
@@ -272,41 +291,18 @@ int runSimulation(int argc, char** argv)
     // spark renders to sparkRenderTexture
     // overlay renders to g_transparentRenderPass using a glow shader
 
-    FluidPtr fluidData;
-    if( false )
+    
+    // Set window/textures sizes by sending signals to listeners
+    // Note that the current design has a circular dependency
+    // between guiEventPublisher and textures, calling resize explicitly
+    // helps break the cycle.  -- TODO
     {
-        fluidData.reset( new Fluid(22) );
-        fluidData->setDiffusion( 0.0 );
-        fluidData->setVorticity( 1e4 );
-        fluidData->setGravityFactor( 0, -4000, 0.0 );
-        ////fluidData->loadFromFile( "test.fluid" );
-
-        spark::shared_ptr< spark::SlicedVolume > slices( new
-                SlicedVolume( textureManager,
-                             shaderManager,
-                             "TransparentPass",
-                             256, fluidData ) );
-    //    RayCastVolumePtr rayCastFluid( new RayCastVolume( "fluid_raycastvolume",
-    //                                               textureManager,
-    //                                               shaderManager,
-    //                                               fluidData ) );
-        glm::mat4 xform = glm::translate( glm::mat4( 1.0f ),
-                                          glm::vec3( 0.075f, 0.75f, 0.05f ) );
-        
-        
-        //xform = glm::scale( xform, glm::vec3( 0.5f, 0.5f, 0.5f ) );
-        //xform = glm::rotate( xform, 90.0f, glm::vec3(1,0,0) );
-        
-        //rayCastFluid->setTransform( xform );
-        slices->setTransform( xform );
-        //scene->add( rayCastFluid );
-        //sceneOne->add( slices );
-        // 
-        SceneState* ssp =  (SceneState*)(stateManager.currState().get());
-        ssp->add( slices );
+        int width = 0; int height = 0;
+        int xPos = 0; int yPos = 0;
+        window.getSize( &width, &height );
+        window.getPosition( &xPos, &yPos );
+        g_guiEventPublisher->resizeViewport( 0, 0, width, height );
     }
-
-
     const double startTime = glfwGetTime();
     double currTime = startTime;
     double lastTime = startTime;
@@ -335,37 +331,44 @@ int runSimulation(int argc, char** argv)
         {
             LOG_TRACE(g_log) << "Fixed update at " << currTime;
             stateManager.fixedUpdate( dt );
-            if( eyeTracker ) eyeTracker->fixedUpdate( dt );
+            if( eyeTracker ) 
+            {
+                eyeTracker->fixedUpdate( dt );
+            }
             prevUpdateTime = currTime;
         }
         LOG_TRACE(g_log) << "Update at " << currTime;
         stateManager.update( currTime - lastTime );
-        if( eyeTracker ) eyeTracker->update( currTime - lastTime );
-
-        ////////////////////////////////////////////////////////////////////////
-        // Render
-        bool stereoRender = true;
-
+        if( eyeTracker ) 
+        {
+            eyeTracker->update( currTime - lastTime );
+        }
         if( g_arcBall )
         {
             g_arcBall->updatePerspective( cameraPerspective );
         }
-        if( eyeTracker && !stereoRender )
+
+        ////////////////////////////////////////////////////////////////////////
+        // Render
+        window.makeContextCurrent();
+        if( eyeTracker && !useStereo )
         {
-            eyeTracker->updatePerspective( cameraPerspective, EyeTracker::monoEye );
+            eyeTracker->updatePerspective( cameraPerspective );
         }
-        if( eyeTracker && stereoRender )
+        if( eyeTracker && useStereo )
         {
-            glDrawBuffer( GL_BACK_LEFT );
-            eyeTracker->updatePerspective( cameraPerspective, EyeTracker::leftEye );
+            glDrawBuffer( GL_BACK_RIGHT );
+            LOG_DEBUG(g_log) << "Switching to RIGHT Buffer";
+            eyeTracker->updatePerspective( cameraPerspective, EyeTracker::rightEye );
             stateManager.render(); // Extra scene render in stereo mode
 
-            glDrawBuffer( GL_BACK_RIGHT );
-            eyeTracker->updatePerspective( cameraPerspective, EyeTracker::rightEye );
+            glDrawBuffer( GL_BACK_LEFT );
+            LOG_DEBUG(g_log) << "Switching to LEFT Buffer";
+            eyeTracker->updatePerspective( cameraPerspective, EyeTracker::leftEye );
         }
         stateManager.render();
-
         window.swapBuffers();
+
 
         LOG_TRACE(g_log) << "Scene end - glfwSwapBuffers()";
         if( vars.isSavingFrames ) writeFrameBufferToFile( "sparks_" );
@@ -377,8 +380,7 @@ int runSimulation(int argc, char** argv)
         // See: http://www.glfw.org/docs/3.0/group__keys.html
         if( window.getKey( GLFW_KEY_UP ) == GLFW_PRESS )
         {
-            fluidData->reset();
-            currTime = 1.2;
+            //stateManager.currState()->reset();
         }
         if( window.getKey( GLFW_KEY_ENTER ) == GLFW_PRESS )
         {

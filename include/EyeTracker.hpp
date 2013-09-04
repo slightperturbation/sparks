@@ -16,9 +16,14 @@ namespace spark
 
         typedef enum { monoEye, leftEye, rightEye } PerspectiveEye;
 
-        /// Modify the given perspective to reflect recent input.
-        virtual void updatePerspective( PerspectiveProjectionPtr persp,
-                                        PerspectiveEye eye = monoEye ) = 0;
+        /// Modify the given perspective to reflect the position
+        /// of the specified eye.  Use "monoEye" (the default) to
+        /// get the position of the head or face.
+        void updatePerspective( PerspectiveProjectionPtr persp,
+            PerspectiveEye eye = monoEye )
+        {
+            implUpdatePerspective( persp, eye );
+        }
 
         /// Update the viewport
         virtual void resizeViewport( int left, int bottom,
@@ -26,6 +31,9 @@ namespace spark
 
         virtual void update( float dt ) override {}
         virtual void fixedUpdate( float dt ) override {}
+    protected:
+        virtual void implUpdatePerspective( PerspectiveProjectionPtr persp, 
+            PerspectiveEye eye ) = 0;
     };
     typedef spark::shared_ptr< EyeTracker > EyeTrackerPtr;
     

@@ -84,6 +84,7 @@ spark
      luabind::class_< TissueMesh, Renderable, TissueMeshPtr >( "TissueMesh" )
      .def( "accumulateHeat", &TissueMesh::accumulateHeat )
      .def( "getTempMapTextureName", &TissueMesh::getTempMapTextureName )
+     .def( "getConditionMapTextureName", &TissueMesh::getConditionMapTextureName )
      ];
 
     // FontManager
@@ -231,8 +232,8 @@ spark
     [
      luabind::class_< Material,
      MaterialPtr >( "Material" )
-     //            .property( "name", (std::string& (Material::* const)(void) )&Material::name,
-     //                               (void (Material::*)(const std::string&) )&Material::name )
+     .property( "name", (const std::string& (Material::*)(void) const )&Material::name,
+                        (void (Material::*)(const std::string&) )&Material::name )
      .def( "setFloat", &Material::setShaderUniform<float> )
      .def( "setVec2", &Material::setShaderUniform<glm::vec2> )
      .def( "setVec3", &Material::setShaderUniform<glm::vec3> )
@@ -240,7 +241,6 @@ spark
      .def( "addTexture", &Material::addTexture )
      .def( "dumpShaderUniforms", &Material::dumpShaderUniforms )
      ];
-    
 }
 
 void

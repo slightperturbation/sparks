@@ -8,7 +8,7 @@
 namespace spark
 {
     /// Concrete state handling the simulation.
-    /// Augments the lua SimulationState script.
+    /// Augments the Lua SimulationState script.
     class SimulationState : public ScriptState
     {
     public:
@@ -27,6 +27,7 @@ namespace spark
     private:
         // Owned Tissue simulation mesh
         TissueMeshPtr m_tissueMesh;
+        FluidPtr m_fluidData;
 
         // Disallow copy ctor and assignment
         SimulationState( const SimulationState& ); // undefined to disable

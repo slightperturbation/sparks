@@ -3,13 +3,14 @@
 
 #include "Spark.hpp"
 
+#include "Updateable.hpp"
 #include "Renderable.hpp"
 #include "Mesh.hpp"
 
 namespace spark
 {
     /// 2D model of tissue temperature
-    class TissueMesh : public Renderable
+    class TissueMesh : public Renderable, public Updateable
     {
         // Possible states/conditions the tissue can be in 
         // (not a enum class due to VS2010)
@@ -28,17 +29,32 @@ namespace spark
         virtual void render( const RenderCommand& rc ) const override;
         
         /// Update the VBO based on changes to the data.
-        virtual void update( float dt );
+        virtual void fixedUpdate( float dt ) override;
         
         /// Add a source of heat for this time-step
         /// Heat sources are cleared/zero'd each update
-        /// x,y are in object coordinates, [0,1]^2
+        /// x,y are in "world" scale, with center of tissue at 0,0
         void accumulateHeat( float x, float y, float heatInJoules );
 
         /// Returns the handle/name of the texture holding the temperature 
         /// map.  Note that 37.0C is typical body temperature and should
         /// be considered the baseline temperature.
         const TextureName& getTempMapTextureName( void ) const;
+        
+        /// Returns the handle/name of the texture holding the discrete
+        /// condition of the tissue at each location.  Possible values are:
+        ///
+        /// normalTissue=0, dessicatedTissue=1, vaporizingTissue=2,
+        /// and charredTissue=3.
+        ///
+        /// Vaporizing is set when the tissue is actively undergoing vaporization.
+        /// Once vaporization is complete (sufficient energy to vaporize an
+        /// equal mass of water has been injected) the tissue becomes charred.
+        const TextureName& getConditionMapTextureName( void ) const;
+
+        /// Adds positions of each cell currently vaporizing.
+        /// Positions in "world" scale with center of tissue at 0,0
+        void acquireVaporizingLocations( std::vector<glm::vec2>& vaping );
 
         /// Returns the real-world units (meters) length of one side of
         /// the tissue sample, not including the boundary elements.
@@ -117,8 +133,32 @@ namespace spark
             y = ( y == m_N ? m_N-1 : y );
             return index( x, y );
         }
+
+        /// Provides index for cell at "world" coordinates x,y
+        /// Assumes tissue is centered at 0,0
+        /// Inverse operation of indexToPosition()
+        size_t indexFromXY( float x, float y ) const
+        {
+            int rx = (int)((x / m_voxelDimMeters) + ((float)m_N/2.0f) - 0.5f);
+            int ry = (int)((y / m_voxelDimMeters) + ((float)m_N/2.0f) - 0.5f);
+            size_t ind = m_N * ry + rx;
+            assert( ind < m_tissueCondition.size() );
+            return ind;
+        }
+
+        /// Provides "world" x,y coordinates for cell at index ind.
+        /// Assumes center (m_N/2)+0.5 is located at the origin
+        void indexToPosition( size_t ind, float* pX, float* pY ) const
+        {
+            assert( ind < m_tissueCondition.size() );
+            int y = ind / m_N; 
+            int x = ind % m_N;
+            *pX = m_voxelDimMeters * ( x - ((float)m_N/2.0f) + 0.5f );
+            *pY = m_voxelDimMeters * ( y - ((float)m_N/2.0f) + 0.5f );
+        }
         
-        TextureName m_textureName;
+        TextureName m_tempTextureName;
+        TextureName m_conditionTextureName;
         TextureManagerPtr m_textureManager;
         /// number of elements per dim, including two boundary elements
         /// at 0 and m_N-1
@@ -143,6 +183,8 @@ namespace spark
         /// Overshoot factor for SOR, must be 1.0 or more and less than 2.0
         /// 1.0 equivalent to Guass-Seidel; 2.0 is unstable!
         double m_SORovershoot;
+
+        double m_dessicationThresholdTemp;
     };
     typedef spark::shared_ptr< TissueMesh > TissueMeshPtr;
 }

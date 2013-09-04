@@ -14,7 +14,7 @@ namespace spark
     {
     public:
         GuiEventPublisher()  
-        : m_left( 0 ), m_bottom( 0 ), m_width( 800 ), m_height( 600 )
+        : m_left( 0 ), m_bottom( 0 ), m_width( 1024 ), m_height( 768 )
         { }
 
         /// The given aSubscriber will receive notifications of GUI events.
@@ -55,6 +55,11 @@ namespace spark
                     p->resizeViewport( left, bottom, width, height );
                 }
             }
+        }
+
+        void moveWindow( int xpos, int ypos )
+        {
+            resizeViewport( xpos, ypos, m_width, m_height );
         }
 
         int left( void ) const { return m_left; }

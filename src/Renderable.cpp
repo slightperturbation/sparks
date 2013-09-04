@@ -169,7 +169,7 @@ spark::Renderable
 ::setMaterialForPassName( const spark::RenderPassName& renderPassName, 
                           spark::MaterialPtr material )
 {
-    LOG_DEBUG(g_log) << "Assigning material \"" << material->name() 
+    LOG_TRACE(g_log) << "Assigning material \"" << material->name() 
         << "\" to renderable \"" << name() << "\" for pass \"" 
         << renderPassName << "\".";
     m_materials[ renderPassName ] = material;

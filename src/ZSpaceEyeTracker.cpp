@@ -47,6 +47,7 @@ spark::ZSpaceEyeTracker
     if( m_trackerSystem )
     {
         m_trackerSystem->removeReference();
+        m_trackerSystem.reset();
     }
 }
 
@@ -62,8 +63,8 @@ spark::ZSpaceEyeTracker
 
 void 
 spark::ZSpaceEyeTracker
-::updatePerspective( PerspectiveProjectionPtr persp,
-                     PerspectiveEye eye ) 
+::implUpdatePerspective( PerspectiveProjectionPtr persp,
+                         PerspectiveEye eye ) 
 {
     zspace::stereo::StereoFrustum::StereoEye zspaceEye;
     switch( eye )
@@ -78,28 +79,36 @@ spark::ZSpaceEyeTracker
         zspaceEye = zspace::stereo::StereoFrustum::STEREO_EYE_CENTER;
         break;
     default:
+        LOG_WARN(g_log) << "Unexpected eye specified?";
         return;
     }
-    //m_stereoFrustum->setFieldOfViewScale( m_fov );
+    update(0);
+    m_stereoFrustum->setNearClip( 0.001 /*meters*/ );
 
     // Set view matrix
-    GLfloat matrixGl[16];
-    GLfloat monoModelViewGl[16];
-
     // Get the view matrix from the zSpace StereoFrustum for a specified eye
     // and convert it into OpenGl matrix format.
-    zspace::common::Matrix4 viewMatrix;
-    m_stereoFrustum->getViewMatrix( zspaceEye, viewMatrix );
-    zspace::common::MathConverterGl::convertMatrix4ToMatrixGl( viewMatrix, matrixGl );
-    persp->setViewMatrix( glm::make_mat4( matrixGl ) );
+    // 
+    // The frustum's view matrix contains only the *offset* for the eye
+    // so needs to be multiplied by the current 
+    {
+        GLfloat matrixGl[16];
+        zspace::common::Matrix4 viewMatrix;
+        m_stereoFrustum->getViewMatrix( zspaceEye, viewMatrix );
+        zspace::common::MathConverterGl::convertMatrix4ToMatrixGl( viewMatrix, matrixGl );
+        persp->setEyeViewMatrix( glm::make_mat4( matrixGl) );
+    }
 
     // set projection matrix
     // Get the projection matrix from the zSpace StereoFrustum for a specified eye
     // and convert it into OpenGl matrix format.
-    zspace::common::Matrix4 projectionMatrix;
-    m_stereoFrustum->getProjectionMatrix( zspaceEye, projectionMatrix );
-    zspace::common::MathConverterGl::convertMatrix4ToMatrixGl( projectionMatrix, matrixGl );
-    persp->setProjectionMatrix( glm::make_mat4( matrixGl ) );
+    {
+        GLfloat projectionMatrixGl[16];
+        zspace::common::Matrix4 projectionMatrix;
+        m_stereoFrustum->getProjectionMatrix( zspaceEye, projectionMatrix );
+        zspace::common::MathConverterGl::convertMatrix4ToMatrixGl( projectionMatrix, projectionMatrixGl );
+        persp->setProjectionMatrix( glm::make_mat4( projectionMatrixGl ) );
+    }
 }
 
 void 
@@ -127,13 +136,14 @@ spark::ZSpaceEyeTracker
     if(    m_stereoWindow->getX() != m_left 
         || m_stereoWindow->getY() != m_bottom )
     {
-        //m_stereoWindow->move( m_left, m_bottom );
+        m_stereoWindow->move( m_left, m_bottom );
     }
     if(    m_stereoWindow->getWidth() != m_width 
         || m_stereoWindow->getHeight() != m_height )
     {
-        //m_stereoWindow->resize( m_width, m_height );
+        m_stereoWindow->resize( m_width, m_height );
     }
+    GL_CHECK( glViewport( 0, 0, (GLsizei)m_width, (GLsizei)m_height ) );
 
     // Take the tracking data and pass it into the m_stereoFrustum
     // for use when rendering

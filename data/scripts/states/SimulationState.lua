@@ -50,7 +50,7 @@ function SimulationState:load()
  
 	mainRenderTarget = spark:createTextureRenderTarget( "MainRenderTargetTexture" )
 	spark:setMainRenderTarget( mainRenderTarget )
-	mainRenderTarget:setClearColor( vec4( 0.2,0.2,0.2,1.0 ) )
+	mainRenderTarget:setClearColor( vec4( 0.4,0.4,0.4,1.0 ) )
 
 	opaqueRenderPass = spark:createRenderPass( 1.0, "OpaquePass", mainRenderTarget )
 	opaqueRenderPass:setDepthWrite( true )
@@ -62,17 +62,21 @@ function SimulationState:load()
 	transRenderPass:setDepthTest( true )
 	transRenderPass:useInterpolatedBlending()
 
-	HUDRenderPass = spark:createOverlayRenderPass( 0.25, "HUDPass", mainRenderTarget )
-	HUDRenderPass:setDepthTest( false )
-	HUDRenderPass:setDepthWrite( false )
-	HUDRenderPass:useInterpolatedBlending()
+	-- HUDRenderPass = spark:createOverlayRenderPass( 0.25, "HUDPass", mainRenderTarget )
+	-- HUDRenderPass:setDepthTest( false )
+	-- HUDRenderPass:setDepthWrite( false )
+	-- HUDRenderPass:useInterpolatedBlending()
 
 
 
+	-- 
+	-- DEPECATED -- tissue needs to be created on C++ side until better way of passing back to C++ 
+	-- Because of this, must run within SimulationState.cpp
 	-- Make tissue box
-	-- meters in total length on a side  
-	-- total voxels
+	--   meters in total length on a side  
+	--   total voxels
 	--self.tissueSim = spark:createTissue( "tissueSim", 0.25, 100 )
+	-- Global theTissueSim is the tissue simulation, declared in C++
 
 	self.tissueMat = spark:createMaterial( "tissueShader" )
 	self.tissueMat:setVec4( "u_light.position_camera", vec4(5,10,0,1) )
@@ -83,71 +87,82 @@ function SimulationState:load()
 	self.tissueMat:setVec4( "u_ks", vec4(1,1,1,1) )
 	self.tissueMat:setFloat( "u_ns", 100.0 )
 	self.tissueMat:setFloat( "u_activationTime", 0.0 )
-	--self.tissueMat:addTexture( "s_color", "skinColor" )
-	print( "Using temp map: " .. theTissueSim:getTempMapTextureName() )
 	self.tissueMat:addTexture( "s_temperature", theTissueSim:getTempMapTextureName() )
+	self.tissueMat:addTexture( "s_condition", theTissueSim:getConditionMapTextureName() )
+	local skin = spark:createCube( vec3(-0.25, -.025, -0.25), vec3(0.5, 0.05, 0.5), self.tissueMat, "OpaquePass" )
 	--local skin = spark:createCube( vec3(-2.5, .25, -2.5), vec3(5, 0.5, 5), self.tissueMat, "OpaquePass" )
-	--skin:rotate( 90, vec3(1,0,0) )
-	
-	local skin = spark:createCube( vec3(-2.5, .25, -2.5), vec3(5, 0.5, 5), self.tissueMat, "OpaquePass" )
 	skin:rotate( 90, vec3(1,0,0) )
-
-	local mainFontSize = 24
-	local smallFontSize = 12
-	local fontMgr = spark:getFontManager()
-	fontMgr:addFont( "Sans", mainFontSize, "HelveticaNeueLight.ttf" );
-	fontMgr:addFont( "Sans", smallFontSize, "HelveticaNeueLight.ttf" );
-
-	local fontDesc = {}
-	fontDesc.name = "Sans"
-	fontDesc.size = mainFontSize
-
-	fontDesc.material = spark:createMaterial( "TextShader" )
-	fontDesc.material:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
-	fontDesc.material:setVec4( "u_color", vec4( 0.7, 0.7, 0.7, 1 ) )
-
-	fontDesc.rolloverMaterial = spark:createMaterial( "TextShader" )
-	fontDesc.rolloverMaterial:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
-	fontDesc.rolloverMaterial:setVec4( "u_color", vec4( 1.0, 0.7, 0.7, 1 ) )
-
-	local fontMgr = spark:getFontManager()
-	fontMgr:addFont( fontDesc.name, fontDesc.size, "HelveticaNeueLight.ttf" );
+	
+	-- local skin = spark:createCube( vec3(-2.5, .25, -2.5), vec3(5, 0.5, 5), self.tissueMat, "OpaquePass" )
+	-- local skin = spark:createCube( vec3(-0.025, .0025, -0.025), vec3(0.05, 0.005, 0.05), self.tissueMat, "OpaquePass" )
+	-- skin:rotate( 90, vec3(1,0,0) )
 
 
-	self.buttons["wattage"] = Button:new( 0.02, 0.85, 
-		string.format("%2.0f watts", self.currWattage), fontDesc )
-	self.buttons["wattage"].onClick = incrWattage
-	self.buttons["wattage"].onClick2 = decrWattage
 
-	self.buttons["waveText"] = Button:new( 0.02, 0.75, "Cut", fontDesc )
-	self.buttons["activation"] = Button:new( 0.02, 0.5, "0.0 secs", fontDesc )
-	self.buttons["task"] = Button:new( 0.02, 0.25, "Dessicate", fontDesc )
+	-- Here's a nice little marker for the origin
+	-- local debugMat = spark:createMaterial( "constantColorShader" )
+	-- debugMat.name = "DebugMaterial"
+	-- debugMat:setVec4( "u_color", vec4( 1, 0.4, 0.4, 1 ) )
+	-- local scale = 0.01
+	-- local box = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), vec3( scale, scale, scale ), debugMat, "OpaquePass" )
+	--
+
+	-- local mainFontSize = 24
+	-- local smallFontSize = 12
+	-- local fontMgr = spark:getFontManager()
+	-- fontMgr:addFont( "Sans", mainFontSize, "HelveticaNeueLight.ttf" );
+	-- fontMgr:addFont( "Sans", smallFontSize, "HelveticaNeueLight.ttf" );
+
+	-- local fontDesc = {}
+	-- fontDesc.name = "Sans"
+	-- fontDesc.size = mainFontSize
+
+	-- fontDesc.material = spark:createMaterial( "TextShader" )
+	-- fontDesc.material:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
+	-- fontDesc.material:setVec4( "u_color", vec4( 0.7, 0.7, 0.7, 1 ) )
+
+	-- fontDesc.rolloverMaterial = spark:createMaterial( "TextShader" )
+	-- fontDesc.rolloverMaterial:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
+	-- fontDesc.rolloverMaterial:setVec4( "u_color", vec4( 1.0, 0.7, 0.7, 1 ) )
+
+	-- local fontMgr = spark:getFontManager()
+	-- fontMgr:addFont( fontDesc.name, fontDesc.size, "HelveticaNeueLight.ttf" );
+
+
+	-- self.buttons["wattage"] = Button:new( 0.02, 0.85, 
+	-- 	string.format("%2.0f watts", self.currWattage), fontDesc )
+	-- self.buttons["wattage"].onClick = incrWattage
+	-- self.buttons["wattage"].onClick2 = decrWattage
+
+	-- self.buttons["waveText"] = Button:new( 0.02, 0.75, "Cut", fontDesc )
+	-- self.buttons["activation"] = Button:new( 0.02, 0.5, "0.0 secs", fontDesc )
+	-- self.buttons["task"] = Button:new( 0.02, 0.25, "Dessicate", fontDesc )
 
 
 	--Highlight GUI side w/ quad
-	local bgAccentMat = spark:createMaterial( "constantColorShader" )
-	bgAccentMat:setVec4( "u_color", vec4(1,1,1,0.33) )
-	local bgQuad = spark:createQuad( vec2(0,0), vec2(0.225,1.0),
-	bgAccentMat, "HUDPass" )
-	bgQuad:translate( 0,0,-1 )
+	-- local bgAccentMat = spark:createMaterial( "constantColorShader" )
+	-- bgAccentMat:setVec4( "u_color", vec4(1,1,1,0.33) )
+	-- local bgQuad = spark:createQuad( vec2(0,0), vec2(0.225,1.0),
+	-- bgAccentMat, "HUDPass" )
+	-- bgQuad:translate( 0,0,-1 )
 	------
 
 	-- Load hook
-	local metalMat = spark:createMaterial( "phongShader" )
-	metalMat:addTexture( "s_color", "hook_cautery" )
-	metalMat:setVec4( "u_light.position_camera", vec4(0,0,0,1) )
-	metalMat:setVec4( "u_light.diffuse", vec4(0.3,0.3,0.3,1) )
-	metalMat:setVec4( "u_ambientLight", vec4(0.4,0.2,0.2,1) )
-	metalMat:setVec4( "u_ka", vec4(0.4,0.4,0.4,1) )
-	metalMat:setVec4( "u_kd", vec4(1,1,1,1) )
-	metalMat:setVec4( "u_ks", vec4(1,1,1,1) )
-	metalMat:setFloat( "u_ns", 1000.0 )
+	-- local metalMat = spark:createMaterial( "phongShader" )
+	-- metalMat:addTexture( "s_color", "hook_cautery" )
+	-- metalMat:setVec4( "u_light.position_camera", vec4(0,0,0,1) )
+	-- metalMat:setVec4( "u_light.diffuse", vec4(0.3,0.3,0.3,1) )
+	-- metalMat:setVec4( "u_ambientLight", vec4(0.4,0.2,0.2,1) )
+	-- metalMat:setVec4( "u_ka", vec4(0.4,0.4,0.4,1) )
+	-- metalMat:setVec4( "u_kd", vec4(1,1,1,1) )
+	-- metalMat:setVec4( "u_ks", vec4(1,1,1,1) )
+	-- metalMat:setFloat( "u_ns", 1000.0 )
 
-	local hook = spark:loadMesh( "hook_cautery_new.3DS", metalMat, "OpaquePass" )
-	hook:translate( 0,.36,0 )
-	hook:rotate( 120,  vec3(0,0,1) )
-	hook:rotate( 30,  vec3(0,1,0) )
-	hook:scale( 0.02 )
+	-- local hook = spark:loadMesh( "hook_cautery_new.3DS", metalMat, "OpaquePass" )
+	-- hook:translate( 0,.36,0 )
+	-- hook:rotate( 120,  vec3(0,0,1) )
+	-- hook:rotate( 30,  vec3(0,1,0) )
+	-- hook:scale( 0.02 )
 end
 
 function SimulationState:activate()
@@ -155,9 +170,24 @@ function SimulationState:activate()
 	self.startTime = -1
 
 	local camera = spark:getCamera()
-	camera:cameraPos( 0.2, 1.2, -0.9 )
-	camera:cameraTarget( 0.06, 0.1, 0.0 )
-	camera:fov( 48 )
+	-- camera:cameraPos( 0.2, 1.2, -0.9 )
+	-- camera:cameraTarget( 0.06, 0.1, 0.0 )
+	-- camera:fov( 48 )
+
+	-- camera:cameraPos( 0.0, 0.345, 0.222 )
+	-- camera:cameraTarget( 0.0, 0.0, 0.0 )
+	-- camera:cameraUp( 0,1,0 )
+	
+	-- camera:cameraPos( 0.09, -0.14, 0.19 )
+	-- camera:cameraTarget( 0.0, 0.0, 0.0 )
+
+	--camera:cameraPos( 0.0, 0.1, 0.1 )
+	camera:cameraPos( 0.0, 0.345, 0.222 )
+	camera:cameraTarget( 0.0, 0.0, 0.0 )
+	camera:cameraUp( 0,1,0 )
+
+
+	--camera:fov( 37 )
 end
 
 

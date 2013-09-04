@@ -24,7 +24,7 @@ namespace spark
         /// Update between renderings.  Used to swap computed data in to be
         /// rendered on next frame.
         /// Note that OpenGL state may be changed by update() 
-        virtual void update( float dt ) {}
+        //virtual void update( float dt ) {}
 
         /// Provides the descriptive (not necessarily unique) name
         virtual RenderableName name( void ) const;

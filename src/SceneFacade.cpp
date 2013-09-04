@@ -313,9 +313,9 @@ spark::SceneFacade
     cube->unitCube();
     cube->name( "Cube" );
     cube->setMaterialForPassName( pass, material );
-    glm::mat4 xform( 1.0f );
-    xform = glm::translate( xform, position );
-    xform = glm::scale( xform, size );
+    glm::mat4 xform_scale = glm::scale( glm::mat4(), size );
+    glm::mat4 xform_trans = glm::translate( glm::mat4(), position );
+    glm::mat4 xform = xform_trans * xform_scale;
     cube->setTransform( xform );
     m_scene->add( cube );
     return cube;
@@ -363,7 +363,7 @@ spark::SceneFacade
                      forkProb // fork probability
                      );
     TexturedSparkRenderablePtr sparkRenderable(
-                                               new TexturedSparkRenderable( theSpark ) );
+        new TexturedSparkRenderable( theSpark ) );
     sparkRenderable->name( "Spark" );
     sparkRenderable->setMaterialForPassName( pass,
                                             material );

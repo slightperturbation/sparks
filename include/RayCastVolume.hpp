@@ -4,6 +4,7 @@
 #include "Spark.hpp"
 
 #include "Renderable.hpp"
+#include "Updateable.hpp"
 #include "Mesh.hpp"
 #include "Material.hpp"
 #include "VolumeData.hpp"
@@ -12,7 +13,8 @@
 namespace spark
 {
     /// Handles rendering of a data volume using a lighted ray-cast algorithm.
-    class RayCastVolume : public Renderable
+    class RayCastVolume : public Renderable, public Updateable
+
     {
     public:
         RayCastVolume( const RenderableName& aName,

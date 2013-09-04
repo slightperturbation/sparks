@@ -10,6 +10,7 @@
 #define spark_TextRenderable_hpp
 
 #include "Renderable.hpp"
+#include "Updateable.hpp"
 #include "TextureManager.hpp"
 #include "FileAssetFinder.hpp"
 #include "TextureManager.hpp"
@@ -35,7 +36,7 @@ namespace spark
     /// tr.intialize( fm, fontName, fontSize );
     /// tr.setText( "Hello, World" );
     ///
-    class TextRenderable : public Renderable
+    class TextRenderable : public Renderable, public Updateable
     {
     public:
         TextRenderable( const RenderableName& name );

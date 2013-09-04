@@ -63,45 +63,67 @@ spark::PerspectiveProjection
 
 glm::mat4
 spark::PerspectiveProjection
-::viewMatrix( void ) const
+::cameraViewMatrix( void ) const
 {
-    return m_view;
+    return glm::lookAt( m_cameraPos,
+        m_cameraTarget,
+        m_cameraUp );
 }
 
 glm::mat4
 spark::PerspectiveProjection
 ::projectionMatrix( void ) const
 {
-    return m_projection;
-}
-
-void 
-spark::PerspectiveProjection
-::setViewMatrix( const glm::mat4& mat )
-{
-    m_view = mat;
+    if( m_projMat )
+    {
+        return *m_projMat;
+    }
+    else
+    {
+        return glm::perspective( m_fov,
+            m_aspectRatio,
+            m_nearPlaneDist,
+            m_farPlaneDist );
+    }
 }
 
 void 
 spark::PerspectiveProjection
 ::setProjectionMatrix( const glm::mat4& mat )
 {
-    m_projection = mat;
+    m_projMat.reset( mat );
 }
 
 void 
 spark::PerspectiveProjection
-::setMatricesFromCamera( void )
+::unsetProjectionMatrix( void )
 {
-    m_view = glm::lookAt( m_cameraPos,
-        m_cameraTarget,
-        m_cameraUp );
-    m_projection = glm::perspective( m_fov,
-        m_aspectRatio,
-        m_nearPlaneDist,
-        m_farPlaneDist );
+    m_projMat.reset();
 }
 
+glm::mat4
+spark::PerspectiveProjection
+::viewMatrix( void ) const
+{
+    LOG_TRACE(g_log) << "ViewMatrix_EYE    = \n" << m_currEyeView << "\n";
+    LOG_TRACE(g_log) << "ViewMatrix_CAMERA = \n" << cameraViewMatrix() << "\n";
+    LOG_TRACE(g_log) << "ViewMatrix_TOTAL  = \n" << m_currEyeView * cameraViewMatrix() << "\n";
+    return m_currEyeView * cameraViewMatrix();
+}
+
+void 
+spark::PerspectiveProjection
+::setEyeViewMatrix( const glm::mat4& eyeMat ) 
+{
+    m_currEyeView = eyeMat;
+}
+
+void 
+spark::PerspectiveProjection
+::unsetEyeViewMatrix( void )
+{
+    m_currEyeView = glm::mat4();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

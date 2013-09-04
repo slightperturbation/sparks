@@ -6,7 +6,7 @@ out vec4 outColor;
 // From vertex shader
 in vec4 f_vertexPosition;
 in vec4 f_fragColor; // interpolated color of fragment from vertex colors
-in vec2 f_texCoord;  // texture coordinate of vertex
+in vec3 f_texCoord;  // texture coordinate of vertex
 uniform float u_time;     // time in seconds
 uniform float u_activationTime; 
 // For Phong Lighting
@@ -14,8 +14,11 @@ in vec4 f_normal_camera;
 in vec4 f_vertex_camera;
 
 // Samplers are named s_TEXTURENAME
-uniform sampler2D s_temperature;
-//uniform sampler2D s_color2;
+uniform usampler2D s_condition;
+//uniform sampler2D s_temperature;
+
+// Blur samples
+in vec2 f_blurTexCoords[25];
 
 // Phong-specific inputs
 struct Light
@@ -206,84 +209,101 @@ vec2 cellular(vec3 P) {
 #endif
 }
 
-vec3 hotspot( vec2 loc, vec2 uv, vec3 color,
-              float intensity )
-{
-    float d = 1.0 / distance( loc, uv ) ;
-    float exponent = 2.0;
-    d = pow( d * intensity, exponent );
-    return vec3( color*d );
-}
+// vec3 hotspot( vec2 loc, vec2 uv, vec3 color,
+//               float intensity )
+// {
+//     float d = 1.0 / distance( loc, uv ) ;
+//     float exponent = 2.0;
+//     d = pow( d * intensity, exponent );
+//     return vec3( color*d );
+// }
 
 
 void main()
 {
-    vec4 temp = texture( s_temperature, f_texCoord.xy );
-    outColor = vec4( (temp.r - 37.0), (temp.r - 37.0), (temp.r - 37.0), 1.0 );
-    return;
+    //vec4 temp = texture( s_temperature, f_texCoord.xy );
+    //float t = (temp.r - 37.0)/63.0;
 
-    
-	const float cutoff = 0.1;
-    
+    vec3 liverColor = vec3( 0.6, 0.1, 0.15 );
+    vec3 dessicatedColor = vec3( 1, 1, 1 );
+    vec3 vaporizingColor = vec3( 1, 0.9, 0.2 );
+    vec3 charredColor = vec3( 0.1, 0.025, 0.01 ); 
+
+    // vec3 liverColor = vec3( 1, 0, 0 );
+    // vec3 dessicatedColor = vec3( 0.9, 0.9, 0.9 );
+    // vec3 vaporizingColor = vec3( 0, 0.9, 0 );
+    // vec3 charredColor = vec3( 0, 0.025, 1 ); 
+
+
+    float blurWeight[25] = float[]( 1.0/273.0, 4.0/273.0, 7.0/273.0, 4.0/273.0, 1.0/273.0,
+    	                            4.0/273.0,16.0/273.0,26.0/273.0,16.0/273.0, 4.0/273.0,
+    	                            7.0/273.0,26.0/273.0,41.0/273.0,26.0/273.0, 7.0/273.0,
+    	                            4.0/273.0,16.0/273.0,26.0/273.0,16.0/273.0, 4.0/273.0,
+    	                            1.0/273.0, 4.0/273.0, 7.0/273.0, 4.0/273.0, 1.0/273.0 );
+
+    vec3 tissueColor = vec3(0,0,0);
+    for( int i = 0; i < 25; ++i )
+    {
+	    uvec4 cond4 = texture( s_condition, f_blurTexCoords[i].xy );
+		uint cond = cond4.r;
+
+	    /// normalTissue=0, dessicatedTissue=1, vaporizingTissue=2, charredTissue=3.
+		if( cond == 0u )
+		{
+			tissueColor += blurWeight[i] * liverColor;
+		}
+		if( cond == 1u )
+		{
+			tissueColor += blurWeight[i] * dessicatedColor;
+		}
+		if( cond == 2u ) 
+		{
+			tissueColor += blurWeight[i] * vaporizingColor;
+		}
+		if( cond == 3u )
+		{
+			tissueColor += blurWeight[i] * charredColor;
+		}
+	}
+//	outColor = vec4( tissueColor, 1 );
+//	return;
+
+ //    uvec4 cond4 = texture( s_condition, f_blurTexCoords[12].xy );
+	// uint cond = cond4.r;
+	// if( cond == 0u )
+	// {
+	// 	tissueColor = liverColor;
+	// }
+	// if( cond == 1u )
+	// {
+	// 	tissueColor = dessicatedColor;
+	// }
+	// if( cond == 2u ) 
+	// {
+	// 	tissueColor = vaporizingColor;
+	// }
+	// if( cond == 3u )
+	// {
+	// 	tissueColor = charredColor;
+	// }
+		
+
+
 	vec4 normal_camera = normalize( f_normal_camera );
 	vec4 toLight_camera = normalize( u_light.position_camera - f_vertex_camera );
 	vec4 toCamera_camera = normalize( -f_vertex_camera );
 	vec4 halfVector_camera = normalize( toCamera_camera + toLight_camera ); // Blinn's half-vector
 	//vec4 reflect_camera = reflect( -toLight_camera, toCamera_camera ); // Phong's reflection model
     
-    vec2 F = cellular( 200.0*f_vertexPosition.xyz );
-    float n = 0.3*(F.y-F.x) + 0.7;
+    // define the scale of the pattern
+    vec2 F = cellular( 80.0 * f_vertexPosition.xyz );
+    // define the brightness
+    float n = 0.4*(F.y-F.x) + 0.6;
 
-
-    float desicationRadius = 0.0185;
-    float charRadius = 0.005;
-    
-//    vec4 textureColor = liverColor * vec4( n, n, n, 1 )
-//    + hotspot( f_texCoord.xy,
-//              vec2( 0.5, 0.5),
-//              vec3(1,0.7,0.8),
-//              intensityPoint );
-
-    vec2 heatPoint = vec2( 0.5, 0.5  );
-    vec3 liverColor = vec3( 0.6, 0.1, 0.15 );
-	vec4 textureColor = vec4( n * liverColor, 1 );
-
-	if( u_activationTime > 0.0 && u_activationTime < 1.2 )
-	{
-	    vec3 baseColor =  n * ( liverColor
-	                              + hotspot( f_texCoord.xy,
-	                                       heatPoint,
-	                                       vec3(1,0.7,0.8),
-	                                       desicationRadius )
-	                              - hotspot( f_texCoord.xy,
-	                                        heatPoint,
-	                                        vec3( 1,1,1 ),
-	                                        charRadius )
-	                              );
-	    textureColor = vec4( baseColor, 1 );
-	}
-	if( u_activationTime > 1.2 )
-	{
-	    vec3 baseColor =  n * ( liverColor
-	                              - hotspot( f_texCoord.xy,
-	                                        heatPoint,
-	                                        vec3( 1,1,1 ),
-	                                        charRadius )
-	                              );
-	    textureColor = vec4( baseColor, 1 );	
-	}
-    
-//	vec4 textureColor = texture( s_color, f_texCoord );
-//	if( textureColor.a < cutoff )
-//	{
-//		discard;
-//	}
-    
+	vec4 textureColor = vec4( n * tissueColor, 1.0 );
 	vec4 Ia = u_ambientLight * textureColor;
 	vec4 Id = u_light.diffuse * textureColor * max( dot (toLight_camera, normal_camera), 0.0 );
 	vec4 Is = vec4( 1,1,1,1 ) * u_ks * pow( max(dot(halfVector_camera, normal_camera), 0.0), u_ns );
     
 	outColor = Ia + Id + Is;
-    
-    //outColor = textureColor;
 }

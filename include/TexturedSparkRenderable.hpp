@@ -12,6 +12,7 @@
 #include "Mesh.hpp"
 #include "LSpark.hpp"
 #include "Renderable.hpp"
+#include "Updateable.hpp"
 #include "Projection.hpp"
 
 #define GLEW_STATIC
@@ -27,7 +28,7 @@
 namespace spark
 {
     /// Renders the component spark with a textured set of triangles.
-    class TexturedSparkRenderable : public Renderable
+    class TexturedSparkRenderable : public Renderable, public Updateable
     {
     public:
         TexturedSparkRenderable( LSparkPtr spark );

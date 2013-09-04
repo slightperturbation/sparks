@@ -36,11 +36,13 @@ namespace spark
                       bool enableLegacyOpenGlLogging,
                       bool enableStereo ); 
         ~OpenGLWindow();
+        void makeContextCurrent( void );
         bool isOK( void ) { return m_isOK; }
         bool isRunning( void );
         int getKey( int key );
         void swapBuffers( void );
         void getSize( int* width, int* height );
+        void getPosition( int* xPos, int* yPos );
         GLFWwindow* glfwWindow( void ) { return m_glfwWindow; }
         EyeTrackerPtr getEyeTracker( void )  { return m_eyeTracker; }
     private:

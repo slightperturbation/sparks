@@ -1,5 +1,6 @@
 
 #include "Scene.hpp"
+#include "Updateable.hpp"
 #include "Mesh.hpp"
 
 #include <functional>
@@ -90,7 +91,7 @@ void
 spark::Scene
 ::update( double dt )
 {
-    for( auto i = m_renderables.begin(); i != m_renderables.end(); ++i )
+    for( auto i = m_updateables.begin(); i != m_updateables.end(); ++i )
     {
         (*i)->update( dt );
     }
@@ -100,9 +101,29 @@ void
 spark::Scene
 ::fixedUpdate( double dt )
 {
-    // Noop -- renderables don't need fixedUpdate
+    for( auto i = m_updateables.begin(); i != m_updateables.end(); ++i )
+    {
+        (*i)->fixedUpdate( dt );
+    }
 }
 
+void
+spark::Scene
+::addUpdateable( UpdateablePtr up )
+{
+    if( up )
+    {
+        if( std::find( m_updateables.begin(), m_updateables.end(), up ) != m_updateables.end() )
+        {
+            LOG_WARN(g_log) << "Attempt to add Updateable to Scene multiple times.";
+        }
+        m_updateables.push_back( up );
+    }
+    else
+    {
+        LOG_ERROR(g_log) << "Scene::add(UpdateablePtr) called with a nullptr.";
+    }
+}
 
 void 
 spark::Scene
@@ -124,7 +145,19 @@ spark::Scene
 {
     if( r )
     {
-        m_renderables.push_back( r ); 
+        if( std::find(m_renderables.begin(), m_renderables.end(), r) != m_renderables.end() )
+        {
+            LOG_ERROR(g_log) << "Attempt to add renderable \"" <<
+                r->name() << "\" to Scene multiple times.";
+        }
+        m_renderables.push_back( r );
+
+        //UpdateablePtr up = UpdateablePtr( dynamic_cast<Updateable*>( r.get() ) );
+        UpdateablePtr up = boost::dynamic_pointer_cast<Updateable>(r);
+        if( up )
+        {
+            addUpdateable( up );
+        }
     }
     else
     {

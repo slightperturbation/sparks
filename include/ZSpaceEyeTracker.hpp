@@ -22,15 +22,11 @@ namespace spark
 {
     /// Concrete class that updates the camera perspective to follow the
     /// user's eyes.
-    class ZSpaceEyeTracker : public EyeTracker, public Updateable
+    class ZSpaceEyeTracker : public EyeTracker
     {
     public:
         ZSpaceEyeTracker();
         virtual ~ZSpaceEyeTracker();
-        
-        /// From EyeTracker
-        virtual void updatePerspective( PerspectiveProjectionPtr persp,
-            PerspectiveEye eye = monoEye ) override;
 
         virtual void resizeViewport( int left, int bottom,
             int right, int top ) override;
@@ -41,7 +37,9 @@ namespace spark
 
         // ZSpace-specific Methods
         void setInterPupillaryDistance( float distInMeters );
-
+    protected:
+        virtual void implUpdatePerspective( PerspectiveProjectionPtr persp,
+            PerspectiveEye eye ) override;
     private:
         int m_left;
         int m_bottom;

@@ -7,6 +7,7 @@ out vec4 outColor;
 in vec4 f_fragColor; // interpolated color of fragment from vertex colors 
 in vec2 f_texCoord;  // texture coordinate of vertex
 in vec4 f_vertexPosition;
+in vec3 f_normal;
 
 //////////////////////////////////////////////////////////////////////
 // Common Uniforms (see RenderCommand)
@@ -22,5 +23,5 @@ uniform vec4 u_color = vec4( 1, 1, 1, 1 );
 
 void main()
 {
-    outColor = u_color;
+    outColor = vec4( f_normal, 1 );//u_color;
 }

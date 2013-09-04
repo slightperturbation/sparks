@@ -68,6 +68,9 @@ namespace spark
 {
     class FileAssetFinder;
     typedef spark::shared_ptr< FileAssetFinder > FileAssetFinderPtr;
+
+    class Fluid;
+    typedef spark::shared_ptr< Fluid > FluidPtr;
     
     class FrameBufferRenderTarget;
     typedef spark::shared_ptr< FrameBufferRenderTarget > FrameBufferRenderTargetPtr;
@@ -164,6 +167,7 @@ namespace spark
     
     class Updateable;
     typedef spark::shared_ptr< Updateable > UpdateablePtr;
+    typedef std::vector< UpdateablePtr >  Updateables;
 
     class VolumeData;
     typedef spark::shared_ptr< VolumeData > VolumeDataPtr;

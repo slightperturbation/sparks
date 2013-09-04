@@ -7,8 +7,9 @@ namespace spark
     {
     public:
         virtual ~Updateable() {}
-        virtual void update( float dt ) = 0;
-        virtual void fixedUpdate( float dt ) = 0;
+        
+        virtual void update( float dt ) {}
+        virtual void fixedUpdate( float dt ) {}
     };
 }
 

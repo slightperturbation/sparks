@@ -65,7 +65,8 @@ namespace spark
         }
 
         /// Used to update and/or clear the source of density
-        const float* getDensitySource( void );
+        const float* getDensitySource( void ) { return m_density_source; }
+        const float* getTempSource( void ) { return m_temp_source; }
     
         /// Used to update and/or clear the source of velocity
         const float* getVelUSource( void );
@@ -85,7 +86,7 @@ namespace spark
         void reset( void );
 
         void addBottomSource( void );
-
+        void addSourceAtLocation( float x, float y );
     private:
         void reallocate( void );
         void init( void );

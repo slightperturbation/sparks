@@ -167,7 +167,7 @@ spark::OpenGLWindow
     }
     LOG_DEBUG(g_log) << "done.\n";
 
-    // Default window position
+    // Default window position, upper left
     int x = 0;
     int y = 0;
     int targetDisplayId = 0;
@@ -177,8 +177,9 @@ spark::OpenGLWindow
     int index = 0;
     int numDisplays = displayInfo.getNumDisplays();
     while (index < numDisplays && !displayInfo.getDisplay(index)->isZSpaceDisplay)
+    {
         index++;
-
+    }
     // If a zSpace display was found, then position the window on the zSpace
     if (index < numDisplays)
     {
@@ -201,9 +202,8 @@ spark::OpenGLWindow
     glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
     glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
 
-    //glfwWindowHint( GLFW_VISIBLE, GL_TRUE );
-    glfwWindowHint( GLFW_DECORATED, GL_TRUE );
-    glfwWindowHint( GLFW_RESIZABLE, GL_FALSE );
+    // Want as deep a depth buffer as possible!
+    glfwWindowHint( GLFW_DEPTH_BITS, 32 );
 
     if( enableStereo )
     {
@@ -214,9 +214,8 @@ spark::OpenGLWindow
     glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE );
 #endif
 
-    glfwWindowHint( GLFW_VISIBLE, GL_FALSE );
+    glfwWindowHint( GLFW_VISIBLE, GL_TRUE );
     //glfwWindowHint( GLFW_DECORATED, GL_FALSE );
-    
    
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     int monitorCount = 0;
@@ -235,11 +234,14 @@ spark::OpenGLWindow
         monitor = monitors[targetDisplayId];
     }
     const GLFWvidmode* mode = glfwGetVideoMode( monitor );
+    int width = mode->width;
+    int height = mode->height;
+    monitor = nullptr; // null for windowed; easier to debug, prob want FS for release?
+
     LOG_DEBUG(g_log) << "glfwOpenWindow...";
-    m_glfwWindow = glfwCreateWindow( 800, 600, 
+    m_glfwWindow = glfwCreateWindow( width, height,
                                      programName, 
-                                     //monitor,
-                                     NULL, 
+                                     monitor, // non-null for fullscreen
                                      NULL );
     if( !m_glfwWindow )
     {
@@ -249,7 +251,6 @@ spark::OpenGLWindow
     }
     glfwSetWindowPos( m_glfwWindow, x, y );
     glfwShowWindow( m_glfwWindow );
-
     glfwMakeContextCurrent( m_glfwWindow );
     
     checkOpenGLErrors();
@@ -320,6 +321,14 @@ spark::OpenGLWindow
     glfwTerminate();
 }
 
+
+void
+spark::OpenGLWindow
+::makeContextCurrent( void )
+{
+    glfwMakeContextCurrent( m_glfwWindow );
+}
+
 bool
 spark::OpenGLWindow
 ::isRunning( void )
@@ -347,6 +356,13 @@ spark::OpenGLWindow
 ::getSize( int* width, int* height )
 {
     glfwGetWindowSize( m_glfwWindow, width, height );
+}
+
+void 
+spark::OpenGLWindow
+::getPosition( int* xPos, int* yPos )
+{
+    glfwGetWindowPos( m_glfwWindow, xPos, yPos );
 }
 
 bool

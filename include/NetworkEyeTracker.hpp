@@ -102,13 +102,14 @@ namespace spark
         NetworkEyeTracker( short listeningUdpPort = 5005 /* display size & viewport pos */ );
         virtual ~NetworkEyeTracker();
 
-        /// Modify the given perspective to reflect recent input.
-        virtual void updatePerspective( PerspectiveProjectionPtr persp,
-                                        PerspectiveEye eye = monoEye ) override;
-
         /// Update the viewport
         virtual void resizeViewport( int left, int bottom,
             int right, int top ) override;
+    protected:
+        /// Note that vision-based tracker can only find the head, 
+        /// not the individual eyes
+        virtual void implUpdatePerspective( PerspectiveProjectionPtr persp,
+            PerspectiveEye eye ) override;
     private:
         std::unique_ptr< EyeTrackerServer > m_server;
         std::unique_ptr< boost::thread > m_listenerThread;
