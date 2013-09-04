@@ -29,14 +29,13 @@ void
 spark::SimulationState
 ::load( void )
 {
-
     {
         //m_fluidData.reset( new Fluid(22) );
-        int n = 48;
+        int n = 36; // 48 looks great, but slow
         m_fluidData.reset( new Fluid(n) );
-        m_fluidData->setDiffusion( 0.01 );
-        m_fluidData->setVorticity( 1e2 ); //1e4 );
-        m_fluidData->setGravityFactor( 0, 1000, -3000 );
+        m_fluidData->setDiffusion( 5e-3 );//1e-2 );
+        m_fluidData->setVorticity( 1e4 );//1e4 ); //1e2 );
+        m_fluidData->setGravityFactor( 0, 500, 1100 ); // +x left, +y is away from viewer, 
         //m_fluidData->setGravityFactor( 0, -4000, 0.0 );
         
         spark::shared_ptr< spark::SlicedVolume > slices( new
@@ -52,7 +51,7 @@ spark::SimulationState
         glm::mat4 xform_scale = glm::scale( glm::mat4(), 
             glm::vec3( sideLength, sideLength, sideLength ) );
         glm::mat4 xform_move = glm::translate( glm::mat4(), 
-            glm::vec3( 0, (2.0/n)*sideLength - sideLength/2, 0 ) );
+            glm::vec3( 0, sideLength/2.0f - (2.5f/n)*sideLength, 0 ) ); // 2.5, 1 for boundary cell, 0.5 to center on grid
         glm::mat4 xform_rot = glm::rotate( glm::mat4(), 90.0f, glm::vec3( 1,0,0 ) ); // z-up to y-up
         glm::mat4 xform =  xform_move * xform_rot * xform_scale;// 
 
@@ -67,7 +66,9 @@ spark::SimulationState
         name() + "_TISSUE_SIMULATION", 
         m_facade->getTextureManager(),
         0.5, 
-        126 //254 // level of detail 510-- good, 126 for debugging
+        510 //254 // level of detail 510-- good, 126 for debugging
+            // change tissue shader blur radius
+            // 
         ) );
     m_scene->add( m_tissueMesh );  // register for updates
     // Register tissue mesh with lua 
@@ -107,8 +108,8 @@ spark::SimulationState
     static float y = 0;//rand()/(float)RAND_MAX;
     float joules;
 
-    // Current wattage from UI/Lua
-    float wattage = 100000.0;
+    // get current wattage from network
+    float wattage = 30000.0;
     int numContactElems = 3;
     
     // Direct Heat
@@ -116,8 +117,8 @@ spark::SimulationState
     for( int i = 0; i < numContactElems; ++i )
     {
         // random walk
-        x += 0.02 * rand()/(float)RAND_MAX - 0.01;
-        y += 0.02 * rand()/(float)RAND_MAX - 0.01;
+        x += 0.005 * rand()/(float)RAND_MAX - 0.0025;
+        y += 0.005 * rand()/(float)RAND_MAX - 0.0025;
         x = std::min( x, extent );
         x = std::max( x, -extent );
         y = std::min( y, extent );
@@ -136,10 +137,6 @@ spark::SimulationState
         m_fluidData->addSourceAtLocation( pos.x, pos.y );
     }
 
-
-
-    // Arcing heat
-    // TODO
 
     ScriptState::fixedUpdate( dt );
 }

@@ -164,7 +164,7 @@ int runSimulation(int argc, char** argv)
 #ifdef HAS_ZSPACE
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// Too slow for testing.  Maybe a cmd line flag?  Setting in GUI?
-    ////useStereo = true;
+    useStereo = true;
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
     OpenGLWindow window( "Spark", enableLegacyOpenGlLogging, useStereo );
@@ -358,12 +358,12 @@ int runSimulation(int argc, char** argv)
         if( eyeTracker && useStereo )
         {
             glDrawBuffer( GL_BACK_RIGHT );
-            LOG_DEBUG(g_log) << "Switching to RIGHT Buffer";
+            LOG_TRACE(g_log) << "Switching to RIGHT Buffer";
             eyeTracker->updatePerspective( cameraPerspective, EyeTracker::rightEye );
             stateManager.render(); // Extra scene render in stereo mode
 
             glDrawBuffer( GL_BACK_LEFT );
-            LOG_DEBUG(g_log) << "Switching to LEFT Buffer";
+            LOG_TRACE(g_log) << "Switching to LEFT Buffer";
             eyeTracker->updatePerspective( cameraPerspective, EyeTracker::leftEye );
         }
         stateManager.render();

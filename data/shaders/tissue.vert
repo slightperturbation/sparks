@@ -30,7 +30,7 @@ out vec2 f_blurTexCoords[25];
 // Blur radius == this should be tied directly to the 
 // size of the tissue condition map!
 // 1/map_size
-uniform float u_blurRadius = 1.0/256.0; 
+uniform float u_blurRadius = 1.0/512.0; 
 
 void main()
 {

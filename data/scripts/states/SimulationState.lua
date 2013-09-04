@@ -50,7 +50,7 @@ function SimulationState:load()
  
 	mainRenderTarget = spark:createTextureRenderTarget( "MainRenderTargetTexture" )
 	spark:setMainRenderTarget( mainRenderTarget )
-	mainRenderTarget:setClearColor( vec4( 0.4,0.4,0.4,1.0 ) )
+	mainRenderTarget:setClearColor( vec4( 0.1, 0.05, 0.05, 1.0 ) )
 
 	opaqueRenderPass = spark:createRenderPass( 1.0, "OpaquePass", mainRenderTarget )
 	opaqueRenderPass:setDepthWrite( true )
@@ -139,30 +139,31 @@ function SimulationState:load()
 	-- self.buttons["task"] = Button:new( 0.02, 0.25, "Dessicate", fontDesc )
 
 
-	--Highlight GUI side w/ quad
+	-- --Highlight GUI side w/ quad
 	-- local bgAccentMat = spark:createMaterial( "constantColorShader" )
 	-- bgAccentMat:setVec4( "u_color", vec4(1,1,1,0.33) )
 	-- local bgQuad = spark:createQuad( vec2(0,0), vec2(0.225,1.0),
 	-- bgAccentMat, "HUDPass" )
 	-- bgQuad:translate( 0,0,-1 )
-	------
+	----
 
-	-- Load hook
-	-- local metalMat = spark:createMaterial( "phongShader" )
-	-- metalMat:addTexture( "s_color", "hook_cautery" )
-	-- metalMat:setVec4( "u_light.position_camera", vec4(0,0,0,1) )
-	-- metalMat:setVec4( "u_light.diffuse", vec4(0.3,0.3,0.3,1) )
-	-- metalMat:setVec4( "u_ambientLight", vec4(0.4,0.2,0.2,1) )
-	-- metalMat:setVec4( "u_ka", vec4(0.4,0.4,0.4,1) )
-	-- metalMat:setVec4( "u_kd", vec4(1,1,1,1) )
-	-- metalMat:setVec4( "u_ks", vec4(1,1,1,1) )
-	-- metalMat:setFloat( "u_ns", 1000.0 )
+	--Load hook
+	local metalMat = spark:createMaterial( "phongShader" )
+	metalMat:addTexture( "s_color", "hook_cautery" )
+	metalMat:setVec4( "u_light.position_camera", vec4(0,0,0,1) )
+	metalMat:setVec4( "u_light.diffuse", vec4(0.3,0.3,0.3,1) )
+	metalMat:setVec4( "u_ambientLight", vec4(0.4,0.2,0.2,1) )
+	metalMat:setVec4( "u_ka", vec4(0.4,0.4,0.4,1) )
+	metalMat:setVec4( "u_kd", vec4(1,1,1,1) )
+	metalMat:setVec4( "u_ks", vec4(1,1,1,1) )
+	metalMat:setFloat( "u_ns", 1000.0 )
 
-	-- local hook = spark:loadMesh( "hook_cautery_new.3DS", metalMat, "OpaquePass" )
-	-- hook:translate( 0,.36,0 )
-	-- hook:rotate( 120,  vec3(0,0,1) )
-	-- hook:rotate( 30,  vec3(0,1,0) )
-	-- hook:scale( 0.02 )
+	local hook = spark:loadMesh( "hook_cautery_new.3DS", metalMat, "OpaquePass" )
+	hook:translate( 0,.0036,0 )
+	hook:rotate( 120,  vec3(0,0,1) )
+	hook:rotate( 30,  vec3(0,1,0) )
+	--hook:scale( 0.02 )
+	hook:scale( 0.002 )
 end
 
 function SimulationState:activate()

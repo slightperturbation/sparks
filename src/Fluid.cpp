@@ -927,8 +927,8 @@ void
 spark::Fluid
 ::update( float dt )
 {
-    stepVelocity( dt * 0.1 );
-    stepDensity( dt * 0.1 );
+    stepVelocity( dt * 0.05 );
+    stepDensity( dt * 0.05 );
 }
 
 void
@@ -939,11 +939,12 @@ spark::Fluid
     int rx = (int)( (x/lenOfCell) + ( (float)(m_N+2)/2.0f - 0.5f ) );
     int ry = (int)( (y/lenOfCell) + ( (float)(m_N+2)/2.0f - 0.5f ) );
     
-    size_t i = index( rx, ry, 1);
-    m_density[ i ] = 0.4;
-    m_density_prev[ i ] = 0.4;
-    m_temp[ i ] = m_ambientTemp + 50.0;
-    m_temp_prev[ i ] = m_ambientTemp + 50.0;
+    size_t i = index( rx, ry, m_N );
+    m_density[ i ] = std::min( m_density[i] + 0.15, 0.4 );
+
+    //m_density_prev[ i ] = 0.4;
+    //m_temp[ i ] = 150.0;
+    //m_temp_prev[ i ] = m_ambientTemp + 50.0;
 
     //m_density[ index( rx, ry, 2) ] = 1;
     //m_density_prev[ index( rx, ry, 2 ) ] = 1;

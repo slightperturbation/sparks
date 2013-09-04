@@ -218,16 +218,30 @@ vec2 cellular(vec3 P) {
 //     return vec3( color*d );
 // }
 
+float circle( vec2 position, vec2 center, float radius ) 
+{
+	return 1.0 - smoothstep( radius*0.95, radius, length(position-center) );
+	// float smooth1 = 0.0;
+	// float smooth2 = 1.0;
+	// float dist = length( position - center );
+	// return mix(vec4(1.0), vec4(0.0), smoothstep(smooth1, smooth2, dist*dist));
+}
+
+float rand(vec2 co){
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
 
 void main()
 {
+
+
     //vec4 temp = texture( s_temperature, f_texCoord.xy );
     //float t = (temp.r - 37.0)/63.0;
 
     vec3 liverColor = vec3( 0.6, 0.1, 0.15 );
-    vec3 dessicatedColor = vec3( 1, 1, 1 );
-    vec3 vaporizingColor = vec3( 1, 0.9, 0.2 );
-    vec3 charredColor = vec3( 0.1, 0.025, 0.01 ); 
+    vec3 dessicatedColor = vec3( 0.9, 0.9, 0.9 ) + vec3(0.1) * rand(f_vertexPosition.xy);
+    vec3 vaporizingColor = vec3( 0.9, 0.5, 0.3 ) + vec3(0.2) * rand(f_vertexPosition.xy * u_time);
+    vec3 charredColor = vec3( 0.1, 0.025, 0.01 ) + vec3(0.2) * rand(f_vertexPosition.xy); 
 
     // vec3 liverColor = vec3( 1, 0, 0 );
     // vec3 dessicatedColor = vec3( 0.9, 0.9, 0.9 );
@@ -265,40 +279,20 @@ void main()
 			tissueColor += blurWeight[i] * charredColor;
 		}
 	}
-//	outColor = vec4( tissueColor, 1 );
-//	return;
-
- //    uvec4 cond4 = texture( s_condition, f_blurTexCoords[12].xy );
-	// uint cond = cond4.r;
-	// if( cond == 0u )
-	// {
-	// 	tissueColor = liverColor;
-	// }
-	// if( cond == 1u )
-	// {
-	// 	tissueColor = dessicatedColor;
-	// }
-	// if( cond == 2u ) 
-	// {
-	// 	tissueColor = vaporizingColor;
-	// }
-	// if( cond == 3u )
-	// {
-	// 	tissueColor = charredColor;
-	// }
-		
 
 
-	vec4 normal_camera = normalize( f_normal_camera );
+
+    // define the scale of the pattern
+    vec2 F = cellular( 80.0 * f_vertexPosition.xyz );
+    // define the brightness
+    float n = 0.4*(F.y-F.x) + 0.6;
+
+	vec4 normal_camera = normalize( f_normal_camera + vec4(F.x, F.y, 0.5, 1) );
 	vec4 toLight_camera = normalize( u_light.position_camera - f_vertex_camera );
 	vec4 toCamera_camera = normalize( -f_vertex_camera );
 	vec4 halfVector_camera = normalize( toCamera_camera + toLight_camera ); // Blinn's half-vector
 	//vec4 reflect_camera = reflect( -toLight_camera, toCamera_camera ); // Phong's reflection model
     
-    // define the scale of the pattern
-    vec2 F = cellular( 80.0 * f_vertexPosition.xyz );
-    // define the brightness
-    float n = 0.4*(F.y-F.x) + 0.6;
 
 	vec4 textureColor = vec4( n * tissueColor, 1.0 );
 	vec4 Ia = u_ambientLight * textureColor;
@@ -306,4 +300,11 @@ void main()
 	vec4 Is = vec4( 1,1,1,1 ) * u_ks * pow( max(dot(halfVector_camera, normal_camera), 0.0), u_ns );
     
 	outColor = Ia + Id + Is;
+
+	//if( u_time > 0.5 && u_time < 7.5 )
+	{
+		vec4 targetColor = vec4( 1, 1, 0.3, 0.4 );
+		vec2 target = vec2( 0.6, 0.35 );
+		outColor += targetColor * circle( f_vertexPosition.xy, target, 0.04 ) - circle( f_vertexPosition.xy, target, 0.03 );
+	}
 }

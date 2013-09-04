@@ -83,7 +83,7 @@ spark::ZSpaceEyeTracker
         return;
     }
     update(0);
-    m_stereoFrustum->setNearClip( 0.001 /*meters*/ );
+    m_stereoFrustum->setNearClip( 0.01 /*meters*/ );
 
     // Set view matrix
     // Get the view matrix from the zSpace StereoFrustum for a specified eye

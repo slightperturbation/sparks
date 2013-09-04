@@ -158,24 +158,30 @@ spark::TissueMesh
             if( (m_tissueCondition[ind] == normalTissue) && (temp > m_dessicationThresholdTemp) )
             {
                 m_tissueCondition[ind] = dessicatedTissue;
+                continue;
             }
             if( (m_tissueCondition[ind] == vaporizingTissue) && (temp < 100) )
             {
                 m_tissueCondition[ind] = charredTissue;
+                continue;
             }
-            if( (m_tissueCondition[ind] == dessicatedTissue) && (temp >= 100) )
+            if( (m_tissueCondition[ind] == dessicatedTissue) && (temp > 100) )
             {
                 m_tissueCondition[ind] = vaporizingTissue;
+                (*m_currTempMap)[ind] = std::min( 110.0f, temp );
+                continue;
             }
             // as the temp rises above 100, it's vaporizing
             // the total energy (J) needed to complete the vaporization
             // can be represented as a change in temp:
             float vapeHeatAsKelvin 
                 = latentHeatOfVaporization(x,y) / specificHeat(x,y);
-            if( temp > (100 + vapeHeatAsKelvin) )
+            if( temp > (100 + 5) ) //vapeHeatAsKelvin) )
             {
-                temp = 100;
                 m_tissueCondition[ind] = charredTissue;
+                (*m_currTempMap)[ind] = 90.0f;
+                (*m_nextTempMap)[ind] = 90.0f;
+
             }
         }
     } // end condition update
