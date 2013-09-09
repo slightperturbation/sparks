@@ -10,7 +10,12 @@
 
 namespace spark
 {
-    ///
+    /// Keeps track of the possible system states and handles switches
+    /// between those states.
+    /// Only one state can be active at a time, see setCurrState() and
+    /// currState().
+    /// States are responsible for switching the StateManager's current
+    /// state by return value of the State::nextState() method.
     class StateManager
     {
     public:
