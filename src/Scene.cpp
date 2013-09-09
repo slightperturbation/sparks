@@ -3,6 +3,8 @@
 #include "Updateable.hpp"
 #include "Mesh.hpp"
 
+#include <boost/chrono.hpp>
+
 #include <functional>
 #include <algorithm>
 
@@ -12,7 +14,19 @@ spark::Scene
 
 spark::Scene
 ::~Scene( )
-{ }
+{
+    //    // wait for the threads to complete
+    //    for( auto iter = m_updateThreads.begin();
+    //         iter != m_updateThreads.end();
+    //         ++iter )
+    //    {
+    //        (*iter)->join();
+    //    }
+    for( auto iter = m_updateTasks.begin(); iter != m_updateTasks.end(); ++iter )
+    {
+        (*iter)->stop();
+    }
+}
 
 void
 spark::Scene
@@ -101,9 +115,28 @@ void
 spark::Scene
 ::fixedUpdate( double dt )
 {
-    for( auto i = m_updateables.begin(); i != m_updateables.end(); ++i )
+    // Noop - fixed updates usually done in separate thread
+}
+
+void
+spark::Scene
+::activate( void )
+{
+    // resume updates
+    for( auto iter = m_updateTasks.begin(); iter != m_updateTasks.end(); ++iter )
     {
-        (*i)->fixedUpdate( dt );
+        (*iter)->resume();
+    }
+}
+
+void
+spark::Scene
+::deactivate( void )
+{
+    // stop updates
+    for( auto iter = m_updateTasks.begin(); iter != m_updateTasks.end(); ++iter )
+    {
+        (*iter)->pause();
     }
 }
 
@@ -111,6 +144,7 @@ void
 spark::Scene
 ::addUpdateable( UpdateablePtr up )
 {
+    float dt = 1.0/30.0;
     if( up )
     {
         if( std::find( m_updateables.begin(), m_updateables.end(), up ) != m_updateables.end() )
@@ -118,6 +152,10 @@ spark::Scene
             LOG_WARN(g_log) << "Attempt to add Updateable to Scene multiple times.";
         }
         m_updateables.push_back( up );
+        
+        // Dispatch thread
+        m_updateTasks.push_back( FixedUpdateTaskPtr( new FixedUpdateTask( up, dt ) ) );
+        m_updateTasks.back()->start();
     }
     else
     {
@@ -185,9 +223,12 @@ void
 spark::Scene
 ::prepareRenderCommands( void )
 {
-    LOG_TRACE(g_log) << "Scene::prepareRenderCommands with " 
-        << m_passes.size() << " passes and " 
-        << m_renderables.size() << " renderables.";
+    if( g_log->isTrace() )
+    {
+        LOG_TRACE(g_log) << "Scene::prepareRenderCommands with " 
+            << m_passes.size() << " passes and " 
+            << m_renderables.size() << " renderables.";
+    }
     m_passes.sort( renderPassCompareByPriority );
 
     RenderCommand rc;
@@ -233,4 +274,80 @@ spark::Scene
     LOG_INFO(g_log) << "Resetting Scene";
     m_passes.clear();
     m_renderables.clear();
+}
+
+spark::Scene::FixedUpdateTask
+::FixedUpdateTask(UpdateablePtr udp, float dt )
+  : m_updateable( udp ), m_dt( dt ), m_hasStarted( false ), m_isPaused( false )
+{
+    m_prevUpdateTime = getTime();
+}
+
+void
+spark::Scene::FixedUpdateTask
+::executeTask( void )
+{
+    while( true )
+    {
+        double currTime = getTime();
+        double elapsedTimeSoFar = currTime - m_prevUpdateTime;
+        if( !m_isPaused && (elapsedTimeSoFar > m_dt) )
+        {
+            m_updateable->fixedUpdate( m_dt );
+            m_prevUpdateTime = currTime;
+        }
+        else
+        {
+            boost::this_thread::yield();
+            // while it's clearly better to wait for a known (roughly)
+            // time, rather than busy-wait with a yield, turns out 
+            // that this kills a huge amount of CPU in boost time functions
+            // on windows.  I believe this is due to using posix_time.
+            // May be able to fix using system_time or similar, but
+            // that fix won't be needed until CPU-bound.  Leaving it 
+            // as-is (using a busy-wait-yield) gives more exact timing
+            // for the updates, and should give a more consistent look.
+            // 
+            //double waitTimeDoubleMilliseconds = 1000.0 * (m_dt - (getTime() - m_prevUpdateTime));
+            //if( waitTimeDoubleMilliseconds > 3 )
+            //{
+            //    boost::posix_time::seconds waitTime( waitTimeDoubleMilliseconds );
+            //    boost::this_thread::sleep( waitTime );
+            //}
+        }
+    }
+    // Never returns
+}
+
+void
+spark::Scene::FixedUpdateTask
+::pause( void )
+{
+    m_isPaused = true;
+}
+
+void
+spark::Scene::FixedUpdateTask
+::resume( void )
+{
+    m_isPaused = false;
+}
+
+void
+spark::Scene::FixedUpdateTask
+::start( void )
+{
+    if( !m_hasStarted )
+    {
+        m_hasStarted = true;
+        m_thread = boost::thread( &FixedUpdateTask::executeTask, this );
+    }
+}
+
+void
+spark::Scene::FixedUpdateTask
+::stop( void )
+{
+    m_isPaused = true;
+    m_thread.interrupt();
 }

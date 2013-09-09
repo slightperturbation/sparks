@@ -6,8 +6,11 @@
 #include "Utilities.hpp"
 #include "FileAssetFinder.hpp"
 
+#include <boost/thread/mutex.hpp>
+
 #include <string>
 #include <map>
+#include <set>
 
 namespace spark
 {
@@ -22,12 +25,114 @@ namespace spark
     ///   m_shader->setUniform( "s_color", texUnit );
     /// Where "s_color" is the shader's texture sampler.
     class TextureManager
-    : public std::enable_shared_from_this< TextureManager >
+    : public spark::enable_shared_from_this< TextureManager >
     {
+        /// Commands can be queue'd up by other threads
+        /// to allow the OpenGL-attached thread to 
+        /// dispatch.
+        struct TextureManagerCommand
+        {
+            TextureManagerCommand( const TextureName& aHandle )
+                : m_handle( aHandle ) {}
+            virtual ~TextureManagerCommand() {}
+            virtual void operator()( TextureManager* tm ) const = 0;
+            const TextureName m_handle;
+        };
+        typedef std::unique_ptr< TextureManagerCommand > TextureManagerCommandUniquePtr;
+        struct TextureManagerCommandComparator
+        {
+            bool operator()( const TextureManagerCommandUniquePtr& lhs, 
+                             const TextureManagerCommandUniquePtr& rhs )
+            {
+                return lhs->m_handle < rhs->m_handle;
+            }
+        };
+
+        struct Load3DTextureFromVolumeDataCommand
+            : public TextureManagerCommand
+        {
+            Load3DTextureFromVolumeDataCommand( const TextureName& aHandle,
+                                                VolumeDataPtr& volumeData )
+            : TextureManagerCommand( aHandle ), m_volumeData( volumeData ) 
+            { }
+            virtual void operator()( TextureManager* tm ) const override
+            {
+                tm->load3DTextureFromVolumeData( m_handle, m_volumeData );
+            }
+            const VolumeDataPtr m_volumeData; //< TODO -- should the data be copied? 
+        };
+
+        struct Load2DByteTextureFromDataCommand
+        : public TextureManagerCommand
+        {
+             Load2DByteTextureFromDataCommand( const TextureName& aHandle,
+                                  const std::vector<unsigned char>& aData,
+                                  size_t dimPerSide )
+            : TextureManagerCommand( aHandle ),
+              m_dimPerSide( dimPerSide )
+            {
+                m_data.reserve( aData.size() );
+                for( auto iter = aData.begin(); iter != aData.end(); ++iter )
+                {
+                    m_data.push_back(*iter);
+                }
+            }
+            virtual void operator()( TextureManager* tm ) const override
+            {
+                tm->load2DByteTextureFromData( m_handle, m_data, m_dimPerSide );
+            }
+            std::vector<unsigned char> m_data;
+            const size_t m_dimPerSide;
+        };
+        // TODO -- template on data type; need to overload load method for data type in support.
+        struct Load2DFloatTextureFromDataCommand
+        : public TextureManagerCommand
+        {
+             Load2DFloatTextureFromDataCommand( const TextureName& aHandle,
+                                  const std::vector<float>& aData,
+                                  size_t dimPerSide )
+            : TextureManagerCommand( aHandle ),
+              m_dimPerSide( dimPerSide )
+            {
+                m_data.reserve( aData.size() );
+                for( auto iter = aData.begin(); iter != aData.end(); ++iter )
+                {
+                    m_data.push_back(*iter);
+                }
+            }
+            virtual void operator()( TextureManager* tm ) const override
+            {
+                tm->load2DFloatTextureFromData( m_handle, m_data, m_dimPerSide );
+            }
+            std::vector<float> m_data;
+            const size_t m_dimPerSide;
+        };
+        std::set< TextureManagerCommandUniquePtr, TextureManagerCommandComparator > m_commandQueue;
+        boost::mutex m_commandQueueMutex;
     public:
         TextureManager( void );
         TextureManager( FileAssetFinderPtr finder ) : m_finder( finder ) { }
-        ~TextureManager();
+        virtual ~TextureManager();
+
+        //////////////////////////////////////////////////////////////////
+        /// Non-OpenGL Methods
+        /// Some methods may call TextureManager from a thread not 
+        /// associated with the OpenGL context.
+        /// The following calls can be made from Updateable::fixedUpdate(dt)
+        /// or other threads safely, as these calls queue-up requests
+        /// that are dispatched in postUpdate() 
+        void queueLoad3DTextureFromVolumeData( const TextureName& aHandle,
+                                               VolumeDataPtr aVolume );
+        void queueLoad2DByteTextureFromData( const TextureName& aHandle, 
+                                             const std::vector<unsigned char>& aData, 
+                                             size_t dimPerSide );
+        void queueLoad2DFloatTextureFromData( const TextureName& aHandle,
+                                              const std::vector<float>& aData,
+                                              size_t dimPerSide );
+        //////////////////////////////////////////////////////////////////
+        void executeQueuedCommands( void );
+        //////////////////////////////////////////////////////////////////
+
     
         /// Set the asset finder, giving a set of paths for texture files.
         void setAssetFinder( FileAssetFinderPtr finder ) { m_finder = finder; }

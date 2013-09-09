@@ -217,6 +217,12 @@ spark::OpenGLWindow
     glfwWindowHint( GLFW_VISIBLE, GL_TRUE );
     //glfwWindowHint( GLFW_DECORATED, GL_FALSE );
    
+
+    //////////////////////////////////////////////////////////////////////
+    // V-Sync
+    glfwSwapInterval(1);
+
+
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     int monitorCount = 0;
     GLFWmonitor** monitors = glfwGetMonitors( &monitorCount );	
@@ -730,4 +736,9 @@ spark
         outMeshes.push_back( Mesh::createMeshFromAiMesh( aimesh, 1.0 ) );
     }
     LOG_INFO(g_log) << "Loaded " << outMeshes.size() << " new meshes.";
+}
+
+double spark::getTime( void )
+{
+    return glfwGetTime();
 }

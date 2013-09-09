@@ -86,6 +86,8 @@ namespace spark
     std::ostream& operator<<( std::ostream& out, const glm::mat3& m );
     std::ostream& operator<<( std::ostream& out, const glm::mat4& m );
 
+    double getTime( void );
+    
     /// Debugging
     void checkOpenGLErrors( void ); 
     void checkOpenGLErrors( const char* aCodeStatement, 
