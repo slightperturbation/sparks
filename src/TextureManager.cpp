@@ -2,8 +2,9 @@
 #include "TextureManager.hpp"
 #include "VolumeData.hpp"
 
-#include <iostream>
+#include <boost/thread/locks.hpp>
 
+#include <iostream>
 
 spark::TextureManager
 ::TextureManager( void )
@@ -243,7 +244,10 @@ spark::TextureManager
     bindTextureIdToUnit( aTextureId, textureUnit, GL_TEXTURE_2D );
 }
 
-void spark::TextureManager::loadTextureFromImageFile( const TextureName& aHandle, const char* aTextureFileName )
+void 
+spark::TextureManager
+::loadTextureFromImageFile( const TextureName& aHandle, 
+                            const char* aTextureFileName )
 {
     GLint textureUnit = reserveTextureUnit();
 
@@ -315,6 +319,30 @@ spark::TextureManager
 
 }
 
+void 
+spark::TextureManager
+::executeQueuedCommands( void )
+{
+    boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
+    auto iter = m_commandQueue.begin();
+    while( iter != m_commandQueue.end() )
+    {
+        assert( *iter );
+        (*iter)->operator()( this );
+        iter = m_commandQueue.erase( iter );
+    }
+}
+
+void 
+spark::TextureManager
+::queueLoad3DTextureFromVolumeData( const TextureName& aHandle,
+                                    VolumeDataPtr aVolume )
+{
+    boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
+    m_commandQueue.insert( TextureManagerCommandUniquePtr( 
+        new Load3DTextureFromVolumeDataCommand( aHandle, aVolume ) ) );
+}
+
 void
 spark::TextureManager
 ::load3DTextureFromVolumeData( const TextureName& aHandle,
@@ -373,6 +401,17 @@ spark::TextureManager
 
 void
 spark::TextureManager
+::queueLoad2DByteTextureFromData( const TextureName& aHandle,
+                                  const std::vector<unsigned char>& aData,
+                                  size_t dimPerSide )
+{
+    boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
+    m_commandQueue.insert( TextureManagerCommandUniquePtr( 
+        new Load2DByteTextureFromDataCommand( aHandle, aData, dimPerSide ) ) );
+}
+
+void
+spark::TextureManager
 ::load2DByteTextureFromData( const TextureName& aHandle,
                              const std::vector<unsigned char>& aData,
                              size_t dimPerSide )
@@ -427,6 +466,16 @@ spark::TextureManager
     << " into texture unit=" << textureUnit ;
 }
 
+void
+spark::TextureManager
+::queueLoad2DFloatTextureFromData( const TextureName& aHandle,
+    const std::vector<float>& aData,
+    size_t dimPerSide )
+{
+    boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
+    m_commandQueue.insert( TextureManagerCommandUniquePtr( 
+        new Load2DFloatTextureFromDataCommand( aHandle, aData, dimPerSide ) ) );
+};
 
 void
 spark::TextureManager
@@ -506,7 +555,6 @@ spark::TextureManager
     {
         LOG_ERROR(g_log) << "Unable to provide texture unit for unknown texture \""
             << aHandle << "\".";
-        throw "getTextureUnitForHandle called for unknown texture";
         return -1;
     }
     return ensureTextureUnitBoundToId( texId );

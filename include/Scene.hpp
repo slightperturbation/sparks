@@ -13,6 +13,10 @@
 
 #include "RenderPass.hpp"
 #include "RenderCommand.hpp"
+#include "Updateable.hpp"
+#include "Utilities.hpp" // getTime()
+
+#include <boost/thread.hpp>
 
 namespace spark
 {
@@ -21,6 +25,30 @@ namespace spark
     /// Different instances of Scene can share Renderables and RenderPasses
     class Scene
     {
+        /// Calls the Updateable's fixedUpdate method unless pause()'d or 
+        /// stop()'d.
+        class FixedUpdateTask
+        {
+        public:
+            FixedUpdateTask( UpdateablePtr udp, float dt );
+            void pause( void );
+            void resume( void );
+            void start( void );
+            void stop( void );
+            void executeTask( void );
+        private:
+            // MSVC doesn't have move semantics, so disable copy-ctor and op=
+            FixedUpdateTask( const FixedUpdateTask& ); // empty
+            FixedUpdateTask operator=( const FixedUpdateTask& ); // empty
+        private:
+            boost::thread m_thread;
+            bool m_hasStarted; //< TODO: shouldn't be needed, test if thread is not-a-thread
+            bool m_isPaused;
+            UpdateablePtr m_updateable;
+            double m_dt;
+            double m_prevUpdateTime;
+        };
+        typedef spark::shared_ptr< FixedUpdateTask > FixedUpdateTaskPtr;
     public:
         Scene( void );
         ~Scene();
@@ -53,6 +81,13 @@ namespace spark
 
         /// Update scene objects per-frame
         void fixedUpdate( double dt );
+        
+        /// Prepare scene objects to be rendered and updated.
+        void activate( void );
+
+        /// Notification that scene objects will not be rendered/updated until
+        /// a call to activate().
+        void deactivate( void );
 
         /// Delete references to all held resources
         void reset( void );
@@ -73,6 +108,10 @@ namespace spark
         RenderCommandQueue m_commands;
         Renderables m_renderables;
         Updateables m_updateables;
+        
+        // MSVC doesn't have C++11 move semantics, so need to hold pointers
+        // to threads, not just threads.
+        std::vector< FixedUpdateTaskPtr > m_updateTasks;
     };
 } // end namespace spark
 

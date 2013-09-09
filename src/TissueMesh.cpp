@@ -7,8 +7,7 @@ spark::TissueMesh
               TextureManagerPtr tm,
               float totalLengthMeters,
               size_t heatDim )
-: Renderable( name ),
-  m_tempTextureName( name + "_TISSUE_TEMPERATURE_TEXTURE" ),
+: m_tempTextureName( name + "_TISSUE_TEMPERATURE_TEXTURE" ),
   m_conditionTextureName( name + "_TISSUE_CONDITION_TEXTURE" ),
   m_textureManager( tm ),
   m_N( heatDim + 2 ),
@@ -29,13 +28,6 @@ spark::TissueMesh
 
 spark::TissueMesh
 ::~TissueMesh()
-{
-    // Noop
-}
-
-void
-spark::TissueMesh
-::render( const RenderCommand& rc ) const
 {
     // Noop
 }
@@ -187,8 +179,8 @@ spark::TissueMesh
     } // end condition update
 
     // push temp data to graphics card
-    m_textureManager->load2DFloatTextureFromData( m_tempTextureName, *m_nextTempMap, m_N );
-    m_textureManager->load2DByteTextureFromData( m_conditionTextureName, m_tissueCondition, m_N );
+    m_textureManager->queueLoad2DFloatTextureFromData( m_tempTextureName, *m_nextTempMap, m_N );
+    m_textureManager->queueLoad2DByteTextureFromData( m_conditionTextureName, m_tissueCondition, m_N );
     swapTempMaps();
 }
 
