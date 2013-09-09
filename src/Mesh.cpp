@@ -265,26 +265,33 @@ spark::Mesh
 
 void 
 spark::Mesh
-::unitCube()
+::unitCube( void )
+{
+   cube( 1.0f );
+}
+
+void 
+spark::Mesh
+::cube( float scale )
 {
     LOG_DEBUG(g_log) << "Creating new Unit Cube\n";
     float third = 1.0f/1.73205080757f;
     
     MeshVertex v;
     //0
-    v.m_position[0]     =  0;     v.m_position[1]     =  1;     v.m_position[2]     =  0;
+    v.m_position[0]     =  0;     v.m_position[1]     =  scale; v.m_position[2]     =  0;
     v.m_texCoord[0]     =  0;     v.m_texCoord[1]     =  1;     v.m_texCoord[2]     =  0;
     v.m_normal[0]       = -third; v.m_normal[1]       =  third; v.m_normal[2]       = -third;
     v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  0.0;   v.m_diffuseColor[2] =  0.0;
     m_vertexData.push_back( v );
     //1
-    v.m_position[0]     =  1;     v.m_position[1]     =  1;     v.m_position[2]     =  0;
+    v.m_position[0]     =  scale; v.m_position[1]     =  scale; v.m_position[2]     =  0;
     v.m_texCoord[0]     =  1;     v.m_texCoord[1]     =  1;     v.m_texCoord[2]     =  0;
     v.m_normal[0]       =  third; v.m_normal[1]       =  third; v.m_normal[2]       = -third;
     v.m_diffuseColor[0] =  0.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  0.0;
     m_vertexData.push_back( v );
     //2
-    v.m_position[0]     =  1;     v.m_position[1]     =  0;     v.m_position[2]     =  0;
+    v.m_position[0]     =  scale; v.m_position[1]     =  0;     v.m_position[2]     =  0;
     v.m_texCoord[0]     =  1;     v.m_texCoord[1]     =  0;     v.m_texCoord[2]     =  0;
     v.m_normal[0]       =  third; v.m_normal[1]       = -third; v.m_normal[2]       = -third;
     v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  0.0;   v.m_diffuseColor[2] =  1.0;
@@ -297,25 +304,25 @@ spark::Mesh
     m_vertexData.push_back( v );
     
     //4
-    v.m_position[0]     =  0;     v.m_position[1]     =  1;     v.m_position[2]     =  1;
+    v.m_position[0]     =  0;     v.m_position[1]     =  scale; v.m_position[2]     =  scale;
     v.m_texCoord[0]     =  0;     v.m_texCoord[1]     =  1;     v.m_texCoord[2]     =  1;
     v.m_normal[0]       = -third; v.m_normal[1]       =  third; v.m_normal[2]       =  third;
     v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0;
     m_vertexData.push_back( v );
     //5
-    v.m_position[0]     =  1;     v.m_position[1]     =  1;     v.m_position[2]     =  1;
+    v.m_position[0]     =  scale; v.m_position[1]     =  scale; v.m_position[2]     =  scale;
     v.m_texCoord[0]     =  1;     v.m_texCoord[1]     =  1;     v.m_texCoord[2]     =  1;
     v.m_normal[0]       =  third; v.m_normal[1]       =  third; v.m_normal[2]       =  third;
     v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0;
     m_vertexData.push_back( v );
     //6
-    v.m_position[0]     =  1;     v.m_position[1]     =  0;     v.m_position[2]     =  1;
+    v.m_position[0]     =  scale; v.m_position[1]     =  0;     v.m_position[2]     =  scale;
     v.m_texCoord[0]     =  1;     v.m_texCoord[1]     =  0;     v.m_texCoord[2]     =  1;
     v.m_normal[0]       =  third; v.m_normal[1]       = -third; v.m_normal[2]       =  third;
     v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0;
     m_vertexData.push_back( v );
     //7
-    v.m_position[0]     =  0;     v.m_position[1]     =  0;     v.m_position[2]     =  1;
+    v.m_position[0]     =  0;     v.m_position[1]     =  0;     v.m_position[2]     =  scale;
     v.m_texCoord[0]     =  0;     v.m_texCoord[1]     =  0;     v.m_texCoord[2]     =  1;
     v.m_normal[0]       = -third; v.m_normal[1]       = -third; v.m_normal[2]       =  third;
     v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0;

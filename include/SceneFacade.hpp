@@ -150,7 +150,7 @@ namespace spark
         /// Create a new Mesh as a cube with lower-left vertex at
         /// position and with sides of size.  Render on pass with material.
         RenderablePtr createCube( const glm::vec3& position, 
-                                  const glm::vec3& size,
+                                  float size,
                                   MaterialPtr material,
                                   const RenderPassName& pass );
 

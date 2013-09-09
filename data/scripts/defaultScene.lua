@@ -45,7 +45,7 @@ skinMat:setVec4( "u_kd", vec4(1,1,1,1) )
 skinMat:setVec4( "u_ks", vec4(1,1,1,1) )
 skinMat:setFloat( "u_ns", 100.0 )
 skinMat:addTexture( "s_color", "skinColor" )
-skin = spark:createCube( vec3(-2.5, .25, -2.5), vec3(5, 0.5, 5), skinMat, "OpaquePass" )
+skin = spark:createCube( vec3(-2.5, -2.5, -2.5), 5, skinMat, "OpaquePass" )
 skin:rotate( 90, vec3(1,0,0) )
 
 
@@ -104,7 +104,7 @@ end
 
 for boxX = -1, 1, 0.33 do
   boxZ = -.33
-    box = spark:createCube( vec3(boxX,0.25,boxZ), vec3(0.15,0.15,0.15), metalMat, "OpaquePass" )
+    box = spark:createCube( vec3(boxX,0.25,boxZ), 0.15, metalMat, "OpaquePass" )
     box:rotate( 45, vec3(0,1,0) )
 end
 

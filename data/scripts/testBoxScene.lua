@@ -18,13 +18,13 @@ print( "\tSetting up render passes..." );
 -- floorMat:setVec4( "u_ks", vec4(1,1,1,1) )
 -- floorMat:setFloat( "u_ns", 100.0 )
 -- floorMat:addTexture( "s_color", "skinColor" )
--- skin = spark:createCube( vec3(-2.5, 0, -2.5), vec3(5, 0.1, 5), floorMat, "OpaquePass" )
+-- skin = spark:createCube( vec3(-2.5, -2.5, -2.5), 5, floorMat, "OpaquePass" )
 -- skin:rotate( 90, vec3(1,0,0) )
 
 boxMat = spark:createMaterial( "colorShader" )
 boxMat:setVec4( "u_color", vec4(1.0,0.3,0.3,1.0) )
-boxA = spark:createCube( vec3(0,0,0), vec3(0.25,0.25,0.25), boxMat, "OpaquePass" )
-boxB = spark:createCube( vec3(-0.5,0,0), vec3(0.25,0.25,0.25), boxMat, "OpaquePass" )
+boxA = spark:createCube( vec3(0,0,0), 0.25, boxMat, "OpaquePass" )
+boxB = spark:createCube( vec3(-0.5,0,0), 0.25, boxMat, "OpaquePass" )
 boxB:rotate( 45, vec3(0,1,0) )
 
 

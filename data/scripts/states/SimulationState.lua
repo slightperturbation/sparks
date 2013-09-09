@@ -76,36 +76,52 @@ function SimulationState:load()
 	--   meters in total length on a side  
 	--   total voxels
 	--self.tissueSim = spark:createTissue( "tissueSim", 0.25, 100 )
-	-- Global theTissueSim is the tissue simulation, declared in C++
 
-	self.tissueMat = spark:createMaterial( "tissueShader" )
-	self.tissueMat:setVec4( "u_light.position_camera", vec4(5,10,0,1) )
-	self.tissueMat:setVec4( "u_light.diffuse", vec4(0.8,0.8,0.8,1) )
-	self.tissueMat:setVec4( "u_ambientLight", vec4(0.3,0.1,0.1,1) )
-	self.tissueMat:setVec4( "u_ka", vec4(1,1,1,1) )
-	self.tissueMat:setVec4( "u_kd", vec4(1,1,1,1) )
-	self.tissueMat:setVec4( "u_ks", vec4(1,1,1,1) )
-	self.tissueMat:setFloat( "u_ns", 100.0 )
-	self.tissueMat:setFloat( "u_activationTime", 0.0 )
-	self.tissueMat:addTexture( "s_temperature", theTissueSim:getTempMapTextureName() )
-	self.tissueMat:addTexture( "s_condition", theTissueSim:getConditionMapTextureName() )
-	local skin = spark:createCube( vec3(-0.25, -.025, -0.25), vec3(0.5, 0.05, 0.5), self.tissueMat, "OpaquePass" )
-	--local skin = spark:createCube( vec3(-2.5, .25, -2.5), vec3(5, 0.5, 5), self.tissueMat, "OpaquePass" )
-	skin:rotate( 90, vec3(1,0,0) )
-	
-	-- local skin = spark:createCube( vec3(-2.5, .25, -2.5), vec3(5, 0.5, 5), self.tissueMat, "OpaquePass" )
-	-- local skin = spark:createCube( vec3(-0.025, .0025, -0.025), vec3(0.05, 0.005, 0.05), self.tissueMat, "OpaquePass" )
+	-- local showTissue = false
+	-- if showTissue  then
+	-- 	self.tissueMat = spark:createMaterial( "phongShader" )--"tissueShader" )
+	-- 	self.tissueMat:setVec4( "u_light.position_camera", vec4(5,10,0,1) )
+	-- 	self.tissueMat:setVec4( "u_light.diffuse", vec4(0.8,0.8,0.8,1) )
+	-- 	self.tissueMat:setVec4( "u_ambientLight", vec4(0.3,0.1,0.1,1) )
+	-- 	self.tissueMat:setVec4( "u_ka", vec4(1,1,1,1) )
+	-- 	self.tissueMat:setVec4( "u_kd", vec4(1,1,1,1) )
+	-- 	self.tissueMat:setVec4( "u_ks", vec4(1,1,1,1) )
+	-- 	self.tissueMat:setFloat( "u_ns", 100.0 )
+	-- 	self.tissueMat:setFloat( "u_activationTime", 0.0 )
+	-- 	-- Global theTissueSim is the tissue simulation, declared in C++
+	-- 	self.tissueMat:addTexture( "s_temperature", theTissueSim:getTempMapTextureName() )
+	-- 	self.tissueMat:addTexture( "s_condition", theTissueSim:getConditionMapTextureName() )
+	-- 	local skin = spark:createCube( vec3(-0.25, -0.5, -0.25), 0.5, self.tissueMat, "OpaquePass" )
+	-- 	--local skin = spark:createCube( vec3(-2.5, .25, -2.5), 5, self.tissueMat, "OpaquePass" )
+	-- 	skin:rotate( 90, vec3(1,0,0) )
+	-- end
+
+	-- local skin = spark:createCube( vec3(-2.5, .25, -2.5), 5, self.tissueMat, "OpaquePass" )
+	-- local skin = spark:createCube( vec3(-0.025, .0025, -0.025), 0.05, self.tissueMat, "OpaquePass" )
 	-- skin:rotate( 90, vec3(1,0,0) )
 
 
+	local scale = 0.02
+	local cursorMat = spark:createMaterial( "constantColorShader" )
+	cursorMat:setVec4( "u_color", vec4(1,0.2,0.2,1.0) );
+
+	-- Tmp -- 3D mouse cursor
+	self.controlledTool = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
+		scale, cursorMat, "OpaquePass" )
+	
+	local cursorMat2 = spark:createMaterial( "constantColorShader" )
+	cursorMat2:setVec4( "u_color", vec4( 0.2,1,0.2,1.0) );
+	self.controlledTool2 = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
+		scale, cursorMat2, "OpaquePass" )
+
 
 	-- Here's a nice little marker for the origin
-	-- local debugMat = spark:createMaterial( "constantColorShader" )
-	-- debugMat.name = "DebugMaterial"
-	-- debugMat:setVec4( "u_color", vec4( 1, 0.4, 0.4, 1 ) )
-	-- local scale = 0.01
-	-- local box = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), vec3( scale, scale, scale ), debugMat, "OpaquePass" )
-	--
+	local debugMat = spark:createMaterial( "colorShader" )
+	debugMat.name = "DebugMaterial"
+	debugMat:setVec4( "u_color", vec4( 1, 1, 1, 1 ) )
+	local scale = 0.01
+	local box = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), scale, debugMat, "OpaquePass" )
+	--box:translate( 0, 0.1, 0 )	
 
 	-- local mainFontSize = 24
 	-- local smallFontSize = 12
@@ -141,8 +157,8 @@ function SimulationState:load()
 
 	-- --Highlight GUI side w/ quad
 	-- local bgAccentMat = spark:createMaterial( "constantColorShader" )
-	-- bgAccentMat:setVec4( "u_color", vec4(1,1,1,0.33) )
-	-- local bgQuad = spark:createQuad( vec2(0,0), vec2(0.225,1.0),
+	-- bgAccentMat:setVec4( "u_color", vec4(1,1,1,0.13) )
+	-- local bgQuad = spark:createQuad( vec2(0,0), vec2(0.15,1.0),
 	-- bgAccentMat, "HUDPass" )
 	-- bgQuad:translate( 0,0,-1 )
 	----
@@ -158,12 +174,8 @@ function SimulationState:load()
 	metalMat:setVec4( "u_ks", vec4(1,1,1,1) )
 	metalMat:setFloat( "u_ns", 1000.0 )
 
-	local hook = spark:loadMesh( "hook_cautery_new.3DS", metalMat, "OpaquePass" )
-	hook:translate( 0,.0036,0 )
-	hook:rotate( 120,  vec3(0,0,1) )
-	hook:rotate( 30,  vec3(0,1,0) )
-	--hook:scale( 0.02 )
-	hook:scale( 0.002 )
+	self.instrument = spark:loadMesh( "hook_cautery_new.3DS", metalMat, "OpaquePass" )
+
 end
 
 function SimulationState:activate()
@@ -171,24 +183,9 @@ function SimulationState:activate()
 	self.startTime = -1
 
 	local camera = spark:getCamera()
-	-- camera:cameraPos( 0.2, 1.2, -0.9 )
-	-- camera:cameraTarget( 0.06, 0.1, 0.0 )
-	-- camera:fov( 48 )
-
-	-- camera:cameraPos( 0.0, 0.345, 0.222 )
-	-- camera:cameraTarget( 0.0, 0.0, 0.0 )
-	-- camera:cameraUp( 0,1,0 )
-	
-	-- camera:cameraPos( 0.09, -0.14, 0.19 )
-	-- camera:cameraTarget( 0.0, 0.0, 0.0 )
-
-	--camera:cameraPos( 0.0, 0.1, 0.1 )
 	camera:cameraPos( 0.0, 0.345, 0.222 )
 	camera:cameraTarget( 0.0, 0.0, 0.0 )
 	camera:cameraUp( 0,1,0 )
-
-
-	--camera:fov( 37 )
 end
 
 
@@ -217,6 +214,48 @@ function SimulationState:update( dt )
 			end
 		end
 	end
+
+	-- local mousePos = input:getPosition( "mouse" ) 
+	-- --local xform = input:getTransform( "mouse" )
+	-- --self.controlledTool:setTransform( xform )
+	-- self.controlledTool:setTransform( mat4() )
+	-- self.controlledTool:translate( 0.0002 * (mousePos.x - 1920.0/2.0), -- hard coded half-width
+	-- 	                           -0.02,
+	-- 	                           0.0002 * (mousePos.y - 1054/2.0) ) -- hard coded half-height
+	-- self.controlledTool:scale( 0.0025 )
+
+
+	-- Debugging (and on non-zspace machines, use mouse)
+	local stylusPos = input:getPosition( "stylus" )
+	local stylusMat = input:getTransform( "stylus" )
+	--local stylusPos = input:getPosition( "mouse" )
+
+	-- green block on final
+	local screenSpaceOffset = vec3( 0, 0.175, 0 )
+	self.controlledTool2:setTransform( mat4() )
+	self.controlledTool2:translate( screenSpaceOffset )
+	self.controlledTool2:applyTransform( stylusMat )
+
+	-- red block on base position
+	self.controlledTool:setTransform( mat4() )
+	self.controlledTool:translate( stylusPos )
+	
+	local useOnlyPosition = false
+	if( useOnlyPosition ) then
+		self.instrument:setTransform( mat4() )
+		self.instrument:translate( stylusPos )
+		self.instrument:translate( 0,.3,0 )
+		self.instrument:rotate( 120,  vec3(0,0,1) )
+		self.instrument:rotate( 30,  vec3(0,1,0) )
+		self.instrument:scale( 0.002 )
+	else
+		self.instrument:setTransform( mat4() )
+		self.instrument:translate( screenSpaceOffset )
+		self.instrument:applyTransform( stylusMat )
+		self.instrument:rotate( -90,  vec3(0,1,0) )
+		self.instrument:scale( 0.002 )
+	end
+
 
 	--print( "SimulationState:update" )
 	-- self.currTime = self.currTime + dt

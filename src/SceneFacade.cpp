@@ -129,6 +129,7 @@ spark::SceneFacade
                                        scaleFactor )
     );
     target->initialize( m_textureManager );
+    //    GuiEventSubscriberPtr gesp = boost::dynamic_pointer_cast<GuiEventSubscriber>(target);
     m_guiEventPublisher->subscribe( target );
     return target;
 }
@@ -147,6 +148,7 @@ spark::SceneFacade
                                        ScaledTextureRenderTarget::DepthOnly )
     );
     target->initialize( m_textureManager );
+    //GuiEventSubscriberPtr gesp = boost::dynamic_pointer_cast<GuiEventSubscriber>(target);
     m_guiEventPublisher->subscribe( target );
     return target;
 }
@@ -305,18 +307,16 @@ spark::SceneFacade
 spark::RenderablePtr
 spark::SceneFacade
 ::createCube( const glm::vec3& position,
-              const glm::vec3& size,
+              float size,
               MaterialPtr material,
               const RenderPassName& pass )
 {
     MeshPtr cube( new Mesh() );
-    cube->unitCube();
+    cube->cube( size );
     cube->name( "Cube" );
     cube->setMaterialForPassName( pass, material );
-    glm::mat4 xform_scale = glm::scale( glm::mat4(), size );
     glm::mat4 xform_trans = glm::translate( glm::mat4(), position );
-    glm::mat4 xform = xform_trans * xform_scale;
-    cube->setTransform( xform );
+    cube->setTransform( xform_trans );
     m_scene->add( cube );
     return cube;
 }

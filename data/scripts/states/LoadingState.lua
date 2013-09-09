@@ -52,8 +52,8 @@ function LoadingState:load()
 
 	self.boxMat = spark:createMaterial( "colorShader" )
 	self.boxMat:setVec4( "u_color", vec4(1.0,0.3,0.3,1.0) )
-	self.boxA = spark:createCube( vec3(0,0,0), vec3(0.25,0.25,0.25), self.boxMat, "OpaquePass" )
-	self.boxB = spark:createCube( vec3(-0.5,0,0), vec3(0.25,0.25,0.25), self.boxMat, "OpaquePass" )
+	self.boxA = spark:createCube( vec3(0,0,0), 0.25, self.boxMat, "OpaquePass" )
+	self.boxB = spark:createCube( vec3(-0.5,0,0), 0.25, self.boxMat, "OpaquePass" )
 	self.boxB:rotate( self.angle, vec3(0,1,0) )
 end
 
@@ -67,7 +67,7 @@ function LoadingState:activate()
 end
 
 function LoadingState:update( dt )
-	print( "LoadingState:update" )
+	--print( "LoadingState:update" )
 
 	local xform = self.logo:getTransform()
 
@@ -100,8 +100,8 @@ function LoadingState:nextState( currTime )
 	-- TODO should be changed to use the return value
 	--print( "LoadingState:nextState( " .. currTime .. " )")
 	if currTime > 10 then 
-		theNextState = "Simulation" 
-		print( "Changing state to menu!" )
+		--theNextState = "Menu" 
+		--print( "Changing state to menu!" )
 	else
 		theNextState = ""
 	end

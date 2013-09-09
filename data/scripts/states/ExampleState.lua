@@ -9,8 +9,8 @@ end
 function ExampleState:load()
     self.boxMat = spark:createMaterial( "colorShader" )
     self.boxMat:setVec4( "u_color", vec4(1.0,0.3,0.3,1.0) )
-    self.boxA = spark:createCube( vec3(0,0,0), vec3(0.25,0.25,0.25), self.boxMat, "OpaquePass" )
-    self.boxB = spark:createCube( vec3(-0.5,0,0), vec3(0.25,0.25,0.25), self.boxMat, "OpaquePass" )
+    self.boxA = spark:createCube( vec3(0,0,0), 0.25, self.boxMat, "OpaquePass" )
+    self.boxB = spark:createCube( vec3(-0.5,0,0), 0.25, self.boxMat, "OpaquePass" )
     self.boxB:rotate( self.angle, vec3(0,1,0) )
 end
 
