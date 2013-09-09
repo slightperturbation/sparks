@@ -1,6 +1,8 @@
 #ifndef SPARK_INPUTFACTORY_HPP
 #define SPARK_INPUTFACTORY_HPP
 
+#include <memory>
+
 namespace spark
 {
     class KeyboardInputDevice;

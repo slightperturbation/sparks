@@ -1,4 +1,5 @@
 #include "ZSpaceEyeTracker.hpp"
+#include "ZSpaceSystem.hpp"
 #include "Projection.hpp"
 
 
@@ -17,47 +18,23 @@
 
 spark::ZSpaceEyeTracker
 ::ZSpaceEyeTracker()
-: m_left( 0 ), m_bottom( 0 ), m_width( 0 ), m_height( 0 ),
-  m_stereoFrustum( nullptr )
+: m_left( 0 ), m_bottom( 0 ), m_width( 0 ), m_height( 0 )
 {
-    m_stereoWindow.reset( new zspace::stereo::StereoWindow() );
-    m_stereoViewport.reset( new zspace::stereo::StereoViewport() );
-    m_stereoWindow->addStereoViewport( m_stereoViewport.get() );
-    m_stereoViewport->setUsingWindowSize( true ); // request to handle resize
-    m_stereoFrustum = m_stereoViewport->getStereoFrustum();
-
-    zspace::stereo::StereoLeftRightDetect::initialize( m_stereoWindow.get(), 
-        zspace::stereo::StereoLeftRightDetect::WINDOW_TYPE_GL );
-
-    m_trackerSystem.reset( new zspace::tracker::TrackerSystem() );
 }
 
 spark::ZSpaceEyeTracker
 ::~ZSpaceEyeTracker()
 {
-    zspace::stereo::StereoLeftRightDetect::shutdown();
-    if( m_stereoWindow )
-    {
-        m_stereoWindow->removeReference();
-    }
-    if( m_stereoViewport )
-    {
-        m_stereoViewport->removeReference();
-    }
-    if( m_trackerSystem )
-    {
-        m_trackerSystem->removeReference();
-        m_trackerSystem.reset();
-    }
 }
 
 void 
 spark::ZSpaceEyeTracker
 ::setInterPupillaryDistance( float distInMeters )
 {
-    if( m_stereoFrustum )
+    if( ZSpaceSystem::get().m_stereoFrustum )
     {
-        m_stereoFrustum->setInterPupillaryDistance( distInMeters );
+        ZSpaceSystem::get().m_stereoFrustum
+            ->setInterPupillaryDistance( distInMeters );
     }
 }
 
@@ -83,7 +60,10 @@ spark::ZSpaceEyeTracker
         return;
     }
     update(0);
-    m_stereoFrustum->setNearClip( 0.01 /*meters*/ );
+    ZSpaceSystem::get().m_stereoFrustum->setNearClip( 0.05 /*meters*/ );
+
+    // store the monoscopic "modelview" matrix
+    ZSpaceSystem::get().m_modelViewMatrix = persp->viewMatrix();
 
     // Set view matrix
     // Get the view matrix from the zSpace StereoFrustum for a specified eye
@@ -94,7 +74,7 @@ spark::ZSpaceEyeTracker
     {
         GLfloat matrixGl[16];
         zspace::common::Matrix4 viewMatrix;
-        m_stereoFrustum->getViewMatrix( zspaceEye, viewMatrix );
+        ZSpaceSystem::get().m_stereoFrustum->getViewMatrix( zspaceEye, viewMatrix );
         zspace::common::MathConverterGl::convertMatrix4ToMatrixGl( viewMatrix, matrixGl );
         persp->setEyeViewMatrix( glm::make_mat4( matrixGl) );
     }
@@ -105,7 +85,8 @@ spark::ZSpaceEyeTracker
     {
         GLfloat projectionMatrixGl[16];
         zspace::common::Matrix4 projectionMatrix;
-        m_stereoFrustum->getProjectionMatrix( zspaceEye, projectionMatrix );
+        ZSpaceSystem::get().m_stereoFrustum
+            ->getProjectionMatrix( zspaceEye, projectionMatrix );
         zspace::common::MathConverterGl::convertMatrix4ToMatrixGl( projectionMatrix, projectionMatrixGl );
         persp->setProjectionMatrix( glm::make_mat4( projectionMatrixGl ) );
     }
@@ -126,42 +107,36 @@ void
 spark::ZSpaceEyeTracker
 ::update( float dt ) 
 {
-    if( !m_stereoWindow || !m_trackerSystem || !m_stereoViewport )
+    ZSpaceSystem& sys = ZSpaceSystem::get();
+    if( !sys.m_stereoWindow || !sys.m_trackerSystem || !sys.m_stereoViewport )
     {
         return;
     }
     // Update zSpace Left/Right Frame Detection.
     zspace::stereo::StereoLeftRightDetect::update();
 
-    if(    m_stereoWindow->getX() != m_left 
-        || m_stereoWindow->getY() != m_bottom )
+    if(    sys.m_stereoWindow->getX() != m_left 
+        || sys.m_stereoWindow->getY() != m_bottom )
     {
-        m_stereoWindow->move( m_left, m_bottom );
+        sys.m_stereoWindow->move( m_left, m_bottom );
     }
-    if(    m_stereoWindow->getWidth() != m_width 
-        || m_stereoWindow->getHeight() != m_height )
+    if(    sys.m_stereoWindow->getWidth() != m_width 
+        || sys.m_stereoWindow->getHeight() != m_height )
     {
-        m_stereoWindow->resize( m_width, m_height );
+        sys.m_stereoWindow->resize( m_width, m_height );
     }
     GL_CHECK( glViewport( 0, 0, (GLsizei)m_width, (GLsizei)m_height ) );
 
     // Take the tracking data and pass it into the m_stereoFrustum
     // for use when rendering
-    m_trackerSystem->captureTargets();
+    sys.m_trackerSystem->captureTargets();
 
     zspace::tracker::TrackerTarget* headTarget 
-        = m_trackerSystem->getDefaultTrackerTarget( zspace::tracker::TrackerTarget::TYPE_HEAD );
+        = sys.m_trackerSystem->getDefaultTrackerTarget( zspace::tracker::TrackerTarget::TYPE_HEAD );
     if( headTarget )
     {
         zspace::common::Matrix4 headPose = zspace::common::Matrix4::IDENTITY();
         headTarget->getPose( headPose );
-        m_stereoFrustum->setHeadPose( headPose );
+        sys.m_stereoFrustum->setHeadPose( headPose );
     }
-}
-
-void 
-spark::ZSpaceEyeTracker
-::fixedUpdate( float dt ) 
-{
-    // Noop
 }

@@ -19,6 +19,19 @@ spark::Input
     // Noop
 }
 
+void
+spark::Input
+::update( double dt )
+{
+    for( auto iter = m_devices.begin(); 
+         iter != m_devices.end(); 
+         ++iter )
+    {
+        std::unique_ptr<InputDevice>& device = iter->second;
+        device->update( dt );
+    }
+}
+
 bool
 spark::Input
 ::isKeyDown( int key ) const

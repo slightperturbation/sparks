@@ -26,6 +26,9 @@ namespace spark
         Input( void );
         virtual ~Input();
 
+        /// Allow each input device to update itself.
+        void update( double dt );
+
         /// Returns true if the key is currently down.
         /// TODO Using GLFW key codes; should abstract from GLFW
         virtual bool isKeyDown( int keyCode ) const;
