@@ -105,9 +105,12 @@ glm::mat4
 spark::PerspectiveProjection
 ::viewMatrix( void ) const
 {
-    LOG_TRACE(g_log) << "ViewMatrix_EYE    = \n" << m_currEyeView << "\n";
-    LOG_TRACE(g_log) << "ViewMatrix_CAMERA = \n" << cameraViewMatrix() << "\n";
-    LOG_TRACE(g_log) << "ViewMatrix_TOTAL  = \n" << m_currEyeView * cameraViewMatrix() << "\n";
+    if( g_log->isTrace() )
+    {
+        LOG_TRACE(g_log) << "ViewMatrix_EYE    = \n" << m_currEyeView << "\n";
+        LOG_TRACE(g_log) << "ViewMatrix_CAMERA = \n" << cameraViewMatrix() << "\n";
+        LOG_TRACE(g_log) << "ViewMatrix_TOTAL  = \n" << m_currEyeView * cameraViewMatrix() << "\n";
+    }
     return m_currEyeView * cameraViewMatrix();
 }
 

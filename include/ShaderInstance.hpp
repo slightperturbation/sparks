@@ -72,7 +72,10 @@ namespace spark
         template< typename T >
         void setUniform( const ShaderUniformName& name, const T& val )
         { 
-            LOG_TRACE(g_log) << "Setting uniform " << name << " = " << val;
+            if( g_log->isTrace() )
+            {
+                LOG_TRACE(g_log) << "Setting uniform " << name << " = " << val;
+            }
             if( m_uniforms.find( name ) == m_uniforms.end() ) 
             {
                 createUniform<T>( name );
@@ -92,7 +95,10 @@ namespace spark
         template <typename T>
         void createUniform( const ShaderUniformName& name )
         {
-            LOG_TRACE(g_log) << "Creating uniform " << name << " with default value.";
+            if( g_log->isTrace() )
+            {
+                LOG_TRACE(g_log) << "Creating uniform " << name << " with default value.";
+            }
             m_uniforms[name] = new ShaderUniform<T>();
             m_isDirty = true;
         }
@@ -114,8 +120,11 @@ namespace spark
             }
             for( auto sumap = m_uniforms.begin(); sumap != m_uniforms.end(); ++sumap )
             {
-                LOG_TRACE(g_log) << "Applying ShaderUniform " << (*sumap).first
-                                 << " = " << (*sumap).second->toString();
+                if( g_log->isTrace() )
+                {
+                    LOG_TRACE(g_log) << "Applying ShaderUniform " << (*sumap).first
+                        << " = " << (*sumap).second->toString();
+                }
                 (*sumap).second->apply();
             }
         }
@@ -181,8 +190,11 @@ namespace spark
         void use( void ) const
         {
             GLuint shaderIndex = getGLProgramIndex();
-            LOG_TRACE(g_log) << "Use Shader Program " << shaderIndex
-                             << " \"" << name() << "\".";
+            if( g_log->isTrace() )
+            {
+                LOG_TRACE(g_log) << "Use Shader Program " << shaderIndex
+                                 << " \"" << name() << "\".";
+            }
             GL_CHECK( glUseProgram( shaderIndex ) );
             applyShaderUniforms( shaderIndex);
         }
