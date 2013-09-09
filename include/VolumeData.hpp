@@ -14,7 +14,7 @@ namespace spark
     public:
         virtual ~VolumeData() {}
         /// Simulate the fluid flow: add sources, diffuse, advect
-        virtual void update( float dt ) = 0;
+        virtual void fixedUpdate( float dt ) = 0;
 
         /// Returns the size of the fluid in number of voxels on x dimension
         virtual size_t dimX( void ) const = 0;

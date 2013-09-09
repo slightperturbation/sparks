@@ -10,7 +10,7 @@
 namespace spark
 {
     /// 2D model of tissue temperature
-    class TissueMesh : public Renderable, public Updateable
+    class TissueMesh : public Updateable
     {
         // Possible states/conditions the tissue can be in 
         // (not a enum class due to VS2010)
@@ -24,10 +24,7 @@ namespace spark
                     float totalLengthMeters,
                     size_t heatDim );
         virtual ~TissueMesh();
-        
-        /// Renderable
-        virtual void render( const RenderCommand& rc ) const override;
-        
+                
         /// Update the VBO based on changes to the data.
         virtual void fixedUpdate( float dt ) override;
         

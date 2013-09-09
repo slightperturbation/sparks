@@ -131,7 +131,7 @@ namespace spark
 
     // TODO -- template-tize over MeshVertex
     /// Mesh supports rendering of a indexed set of triangles
-    class Mesh : public Renderable
+    class Mesh : public Renderable, public Updateable
     {
     public:
         Mesh( void );
@@ -141,7 +141,8 @@ namespace spark
         virtual void render( const RenderCommand& rc ) const override;
 
         /// Update the VBO based on changes to the data.
-        virtual void update( float dt );
+        virtual void update( float dt ) override;
+        virtual void fixedUpdate( float dt ) override {}
         
         void clearGeometry( void );
         void resizeVertexArray( size_t newSize );
@@ -176,6 +177,7 @@ namespace spark
 
         /// Construction methods
         void unitCube( void );
+        void cube( float scale );
     
         /// Load the mesh and associated materials from the given filename
         bool createMeshFromFile( const std::string& filename,

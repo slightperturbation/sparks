@@ -1,4 +1,7 @@
 #include "Fluid.hpp"
+
+#include "Utilities.hpp" //< for getTime() only
+
 #include <limits>
 #include <fstream>
 #include <algorithm>
@@ -226,42 +229,6 @@ spark::Fluid
         m_vorticityForceV[i] = 0.0f;
         m_vorticityForceW[i] = 0.0f;
     }
-
-    // Sources are hacked into the initialization code for now
-    const bool hasCentralSource = false;
-    const bool hasBottomSource = false;
-    const bool hasBoom = false;
-
-    //for( size_t i=1; i<m_N; ++i )
-    //{
-    //    for( size_t j=1; j<m_N; ++j )
-    //    {
-    //        for( size_t k=1; k<m_N; ++k )
-    //        {
-    //            const int ci = m_N/2; 
-    //            const int cj = m_N/2;
-    //            const int ck = 2*m_N/5;
-    //            float d = std::sqrt( 
-    //                  (i-(float)ci)*(i-(float)ci)
-    //                + (j-(float)cj)*(j-(float)cj)
-    //                + (k-(float)ck)*(k-(float)ck)
-    //                );
-    //            if( hasCentralSource && d < m_N/5.0f )
-    //            {
-    //                m_density[index(i,j,k)] = 0.5;
-    //                m_density_source[index(i,j,k)] = 0;
-    //                m_temp[index(i,j,k)] = 20 + m_ambientTemp;
-    //            }
-    //            // grid is nice for understanding shape of volume
-    //            if( (!(i%8) || !(k%8)) && j==m_N/2 )
-    //            {
-    //                //m_density[index(i,j,k)] = 1.5;
-    //            }
-    //        }
-    //    }
-    //}
-    //if( hasBottomSource ) addBottomSource();
-    //if( hasBoom ) addBoom();
 }
 
 /// Create a 4x4x1 area at the bottom with high temp and source
@@ -925,7 +892,7 @@ spark::Fluid
 
 void 
 spark::Fluid
-::update( float dt )
+::fixedUpdate( float dt )
 {
     stepVelocity( dt * 0.05 );
     stepDensity( dt * 0.05 );

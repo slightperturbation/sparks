@@ -25,7 +25,7 @@ namespace spark
         
         virtual void render( const RenderCommand& rc ) const override;
         virtual void attachShaderAttributes( GLuint shaderIndex ) override;
-        virtual void update( float dt ) override;
+        virtual void fixedUpdate( float dt ) override;
         
         /// Shader Parameters
         void setLightSamples( int num )
