@@ -34,6 +34,7 @@
 
 #ifdef HAS_ZSPACE
   #include "ZSpaceEyeTracker.hpp"
+  #include "ZSpaceInput.hpp"
 #endif
 
 #include "StateManager.hpp"
@@ -163,7 +164,8 @@ int runSimulation(int argc, char** argv)
     bool useStereo = false;
 #ifdef HAS_ZSPACE
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Too slow for testing.  Maybe a cmd line flag?  Setting in GUI?
+    // Too slow for testing.  Maybe a cmd line flag?  Setting in GUI?
+    // Also, must be off for nVidia debugging
     useStereo = true;
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
@@ -179,12 +181,17 @@ int runSimulation(int argc, char** argv)
     // And Input manager
     // Choose windowing library -- glfw for now
     InputPtr inputManager( new Input );
-    std::unique_ptr<InputFactory> inputFactory(
+    std::unique_ptr<InputFactory> glfwInputFactory(
         new GlfwInputFactory( window.glfwWindow() ) );
-    inputManager->acquireKeyboardDevice( inputFactory->createKeyboard() );
+    inputManager->acquireKeyboardDevice( glfwInputFactory->createKeyboard() );
     inputManager->acquireInputDevice( "mouse",
-                                     inputFactory->createDevice(0) );
-    
+                                     glfwInputFactory->createDevice(0) );
+
+#ifdef HAS_ZSPACE
+    ZSpaceInputFactory zSpaceInputFactory;
+    inputManager->acquireInputDevice( "stylus", 
+                                      zSpaceInputFactory.createDevice(0) );
+#endif
     // Create common managers and tell them how to find file resources
     FileAssetFinderPtr finder( new FileAssetFinder );
     finder->addRecursiveSearchPath( DATA_PATH );
@@ -306,6 +313,9 @@ int runSimulation(int argc, char** argv)
     const double startTime = glfwGetTime();
     double currTime = startTime;
     double lastTime = startTime;
+    double totalTime = 0;
+    double lastReportedFps = 0;
+    double fpsReportThreshold = 1.0;
     double prevUpdateTime = 0;
     while( window.isRunning() )
     {
@@ -321,12 +331,29 @@ int runSimulation(int argc, char** argv)
         currTime = glfwGetTime();
         vars.fps = 1.0f/(currTime - lastTime);
 
+        // Report moving average of frame time
+        const int framesPerSegment = 32;
+        totalTime = totalTime 
+            + (currTime-lastTime) // time this frame
+            - (totalTime / framesPerSegment ); // moving avg removed
+        if( std::abs( lastReportedFps - (framesPerSegment/totalTime) ) 
+            > fpsReportThreshold )
+        {
+            std::cerr << "FPS over last " << framesPerSegment 
+                << " frames:  \t\t" 
+                << (framesPerSegment/totalTime) << "\n";
+            lastReportedFps = (framesPerSegment/totalTime);
+        }
+
         // UPDATE
         const float dt = 1.0f/60.0f;
         
         ////////////////////////////////////////////////////////////////////////
         // Update System (physics, collisions, etc.
         // 
+        
+        inputManager->update( dt );
+        
         if( (currTime - prevUpdateTime) > dt )
         {
             LOG_TRACE(g_log) << "Fixed update at " << currTime;
@@ -349,6 +376,12 @@ int runSimulation(int argc, char** argv)
         }
 
         ////////////////////////////////////////////////////////////////////////
+        // Pre-render
+        // parallel updates are complete, so handle queue'd opengl requests
+        // before rendering next frame
+        textureManager->executeQueuedCommands();
+
+        ////////////////////////////////////////////////////////////////////////
         // Render
         window.makeContextCurrent();
         if( eyeTracker && !useStereo )
@@ -368,7 +401,6 @@ int runSimulation(int argc, char** argv)
         }
         stateManager.render();
         window.swapBuffers();
-
 
         LOG_TRACE(g_log) << "Scene end - glfwSwapBuffers()";
         if( vars.isSavingFrames ) writeFrameBufferToFile( "sparks_" );

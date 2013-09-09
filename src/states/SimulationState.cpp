@@ -29,20 +29,55 @@ void
 spark::SimulationState
 ::load( void )
 {
+    enum PerformanceType { faster, balanced, highQuality, veryHighQuality };
+    PerformanceType perf = faster;
     {
-        //m_fluidData.reset( new Fluid(22) );
-        int n = 36; // 48 looks great, but slow
-        m_fluidData.reset( new Fluid(n) );
-        m_fluidData->setDiffusion( 5e-3 );//1e-2 );
-        m_fluidData->setVorticity( 1e4 );//1e4 ); //1e2 );
-        m_fluidData->setGravityFactor( 0, 500, 1100 ); // +x left, +y is away from viewer, 
-        //m_fluidData->setGravityFactor( 0, -4000, 0.0 );
-        
-        spark::shared_ptr< spark::SlicedVolume > slices( new
+        int n = 0;
+        int slices = 32;
+        switch( perf )
+        {
+        case faster:
+            slices = 32;
+            n = 6;
+            m_fluidData.reset( new Fluid(n) );
+            m_fluidData->setDiffusion( 5e-3 );//1e-2 );
+            m_fluidData->setVorticity( 1e4 );//1e4 ); //1e2 );
+            m_fluidData->setGravityFactor( 0, 500, 1100 ); // +x left, +y is away from viewer, 
+            break;
+            
+        case balanced:
+            slices = 128;
+            n = 22; 
+            m_fluidData.reset( new Fluid(n) );
+            m_fluidData->setDiffusion( 5e-3 );//1e-2 );
+            m_fluidData->setVorticity( 1e4 );//1e4 ); //1e2 );
+            m_fluidData->setGravityFactor( 0, 500, 1100 ); // +x left, +y is away from viewer, 
+            break;
+
+        case highQuality:
+            slices = 512;
+            n = 36; // looks good, still too slow 
+            m_fluidData.reset( new Fluid(n) );
+            m_fluidData->setDiffusion( 5e-3 );//1e-2 );
+            m_fluidData->setVorticity( 1e4 );//1e4 ); //1e2 );
+            m_fluidData->setGravityFactor( 0, 500, 1100 ); // +x left, +y is away from viewer, 
+            break;
+
+        case veryHighQuality:
+            slices = 1024;
+            n = 48;// looks great, but slow
+            m_fluidData.reset( new Fluid(n) );
+            m_fluidData->setDiffusion( 5e-3 );//1e-2 );
+            m_fluidData->setVorticity( 1e4 );//1e4 ); //1e2 );
+            m_fluidData->setGravityFactor( 0, 500, 1100 ); // +x left, +y is away from viewer, 
+            break;
+        }
+
+        spark::shared_ptr< spark::SlicedVolume > sliceVolume( new
             SlicedVolume( m_facade->getTextureManager(),
             m_facade->getShaderManager(),
             "TransparentPass",
-            1024, m_fluidData ) );
+            slices, m_fluidData ) );
         //    RayCastVolumePtr rayCastFluid( new RayCastVolume( "fluid_raycastvolume",
         //                                               textureManager,
         //                                               shaderManager,
@@ -56,21 +91,29 @@ spark::SimulationState
         glm::mat4 xform =  xform_move * xform_rot * xform_scale;// 
 
         //rayCastFluid->setTransform( xform );
-        slices->setTransform( xform );
-        m_scene->add( slices );
+        sliceVolume->setTransform( xform );
+        m_scene->add( sliceVolume );
         //m_lua->registerObject( "theSmoke", m_fluidData );
     }
 
-
+    int cellCountPerSide = 510;
+    // change tissue shader blur radius to match!
+    switch( perf )
+    {
+    case faster:
+        cellCountPerSide = 126;
+        break;
+    case balanced:
+        cellCountPerSide = 254;
+        break;
+    }
     m_tissueMesh = TissueMeshPtr( new TissueMesh( 
         name() + "_TISSUE_SIMULATION", 
         m_facade->getTextureManager(),
-        0.5, 
-        510 //254 // level of detail 510-- good, 126 for debugging
-            // change tissue shader blur radius
-            // 
+        0.5, // scale
+        cellCountPerSide //254 // level of detail 510-- good, 126 for debugging
         ) );
-    m_scene->add( m_tissueMesh );  // register for updates
+    m_scene->addUpdateable( m_tissueMesh );  // register for updates
     // Register tissue mesh with lua 
     m_lua->registerObject( "theTissueSim", m_tissueMesh );
 
