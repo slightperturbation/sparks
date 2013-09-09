@@ -61,7 +61,7 @@ void
 spark::Renderable
 ::transform( const glm::mat4& mat )
 {
-    m_objectTransform = mat * m_objectTransform; 
+    m_objectTransform = m_objectTransform * mat; 
 }
 
 
