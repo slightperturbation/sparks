@@ -29,14 +29,14 @@ void
 spark::SceneState
 ::activate( void )
 {
-    // Noop
+    m_scene->activate();
 }
 
 void
 spark::SceneState
 ::deactivate( void )
 {
-    // Noop
+    m_scene->deactivate();
 }
 
 void

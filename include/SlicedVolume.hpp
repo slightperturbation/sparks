@@ -20,6 +20,7 @@ namespace spark
         void attachVolumeData( VolumeDataPtr data ) { m_volumeData = data; }
         virtual void render( const RenderCommand& rc ) const override;
         virtual void update( float dt ) override;
+        virtual void fixedUpdate( float dt ) override;
         virtual void attachShaderAttributes( GLuint shaderIndex ) override;
         void setCameraDirection( const glm::vec3& dir );
     private:
