@@ -187,7 +187,7 @@ INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}/unsupported/" )
 #####################################################################
 # Intel Thread Building Blocks (TBB)
 #####################################################################
-set( USING_TBB OFF )
+set( USING_TBB ON )
 if( USING_TBB )
   MESSAGE( STATUS "\tTBB ON")
   if( WIN32 )
@@ -567,9 +567,12 @@ set( GUI_SRCS
 )
 
 if( ZSPACE_FOUND )
-  LIST( APPEND HDRS ./include/ZSpaceEyeTracker.hpp )
   LIST( APPEND SRCS ./src/ZSpaceEyeTracker.cpp )
-  LIST( APPEND SRCS ./src/EyeTrackerZSpace.cpp )
+  LIST( APPEND SRCS ./src/ZSpaceInput.cpp )
+  LIST( APPEND SRCS ./src/ZSpaceSystem.cpp )
+  LIST( APPEND HDRS ./include/ZSpaceEyeTracker.hpp )
+  LIST( APPEND HDRS ./include/ZSpaceInput.hpp )
+  LIST( APPEND HDRS ./include/ZSpaceSystem.hpp )
 else( ZSPACE_FOUND )
   LIST( APPEND SRCS ./src/EyeTrackerNetwork.cpp )
 endif( ZSPACE_FOUND )
