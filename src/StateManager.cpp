@@ -68,7 +68,7 @@ spark::StateManager
     {
         LOG_ERROR(g_log) << "Attempt to setCurrState(\"" << nextState
         << "\") but no such state is managed by this StateManager.";
-        // TODO throw
+        // TODO throw?  what does this mean?  who made a mistake?
         return;
     }
     if( m_currState )

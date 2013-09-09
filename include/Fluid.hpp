@@ -32,10 +32,11 @@ namespace spark
 
         //////////////////////////////////////////////////////////////////////////
         // Methods from VolumeData
-        virtual void update( float dt );
+        virtual void fixedUpdate( float dt );
         virtual size_t dimX( void ) const { return m_N+2; }
         virtual size_t dimY( void ) const { return m_N+2; }
         virtual size_t dimZ( void ) const { return m_N+2; }
+        /// Provides the "stable" density data (i.e., not currently updated)
         virtual const float* const getDensityData() const { return m_density; }
         virtual const float* const getVorticityMagnitudeData() const { return m_vorticityMagnitude; }
         virtual void getVelocityData( const float*& outVelX, const float*& outVelY, const float*& outVelZ ) const
@@ -186,6 +187,7 @@ namespace spark
         float* m_density_prev; //< previous time step's density field (scalar)
         // sources to be added with each update, needs to be zeroed if no longer adding
         float* m_density_source;
+
         float* m_velU;    //< (velU,velV,velW) is a (N+2)^3 vector field holding the velocity
         float* m_velV;
         float* m_velW;

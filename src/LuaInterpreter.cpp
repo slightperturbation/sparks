@@ -37,7 +37,7 @@ void
 spark
 ::bindSceneFacade( lua_State* lua )
 {
-    // Renderable
+    //////////////////////////////////////////////////////////// Renderable
     luabind::module( lua )
     [
      luabind::class_< Renderable, RenderablePtr >( "Renderable" )
@@ -69,7 +69,7 @@ spark
           &Renderable::setMaterialForPassName )
      ];
     
-    // TextRenderable
+    //////////////////////////////////////////////////////// TextRenderable
     luabind::module( lua )
     [
      luabind::class_< TextRenderable, Renderable, TextRenderablePtr >( "TextRenderable" )
@@ -78,7 +78,7 @@ spark
      .def( "getSizeInPixels", &TextRenderable::getSizeInPixels )
      ];
 
-    // TissueMesh
+    //////////////////////////////////////////////////////////// TissueMesh
     luabind::module( lua )
     [
      luabind::class_< TissueMesh, Renderable, TissueMeshPtr >( "TissueMesh" )
@@ -87,7 +87,7 @@ spark
      .def( "getConditionMapTextureName", &TissueMesh::getConditionMapTextureName )
      ];
 
-    // FontManager
+    /////////////////////////////////////////////////////////// FontManager
     luabind::module( lua )
     [
      luabind::class_< FontManager, FontManagerPtr >( "FontManager" )
@@ -95,7 +95,7 @@ spark
      .def( "getFontAtlasTextureName", &FontManager::getFontAtlasTextureName )
     ];
 
-    // RenderPass
+    //////////////////////////////////////////////////////////// RenderPass
     luabind::module( lua )
     [
      luabind::class_< RenderPass, RenderPassPtr >( "RenderPass" )
@@ -121,19 +121,20 @@ spark
           &RenderPass::useDefaultMaterial )
      ];
     
-    // RenderTarget
+    ////////////////////////////////////////////////////////// RenderTarget
     luabind::module( lua )
     [
      luabind::class_< RenderTarget,
      RenderTargetPtr >( "RenderTarget" )
      .def( "setClearColor", &RenderTarget::setClearColor )
      ];
-    // Projection
+
+    //////////////////////////////////////////////////////////// Projection
     luabind::module( lua )
     [
      luabind::class_< Projection, ProjectionPtr >( "Projection" )
      ];
-    // PerspectiveProjection
+    ///////////////////////////////////////////////// PerspectiveProjection
     luabind::module( lua )
     [
      // Note! The luabind docs explicitly say to bind with the base-class's
@@ -150,7 +151,7 @@ spark
      
      ];
     
-    // Input
+    ///////////////////////////////////////////////////////////////// Input
     luabind::module( lua )
     [
      luabind::class_< Input, InputPtr >( "Input" )
@@ -161,14 +162,15 @@ spark
      .def( "getPositionRange", &Input::getPositionRange )
      ];
     
-    // OrthogonalProjection
+    ////////////////////////////////////////////////// OrthogonalProjection
     luabind::module( lua )
     [
      luabind::class_< OrthogonalProjection,
      Projection,
      OrthogonalProjectionPtr >( "OrthogonalProjection" )
      ];
-    
+
+    /////////////////////////////////////////////////////////// SceneFacade
     luabind::module( lua )
     [
      luabind::class_< SceneFacade,
@@ -227,7 +229,8 @@ spark
      .def( "getRenderPassByName",
           &SceneFacade::getRenderPassByName )
      ];
-    
+
+    ////////////////////////////////////////////////////////////// Material
     luabind::module( lua )
     [
      luabind::class_< Material,
@@ -303,6 +306,7 @@ spark
      .def_readwrite( "x", &glm::vec3::x )
      .def_readwrite( "y", &glm::vec3::y )
      .def_readwrite( "z", &glm::vec3::z )
+     // Union bindings not supported under Intel complier
      //.def_readwrite( "r", &glm::vec3::r )
      //.def_readwrite( "g", &glm::vec3::g )
      //.def_readwrite( "b", &glm::vec3::b )
@@ -319,6 +323,7 @@ spark
      .def_readwrite( "y", &glm::vec4::y )
      .def_readwrite( "z", &glm::vec4::z )
      .def_readwrite( "w", &glm::vec4::w )
+     // Union bindings not supported under Intel complier
      //.def_readwrite( "r", &glm::vec4::r )
      //.def_readwrite( "g", &glm::vec4::g )
      //.def_readwrite( "b", &glm::vec4::b )

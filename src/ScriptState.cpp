@@ -80,8 +80,6 @@ void
 spark::ScriptState
 ::update( double dt )
 {
-    
-    
     m_scene->update( dt );
     // poll for loading thread to complete
     // when complete set flag to advance to next state
