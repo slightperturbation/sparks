@@ -41,8 +41,7 @@ namespace spark
 
     /// Draws to the default display framebuffer.
     class FrameBufferRenderTarget 
-        : public RenderTarget, 
-          public GuiEventSubscriber
+        : public RenderTarget
     {
     public:
         FrameBufferRenderTarget( int aWidth, int aHeight );
@@ -110,8 +109,7 @@ namespace spark
 
     /// A ScaledTexureRenderTarget that maintains a size that is a scale factor
     /// of the viewport's size.  Listens to GUI callbacks to keep size linked.
-    class ScaledTextureRenderTarget : public TextureRenderTarget,
-                                      public GuiEventSubscriber
+    class ScaledTextureRenderTarget : public TextureRenderTarget
     {
     public:
         ScaledTextureRenderTarget( const TextureName& aName,
