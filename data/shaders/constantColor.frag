@@ -23,5 +23,5 @@ uniform vec4 u_color = vec4( 1, 1, 1, 1 );
 
 void main()
 {
-    outColor = vec4( f_normal, 1 );//u_color;
+    outColor = u_color;//vec4( f_normal, 1 );//
 }
