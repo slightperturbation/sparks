@@ -285,10 +285,10 @@ spark::TextureManager
     //TODO-- Can be overridden by TextureUnit?
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
                                GL_TEXTURE_WRAP_S,
-                               GL_CLAMP_TO_EDGE ) );
+                               GL_REPEAT ) );
 	GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
                                GL_TEXTURE_WRAP_T,
-                               GL_CLAMP_TO_EDGE ) );
+                               GL_REPEAT ) );
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D,
                                GL_TEXTURE_MIN_FILTER,
                                GL_LINEAR_MIPMAP_LINEAR ) );
@@ -323,13 +323,19 @@ void
 spark::TextureManager
 ::executeQueuedCommands( void )
 {
-    boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
-    auto iter = m_commandQueue.begin();
-    while( iter != m_commandQueue.end() )
+    std::set< TextureManagerCommandPtr, TextureManagerCommandComparator > execCopy;
+    {
+        boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
+        std::copy( m_commandQueue.begin(), m_commandQueue.end(),
+            std::inserter( execCopy, execCopy.begin() ) );
+        m_commandQueue.clear();
+    }
+    for( auto iter = execCopy.begin();
+         iter != execCopy.end();
+         ++iter )
     {
         assert( *iter );
         (*iter)->operator()( this );
-        iter = m_commandQueue.erase( iter );
     }
 }
 
@@ -339,7 +345,7 @@ spark::TextureManager
                                     VolumeDataPtr aVolume )
 {
     boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
-    m_commandQueue.insert( TextureManagerCommandUniquePtr( 
+    m_commandQueue.insert( TextureManagerCommandPtr( 
         new Load3DTextureFromVolumeDataCommand( aHandle, aVolume ) ) );
 }
 
@@ -406,7 +412,7 @@ spark::TextureManager
                                   size_t dimPerSide )
 {
     boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
-    m_commandQueue.insert( TextureManagerCommandUniquePtr( 
+    m_commandQueue.insert( TextureManagerCommandPtr( 
         new Load2DByteTextureFromDataCommand( aHandle, aData, dimPerSide ) ) );
 }
 
@@ -473,7 +479,7 @@ spark::TextureManager
     size_t dimPerSide )
 {
     boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
-    m_commandQueue.insert( TextureManagerCommandUniquePtr( 
+    m_commandQueue.insert( TextureManagerCommandPtr( 
         new Load2DFloatTextureFromDataCommand( aHandle, aData, dimPerSide ) ) );
 };
 
@@ -577,13 +583,16 @@ spark::TextureManager
     GL_CHECK( glBindTexture( aTextureType, aTextureId ) );
     m_bindingTextureUnitToTextureId.push_back( std::make_pair( aTextureUnit,
                                                                aTextureId) );
-    LOG_TRACE(g_log) << "Bound texture \""
-                     << getTextureHandleFromTextureId( aTextureId )
-                     << "\" ID="
-                     << aTextureId << " to texture unit "
-                     << aTextureUnit << ", type = "
-                     << ((aTextureType == GL_TEXTURE_2D) ? "TEXTURE_2D" : "" )
-                     << ((aTextureType == GL_TEXTURE_3D) ? "TEXTURE_3D" : "" );
+    if( g_log->isTrace() )
+    {
+        LOG_TRACE(g_log) << "Bound texture \""
+                         << getTextureHandleFromTextureId( aTextureId )
+                         << "\" ID="
+                         << aTextureId << " to texture unit "
+                         << aTextureUnit << ", type = "
+                         << ((aTextureType == GL_TEXTURE_2D) ? "TEXTURE_2D" : "" )
+                         << ((aTextureType == GL_TEXTURE_3D) ? "TEXTURE_3D" : "" );
+    }
 }
 
 GLint

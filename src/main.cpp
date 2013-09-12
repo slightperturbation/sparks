@@ -166,7 +166,7 @@ int runSimulation(int argc, char** argv)
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Too slow for testing.  Maybe a cmd line flag?  Setting in GUI?
     // Also, must be off for nVidia debugging
-    useStereo = true;
+    useStereo = false;
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
     OpenGLWindow window( "Spark", enableLegacyOpenGlLogging, useStereo );
@@ -292,8 +292,8 @@ int runSimulation(int argc, char** argv)
         stateManager.addState( newState );
         
     }
-    stateManager.setCurrState( "Simulation" );
-    //stateManager.setCurrState( "Loading" );
+    //stateManager.setCurrState( "Simulation" );
+    stateManager.setCurrState( "Loading" );
 
     // spark renders to sparkRenderTexture
     // overlay renders to g_transparentRenderPass using a glow shader
@@ -480,6 +480,7 @@ int runSimulation(int argc, char** argv)
             //}
         }
     }
+    stateManager.shutdown();
     textureManager->releaseAll();
     return 0;
 }

@@ -38,11 +38,11 @@ namespace spark
             virtual void operator()( TextureManager* tm ) const = 0;
             const TextureName m_handle;
         };
-        typedef std::unique_ptr< TextureManagerCommand > TextureManagerCommandUniquePtr;
+        typedef spark::shared_ptr< TextureManagerCommand > TextureManagerCommandPtr;
         struct TextureManagerCommandComparator
         {
-            bool operator()( const TextureManagerCommandUniquePtr& lhs, 
-                             const TextureManagerCommandUniquePtr& rhs )
+            bool operator()( const TextureManagerCommandPtr& lhs, 
+                             const TextureManagerCommandPtr& rhs )
             {
                 return lhs->m_handle < rhs->m_handle;
             }
@@ -107,7 +107,7 @@ namespace spark
             std::vector<float> m_data;
             const size_t m_dimPerSide;
         };
-        std::set< TextureManagerCommandUniquePtr, TextureManagerCommandComparator > m_commandQueue;
+        std::set< TextureManagerCommandPtr, TextureManagerCommandComparator > m_commandQueue;
         boost::mutex m_commandQueueMutex;
     public:
         TextureManager( void );

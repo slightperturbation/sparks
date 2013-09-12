@@ -61,6 +61,9 @@ namespace spark
         
         /// Ask the current state if we should change states.
         void updateState( double currTime );
+
+        /// Stops the current state and leaves the system ready to be unloaded.
+        void shutdown( void );
     private:
         /// Returns true iff the state of name has had load() called already.
         bool isLoaded( const StateName& name );

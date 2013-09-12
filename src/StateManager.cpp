@@ -177,6 +177,21 @@ spark::StateManager
     }
 }
 
+void
+spark::StateManager
+::shutdown( void )
+{
+    if( m_currState )
+    {
+        m_currState->deactivate();
+    }
+    if( m_pendingRemoval && m_pendingRemoval.get() == m_currState->name() )
+    {
+        removeStateByName( m_pendingRemoval.get() );
+    }
+    m_currState.reset(); // No current state after shutdown
+}
+
 bool
 spark::StateManager
 ::isLoaded( const StateName& name )
