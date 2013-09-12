@@ -26,7 +26,7 @@ function LoadingState:load()
 
 	self.mainRenderTarget = spark:createTextureRenderTarget( "MainRenderTargetTexture" )
 	spark:setMainRenderTarget( self.mainRenderTarget )
-	self.mainRenderTarget:setClearColor( vec4( 0,1,0,0.5 ) )
+	self.mainRenderTarget:setClearColor( vec4( 1,1,1,1 ) )
 
 	self.opaqueRenderPass = spark:createRenderPass( 1.0, "OpaquePass", self.mainRenderTarget )
 	self.opaqueRenderPass:setDepthWrite( true )
@@ -41,19 +41,21 @@ function LoadingState:load()
 	textureManager:loadTextureFromImageFile( "cemsimLogo", "cemsimlogo-regular.jpg" )
 	self.logoMaterial = spark:createMaterial( "texturedOverlayShader" )
 	self.logoMaterial:addTexture( "s_color", "cemsimLogo" )
-	local logoX = 2592.0
+	local logoX = 2592.0  -- actual size in pixels
 	local logoY = 864.0
-	local aspect = (logoY / logoX) / .75 -- .75 is aspect ratio of display
+	local displayAspectRatio = 1080/1920 -- zSpace display
+	local aspect = (logoY / logoX) / displayAspectRatio -- .75 is aspect ratio of display
 	self.size = 1
 	local size = self.size
-	self.logo = spark:createQuad( vec2(0, 1.0-size*aspect), 
-		                          vec2( size, -size*aspect), 
+	local sizeScale = 0.5
+	self.logo = spark:createQuad( vec2( sizeScale*size*.5, 1.0-(size*aspect*sizeScale*.5) ), 
+		                          vec2( sizeScale*size, -size*aspect*sizeScale ), 
 		                          self.logoMaterial, "HUDPass" )
 
 	self.boxMat = spark:createMaterial( "colorShader" )
-	self.boxMat:setVec4( "u_color", vec4(1.0,0.3,0.3,1.0) )
-	self.boxA = spark:createCube( vec3(0,0,0), 0.25, self.boxMat, "OpaquePass" )
-	self.boxB = spark:createCube( vec3(-0.5,0,0), 0.25, self.boxMat, "OpaquePass" )
+	self.boxMat:setVec4( "u_color", vec4(0.3,0.3,0.3,1.0) )
+	self.boxA = spark:createCube( vec3(0.25,0,0), 0.25, self.boxMat, "OpaquePass" )
+	self.boxB = spark:createCube( vec3(-0.25,0,0), 0.25, self.boxMat, "OpaquePass" )
 	self.boxB:rotate( self.angle, vec3(0,1,0) )
 end
 
@@ -88,6 +90,7 @@ end
 function LoadingState:fixedUpdate( dt )
 	--print( "LoadingState:fixedUpdate" )	
 	self.boxB:rotate( 10, vec3(0,1,0) )
+	self.boxA:rotate( -10, vec3(0,1,0) )
 end
 
 function LoadingState:deactivate()
@@ -99,11 +102,11 @@ function LoadingState:nextState( currTime )
 	-- the next desired state back to the app
 	-- TODO should be changed to use the return value
 	--print( "LoadingState:nextState( " .. currTime .. " )")
-	if currTime > 10 then 
-		--theNextState = "Menu" 
+	if currTime > 0 then 
+		theNextState = "Simulation" 
 		--print( "Changing state to menu!" )
 	else
-		theNextState = ""
+		theNextState = "" -- null means stay at current state
 	end
 end
 

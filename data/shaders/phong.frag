@@ -15,7 +15,6 @@ in vec4 f_vertex_camera;
 
 // Samplers are named s_TEXTURENAME
 uniform sampler2D s_color;
-uniform sampler2D s_color2;
 
 // Phong-specific inputs
 struct Light

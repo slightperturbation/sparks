@@ -221,10 +221,6 @@ vec2 cellular(vec3 P) {
 float circle( vec2 position, vec2 center, float radius ) 
 {
 	return 1.0 - smoothstep( radius*0.95, radius, length(position-center) );
-	// float smooth1 = 0.0;
-	// float smooth2 = 1.0;
-	// float dist = length( position - center );
-	// return mix(vec4(1.0), vec4(0.0), smoothstep(smooth1, smooth2, dist*dist));
 }
 
 float rand(vec2 co){
