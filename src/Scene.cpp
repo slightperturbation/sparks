@@ -298,22 +298,13 @@ spark::Scene::FixedUpdateTask
         }
         else
         {
-            boost::this_thread::yield();
-            // while it's clearly better to wait for a known (roughly)
-            // time, rather than busy-wait with a yield, turns out 
-            // that this kills a huge amount of CPU in boost time functions
-            // on windows.  I believe this is due to using posix_time.
-            // May be able to fix using system_time or similar, but
-            // that fix won't be needed until CPU-bound.  Leaving it 
-            // as-is (using a busy-wait-yield) gives more exact timing
-            // for the updates, and should give a more consistent look.
-            // 
-            //double waitTimeDoubleMilliseconds = 1000.0 * (m_dt - (getTime() - m_prevUpdateTime));
-            //if( waitTimeDoubleMilliseconds > 3 )
-            //{
-            //    boost::posix_time::seconds waitTime( waitTimeDoubleMilliseconds );
-            //    boost::this_thread::sleep( waitTime );
-            //}
+            // Wait for roughly how long until the next update is needed.
+            const int waitTimeMilliseconds = int( 1000.0 * (m_dt - (getTime() - m_prevUpdateTime)) );
+            if( waitTimeMilliseconds > 3 )
+            {
+                //std::cerr << "FixedUpdateTask [" << m_updateable->updateableName() << " - " << boost::this_thread::get_id() << "] waiting for " << waitTimeMilliseconds << "\n";
+                boost::this_thread::sleep_for( boost::chrono::milliseconds( waitTimeMilliseconds ) );
+            }
         }
     }
     // Never returns

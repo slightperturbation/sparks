@@ -148,6 +148,7 @@ list(APPEND PROJECT_BOOST_COMPONENTS
   filesystem 
   system 
   thread 
+  chrono
   ) 
 FIND_PACKAGE(Boost ${BOOST_MIN_VERSION} COMPONENTS ${PROJECT_BOOST_COMPONENTS})
 MESSAGE( STATUS "Using boost from " ${Boost_LIBRARY_DIRS} )
