@@ -2,6 +2,11 @@
 
 #include "TextRenderable.hpp"
 #include "TissueMesh.hpp"
+#include "SlicedVolume.hpp"
+#include "Fluid.hpp"
+#include "Utilities.hpp" // for glm operator<< functions
+
+#include <luabind/operator.hpp>
 
 int
 spark
@@ -86,6 +91,26 @@ spark
      .def( "getTempMapTextureName", &TissueMesh::getTempMapTextureName )
      .def( "getConditionMapTextureName", &TissueMesh::getConditionMapTextureName )
      ];
+
+    ///////////////////////////////////////////////////////////SlicedVolume
+    luabind::module( lua )
+    [
+        luabind::class_< SlicedVolume, Renderable, SlicedVolumePtr >( "SlicedVolume" )
+        .def( "setCameraDirection", &SlicedVolume::setCameraDirection )
+    ];
+
+    /////////////////////////////////////////////////////////// Fluid
+    luabind::module( lua )
+    [
+        luabind::class_< Fluid, FluidPtr >( "Fluid" )
+        .def( "setViscosity", &Fluid::setViscosity )
+        .def( "setDiffusion", &Fluid::setDiffusion )
+        .def( "setVorticity", &Fluid::setVorticity )
+        .def( "setAbsorption", &Fluid::setAbsorption )
+        .def( "setGravityFactor", &Fluid::setGravityFactor )
+        .def( "setSolverIterations", &Fluid::setSolverIterations )
+        .def( "reset", &Fluid::reset )
+    ];
 
     /////////////////////////////////////////////////////////// FontManager
     luabind::module( lua )
@@ -261,6 +286,7 @@ spark
      .def( "deleteTexture", &TextureManager::deleteTexture )
      .def( "exists", &TextureManager::exists )
      .def( "logTextures", &TextureManager::logTextures )
+     .def( "setTextureParameteri", &TextureManager::setTextureParameteri )
      ];
 }
 
@@ -295,6 +321,10 @@ spark
      //.def_readwrite( "t", &glm::vec2::t )
      .def( "at", &vec2_at )
      .def( "set", &vec2_set )
+     .def( luabind::const_self + luabind::const_self )
+     .def( luabind::const_self - luabind::const_self )
+     .def( luabind::const_self * float() )
+     .def( luabind::const_self * luabind::other< glm::mat2 >() )
      ];
     
     luabind::module( lua )
@@ -312,6 +342,10 @@ spark
      //.def_readwrite( "b", &glm::vec3::b )
      .def( "at", &vec3_at )
      .def( "set", &vec3_set )
+     .def( luabind::const_self + luabind::const_self )
+     .def( luabind::const_self - luabind::const_self )
+     .def( luabind::const_self * float() )
+     .def( luabind::const_self * luabind::other< glm::mat3 >() )
      ];
     luabind::module( lua )
     [
@@ -330,6 +364,10 @@ spark
      //.def_readwrite( "a", &glm::vec4::a )
      .def( "at", &vec4_at )
      .def( "set", &vec4_set )
+     .def( luabind::const_self + luabind::const_self )
+     .def( luabind::const_self - luabind::const_self )
+     .def( luabind::const_self * float() )
+     .def( luabind::const_self * luabind::other< glm::mat4 >() )
      ];
     
     luabind::module( lua )
@@ -340,6 +378,10 @@ spark
      .def( luabind::constructor<glm::vec3,glm::vec3,glm::vec3>() )
      .def( "at", (glm::vec3& (*)(glm::mat3*, int))&mat3_at )
      .def( "at", (float& (*)(glm::mat3*, int, int))&mat3_at )
+     .def( luabind::const_self + luabind::const_self )
+     .def( luabind::const_self - luabind::const_self )
+     .def( luabind::const_self * luabind::const_self )
+     .def( luabind::const_self * luabind::other< glm::vec3 >() )
      ];
     
     luabind::module( lua )
@@ -350,8 +392,17 @@ spark
      .def( luabind::constructor<glm::vec4,glm::vec4,glm::vec4,glm::vec4>() )
      .def( "at", (glm::vec4& (*)(glm::mat4*, int))&mat4_at )
      .def( "at", (float& (*)(glm::mat4*, int, int))&mat4_at )
-     .def( "set", &mat4_set )
+     .def( luabind::const_self + luabind::const_self )
+     .def( luabind::const_self - luabind::const_self )
+     .def( luabind::const_self * luabind::const_self )
+     .def( luabind::const_self * luabind::other< glm::vec4 >() )
      ];
+
+    luabind::module( lua )
+    [
+        luabind::def( "mat4_set", &spark::mat4_set ),
+        luabind::def( "mat4_at", &spark::mat4_at )
+    ];
 }
 
 void

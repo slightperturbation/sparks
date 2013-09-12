@@ -81,9 +81,9 @@ namespace spark
     inline float& mat3_at( glm::mat3* m, int i, int j ) { return (*m)[i][j]; }
     inline void mat3_set( glm::mat3* m, int i, int j, float x ) { (*m)[i][j] = x; }
 
-    inline glm::vec4& mat4_at( glm::mat4* m, int i ) { return (*m)[i]; }
-    inline float& mat4_at( glm::mat4* m, int i, int j ) { return (*m)[i][j]; }
-    inline void mat4_set( glm::mat4* m, int i, int j, float x ) { (*m)[i][j] = x; }
+    //inline glm::vec4& mat4_at( glm::mat4* m, int i ) { return (*m)[i]; }
+    inline float mat4_at( glm::mat4& m, int i, int j ) { return m[i][j]; }
+    inline void mat4_set( glm::mat4& m, int i, int j, float x ) { m[i][j] = x; }
     
     
     /////////////////////////////////////////////////////////////////////
