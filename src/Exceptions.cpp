@@ -21,8 +21,6 @@ spark
     m_msg = msg; m_shaderSource = shaderSource;
     LOG_DEBUG(g_log) << "ShaderCompilationException on shader source: "
                      << shaderSource;
-    std::cerr << "\nShaderCompilationException on shader source: "
-        << shaderSource << "\n\n";
 }
 
 const char*

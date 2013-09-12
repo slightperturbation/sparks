@@ -51,7 +51,7 @@ namespace spark
             }
             else if( index == -1 )
             {
-                LOG_DEBUG(g_log) << "VertexAttribute \"" << m_name << "\" not found in shader program "
+                LOG_TRACE(g_log) << "VertexAttribute \"" << m_name << "\" not found in shader program "
                 << shaderProgramIndex << "\n";
             }
             else
@@ -70,7 +70,7 @@ namespace spark
             }
             else if( index == -1 )
             {
-                LOG_DEBUG(g_log) << "VertexAttribute \"" << m_name << "\" not found in shader program "
+                LOG_TRACE(g_log) << "VertexAttribute \"" << m_name << "\" not found in shader program "
                 << shaderProgramIndex << "\n";
             }
             else
@@ -89,7 +89,7 @@ namespace spark
             }
             else if( index == -1 )
             {
-                LOG_DEBUG(g_log) << "VertexAttribute \"" << m_name << "\" not found in shader program "
+                LOG_TRACE(g_log) << "VertexAttribute \"" << m_name << "\" not found in shader program "
                 << shaderProgramIndex << "\n";
             }
             else
@@ -119,7 +119,7 @@ namespace spark
         virtual ~FloatVertexAttribute() {}
         virtual void assignPointerByIndex(GLuint attribIndex)
         {
-            LOG_DEBUG(g_log) << "Assigning float VertexAttribPointer \"" << m_name << "\" size="
+            LOG_TRACE(g_log) << "Assigning float VertexAttribPointer \"" << m_name << "\" size="
             << m_size << ", stride=" << m_stride << ", offset=" << m_offset 
             << " to current GL_ARRAY_BUFFER. [ glVertexAttribPointer ]";
             GL_CHECK( glVertexAttribPointer( attribIndex, m_size, GL_FLOAT, GL_FALSE, m_stride, m_offset ) );

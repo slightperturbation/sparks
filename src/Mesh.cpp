@@ -397,18 +397,18 @@ spark::Mesh
 
     MeshVertex::addVertexAttributes( m_attributes );
 
+    LOG_TRACE(g_log) << "Binding vertex array object: " << m_vertexArrayObjectId ;
     // Must bind VAO & VBO to set attributes
-    LOG_DEBUG(g_log) << "Binding vertex array object: " << m_vertexArrayObjectId ;
     GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
     GL_CHECK( glBindBuffer(GL_ARRAY_BUFFER, m_vertexBufferId ) );
 
-    LOG_DEBUG(g_log) << "\tInitializing: # of attributes = " << m_attributes.size();
+    LOG_TRACE(g_log) << "\tInitializing: # of attributes = " << m_attributes.size();
     for( auto attribIter = m_attributes.begin(); attribIter != m_attributes.end(); ++attribIter )
     {
         auto attrib = *attribIter;
-        LOG_DEBUG(g_log) << "\t\tdefining shader attribute \"" << attrib->m_name << "\".";
+        LOG_TRACE(g_log) << "\t\tdefining shader attribute \"" << attrib->m_name << "\".";
         attrib->defineByNameInShader( aShaderProgramIndex );
-        LOG_DEBUG(g_log) << "\t\tenabling shader attribute \"" << attrib->m_name << "\".";
+        LOG_TRACE(g_log) << "\t\tenabling shader attribute \"" << attrib->m_name << "\".";
         attrib->enableByNameInShader( aShaderProgramIndex );
     }
     GL_CHECK( glBindVertexArray( 0 ) );

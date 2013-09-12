@@ -126,7 +126,6 @@ glm::mat4
 spark::ZSpaceInputDevice
 ::getTransform( void ) const 
 {
-    std::cerr << "Stylus transform:   " << m_transform << "\n";
     return m_transform;
 }
 
