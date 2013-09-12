@@ -3,6 +3,11 @@
 local Button = require "button"
 -----------------------------
 
+function abs( a ) 
+	if( a < 0 ) then return -a end
+	return a
+end
+
 
 SimulationState = {}
 
@@ -14,9 +19,8 @@ function SimulationState:new()
 		angle = 45, 
 		hasRunOnce = false, 
 		startTime = -1, 
-		currWattage = 20,
-		startActivation = 4, 
-		stopActivation = 5.22, 
+		currWattage = 200, 
+		activationTime = 0,
 		currTime = 0 
 	}
 	self.__index = self
@@ -28,7 +32,7 @@ function incrWattage( simState )
 	if( simState.currWattage < 65 ) then
 		simState.currWattage = simState.currWattage + 10
 		print( "New Wattage: "..simState.currWattage )
-		simState.buttons["wattage"].text:setText( string.format("%2.0f watts", simState.currWattage) )
+		simState.buttons["wattage"].text:setText( string.format("%2.0f", simState.currWattage) )
 	end
 end
 function decrWattage( simState )
@@ -36,7 +40,7 @@ function decrWattage( simState )
 	if( simState.currWattage > 15 ) then
 		simState.currWattage = simState.currWattage - 10
 		print( "New Wattage: "..simState.currWattage )
-		simState.buttons["wattage"].text:setText( string.format("%2.0f watts", simState.currWattage) )
+		simState.buttons["wattage"].text:setText( string.format("%2.0f", simState.currWattage) )
 	end
 end
 
@@ -62,43 +66,69 @@ function SimulationState:load()
 	transRenderPass:setDepthTest( true )
 	transRenderPass:useInterpolatedBlending()
 
-	-- HUDRenderPass = spark:createOverlayRenderPass( 0.25, "HUDPass", mainRenderTarget )
-	-- HUDRenderPass:setDepthTest( false )
-	-- HUDRenderPass:setDepthWrite( false )
-	-- HUDRenderPass:useInterpolatedBlending()
+	HUDRenderPass = spark:createOverlayRenderPass( 0.25, "HUDPass", mainRenderTarget )
+	HUDRenderPass:setDepthTest( false )
+	HUDRenderPass:setDepthWrite( false )
+	HUDRenderPass:useInterpolatedBlending()
+	
+	-- specifies where the tissue is relative to world coords
+	self.worldOffset = vec3( 0, -.1, -0.125 )
+	local showTable = true
+	if( showTable ) then
+		self.clothMat = spark:createMaterial( "phongShader" )
+		self.clothMat:setVec4( "u_light.position_camera", vec4(5,10,0,1) )
+		self.clothMat:setVec4( "u_light.diffuse", vec4(0.8,0.8,0.8,1) )
+		self.clothMat:setVec4( "u_ambientLight", vec4(0.3,0.1,0.1,1) )
+		self.clothMat:setVec4( "u_ka", vec4(1,1,1,1) )
+		self.clothMat:setVec4( "u_kd", vec4(1,1,1,1) )
+		self.clothMat:setVec4( "u_ks", vec4(1,1,1,1) )
+		self.clothMat:setFloat( "u_ns", 100.0 )
+		self.clothMat:setFloat( "u_activationTime", 0.0 )
+		self.clothMat:addTexture( "s_color", "cloth" );
+		self.clothMat:setVec2( "u_textureRepeat", vec2(4,4) )
+		local table = spark:createCube(self.worldOffset + vec3(-0.5, -0.025, -0.5), 1, self.clothMat, "OpaquePass" )
+		table:rotate( 90, vec3(1,0,0) )
+	end
+
+	local showTissue = true
+	if showTissue  then
+		self.tissueMat = spark:createMaterial( "tissueShader" ) --"tissueShader_procedural"  )
+		self.tissueMat:setVec4( "u_light.position_camera", vec4(5,10,0,1) )
+		self.tissueMat:setVec4( "u_light.diffuse", vec4(0.8,0.8,0.8,1) )
+		self.tissueMat:setVec4( "u_ambientLight", vec4(0.3,0.1,0.1,1) )
+		self.tissueMat:setVec4( "u_ka", vec4(1,1,1,1) )
+		self.tissueMat:setVec4( "u_kd", vec4(1,1,1,1) )
+		self.tissueMat:setVec4( "u_ks", vec4(1,1,1,1) )
+		self.tissueMat:setFloat( "u_ns", 100.0 )
+		self.tissueMat:setFloat( "u_activationTime", 0.0 )
+
+		self.tissueMat:addTexture( "s_color", "tissueDiffuse" );
+		self.tissueMat:addTexture( "s_bump", "tissueBump" );
+		self.tissueMat:addTexture( "s_normal", "tissueNormal" );
+		self.tissueMat:addTexture( "s_ambient", "tissueAmbient" );
+		self.tissueMat:addTexture( "s_temperature", theTissueSim:getTempMapTextureName() )
+		self.tissueMat:addTexture( "s_condition", theTissueSim:getConditionMapTextureName() )
+
+		self.tissueMat_debug = spark:createMaterial( "tissueShader_debug" )
+		self.tissueMat_debug:addTexture( "s_temperature", theTissueSim:getTempMapTextureName() )
+		self.tissueMat_debug:addTexture( "s_condition", theTissueSim:getConditionMapTextureName() )
+
+		-- Global theTissueSim is the tissue simulation, declared in C++
+		self.tissueMat:addTexture( "s_temperature", theTissueSim:getTempMapTextureName() )
+		self.tissueMat:addTexture( "s_condition", theTissueSim:getConditionMapTextureName() )
+		self.tissue = spark:createCube( self.worldOffset + vec3(-0.25, 0, -0.25), 0.5, self.tissueMat, "OpaquePass" )
+		self.tissue:rotate( 90, vec3(1,0,0) )
 
 
-
-	-- 
-	-- DEPECATED -- tissue needs to be created on C++ side until better way of passing back to C++ 
-	-- Because of this, must run within SimulationState.cpp
-	-- Make tissue box
-	--   meters in total length on a side  
-	--   total voxels
-	--self.tissueSim = spark:createTissue( "tissueSim", 0.25, 100 )
-
-	-- local showTissue = false
-	-- if showTissue  then
-	-- 	self.tissueMat = spark:createMaterial( "phongShader" )--"tissueShader" )
-	-- 	self.tissueMat:setVec4( "u_light.position_camera", vec4(5,10,0,1) )
-	-- 	self.tissueMat:setVec4( "u_light.diffuse", vec4(0.8,0.8,0.8,1) )
-	-- 	self.tissueMat:setVec4( "u_ambientLight", vec4(0.3,0.1,0.1,1) )
-	-- 	self.tissueMat:setVec4( "u_ka", vec4(1,1,1,1) )
-	-- 	self.tissueMat:setVec4( "u_kd", vec4(1,1,1,1) )
-	-- 	self.tissueMat:setVec4( "u_ks", vec4(1,1,1,1) )
-	-- 	self.tissueMat:setFloat( "u_ns", 100.0 )
-	-- 	self.tissueMat:setFloat( "u_activationTime", 0.0 )
-	-- 	-- Global theTissueSim is the tissue simulation, declared in C++
-	-- 	self.tissueMat:addTexture( "s_temperature", theTissueSim:getTempMapTextureName() )
-	-- 	self.tissueMat:addTexture( "s_condition", theTissueSim:getConditionMapTextureName() )
-	-- 	local skin = spark:createCube( vec3(-0.25, -0.5, -0.25), 0.5, self.tissueMat, "OpaquePass" )
-	-- 	--local skin = spark:createCube( vec3(-2.5, .25, -2.5), 5, self.tissueMat, "OpaquePass" )
-	-- 	skin:rotate( 90, vec3(1,0,0) )
+		-- show the target ring
+		self.tissueMat:setVec2( "u_targetCircleCenter", vec2( 0.7, 0.6 ) )
+		self.tissueMat:setFloat( "u_targetCircleOuterRadius", 0.025 )
+		self.tissueMat:setFloat( "u_targetCircleInnerRadius", 0.022 )
+	end
+	-- local showSmoke = true
+	-- if( showSmoke ) then
+	-- 	theSmokeVolume:translate( self.worldOffset )
 	-- end
-
-	-- local skin = spark:createCube( vec3(-2.5, .25, -2.5), 5, self.tissueMat, "OpaquePass" )
-	-- local skin = spark:createCube( vec3(-0.025, .0025, -0.025), 0.05, self.tissueMat, "OpaquePass" )
-	-- skin:rotate( 90, vec3(1,0,0) )
 
 
 	local scale = 0.02
@@ -106,61 +136,78 @@ function SimulationState:load()
 	cursorMat:setVec4( "u_color", vec4(1,0.2,0.2,1.0) );
 
 	-- Tmp -- 3D mouse cursor
-	self.controlledTool = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
+	self.markerBox = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
 		scale, cursorMat, "OpaquePass" )
 	
 	local cursorMat2 = spark:createMaterial( "constantColorShader" )
 	cursorMat2:setVec4( "u_color", vec4( 0.2,1,0.2,1.0) );
-	self.controlledTool2 = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
+	self.markerBox2 = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
 		scale, cursorMat2, "OpaquePass" )
 
 
 	-- Here's a nice little marker for the origin
-	local debugMat = spark:createMaterial( "colorShader" )
-	debugMat.name = "DebugMaterial"
-	debugMat:setVec4( "u_color", vec4( 1, 1, 1, 1 ) )
-	local scale = 0.01
-	local box = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), scale, debugMat, "OpaquePass" )
-	--box:translate( 0, 0.1, 0 )	
+	local bool useZeroMarker = false
+	if( useZeroMarker ) then
+		local debugMat = spark:createMaterial( "colorShader" )
+		debugMat.name = "DebugMaterial"
+		debugMat:setVec4( "u_color", vec4( 1, 1, 1, 1 ) )
+		local scale = 0.01
+		local box = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), scale, debugMat, "OpaquePass" )
+		--box:translate( self.worldOffset )	
+	end
 
-	-- local mainFontSize = 24
-	-- local smallFontSize = 12
-	-- local fontMgr = spark:getFontManager()
-	-- fontMgr:addFont( "Sans", mainFontSize, "HelveticaNeueLight.ttf" );
-	-- fontMgr:addFont( "Sans", smallFontSize, "HelveticaNeueLight.ttf" );
+	local mainFontSize = 36
+	local smallFontSize = 12
+	local fontMgr = spark:getFontManager()
+	local fontFilename = "Vera.ttf"--"HelveticaNeueLight.ttf" );
+	fontMgr:addFont( "Sans", mainFontSize, fontFilename )
+	fontMgr:addFont( "Sans", smallFontSize, fontFilename )
 
-	-- local fontDesc = {}
-	-- fontDesc.name = "Sans"
-	-- fontDesc.size = mainFontSize
+	local fontDesc = {}
+	fontDesc.name = "Sans"
+	fontDesc.size = mainFontSize
 
-	-- fontDesc.material = spark:createMaterial( "TextShader" )
-	-- fontDesc.material:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
-	-- fontDesc.material:setVec4( "u_color", vec4( 0.7, 0.7, 0.7, 1 ) )
+	fontDesc.material = spark:createMaterial( "TextShader" )
+	fontDesc.material:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
+	fontDesc.material:setVec4( "u_color", vec4( 0.7, 0.7, 0.7, 1 ) )
 
-	-- fontDesc.rolloverMaterial = spark:createMaterial( "TextShader" )
-	-- fontDesc.rolloverMaterial:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
-	-- fontDesc.rolloverMaterial:setVec4( "u_color", vec4( 1.0, 0.7, 0.7, 1 ) )
+	fontDesc.rolloverMaterial = spark:createMaterial( "TextShader" )
+	fontDesc.rolloverMaterial:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
+	fontDesc.rolloverMaterial:setVec4( "u_color", vec4( 1.0, 0.7, 0.7, 1 ) )
 
-	-- local fontMgr = spark:getFontManager()
-	-- fontMgr:addFont( fontDesc.name, fontDesc.size, "HelveticaNeueLight.ttf" );
-
-
-	-- self.buttons["wattage"] = Button:new( 0.02, 0.85, 
-	-- 	string.format("%2.0f watts", self.currWattage), fontDesc )
-	-- self.buttons["wattage"].onClick = incrWattage
-	-- self.buttons["wattage"].onClick2 = decrWattage
-
-	-- self.buttons["waveText"] = Button:new( 0.02, 0.75, "Cut", fontDesc )
-	-- self.buttons["activation"] = Button:new( 0.02, 0.5, "0.0 secs", fontDesc )
-	-- self.buttons["task"] = Button:new( 0.02, 0.25, "Dessicate", fontDesc )
+	fontMgr:addFont( fontDesc.name, fontDesc.size, fontFilename );
 
 
-	-- --Highlight GUI side w/ quad
-	-- local bgAccentMat = spark:createMaterial( "constantColorShader" )
-	-- bgAccentMat:setVec4( "u_color", vec4(1,1,1,0.13) )
-	-- local bgQuad = spark:createQuad( vec2(0,0), vec2(0.15,1.0),
-	-- bgAccentMat, "HUDPass" )
-	-- bgQuad:translate( 0,0,-1 )
+	self.buttons["wattage"] = Button:new( 0.05, 0.95, 
+		string.format("%2.0f", self.currWattage), fontDesc )
+	self.buttons["wattage"].onClick = incrWattage
+	self.buttons["wattage"].onClick2 = decrWattage
+
+	wattUnitMsg = spark:createText( fontDesc.name, 
+		                            12, 
+		                            fontDesc.material, 
+		                            "HUDPass", "Watts" )
+	wattUnitMsg:translate( 0.0875, 0.945, 0 )
+
+	self.buttons["waveText"] = Button:new( 0.25, 0.95, "[Cut]", fontDesc )
+	self.buttons["activation"] = Button:new( 0.5, 0.95, 
+		string.format("%2.1f", self.activationTime), fontDesc )
+	timeUnitMsg = spark:createText( fontDesc.name, 
+		                            12, 
+		                            fontDesc.material, 
+		                            "HUDPass", "Seconds" )
+	timeUnitMsg:translate( 0.54, 0.945, 0 )
+
+
+	self.buttons["task"] = Button:new( 0.9, 0.95, "Dessicate", fontDesc )
+
+
+	-- --Highlight GUI w/ quad
+	local bgAccentMat = spark:createMaterial( "constantColorShader" )
+	bgAccentMat:setVec4( "u_color", vec4(0,0,0,0.15) )
+	local bgQuad = spark:createQuad( vec2(0,0.9), vec2(1.0,1.0),
+		bgAccentMat, "HUDPass" )
+	--bgQuad:translate( 0,0,-1 )
 	----
 
 	--Load hook
@@ -172,7 +219,7 @@ function SimulationState:load()
 	metalMat:setVec4( "u_ka", vec4(0.4,0.4,0.4,1) )
 	metalMat:setVec4( "u_kd", vec4(1,1,1,1) )
 	metalMat:setVec4( "u_ks", vec4(1,1,1,1) )
-	metalMat:setFloat( "u_ns", 1000.0 )
+	metalMat:setFloat( "u_ns", 100.0 )
 
 	self.instrument = spark:loadMesh( "hook_cautery_new.3DS", metalMat, "OpaquePass" )
 
@@ -192,12 +239,16 @@ end
 function SimulationState:update( dt )
 
 	if( input:isButtonPressed("mouse", 0) ) then
+		self.tissue:setMaterialForPassName( "OpaquePass", self.tissueMat_debug )
+		print( "USING DEBUG TEXTURE" )
 		for name,button in pairs(self.buttons) do
 			if( button:isOver( input:getPosition("mouse") ) ) then
 				button.onClick(self)
 			end
 		end
 	elseif( input:isButtonPressed("mouse", 1) ) then
+		self.tissue:setMaterialForPassName( "OpaquePass", self.tissueMat )
+		print( "USING NORMAL TEXTURE" )
 		for name,button in pairs(self.buttons) do
 			if( button:isOver( input:getPosition("mouse") ) ) then
 				button.onClick2(self)
@@ -217,12 +268,12 @@ function SimulationState:update( dt )
 
 	-- local mousePos = input:getPosition( "mouse" ) 
 	-- --local xform = input:getTransform( "mouse" )
-	-- --self.controlledTool:setTransform( xform )
-	-- self.controlledTool:setTransform( mat4() )
-	-- self.controlledTool:translate( 0.0002 * (mousePos.x - 1920.0/2.0), -- hard coded half-width
+	-- --self.markerBox:setTransform( xform )
+	-- self.markerBox:setTransform( mat4() )
+	-- self.markerBox:translate( 0.0002 * (mousePos.x - 1920.0/2.0), -- hard coded half-width
 	-- 	                           -0.02,
 	-- 	                           0.0002 * (mousePos.y - 1054/2.0) ) -- hard coded half-height
-	-- self.controlledTool:scale( 0.0025 )
+	-- self.markerBox:scale( 0.0025 )
 
 
 	-- Debugging (and on non-zspace machines, use mouse)
@@ -230,17 +281,21 @@ function SimulationState:update( dt )
 	local stylusMat = input:getTransform( "stylus" )
 	--local stylusPos = input:getPosition( "mouse" )
 
-	-- green block on final
-	local screenSpaceOffset = vec3( 0, 0.175, 0 )
-	self.controlledTool2:setTransform( mat4() )
-	self.controlledTool2:translate( screenSpaceOffset )
-	self.controlledTool2:applyTransform( stylusMat )
+	local screenSpaceOffset = vec3( 0, 0.25, 0 )
+	-- green block on final pos & orient
+	self.markerBox2:setTransform( mat4() )
+	self.markerBox2:translate( screenSpaceOffset )
+	self.markerBox2:applyTransform( stylusMat )
 
 	-- red block on base position
-	self.controlledTool:setTransform( mat4() )
-	self.controlledTool:translate( stylusPos )
+	self.markerBox:setTransform( mat4() )
+	self.markerBox:translate( stylusPos )
 	
-	local useOnlyPosition = false
+	local floorHeight = self.worldOffset.y - screenSpaceOffset.y
+	local passDepth = 0.0010
+	local useOnlyPosition = false -- for debugging
+	local limitDepth = true
+	local isBelowSurface = stylusPos.y < (floorHeight - passDepth)
 	if( useOnlyPosition ) then
 		self.instrument:setTransform( mat4() )
 		self.instrument:translate( stylusPos )
@@ -251,26 +306,34 @@ function SimulationState:update( dt )
 	else
 		self.instrument:setTransform( mat4() )
 		self.instrument:translate( screenSpaceOffset )
+		if( mat4_at(stylusMat, 3, 1 ) < (floorHeight - passDepth) ) then
+			mat4_set(stylusMat, 3,1, floorHeight - passDepth )
+			stylusPos = vec3( stylusPos.x, floorHeight - passDepth, stylusPos.z )
+		end 
 		self.instrument:applyTransform( stylusMat )
 		self.instrument:rotate( -90,  vec3(0,1,0) )
 		self.instrument:scale( 0.002 )
 	end
 
 
-	--print( "SimulationState:update" )
-	-- self.currTime = self.currTime + dt
-	-- if self.startTime == -1 then
-	-- 	self.startTime = self.currTime
-	-- else
-	-- 	actTime = (self.currTime - self.startTime) - self.startActivation
-	-- 	if self.startActivation < (self.currTime - self.startTime) and self.stopActivation >  (self.currTime - self.startTime) then
-	-- 		self.activationText:setText( string.format("%1.1f sec", actTime) )
-	-- 		self.tissueMat:setFloat( "u_activationTime", actTime )
-	-- 	else
-	-- 		self.tissueMat:setFloat( "u_activationTime", 0 )
-	-- 	end
-	-- end
+	local touchThreshold = 0.005
+	local sparkThreshold = 0.005
+	if( input:isButtonPressed( "stylus", 0 ) ) then
+		local toolTipPos = stylusPos.y
+		print( "Activation at " .. self.currWattage .. " watts at dist " .. abs( toolTipPos - floorHeight ) )
+		
+		if( abs( toolTipPos - floorHeight ) < touchThreshold ) then
+			theTissueSim:accumulateHeat( stylusPos.x - self.worldOffset.x, stylusPos.z - self.worldOffset.z, self.currWattage ) 
+		end
 
+		self.activationTime = self.activationTime + dt
+		txt = string.format("%2.1f", self.activationTime)
+		self.buttons["activation"].text:setText( txt )
+
+
+		--TODO play sound
+
+	end
 end
 
 function SimulationState:fixedUpdate( dt )
