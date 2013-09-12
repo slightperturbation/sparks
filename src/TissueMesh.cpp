@@ -36,6 +36,7 @@ void
 spark::TissueMesh
 ::fixedUpdate( float dt )
 {
+    if( !m_textureManager ) return;
     // Apply accumulated heat to change tissue temp
     // Q = c m dT
     // dT = Q/(cm)
@@ -179,8 +180,10 @@ spark::TissueMesh
     } // end condition update
 
     // push temp data to graphics card
-    m_textureManager->queueLoad2DFloatTextureFromData( m_tempTextureName, *m_nextTempMap, m_N );
-    m_textureManager->queueLoad2DByteTextureFromData( m_conditionTextureName, m_tissueCondition, m_N );
+    // m_textureManager->queueLoad2DFloatTextureFromData( m_tempTextureName, *m_nextTempMap, m_N );
+    m_textureManager->queueLoad2DByteTextureFromData( m_conditionTextureName, 
+                                                      m_tissueCondition, 
+                                                      m_N );
     swapTempMaps();
 }
 

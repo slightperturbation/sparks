@@ -30,6 +30,7 @@ namespace spark
         TextureName m_textureName;
         glm::vec3 m_cameraDir;
     };
+    typedef spark::shared_ptr< SlicedVolume > SlicedVolumePtr;
 } // end namespace spark
 
 #endif

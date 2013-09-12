@@ -10,7 +10,7 @@
 #define sparks_RenderCommand_hpp
 
 #include "Spark.hpp"
-
+#include "Utilities.hpp"
 #include <functional>
 #include "Material.hpp"
 #include <glm/glm.hpp>

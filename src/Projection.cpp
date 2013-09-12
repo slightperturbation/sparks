@@ -7,6 +7,7 @@
 //
 
 #include "Projection.hpp"
+#include "Utilities.hpp"
 
 spark::Projection
 ::Projection( void )
