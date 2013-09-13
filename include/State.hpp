@@ -39,7 +39,10 @@ namespace spark
         
         /// Allow the state to render itself to the current OpenGL
         /// context.  Must be called only by the main GUI thread.
-        virtual void render( ) = 0;
+        virtual void render( void ) = 0;
+
+        /// Restore the initial conditions of this state.
+        virtual void reset( void ) = 0;
 
         /// Returns a StateName to request switching to a different
         /// State.  The StateManager (generally) honors this as a request

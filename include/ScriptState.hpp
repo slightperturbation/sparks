@@ -34,6 +34,9 @@ namespace spark
     ///
     /// function ExampleState:deactivate()
     /// end
+    /// 
+    /// function ExampleState:reset()
+    /// end
     ///
     /// function ExampleState:nextState( currTime )
     ///   	if currTime > 20 then
@@ -68,6 +71,7 @@ namespace spark
         virtual void update( double dt )      override;
         virtual void fixedUpdate( double dt ) override;
         virtual void deactivate( void )       override;
+        virtual void reset( void )            override;
         boost::optional<spark::StateName> nextState( double currTime ) override;
 
         void reloadScript( void ); // TODO-implement reload

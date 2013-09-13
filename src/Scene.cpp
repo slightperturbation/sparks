@@ -272,6 +272,9 @@ spark::Scene
 ::reset( void )
 {
     LOG_INFO(g_log) << "Resetting Scene";
+    deactivate();
+    m_updateTasks.clear();
+    m_updateables.clear();
     m_passes.clear();
     m_renderables.clear();
 }

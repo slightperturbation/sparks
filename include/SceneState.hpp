@@ -21,6 +21,7 @@ namespace spark
         virtual void update( double dt )      override;
         virtual void fixedUpdate( double dt ) override;
         virtual void render( void )           override;
+        virtual void reset( void )            override;
         boost::optional<spark::StateName> nextState( double currTime ) override;
         
         /// Add the given Renderable to the Scene held by this SceneState.

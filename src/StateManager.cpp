@@ -192,6 +192,17 @@ spark::StateManager
     m_currState.reset(); // No current state after shutdown
 }
 
+void 
+    spark::StateManager
+    ::reset( void )
+{
+    if( m_currState )
+    {
+        m_currState->reset();
+    }
+}
+
+
 bool
 spark::StateManager
 ::isLoaded( const StateName& name )

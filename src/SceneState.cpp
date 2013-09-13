@@ -55,10 +55,17 @@ spark::SceneState
 
 void
 spark::SceneState
-::render()
+::render( void )
 {
     m_scene->prepareRenderCommands();
     m_scene->render();
+}
+
+void 
+spark::SceneState
+::reset( void )
+{
+    m_scene->reset();
 }
 
 boost::optional<spark::StateName>

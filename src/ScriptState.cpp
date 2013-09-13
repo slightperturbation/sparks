@@ -78,6 +78,13 @@ spark::ScriptState
 
 void
 spark::ScriptState
+::reset( void )
+{
+    m_lua->runScriptFromString( "theState:reset()" );
+}
+
+void
+spark::ScriptState
 ::update( double dt )
 {
     m_scene->update( dt );
@@ -111,7 +118,6 @@ spark::ScriptState
         << "\" should build a global object called theState";
     }
 }
-
 
 boost::optional<spark::StateName>
 spark::ScriptState

@@ -64,6 +64,9 @@ namespace spark
 
         /// Stops the current state and leaves the system ready to be unloaded.
         void shutdown( void );
+
+        /// Restore the current state to it's initial conditions
+        void reset( void );
     private:
         /// Returns true iff the state of name has had load() called already.
         bool isLoaded( const StateName& name );
