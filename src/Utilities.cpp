@@ -214,13 +214,12 @@ spark::OpenGLWindow
     glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE );
 #endif
 
-    glfwWindowHint( GLFW_VISIBLE, GL_TRUE );
-    //glfwWindowHint( GLFW_DECORATED, GL_FALSE );
-   
+    // Avoid flashes on startup
+    glfwWindowHint( GLFW_VISIBLE, GL_FALSE );
 
     //////////////////////////////////////////////////////////////////////
     // V-Sync
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
@@ -256,8 +255,8 @@ spark::OpenGLWindow
         return;
     }
     glfwSetWindowPos( m_glfwWindow, x, y );
-    glfwShowWindow( m_glfwWindow );
     glfwMakeContextCurrent( m_glfwWindow );
+    glfwShowWindow( m_glfwWindow );
     
     checkOpenGLErrors();
     LOG_DEBUG(g_log) << " done.\n";
