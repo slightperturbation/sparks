@@ -472,6 +472,8 @@ set( HDRS
   ./include/Display.hpp
   ./include/LSpark.hpp
   ./include/LuaInterpreter.hpp
+  ./include/ESUInput.hpp
+  ./include/ESUInputFromSharedMemory.hpp
   ./include/Exceptions.hpp
   ./include/EyeTracker.hpp
   ./include/Fluid.hpp
@@ -590,7 +592,6 @@ set( STATES_SRCS
 )
 source_group( States FILES ${STATES_HDRS} ${STATES_SRCS} )
 
-
 set( SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data/shaders" )
 file(GLOB VERT_SHADER_FILES RELATIVE 
   ${SHADER_DIR} "${SHADER_DIR}/*.vert" )
@@ -642,6 +643,9 @@ include_directories( ${CMAKE_BINARY_DIR}/config/ )
 #####################################################################
 # Executables
 #####################################################################
+
+#####################################################################
+# Main sparkGui executable
 add_executable( ${PROJECT_NAME} 
   ${HDRS} ${SRCS} 
   ${STATES_SRCS} ${STATES_HDRS} 
@@ -656,7 +660,16 @@ target_link_libraries(${PROJECT_NAME}
 	${PROJECT_LINK_LIBRARIES}
 )
 
+#####################################################################
+# CGI program, uses shared memory to communicate with sparkGui
+add_executable( ESUServerCGI 
+ src/ESUServer/ESUServerCGI.cpp )
 
+target_link_libraries( ESUServerCGI
+	${PROJECT_LINK_LIBRARIES}
+)
+
+#####################################################################
 # For OpenGL on Apple, need to link with Cocoa too
 if(APPLE)
 	target_link_libraries(${PROJECT_NAME}
@@ -668,8 +681,6 @@ if(APPLE)
 #    ${IOKIT_LIBRARY}
 #  )
 endif(APPLE)
-
-
 
 if(WIN32)
   MESSAGE( "Executables will require dependency DLLs to be in the path.  E.g., C:/dev_dlls/" )

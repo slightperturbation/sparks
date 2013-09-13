@@ -29,6 +29,7 @@
 #include "Input.hpp"
 #include "InputFactory.hpp"
 #include "GlfwInput.hpp"
+#include "ESUInputFromSharedMemory.hpp"
 
 #include "NetworkEyeTracker.hpp"
 
@@ -75,6 +76,7 @@ cpplog::BaseLogger* g_baseLogger = NULL;
 // Need globals to allow GLFW callbacks access.
 static spark::GuiEventPublisherPtr g_guiEventPublisher;
 static spark::ArcBallPtr g_arcBall;
+
 
 class InteractionVars
 {
@@ -192,6 +194,9 @@ int runSimulation(int argc, char** argv)
     inputManager->acquireInputDevice( "stylus", 
                                       zSpaceInputFactory.createDevice(0) );
 #endif
+    
+    ESUInput& esuInput = ESUInputFromSharedMemory::get();
+    
     // Create common managers and tell them how to find file resources
     FileAssetFinderPtr finder( new FileAssetFinder );
     finder->addRecursiveSearchPath( DATA_PATH );
@@ -295,10 +300,6 @@ int runSimulation(int argc, char** argv)
     //stateManager.setCurrState( "Simulation" );
     stateManager.setCurrState( "Loading" );
 
-    // spark renders to sparkRenderTexture
-    // overlay renders to g_transparentRenderPass using a glow shader
-
-    
     // Set window/textures sizes by sending signals to listeners
     // Note that the current design has a circular dependency
     // between guiEventPublisher and textures, calling resize explicitly
@@ -325,8 +326,6 @@ int runSimulation(int argc, char** argv)
             textureManager->logTextures();
         }
 
-        glm::mat4 viewTransform;
-
         lastTime = currTime;
         currTime = glfwGetTime();
         vars.fps = 1.0f/(currTime - lastTime);
@@ -350,7 +349,10 @@ int runSimulation(int argc, char** argv)
         
         ////////////////////////////////////////////////////////////////////////
         // Update System (physics, collisions, etc.
-        // 
+        //
+        
+        
+        std::cerr << "Wattage: " << esuInput.wattage() << "\n";
         
         inputManager->update( dt );
         
@@ -377,8 +379,8 @@ int runSimulation(int argc, char** argv)
 
         ////////////////////////////////////////////////////////////////////////
         // Pre-render
-        // parallel updates are complete, so handle queue'd opengl requests
-        // before rendering next frame
+        // parallel updates are handled once per frame, 
+        // handle the queue'd opengl requests before rendering next frame
         textureManager->executeQueuedCommands();
 
         ////////////////////////////////////////////////////////////////////////
@@ -412,7 +414,7 @@ int runSimulation(int argc, char** argv)
         // See: http://www.glfw.org/docs/3.0/group__keys.html
         if( window.getKey( GLFW_KEY_UP ) == GLFW_PRESS )
         {
-            //stateManager.currState()->reset();
+            stateManager.currState()->reset();
         }
         if( window.getKey( GLFW_KEY_ENTER ) == GLFW_PRESS )
         {

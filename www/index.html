@@ -1,0 +1,78 @@
+<html>
+<script>
+var g_wattage = 20.0;
+var g_mode = "Cut";
+
+function toConsole( msg )
+{
+	document.getElementById("consoleMsgs").innerHTML = msg + "<BR>--<BR>" + document.getElementById("consoleMsgs").innerHTML;
+}
+function displayWattage()
+{
+	document.getElementById("wattage").innerHTML = "" + g_wattage + " watts";
+}
+function displayMode()
+{
+	document.getElementById("mode").innerHTML = g_mode;
+}
+function startup()
+{
+	displayWattage();
+	displayMode();
+}
+
+function sendUpdate()
+{
+  	var xmlhttp;
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function()
+	{
+		if( (xmlhttp.readyState == 4) && (xmlhttp.status == 200 ) )
+		{
+			toConsole( "Response: " + xmlhttp.responseText );
+		}
+	}
+	var queryString = '/win32/ESUServerCGI.cgi?Wattage=' + g_wattage;
+	toConsole( "Request: " + queryString );
+	xmlhttp.open( 'GET', queryString, true );
+	xmlhttp.send();
+}
+function upWattage()
+{
+	g_wattage = Math.min( 200, g_wattage + 10 );
+	displayWattage();
+	sendUpdate();
+}
+function downWattage()
+{
+	g_wattage = Math.max( 10, g_wattage - 10 );
+	displayWattage();
+	sendUpdate();
+}
+</script>
+<style>
+.console { height:150px; float:left; overflow:hidden; }
+.clear { clear:both; }
+.button { font-size:150%; text-align: center; width:130px; float:left; overflow:hidden; background-color:lightgray;}
+#wattage, #mode { font-size:150%; text-align: center; width:100px; float:left; overflow:hidden; background-color:lightblue;}
+.spacer { text-align: center; width:10px; float:left; overflow:hidden; background-color:white; }
+</style>
+<body onload="startup()">
+<div class="console" id="consoleMsgs">Startup...</div>
+<div class="clear"></div>
+<hr>
+<div class="spacer" style="width:80px;">&nbsp;</div><div id="wattage"></div><div class="spacer">&nbsp;</div><div id="mode"></div>
+<BR>
+<BR><BR><BR>
+<img width=130 height=20 src="http://upload.wikimedia.org/wikipedia/commons/5/52/Spacer.gif"/>
+<img width=50 src="http://upload.wikimedia.org/wikipedia/commons/9/9e/U%2B2191.svg" onclick="upWattage()" />
+<img width=50 src="http://upload.wikimedia.org/wikipedia/commons/f/f2/U%2B2193.svg" onclick="downWattage()" />
+<BR>
+<div class="button" onclick="g_mode='Cut';displayMode();sendUpdate();">CUT</div>
+<div class="spacer">&nbsp;</div>
+<div class="button" onclick="g_mode='Blend';displayMode();sendUpdate();">BLEND</div>
+<div class="spacer">&nbsp;</div>
+<div class="button" onclick="g_mode='Coag';displayMode();sendUpdate();">COAG</div>
+
+</body>
+</html>
