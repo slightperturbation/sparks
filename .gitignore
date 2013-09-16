@@ -1,3 +1,5 @@
 build-VisualStudio/
 build-xcode/
 ext/
+docs/doxygen/
+CMakeFiles/
