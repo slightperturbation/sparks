@@ -430,6 +430,12 @@ spark
     luabind::globals( lua )["GL_MIN"] = GL_MIN;
     luabind::globals( lua )["GL_MAX"] = GL_MAX;
     
+    luabind::module( lua )
+    [
+        luabind::def( "isWindows", &spark::isWindows ),
+        luabind::def( "isApple", &spark::isApple ),
+        luabind::def( "isLinux", &spark::isLinux )
+    ];
 }
 
 void

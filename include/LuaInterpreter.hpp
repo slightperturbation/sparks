@@ -84,10 +84,34 @@ namespace spark
     //inline glm::vec4& mat4_at( glm::mat4* m, int i ) { return (*m)[i]; }
     inline float mat4_at( glm::mat4& m, int i, int j ) { return m[i][j]; }
     inline void mat4_set( glm::mat4& m, int i, int j, float x ) { m[i][j] = x; }
-    
-    
     /////////////////////////////////////////////////////////////////////
     
+    inline bool isWindows( void )
+    {
+#ifdef WIN32
+        return true;
+#else
+        return false;
+#endif
+    }
+    inline bool isApple( void )
+    {
+#ifdef __APPLE__
+        return true;
+#else
+        return false;
+#endif
+    }
+    inline bool isLinux( void )
+    {
+#ifdef __linux__
+        return true;
+#else
+        return false;
+#endif
+    }
+    
+    /////////////////////////////////////////////////////////////////////
     
     /// Responsible for handling calls to and errors from the lua interpreter.
     /// Finder's paths are added to Lua's package.path at the point of
