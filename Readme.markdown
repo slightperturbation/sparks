@@ -1,5 +1,5 @@
 
-# Spark VR Rendering & Interaction Library #
+# Spark VR Rendering & Interaction Library # {#mainpage}
 
 Features:
 
@@ -96,9 +96,6 @@ Example Lua state script:
      end
     
      function ExampleState:update( dt )
-     end
-    
-     function ExampleState:fixedUpdate( dt )
      end
     
      function ExampleState:deactivate()

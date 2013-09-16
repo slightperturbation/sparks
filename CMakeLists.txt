@@ -454,6 +454,20 @@ ENDIF( ASSIMP_FOUND )
 #  MESSAGE( STATUS "Failed to find AntTweakBar ----------------------")
 #ENDIF( ANT_TWEAK_BAR_FOUND )
 
+###########################################################################
+
+# Git related macros and commands:
+find_package(Git)
+
+if(GIT_FOUND)
+  message(STATUS "Git package was found: '${GIT_EXECUTABLE}'")
+  set(PRINT_VERSION_COMMAND ${GIT_EXECUTABLE} describe)
+  set(PRINT_FILE_DATE_COMMAND_STR "${GIT_EXECUTABLE} log --pretty=format:'Author: %an <%ae>%nDate: %ad' --date=short -n 1")
+else()
+  set(PRINT_VERSION_COMMAND ${CMAKE_COMMAND} -E echo unknown version)
+  set(PRINT_FILE_DATE_COMMAND_STR "${CMAKE_COMMAND} -E echo")
+endif()
+
 
 LIST( APPEND PROJECT_LINK_LIBRARIES 
   ${GLFW_LIBRARY}
@@ -463,6 +477,26 @@ LIST( APPEND PROJECT_LINK_LIBRARIES
   ${ASSIMP_LIBRARIES}
 )
 
+
+# Add an Option to toggle the generation of the API documentation
+OPTION( BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" ON)
+if( BUILD_DOCUMENTATION )
+  FIND_PACKAGE( Doxygen )
+  if( NOT DOXYGEN_FOUND )
+    message(FATAL_ERROR "Doxygen is needed to build the documentation. Install from doxygen.org")
+  endif()
+  #-- Configure the Template Doxyfile for our specific project
+  set( PROJECT_VERSION "0.1" )
+  set( DOXYGEN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/docs/doxygen/")
+  set( README_FILE "Readme.markdown")
+  set( SOURCE_DIR "${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/Readme.markdown" )
+  configure_file( ${CMAKE_SOURCE_DIR}/doxygen/Doxyfile.in 
+                  ${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile  @ONLY IMMEDIATE)
+  #-- Add a custom target to run Doxygen when ever the project is built
+  add_custom_target( Docs 
+                      COMMAND ${DOXYGEN_EXECUTABLE} "${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile"
+                      SOURCES ${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile )
+endif()
 
 
 ###########################################################################
