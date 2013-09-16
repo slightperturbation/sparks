@@ -348,27 +348,27 @@ int runSimulation(int argc, char** argv)
         const float dt = 1.0f/60.0f;
         
         ////////////////////////////////////////////////////////////////////////
-        // Update System (physics, collisions, etc.
+        // Update System (physics, collisions, etc.)
         //
-        
-        
-        std::cerr << "Wattage: " << esuInput.wattage() << "\n";
-        
-        inputManager->update( dt );
-        
+        // Periodic updates roughly every dt
         if( (currTime - prevUpdateTime) > dt )
         {
-            LOG_TRACE(g_log) << "Fixed update at " << currTime;
-            stateManager.fixedUpdate( dt );
-            if( eyeTracker ) 
+            LOG_TRACE(g_log) << "Update at " << currTime;
+            stateManager.update( dt );
+            if( eyeTracker )
             {
-                eyeTracker->fixedUpdate( dt );
+                eyeTracker->update( dt );
             }
             prevUpdateTime = currTime;
         }
+        //////
+        // Input handlers called with each frame
         LOG_TRACE(g_log) << "Update at " << currTime;
-        stateManager.update( currTime - lastTime );
-        if( eyeTracker ) 
+        if( inputManager )
+        {
+            inputManager->update( currTime - lastTime );
+        }
+        if( eyeTracker )
         {
             eyeTracker->update( currTime - lastTime );
         }
@@ -376,12 +376,9 @@ int runSimulation(int argc, char** argv)
         {
             g_arcBall->updatePerspective( cameraPerspective );
         }
-
-        ////////////////////////////////////////////////////////////////////////
-        // Pre-render
-        // parallel updates are handled once per frame, 
-        // handle the queue'd opengl requests before rendering next frame
-        textureManager->executeQueuedCommands();
+        // TODO
+        //std::cerr << "Wattage: " << esuInput.wattage() << "\n";
+        
 
         ////////////////////////////////////////////////////////////////////////
         // Render
@@ -406,6 +403,12 @@ int runSimulation(int argc, char** argv)
 
         LOG_TRACE(g_log) << "Scene end - glfwSwapBuffers()";
         if( vars.isSavingFrames ) writeFrameBufferToFile( "sparks_" );
+        
+        ////////////////////////////////////////////////////////////////////////
+        // Data load
+        // parallel updates are handled once per frame,
+        // handle the queue'd opengl requests before rendering next frame
+        textureManager->executeQueuedCommands();
         
         stateManager.updateState( currTime );
         

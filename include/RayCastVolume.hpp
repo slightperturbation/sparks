@@ -13,8 +13,9 @@
 namespace spark
 {
     /// Handles rendering of a data volume using a lighted ray-cast algorithm.
-    class RayCastVolume : public Renderable, public Updateable
-
+    class RayCastVolume
+    : public Renderable,
+      public Updateable
     {
     public:
         RayCastVolume( const RenderableName& aName,
@@ -25,7 +26,7 @@ namespace spark
         
         virtual void render( const RenderCommand& rc ) const override;
         virtual void attachShaderAttributes( GLuint shaderIndex ) override;
-        virtual void fixedUpdate( float dt ) override;
+        virtual void update( double dt ) override;
         
         /// Shader Parameters
         void setLightSamples( int num )

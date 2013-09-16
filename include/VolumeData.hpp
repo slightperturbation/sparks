@@ -9,12 +9,12 @@
 namespace spark
 {
     /// Abstract superclass for 3D volume data governed by a density field
-    class VolumeData
+    class VolumeData : public Updateable
     {
     public:
         virtual ~VolumeData() {}
         /// Simulate the fluid flow: add sources, diffuse, advect
-        virtual void fixedUpdate( float dt ) = 0;
+        virtual void update( double dt ) = 0;
 
         /// Returns the size of the fluid in number of voxels on x dimension
         virtual size_t dimX( void ) const = 0;

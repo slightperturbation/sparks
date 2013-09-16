@@ -122,10 +122,9 @@ spark::TexturedSparkRenderable
 
 void 
 spark::TexturedSparkRenderable
-::update( float dt )
+::update( double dt )
 {
     m_spark->update( dt );
-    m_mesh->update( dt );
 }
 
 void

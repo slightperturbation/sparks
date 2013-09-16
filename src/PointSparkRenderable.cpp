@@ -58,7 +58,7 @@ spark::PointSparkRenderable
 
 void
 spark::PointSparkRenderable
-::update( float dt )
+::update( double dt )
 {
     
 }

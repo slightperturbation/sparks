@@ -15,7 +15,7 @@ namespace spark
     {
     public:
         virtual ~InputDevice() {}
-        virtual void update( float dt ) {}
+        virtual void update( double dt ) {}
         virtual glm::vec3 getPosition( void ) const = 0;
         virtual glm::mat4 getTransform( void ) const = 0;
         virtual bool isButtonPressed( int buttonNumber ) const = 0;

@@ -370,6 +370,7 @@ spark::SceneFacade
     //sparkRenderable->setMaterialForPassName( g_transparencyRenderPassName,
     //                                         sparkColorMaterial );
     m_scene->add( sparkRenderable );
+    m_scene->addUpdateable( sparkRenderable );
     return sparkRenderable;
 }
 
@@ -417,6 +418,7 @@ spark::SceneFacade
     text->setMaterialForPassName( pass, material );
     text->setText( msg );
     m_scene->add( text );
+    m_scene->addUpdateable( text );
     return text;
 }
 

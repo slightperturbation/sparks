@@ -9,7 +9,7 @@ namespace spark
 {
     /// Interface for head/eye tracking system
     /// Responsible for conversion of motion in camera updates
-    class EyeTracker : public GuiEventSubscriber, public Updateable
+    class EyeTracker : public GuiEventSubscriber
     {
     public:
         virtual ~EyeTracker() {}
@@ -29,8 +29,7 @@ namespace spark
         virtual void resizeViewport( int left, int bottom,
                                      int right, int top ) = 0;
 
-        virtual void update( float dt ) override {}
-        virtual void fixedUpdate( float dt ) override {}
+        virtual void update( double dt ) {}
     protected:
         virtual void implUpdatePerspective( PerspectiveProjectionPtr persp, 
             PerspectiveEye eye ) = 0;

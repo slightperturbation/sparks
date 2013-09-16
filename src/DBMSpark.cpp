@@ -56,7 +56,7 @@ spark::DBMSpark
 
 void
 spark::DBMSpark
-::update( void )
+::update( double dt )
 {
     LOG_DEBUG(g_log) << "Begin Spark::update(), agg: "
     << m_aggregate.size() << ", can: " << m_candidate.size() << "\n";

@@ -12,7 +12,6 @@
 #include "Mesh.hpp"
 #include "LSpark.hpp"
 #include "Renderable.hpp"
-#include "Updateable.hpp"
 #include "Projection.hpp"
 
 #define GLEW_STATIC
@@ -28,7 +27,9 @@
 namespace spark
 {
     /// Renders the component spark with a textured set of triangles.
-    class TexturedSparkRenderable : public Renderable, public Updateable
+    class TexturedSparkRenderable
+    : public Renderable,
+      public Updateable
     {
     public:
         TexturedSparkRenderable( LSparkPtr spark );
@@ -36,7 +37,7 @@ namespace spark
 
         virtual void render( const RenderCommand& rc ) const override;
         virtual void attachShaderAttributes( GLuint shaderIndex ) override;
-        virtual void update( float dt ) override;
+        virtual void update( double dt ) override;
 
         void setViewProjection( ConstProjectionPtr aCamera );
     private:

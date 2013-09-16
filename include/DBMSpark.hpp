@@ -49,7 +49,7 @@ namespace spark
         void initializeBoundary( const PointCharges& a_boundary );
     
         void clear( void );
-        void update( void );
+        void update( double dt );
         PointCharges& aggregate( void ) { return m_aggregate; }
         const PointCharges& aggregate( void ) const { return m_aggregate; }
         PointCharges& candidate( void ) { return m_candidate; }

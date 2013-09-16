@@ -69,21 +69,13 @@ spark::SlicedVolume
 
 void
 spark::SlicedVolume
-::update( float dt ) 
+::update( double dt )
 {
-    m_mesh->update( dt );
-}
-
-void
-spark::SlicedVolume
-::fixedUpdate( float dt ) 
-{
-    if( m_volumeData && m_textureManager && m_mesh )
+    if( m_volumeData && m_textureManager )
     {
-        m_volumeData->fixedUpdate( dt );
+        m_volumeData->update( dt );
         /// Push new density data up to graphics card
         m_textureManager->queueLoad3DTextureFromVolumeData( m_textureName, m_volumeData );
-        m_mesh->fixedUpdate( dt );
     }
 }
 

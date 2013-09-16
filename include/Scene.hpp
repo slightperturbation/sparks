@@ -25,16 +25,36 @@ namespace spark
     /// Different instances of Scene can share Renderables and RenderPasses
     class Scene
     {
-        /// Calls the Updateable's fixedUpdate method unless pause()'d or 
+        /// Calls the Updateable's update method unless pause()'d or
         /// stop()'d.
         class FixedUpdateTask
         {
         public:
             FixedUpdateTask( UpdateablePtr udp, float dt );
-            void pause( void );
-            void resume( void );
+            
+            /// Create a thread to regularly update the associated
+            /// Updateable until FixedUpdateTask is destructed, or
+            /// stop() or pause() is called.
             void start( void );
+            
+            /// Interrupt the contained thread immediately
+            /// and stop calling the contained Updateable's update() method.
+            /// This is final and the contained thread cannot be resumed.
+            /// See pause() and resume() for a way to temporarily stop updates.
             void stop( void );
+           
+            /// Allows the thread to continue running, but
+            /// no longer calles the Updateable's update() method.
+            /// Reverse pause() by calling resume().
+            void pause( void );
+            
+            /// If the thread is running and has been previously pause()'d
+            /// then calling resume() restores the periodic calling of
+            /// Updateable's update() method.
+            /// If the thread is not running or if hasn't been previously
+            /// paused, then resume() has no effect.
+            void resume( void );
+
             void executeTask( void );
         private:
             // MSVC doesn't have move semantics, so disable copy-ctor and op=
@@ -42,9 +62,9 @@ namespace spark
             FixedUpdateTask operator=( const FixedUpdateTask& ); // empty
         private:
             boost::thread m_thread;
+            UpdateablePtr m_updateable;
             bool m_hasStarted; //< TODO: shouldn't be needed, test if thread is not-a-thread
             bool m_isPaused;
-            UpdateablePtr m_updateable;
             double m_dt;
             double m_prevUpdateTime;
         };
@@ -56,15 +76,21 @@ namespace spark
         /// Render the given renderpass when this Scene object's render()
         /// method is called.
         void add( RenderPassPtr rp );
+
         /// Render the given renderable when this Scene object's render()
         /// method is called.  Note that the Renderable must also be
         /// associated with a material (see Renderable::setMaterialForPassName())
         /// for a RenderPass that has been Scene::add()'d to this Scene.
         void add( RenderablePtr r );
         
-        /// Dispatch update() with each render() call, and
-        /// also fixedUpdate() at a regular interval.
-        void addUpdateable( UpdateablePtr u );
+        /// Dispatch update() on the main thread peridoically.
+        void addUpdateable( UpdateablePtr up );
+        
+        /// Dispatch update() periodically on a separate thread.
+        /// Implies adding a new thread to the system.
+        /// Best used for a few heavy-workload tasks
+        /// that operate in realtime.
+        void addAsyncUpdateable( UpdateablePtr up );
         
         /// Build render commands for this frame.
         void prepareRenderCommands( void );
@@ -79,9 +105,6 @@ namespace spark
         /// Update scene objects per-frame
         void update( double dt );
 
-        /// Update scene objects per-frame
-        void fixedUpdate( double dt );
-        
         /// Prepare scene objects to be rendered and updated.
         void activate( void );
 

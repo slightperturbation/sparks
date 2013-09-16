@@ -134,7 +134,7 @@ spark::TextRenderable
 
 void 
 spark::TextRenderable
-::update( float dt )
+::update( double dt )
 {
     if( !m_isDirty )
     {

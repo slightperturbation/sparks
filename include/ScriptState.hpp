@@ -29,9 +29,6 @@ namespace spark
     /// function ExampleState:update( dt )
     /// end
     ///
-    /// function ExampleState:fixedUpdate( dt )
-    /// end
-    ///
     /// function ExampleState:deactivate()
     /// end
     /// 
@@ -69,7 +66,6 @@ namespace spark
         virtual void load( void )             override;
         virtual void activate( void )         override;
         virtual void update( double dt )      override;
-        virtual void fixedUpdate( double dt ) override;
         virtual void deactivate( void )       override;
         virtual void reset( void )            override;
         boost::optional<spark::StateName> nextState( double currTime ) override;

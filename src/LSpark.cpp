@@ -84,7 +84,7 @@ spark::LSpark
 
 void
 spark::LSpark
-::update( float dt )
+::update( double dt )
 {
     return;
     for( size_t i=0; i<m_segments.size(); ++i )

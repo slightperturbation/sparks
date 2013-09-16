@@ -2,6 +2,7 @@
 #define SPARK_STATE_HPP
 
 #include "Spark.hpp"
+#include "Updateable.hpp"
 #include <boost/optional.hpp>
 
 namespace spark
@@ -11,7 +12,7 @@ namespace spark
     /// The StateManager calls methods as appropriate to signal changes
     /// in the simulator's state.
     /// See spark::StateManager
-    class State
+    class State : public Updateable
     {
     public:
         State( const StateName& name );
@@ -31,11 +32,8 @@ namespace spark
         virtual void deactivate( void ) = 0;
         
         /// Allow the state to update its internal state.
-        /// Called once per graphics frame.  
+        /// dt is elapsed time in seconds since last call.
         virtual void update( double dt ) = 0;
-
-        /// Called periodically with a fixed dt (fixed time-step update).
-        virtual void fixedUpdate( double dt ) = 0;
         
         /// Allow the state to render itself to the current OpenGL
         /// context.  Must be called only by the main GUI thread.

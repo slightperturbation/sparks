@@ -53,7 +53,7 @@ namespace spark
 
         /// Renderable overrides
         virtual void render( const RenderCommand& rc ) const override;
-        virtual void update( float dt ) override;
+        virtual void update( double dt ) override;
         virtual void attachShaderAttributes( GLuint shaderIndex ) override;
         
         /// Sets the text to display.  Height of the text is set so that

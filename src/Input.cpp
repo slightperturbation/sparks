@@ -39,7 +39,7 @@ spark::Input
     if( !m_keyboardDevice )
     {
         LOG_ERROR(g_log) << "No keyboard device assigned yet.";
-        assert(false);
+        //assert(false);
         return false;
     }
     return m_keyboardDevice->isKeyDown( key );
@@ -54,7 +54,7 @@ spark::Input
     {
         LOG_ERROR(g_log) << "Can't find input device with name \""
         << name << "\" in call to Input::getTransform().";
-        assert(false);
+        //assert(false);
         return glm::mat4();
     }
     return iter->second->getTransform();
@@ -69,7 +69,7 @@ spark::Input
     {
         LOG_ERROR(g_log) << "Can't find input device with name \""
         << name << "\" in call to Input::getPosition().";
-        assert(false);
+        //assert(false);
         return glm::vec3();
     }
     return iter->second->getPosition();
@@ -84,7 +84,7 @@ spark::Input
     {
         LOG_ERROR(g_log) << "Can't find input device with name \""
         << name << "\" in call to Input::isButtonPressed().";
-        assert(false);
+        //assert(false);
         return false;
     }
     return iter->second->isButtonPressed( buttonNumber );
@@ -99,7 +99,7 @@ spark::Input
     {
         LOG_ERROR(g_log) << "Can't find input device with name \""
             << name << "\" in call to Input::getPositionRange().";
-        assert(false);
+        //assert(false);
         return glm::vec3();
     }
     return iter->second->getPositionRange();

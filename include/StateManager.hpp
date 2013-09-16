@@ -49,11 +49,7 @@ namespace spark
         StatePtr operator[]( const StateName& name );
         
         /// Allow the state to update its internal state.
-        /// Called once per graphics frame.
         virtual void update( double dt );
-        
-        /// Called periodically with a fixed dt (fixed time-step update).
-        virtual void fixedUpdate( double dt );
         
         /// Allow the state to render itself to the current OpenGL
         /// context.  Must be called only by the main GUI thread.

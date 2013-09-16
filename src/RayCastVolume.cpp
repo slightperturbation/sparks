@@ -43,14 +43,13 @@ spark::RayCastVolume
 
 void
 spark::RayCastVolume
-::fixedUpdate( float dt )
+::update( double dt )
 {
     if( m_volumeData && m_textureManager && m_mesh )
     {
-        m_volumeData->fixedUpdate( dt );
+        m_volumeData->update( dt );
         /// Push new density data up to graphics card
         m_textureManager->queueLoad3DTextureFromVolumeData( m_textureName, m_volumeData );
-        m_mesh->update( dt );
     }
 }
 

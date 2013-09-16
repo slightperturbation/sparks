@@ -96,6 +96,7 @@ spark::SimulationState
         //rayCastFluid->setTransform( xform );
         sliceVolume->setTransform( xform );
         m_scene->add( sliceVolume );
+        m_scene->addAsyncUpdateable( sliceVolume );
         m_lua->registerObject( "theSmokeVolume", sliceVolume );
     }
 
@@ -112,14 +113,17 @@ spark::SimulationState
     case highQuality:
         cellCountPerSide = 510;
         break;
+    case veryHighQuality:
+        cellCountPerSide = 510;
+        break;
     }
-    m_tissueMesh = TissueMeshPtr( new TissueMesh( 
-        name() + "_TISSUE_SIMULATION", 
-        m_facade->getTextureManager(),
-        0.5, // scale
-        cellCountPerSide //254 // level of detail 510-- good, 126 for debugging
-        ) );
-    m_scene->addUpdateable( m_tissueMesh );  // register for updates
+    m_tissueMesh = TissueMeshPtr( new TissueMesh( name() + "_TISSUE_SIMULATION",
+                                                  m_facade->getTextureManager(),
+                                                 0.5, // scale
+                                                 cellCountPerSide //254 // level of detail 510-- good, 126 for debugging
+                                                 )
+                                 );
+    m_scene->addAsyncUpdateable( m_tissueMesh );  // register for updates
     // Register tissue mesh with lua 
     m_lua->registerObject( "theTissueSim", m_tissueMesh );
 
@@ -145,18 +149,11 @@ void
 spark::SimulationState
 ::update( double dt )
 {
-    ScriptState::update( dt );
-}
-
-void
-spark::SimulationState
-::fixedUpdate( double dt )
-{
     // random starting position
     //static float x = 0;//rand()/(float)RAND_MAX;
     //static float y = 0;//rand()/(float)RAND_MAX;
     //float joules;
-
+    
     //// get current wattage from network
     //float wattage = 30000.0;
     //int numContactElems = 3;
@@ -175,9 +172,9 @@ spark::SimulationState
     //    joules = dt * wattage / (float)numContactElems;
     //    m_tissueMesh->accumulateHeat( x, y, joules );
     //}
-
+    
     // Smoke
-
+    
     std::vector<glm::vec2> vapingLocations;
     m_tissueMesh->acquireVaporizingLocations( vapingLocations );
     for( auto iter = vapingLocations.begin(); iter != vapingLocations.end(); ++iter )
@@ -186,7 +183,7 @@ spark::SimulationState
         m_fluidData->addSourceAtLocation( pos.x, pos.y );
     }
 
-    ScriptState::fixedUpdate( dt );
+    ScriptState::update( dt );
 }
 
 void

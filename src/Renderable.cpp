@@ -163,7 +163,6 @@ spark::Renderable
     }
 }
 
-
 void
 spark::Renderable
 ::setMaterialForPassName( const spark::RenderPassName& renderPassName, 
@@ -186,7 +185,9 @@ std::ostream& spark::operator<<( std::ostream& out,
         out << "(E)";
     }
     out << "{";
-    for( auto i = renderable->m_materials.begin(); i != renderable->m_materials.end(); ++i )
+    for( auto i = renderable->m_materials.begin();
+         i != renderable->m_materials.end();
+         ++i )
     {
         out << i->first << "->" << i->second->name() << ", ";
     }

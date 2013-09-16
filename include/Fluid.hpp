@@ -32,7 +32,7 @@ namespace spark
 
         //////////////////////////////////////////////////////////////////////////
         // Methods from VolumeData
-        virtual void fixedUpdate( float dt );
+        virtual void update( double dt ) override;
         virtual size_t dimX( void ) const { return m_N+2; }
         virtual size_t dimY( void ) const { return m_N+2; }
         virtual size_t dimZ( void ) const { return m_N+2; }

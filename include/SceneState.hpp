@@ -10,7 +10,7 @@ namespace spark
     /// Use only for scenes that are nothing more than an unchanging Scene.
     /// Concrete implementations written in C++ should inherit from this,
     /// and concrete implementations in Lua should instance ScriptState.
-    class SceneState : public State
+    class SceneState : public State, public Updateable
     {
     public:
         SceneState( const StateName& name, ScenePtr scene );
@@ -19,7 +19,6 @@ namespace spark
         virtual void activate( void )         override;
         virtual void deactivate( void )       override;
         virtual void update( double dt )      override;
-        virtual void fixedUpdate( double dt ) override;
         virtual void render( void )           override;
         virtual void reset( void )            override;
         boost::optional<spark::StateName> nextState( double currTime ) override;

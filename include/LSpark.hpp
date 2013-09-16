@@ -59,7 +59,7 @@ namespace spark
         ConstProjectionPtr viewProjection( void ) const;
         const Segments& segments( void ) const { return m_segments; }
         Segments& segments( void ) { return m_segments; }
-        void update( float dt );
+        void update( double dt );
         /// Move mid-points according to velocity field
         void advect( VelocityFieldInterfacePtr velocityField );
         /// Returns the total length of the spark, begin to end.

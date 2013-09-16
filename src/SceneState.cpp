@@ -48,13 +48,6 @@ spark::SceneState
 
 void
 spark::SceneState
-::fixedUpdate( double dt )
-{
-    m_scene->fixedUpdate( dt );
-}
-
-void
-spark::SceneState
 ::render( void )
 {
     m_scene->prepareRenderCommands();

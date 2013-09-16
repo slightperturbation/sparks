@@ -9,8 +9,12 @@
 
 namespace spark
 {
-    /// 2D model of tissue temperature
-    class TissueMesh : public Updateable
+    /// 2D model of tissue temperature that provides methods for adding
+    /// heat (accumulateHeat()) and a texture to communicate the results
+    /// for rendering.
+    /// TODO - Rename, it's not a mesh.  TissueTexture?  TissueTempModel?
+    class TissueMesh
+    : public Updateable
     {
         // Possible states/conditions the tissue can be in 
         // (not a enum class due to VS2010)
@@ -26,7 +30,7 @@ namespace spark
         virtual ~TissueMesh();
                 
         /// Update the VBO based on changes to the data.
-        virtual void fixedUpdate( float dt ) override;
+        virtual void update( double dt ) override;
         
         /// Add a source of heat for this time-step
         /// Heat sources are cleared/zero'd each update

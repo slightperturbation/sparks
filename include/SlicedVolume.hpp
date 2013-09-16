@@ -18,9 +18,12 @@ namespace spark
                      unsigned int sliceCount, VolumeDataPtr data );
         virtual ~SlicedVolume() {}
         void attachVolumeData( VolumeDataPtr data ) { m_volumeData = data; }
+
+        // From Renderable
         virtual void render( const RenderCommand& rc ) const override;
-        virtual void update( float dt ) override;
-        virtual void fixedUpdate( float dt ) override;
+        // From Updateable
+        virtual void update( double dt ) override;
+
         virtual void attachShaderAttributes( GLuint shaderIndex ) override;
         void setCameraDirection( const glm::vec3& dir );
     private:

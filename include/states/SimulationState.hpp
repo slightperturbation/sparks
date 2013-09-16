@@ -20,7 +20,6 @@ namespace spark
         virtual void activate( void )         override;
         virtual void deactivate( void )       override;
         virtual void update( double dt )      override;
-        virtual void fixedUpdate( double dt ) override;
         virtual void render( void )           override;
         
         boost::optional<spark::StateName> nextState( double currTime ) override;

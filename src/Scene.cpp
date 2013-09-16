@@ -113,13 +113,6 @@ spark::Scene
 
 void
 spark::Scene
-::fixedUpdate( double dt )
-{
-    // Noop - fixed updates usually done in separate thread
-}
-
-void
-spark::Scene
 ::activate( void )
 {
     // resume updates
@@ -144,7 +137,6 @@ void
 spark::Scene
 ::addUpdateable( UpdateablePtr up )
 {
-    float dt = 1.0/30.0;
     if( up )
     {
         if( std::find( m_updateables.begin(), m_updateables.end(), up ) != m_updateables.end() )
@@ -152,14 +144,29 @@ spark::Scene
             LOG_WARN(g_log) << "Attempt to add Updateable to Scene multiple times.";
         }
         m_updateables.push_back( up );
-        
-        // Dispatch thread
-        m_updateTasks.push_back( FixedUpdateTaskPtr( new FixedUpdateTask( up, dt ) ) );
-        m_updateTasks.back()->start();
     }
     else
     {
         LOG_ERROR(g_log) << "Scene::add(UpdateablePtr) called with a nullptr.";
+    }
+}
+
+void
+spark::Scene
+::addAsyncUpdateable( UpdateablePtr up )
+{
+    float dt = 1.0/30.0;
+    if( up )
+    {
+        if( std::find( m_updateables.begin(),
+                       m_updateables.end(), up )
+            != m_updateables.end() )
+        {
+            LOG_ERROR(g_log) << "Probably don't want an updateable to also be async'ly updated.";
+            assert( false );
+        }
+        //m_updateTasks.push_back( FixedUpdateTaskPtr( new FixedUpdateTask( up, dt ) ) );
+        //m_updateTasks.back()->start();
     }
 }
 
@@ -189,13 +196,6 @@ spark::Scene
                 r->name() << "\" to Scene multiple times.";
         }
         m_renderables.push_back( r );
-
-        //UpdateablePtr up = UpdateablePtr( dynamic_cast<Updateable*>( r.get() ) );
-        UpdateablePtr up = boost::dynamic_pointer_cast<Updateable>(r);
-        if( up )
-        {
-            addUpdateable( up );
-        }
     }
     else
     {
@@ -280,8 +280,11 @@ spark::Scene
 }
 
 spark::Scene::FixedUpdateTask
-::FixedUpdateTask(UpdateablePtr udp, float dt )
-  : m_updateable( udp ), m_dt( dt ), m_hasStarted( false ), m_isPaused( false )
+::FixedUpdateTask( UpdateablePtr udp, float dt )
+  : m_updateable( udp ),
+    m_hasStarted( false ),
+    m_isPaused( false ),
+    m_dt( dt )
 {
     m_prevUpdateTime = getTime();
 }
@@ -296,7 +299,7 @@ spark::Scene::FixedUpdateTask
         double elapsedTimeSoFar = currTime - m_prevUpdateTime;
         if( !m_isPaused && (elapsedTimeSoFar > m_dt) )
         {
-            m_updateable->fixedUpdate( m_dt );
+            m_updateable->update( m_dt );
             m_prevUpdateTime = currTime;
         }
         else

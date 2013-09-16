@@ -33,7 +33,12 @@ namespace spark
         GLfloat m_color[4];
     };
 
-    class PointSparkRenderable : public Renderable
+    /// Renders a spark as a series of GL_POINTS using glBegin/glEnd
+    /// Note that using this class violates the OpenGL 3.2 core profile,
+    /// and use should be restricted to debugging only.
+    class PointSparkRenderable
+    : public Renderable,
+      public Updateable
     {
     public:
         PointSparkRenderable( DBMSparkPtr spark,
@@ -42,7 +47,7 @@ namespace spark
         virtual ~PointSparkRenderable() {}
     
         virtual void render( const RenderCommand& ) const override;
-        virtual void update( float dt );
+        virtual void update( double dt ) override;
         virtual void loadTextures() {}
         virtual void loadShaders() {}
     private:

@@ -137,20 +137,6 @@ spark::StateManager
 
 void
 spark::StateManager
-::fixedUpdate( double dt )
-{
-    if( m_currState )
-    {
-        m_currState->fixedUpdate( dt );
-    }
-    else
-    {
-        LOG_ERROR(g_log) << "StateManager::fixedUpdate() requested, but null current state";
-    }
-}
-
-void
-spark::StateManager
 ::render( void )
 {
     if( m_currState )

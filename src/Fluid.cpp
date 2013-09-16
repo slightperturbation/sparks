@@ -892,7 +892,7 @@ spark::Fluid
 
 void 
 spark::Fluid
-::fixedUpdate( float dt )
+::update( double dt )
 {
     stepVelocity( dt * 0.05 );
     stepDensity( dt * 0.05 );

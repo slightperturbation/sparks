@@ -34,7 +34,7 @@ spark::TissueMesh
 
 void
 spark::TissueMesh
-::fixedUpdate( float dt )
+::update( double dt )
 {
     if( !m_textureManager ) return;
     // Apply accumulated heat to change tissue temp

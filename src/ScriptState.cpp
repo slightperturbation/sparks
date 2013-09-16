@@ -57,7 +57,7 @@ void
 spark::ScriptState
 ::load( void )
 {
-    //TODO spawn a thread to run the script
+    //TODO spawn a thread to run the script?
     m_lua->runScriptFromString( "theState:load()" );
 }
 
@@ -93,30 +93,6 @@ spark::ScriptState
     std::stringstream cmd;
     cmd << "theState:update( " << dt << " )";
     m_lua->runScriptFromString( cmd.str().c_str() );
-}
-
-void
-spark::ScriptState
-::fixedUpdate( double dt )
-{
-    m_scene->fixedUpdate( dt );
-    // poll for loading thread to complete
-    // when complete set flag to advance to next state
-    
-    lua_State* lua = m_lua->m_lua;
-    std::string next;
-    luabind::object theState = luabind::globals( lua )["theState"];
-    if( theState )
-    {
-        std::stringstream cmd;
-        cmd << "theState:fixedUpdate( " << dt << " )";
-        m_lua->runScriptFromString( cmd.str().c_str() );
-    }
-    else
-    {
-        LOG_ERROR(g_log) << "ScriptState \"" << name()
-        << "\" should build a global object called theState";
-    }
 }
 
 boost::optional<spark::StateName>
