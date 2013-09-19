@@ -65,6 +65,7 @@ namespace spark
             UpdateablePtr m_updateable;
             bool m_hasStarted; //< TODO: shouldn't be needed, test if thread is not-a-thread
             bool m_isPaused;
+            bool m_isStopped;
             double m_dt;
             double m_prevUpdateTime;
         };

@@ -10,7 +10,7 @@ namespace spark
     /// Use only for scenes that are nothing more than an unchanging Scene.
     /// Concrete implementations written in C++ should inherit from this,
     /// and concrete implementations in Lua should instance ScriptState.
-    class SceneState : public State, public Updateable
+    class SceneState : public State
     {
     public:
         SceneState( const StateName& name, ScenePtr scene );

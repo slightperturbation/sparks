@@ -55,6 +55,12 @@ function SimulationState:load()
 	mainRenderTarget = spark:createTextureRenderTarget( "MainRenderTargetTexture" )
 	spark:setMainRenderTarget( mainRenderTarget )
 	mainRenderTarget:setClearColor( vec4( 0.1, 0.05, 0.05, 1.0 ) )
+ 
+ 	-- Pass ordering (or depth testing?) doesn't work correctly 
+ 	-- when the mainRenderTarget is the frameBuffer rather than a texture
+	-- mainRenderTarget = spark:getFrameBufferRenderTarget()
+	-- spark:setMainRenderTarget( mainRenderTarget ) -- facade which target to use
+	-- mainRenderTarget:setClearColor( vec4( 0.1, 0.05, 0.05, 1.0 ) )
 
 	opaqueRenderPass = spark:createRenderPass( 1.0, "OpaquePass", mainRenderTarget )
 	opaqueRenderPass:setDepthWrite( true )
@@ -70,6 +76,22 @@ function SimulationState:load()
 	HUDRenderPass:setDepthTest( false )
 	HUDRenderPass:setDepthWrite( false )
 	HUDRenderPass:useInterpolatedBlending()
+
+
+	isShadowOn = true
+	if( isShadowOn ) then
+
+		-- Create a shadow-mapped light.  Here using a orthogonal projection for a 
+		-- "directional" style light.
+		-- Create the projection that acts as the light source
+		shadowCamera = spark:createOrthogonalProjection( -10, 10, -10, 10, -10, 20, vec3( 0.5, 2, 2 ) )
+		shadowPass = spark:createRenderPassWithProjection( 1.1, "ShadowPass", shadowCamera, shadowTarget )
+		shadowPass:addShadowLight( vec4(1,1,1,1), shadowCamera )
+		
+		shadowTarget = spark:createDepthMapRenderTarget( "light0_shadowMap", 1024, 1024 )
+		shadowMaterial = spark:createMaterial( "shadowCasterShader" )
+		-- shadowMaterial:setFloat( "u_shadowBias", 0.01 )
+	end
 	
 	-- specifies where the tissue is relative to world coords
 	self.worldOffset = vec3( 0, -.1, -0.125 )
@@ -92,7 +114,7 @@ function SimulationState:load()
 
 	local showTissue = true
 	if showTissue  then
-		self.tissueMat = spark:createMaterial( "tissueShader" ) --"tissueShader_procedural"  )
+		self.tissueMat = spark:createMaterial( "tissueShader_singleSample" ) -- "tissueShader" ) --"tissueShader_procedural"  )
 		self.tissueMat:setVec4( "u_light.position_camera", vec4(5,10,0,1) )
 		self.tissueMat:setVec4( "u_light.diffuse", vec4(0.8,0.8,0.8,1) )
 		self.tissueMat:setVec4( "u_ambientLight", vec4(0.3,0.1,0.1,1) )
@@ -117,8 +139,10 @@ function SimulationState:load()
 		self.tissueMat:addTexture( "s_temperature", theTissueSim:getTempMapTextureName() )
 		self.tissueMat:addTexture( "s_condition", theTissueSim:getConditionMapTextureName() )
 		self.tissue = spark:createCube( self.worldOffset + vec3(-0.25, 0, -0.25), 0.5, self.tissueMat, "OpaquePass" )
+		if( isShadowOn ) then
+			self.tissue:setMaterialForPassName( "ShadowPass", shadowMaterial )
+		end
 		self.tissue:rotate( 90, vec3(1,0,0) )
-
 
 		-- show the target ring
 		self.tissueMat:setVec2( "u_targetCircleCenter", vec2( 0.7, 0.6 ) )
@@ -138,11 +162,17 @@ function SimulationState:load()
 	-- Tmp -- 3D mouse cursor
 	self.markerBox = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
 		scale, cursorMat, "OpaquePass" )
+	if( isShadowOn ) then
+		self.markerBox:setMaterialForPassName( "ShadowPass", shadowMaterial )
+	end
 	
 	local cursorMat2 = spark:createMaterial( "constantColorShader" )
 	cursorMat2:setVec4( "u_color", vec4( 0.2,1,0.2,1.0) );
 	self.markerBox2 = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
 		scale, cursorMat2, "OpaquePass" )
+	if( isShadowOn ) then
+		self.markerBox2:setMaterialForPassName( "ShadowPass", shadowMaterial )
+	end
 
 
 	-- Here's a nice little marker for the origin
@@ -159,7 +189,12 @@ function SimulationState:load()
 	local mainFontSize = 36
 	local smallFontSize = 12
 	local fontMgr = spark:getFontManager()
-	local fontFilename = "Vera.ttf"--"HelveticaNeueLight.ttf" );
+
+	local fontFilename = "Vera.ttf"
+	if isApple() then
+		fontFilename = "HelveticaNeueLight.ttf" 
+	end
+	print( "Using Fontfile: " .. fontFilename )
 	fontMgr:addFont( "Sans", mainFontSize, fontFilename )
 	fontMgr:addFont( "Sans", smallFontSize, fontFilename )
 
@@ -222,6 +257,11 @@ function SimulationState:load()
 	metalMat:setFloat( "u_ns", 100.0 )
 
 	self.instrument = spark:loadMesh( "hook_cautery_new.3DS", metalMat, "OpaquePass" )
+	if( isShadowOn ) then
+		self.instrument:setMaterialForPassName( "ShadowPass", shadowMaterial )
+	end
+
+	--self.instrument = spark:loadMesh( "hook_cautery_new.3DS", cursorMat, "OpaquePass" )
 
 end
 
@@ -238,33 +278,33 @@ end
 
 function SimulationState:update( dt )
 
-	if( input:isButtonPressed("mouse", 0) ) then
-		self.tissue:setMaterialForPassName( "OpaquePass", self.tissueMat_debug )
-		print( "USING DEBUG TEXTURE" )
-		for name,button in pairs(self.buttons) do
-			if( button:isOver( input:getPosition("mouse") ) ) then
-				button.onClick(self)
-			end
-		end
-	elseif( input:isButtonPressed("mouse", 1) ) then
-		self.tissue:setMaterialForPassName( "OpaquePass", self.tissueMat )
-		print( "USING NORMAL TEXTURE" )
-		for name,button in pairs(self.buttons) do
-			if( button:isOver( input:getPosition("mouse") ) ) then
-				button.onClick2(self)
-			end
-		end
-	else
-		for name,button in pairs(self.buttons) do
-			if( button:isOver( input:getPosition("mouse") ) ) then
-				--print( "Mouse over: "..name )
-				button:onMouseOver()
-			else
-				--print( "Mouse out : "..name )
-				button:onMouseOut()
-			end
-		end
-	end
+	-- if( input:isButtonPressed("mouse", 0) ) then
+	-- 	self.tissue:setMaterialForPassName( "OpaquePass", self.tissueMat_debug )
+	-- 	print( "USING DEBUG TEXTURE" )
+	-- 	for name,button in pairs(self.buttons) do
+	-- 		if( button:isOver( input:getPosition("mouse") ) ) then
+	-- 			button.onClick(self)
+	-- 		end
+	-- 	end
+	-- elseif( input:isButtonPressed("mouse", 1) ) then
+	-- 	self.tissue:setMaterialForPassName( "OpaquePass", self.tissueMat )
+	-- 	print( "USING NORMAL TEXTURE" )
+	-- 	for name,button in pairs(self.buttons) do
+	-- 		if( button:isOver( input:getPosition("mouse") ) ) then
+	-- 			button.onClick2(self)
+	-- 		end
+	-- 	end
+	-- else
+	-- 	for name,button in pairs(self.buttons) do
+	-- 		if( button:isOver( input:getPosition("mouse") ) ) then
+	-- 			--print( "Mouse over: "..name )
+	-- 			button:onMouseOver()
+	-- 		else
+	-- 			--print( "Mouse out : "..name )
+	-- 			button:onMouseOut()
+	-- 		end
+	-- 	end
+	-- end
 
 	-- local mousePos = input:getPosition( "mouse" ) 
 	-- --local xform = input:getTransform( "mouse" )
@@ -275,11 +315,17 @@ function SimulationState:update( dt )
 	-- 	                           0.0002 * (mousePos.y - 1054/2.0) ) -- hard coded half-height
 	-- self.markerBox:scale( 0.0025 )
 
+	local stylusPos = vec3()
+	local stylusMat = mat4()
 
-	-- Debugging (and on non-zspace machines, use mouse)
-	local stylusPos = input:getPosition( "stylus" )
-	local stylusMat = input:getTransform( "stylus" )
-	--local stylusPos = input:getPosition( "mouse" )
+	if( isWindows() ) then
+		stylusPos = input:getPosition( "stylus" )
+		stylusMat = input:getTransform( "stylus" )
+	else
+		-- Debugging (and on non-zspace machines, use mouse)
+		stylusPos = input:getPosition( "mouse" )
+		stylusMat = mat4() --input:getTransform( "mouse" )
+	end
 
 	local screenSpaceOffset = vec3( 0, 0.25, 0 )
 	-- green block on final pos & orient
@@ -318,7 +364,21 @@ function SimulationState:update( dt )
 
 	local touchThreshold = 0.005
 	local sparkThreshold = 0.005
-	if( input:isButtonPressed( "stylus", 0 ) ) then
+
+	local buttonPressed = false
+	if( isWindows() ) then
+		if( input:isButtonPressed( "stylus", 0 ) ) then
+			buttonPressed = true
+		end
+	else
+		if( input:isButtonPressed( "mouse", 0 ) ) then
+			-- hack to allow testing with mouse
+			stylusPos.y = floorHeight
+			buttonPressed = true
+		end
+	end
+
+	if( buttonPressed ) then
 		local toolTipPos = stylusPos.y
 		print( "Activation at " .. self.currWattage .. " watts at dist " .. abs( toolTipPos - floorHeight ) )
 		
@@ -334,10 +394,6 @@ function SimulationState:update( dt )
 		--TODO play sound
 
 	end
-end
-
-function SimulationState:fixedUpdate( dt )
-	--print( "SimulationState:fixedUpdate" )	
 end
 
 function SimulationState:deactivate()

@@ -49,7 +49,7 @@ spark::ZSpaceInputDevice
 
 void
 spark::ZSpaceInputDevice
-::update( float dt  )
+::update( double dt  )
 {
     // Grab the latest 6DOF stylus pose (position and orientation) and transform it
     // into the scene's world space.  After the pose has been transformed to world space,

@@ -10,6 +10,7 @@
 #define sparks_RenderPass_hpp
 
 #include "Spark.hpp"
+#include "IlluminationModel.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -74,6 +75,10 @@ namespace spark
         void disableBlending( void );
         void enableBlending( void );
         
+        /// Lights
+        void addAmbientLight( glm::vec4 color );
+        void addShadowLight( glm::vec4 color, ProjectionPtr projection );
+        
         /// If defaultMaterial is non-null, it will be used for all scene
         /// renderables without a material assignment for this pass.
         void useDefaultMaterial( ConstMaterialPtr defaultMaterial );
@@ -121,6 +126,7 @@ namespace spark
         RenderPassName m_name;
         RenderTargetPtr m_target;
         ProjectionPtr m_perspective;
+        IlluminationModel m_illumination;
 
         /// Orders pass wrt other passes.  Higher priorities render first.
         float m_priority;

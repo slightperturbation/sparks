@@ -59,7 +59,10 @@ spark::Material
         assert( false );
         return;
     }
-    LOG_TRACE(g_log) << "Using Material \"" << name() << "\".";
+    if( g_log->isTrace() )
+    {
+        LOG_TRACE(g_log) << "Using Material \"" << name() << "\".";
+    }
     // setup texture uniforms
     for( auto texIter = m_textures.begin();
         texIter != m_textures.end(); 
@@ -74,14 +77,20 @@ spark::Material
                 << "\" in spark::Material \"" << name() << "\".";
         }
         m_shader->setUniform( samplerNameInShader, texUnit );
-        LOG_TRACE(g_log) << "spark::Material setting texture sampler uniform \""
-                         << samplerNameInShader << "\" = " << texUnit
-                         << " bound to texture \"" << textureName << "\".";
+        if( g_log->isTrace() )
+        {
+            LOG_TRACE(g_log) << "spark::Material setting texture sampler uniform \""
+                             << samplerNameInShader << "\" = " << texUnit
+                             << " bound to texture \"" << textureName << "\".";
+        }
     }
     m_shader->use();
 }
 
-void spark::Material::addTexture( const ShaderUniformName& samplerName, const TextureName& textureName )
+void
+spark::Material
+::addTexture( const ShaderUniformName& samplerName,
+              const TextureName& textureName )
 { 
     if( !m_textureManager->isTextureReady( textureName ) )
     {

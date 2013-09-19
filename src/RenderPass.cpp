@@ -255,6 +255,20 @@ spark::RenderPass
 
 void
 spark::RenderPass
+::addAmbientLight( glm::vec4 color )
+{
+    m_illumination.addAmbientLight( color );
+}
+
+void
+spark::RenderPass
+::addShadowLight( glm::vec4 color, ProjectionPtr projection )
+{
+    m_illumination.addShadowLight( color, projection );
+}
+
+void
+spark::RenderPass
 ::useDefaultMaterial( ConstMaterialPtr defaultMaterial )
 {
     m_defaultMaterial = defaultMaterial;
@@ -344,6 +358,7 @@ spark
     outRC.m_renderable = aRenderable;
     outRC.m_material = aRenderPass->getMaterialForRenderable( aRenderable );
     outRC.m_perspective = aRenderPass->m_perspective;
+    outRC.m_illuminationModel = aRenderPass->m_illumination;
 
     if( !outRC.m_material ) 
     {

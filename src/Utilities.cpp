@@ -219,7 +219,7 @@ spark::OpenGLWindow
 
     //////////////////////////////////////////////////////////////////////
     // V-Sync
-    glfwSwapInterval(0);
+    //glfwSwapInterval(0);
 
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
@@ -241,6 +241,11 @@ spark::OpenGLWindow
     const GLFWvidmode* mode = glfwGetVideoMode( monitor );
     int width = mode->width;
     int height = mode->height;
+#ifndef HAS_ZSPACE
+    width /= 2;
+    height /= 2;
+#endif
+    
     monitor = nullptr; // null for windowed; easier to debug, prob want FS for release?
 
     LOG_DEBUG(g_log) << "glfwOpenWindow...";

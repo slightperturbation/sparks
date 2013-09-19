@@ -136,7 +136,8 @@ spark::OrthogonalProjection
 : m_left( 0 ),
   m_right( 1 ),
   m_bottom( 0 ),
-  m_top( 1 )
+  m_top( 1 ),
+  m_direction( 0, 0, 0 )
 {
     m_nearPlaneDist = -5.1f;
     m_farPlaneDist = 5.1f;
@@ -159,7 +160,7 @@ glm::vec3
 spark::OrthogonalProjection
 ::lookAtDirection( const glm::vec3& targetPoint ) const
 {
-    return glm::vec3( 0, 0, -1 );
+    return m_direction;
 }
 
 glm::vec3
@@ -168,3 +169,39 @@ spark::OrthogonalProjection
 {
     return glm::vec3( 0, 1, 0 );
 }
+
+void 
+spark::OrthogonalProjection
+::setLookAtDirection( const glm::vec3& direction )
+{ 
+    m_direction = direction; 
+}
+
+glm::mat4 
+spark::OrthogonalProjection
+::viewMatrix( void ) const
+{
+    if( m_direction == glm::vec3( 0, 0, 0 ) )
+    {
+        return glm::mat4();
+    }
+    glm::vec3 eye( 0, 0, 0 );
+    return glm::lookAt( lookAtDirection(eye), // target position
+        eye,
+        upDirection() );
+}
+
+glm::mat4 
+spark::OrthogonalProjection
+::projectionMatrix( void ) const
+{
+    return glm::ortho( m_left, m_right, m_bottom, m_top, 
+                       m_nearPlaneDist, m_farPlaneDist );
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+
+
+

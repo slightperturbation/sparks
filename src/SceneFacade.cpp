@@ -13,7 +13,7 @@
 #include "TissueMesh.hpp"
 #include "LSpark.hpp"
 #include "TexturedSparkRenderable.hpp"
-
+#include "Projection.hpp"
 
 spark::SceneFacade
 ::SceneFacade( ScenePtr scene,
@@ -87,6 +87,44 @@ spark::SceneFacade
     return m_cameraPerspective;
 }
 
+spark::ProjectionPtr
+spark::SceneFacade
+::createOrthogonalProjection( float left, float right,
+                              float bottom, float top,
+                              float nearPlane, float farPlane,
+                               glm::vec3 direction )
+{
+    OrthogonalProjectionPtr ortho
+        = OrthogonalProjectionPtr( new OrthogonalProjection() );
+    ortho->left( left );
+    ortho->right( right );
+    ortho->bottom( bottom );
+    ortho->top( top );
+    ortho->nearPlaneDistance( nearPlane );
+    ortho->farPlaneDistance( farPlane );
+    ortho->setLookAtDirection( direction );
+    return ortho;
+}
+
+spark::ProjectionPtr
+spark::SceneFacade
+::createPerspectiveProjection( const glm::vec3& pos,
+                               const glm::vec3& target,
+                               const glm::vec3& up,
+                               float fov, 
+                               float nearPlane,
+                               float farPlane )
+{
+    PerspectiveProjectionPtr ppp( new PerspectiveProjection() );
+    ppp->cameraPos( pos );
+    ppp->cameraTarget( target );
+    ppp->cameraUp( up );
+    ppp->fov( fov );
+    ppp->nearPlaneDistance( nearPlane );
+    ppp->farPlaneDistance( farPlane );
+    return ppp;
+}
+
 void
 spark::SceneFacade
 ::setMainRenderTarget( RenderTargetPtr target )
@@ -136,20 +174,13 @@ spark::SceneFacade
 
 spark::RenderTargetPtr
 spark::SceneFacade
-::createScaledDepthTextureRenderTarget( const TextureName& depthTextureName,
-                                        float scaleFactor )
+::createDepthMapRenderTarget( const TextureName& depthTextureName,
+                              int width, int height )
 {
-    ScaledTextureRenderTargetPtr target(
-        new ScaledTextureRenderTarget( depthTextureName,
-                                       m_guiEventPublisher->width(),
-                                       m_guiEventPublisher->height(),
-                                       scaleFactor,
-                                       scaleFactor,
-                                       ScaledTextureRenderTarget::DepthOnly )
+    DepthMapRenderTargetPtr target(
+        new DepthMapRenderTarget( depthTextureName, width, height )
     );
     target->initialize( m_textureManager );
-    //GuiEventSubscriberPtr gesp = boost::dynamic_pointer_cast<GuiEventSubscriber>(target);
-    m_guiEventPublisher->subscribe( target );
     return target;
 }
 

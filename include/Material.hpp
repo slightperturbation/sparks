@@ -16,15 +16,18 @@
 
 namespace spark
 {
-    /// Material is one way to render the object.  Note that one material 
-    /// corresponds to one type of render-pass, so a color pass would use
-    /// a different Material object than a depth-write pass or a G-buffer pass.
+    /// Material is a description of how to render one or more objects.  
+    /// Note that one material corresponds to one type of render-pass, 
+    /// so a color pass would use a different Material object than 
+    /// a depth-write pass or a G-buffer pass.
     class Material
     {
     public:
         Material( TextureManagerPtr tm );
         Material( TextureManagerPtr tm, ShaderInstancePtr aShader );
         ~Material();
+        /// Specifies the shader this material is based on.  All materials
+        /// must have a shader.
         void setShader( ShaderInstancePtr aShader );
         /// Returns the OpenGL Shader ID used by this material.
         GLuint getGLShaderIndex( void ) const;
@@ -49,9 +52,12 @@ namespace spark
         template< typename T >
         void setShaderUniform( ShaderUniformName aName, T arg )
         {
-            LOG_TRACE(g_log) << "Setting Shader Uniform \""
-                             << aName << "\" for Material \""
-                             << name() << "\".";
+            if( g_log->isTrace() )
+            {
+                LOG_TRACE(g_log) << "Setting Shader Uniform \""
+                                 << aName << "\" for Material \""
+                                 << name() << "\".";
+            }
             m_shader->setUniform<T>( aName, arg );
         }
         /// Send to logger all of the shader uniforms actually applied.

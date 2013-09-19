@@ -30,15 +30,15 @@ spark::SimulationState
 ::load( void )
 {
     enum PerformanceType { faster, balanced, highQuality, veryHighQuality };
-    PerformanceType perf = balanced;
+    PerformanceType perf = highQuality;
     {
         int n = 0;
         int slices = 32;
         switch( perf )
         {
         case faster:
-            slices = 64;
-            n = 16;
+            slices = 32;
+            n = 8;
             m_fluidData.reset( new Fluid(n) );
             m_fluidData->setDiffusion( 5e-3 );//1e-2 );
             m_fluidData->setVorticity( 1e4 );//1e4 ); //1e2 );
@@ -55,8 +55,8 @@ spark::SimulationState
             break;
 
         case highQuality:
-            slices = 512;
-            n = 36; // looks good, still too slow 
+            slices = 256;
+            n = 48; // looks good, still too slow 
             m_fluidData.reset( new Fluid(n) );
             m_fluidData->setDiffusion( 5e-3 );//1e-2 );
             m_fluidData->setVorticity( 1e4 );//1e4 ); //1e2 );
@@ -64,7 +64,7 @@ spark::SimulationState
             break;
 
         case veryHighQuality:
-            slices = 1024;
+            slices = 512;
             n = 48;// looks great, but slow
             m_fluidData.reset( new Fluid(n) );
             m_fluidData->setDiffusion( 5e-3 );//1e-2 );
@@ -85,12 +85,17 @@ spark::SimulationState
         float sideLength = 1.0;
         glm::mat4 xform_scale = glm::scale( glm::mat4(), 
             glm::vec3( sideLength, sideLength, sideLength ) );
+
+        // fixed offset hard-coded in SimulationState.lua
         glm::vec3 worldOffset_fromLua( 0, -.1, -0.125 );
+
         glm::mat4 xform_move = glm::translate( glm::mat4(), 
             glm::vec3( 0, sideLength/2.0f - (2.5f/n)*sideLength, 0 )
             + worldOffset_fromLua
         ); // 2.5, 1 for boundary cell, 0.5 to center on grid
+
         glm::mat4 xform_rot = glm::rotate( glm::mat4(), 90.0f, glm::vec3( 1,0,0 ) ); // z-up to y-up
+
         glm::mat4 xform =  xform_move * xform_rot * xform_scale;// 
 
         //rayCastFluid->setTransform( xform );
@@ -105,7 +110,7 @@ spark::SimulationState
     switch( perf )
     {
     case faster:
-        cellCountPerSide = 254;//126;
+        cellCountPerSide = 126;
         break;
     case balanced:
         cellCountPerSide = 254;
@@ -114,15 +119,16 @@ spark::SimulationState
         cellCountPerSide = 510;
         break;
     case veryHighQuality:
-        cellCountPerSide = 510;
+        cellCountPerSide = 1022;
         break;
     }
-    m_tissueMesh = TissueMeshPtr( new TissueMesh( name() + "_TISSUE_SIMULATION",
-                                                  m_facade->getTextureManager(),
-                                                 0.5, // scale
-                                                 cellCountPerSide //254 // level of detail 510-- good, 126 for debugging
-                                                 )
-                                 );
+    m_tissueMesh = TissueMeshPtr( 
+        new TissueMesh( name() + "_TISSUE_SIMULATION",
+                        m_facade->getTextureManager(),
+                        0.5, // scale
+                        cellCountPerSide //254 // level of detail 510-- good, 126 for debugging
+                        )
+    );
     m_scene->addAsyncUpdateable( m_tissueMesh );  // register for updates
     // Register tissue mesh with lua 
     m_lua->registerObject( "theTissueSim", m_tissueMesh );
@@ -173,14 +179,15 @@ spark::SimulationState
     //    m_tissueMesh->accumulateHeat( x, y, joules );
     //}
     
-    // Smoke
-    
+    // Tie tissue vaporization to the Smoke
+    float deltaDensity = 100.5; //< depends on the scale of the tissue and the scale of the smoke!
+    float maxDensity = 20.0;
     std::vector<glm::vec2> vapingLocations;
     m_tissueMesh->acquireVaporizingLocations( vapingLocations );
     for( auto iter = vapingLocations.begin(); iter != vapingLocations.end(); ++iter )
     {
         glm::vec2& pos = *iter;
-        m_fluidData->addSourceAtLocation( pos.x, pos.y );
+        m_fluidData->addSourceAtLocation( pos.x, pos.y, deltaDensity, maxDensity  );
     }
 
     ScriptState::update( dt );

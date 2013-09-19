@@ -49,6 +49,31 @@ namespace spark
         /// This is the camera that will be jittered for 3d rendering.
         PerspectiveProjectionPtr getCamera( void );
         
+        /// Returns a new orthographic projection.
+        /// NOTE this returns a ProjectionPtr instead of an OrthogonalProjectionPtr
+        /// due to createRenderPassWithProjection() not accepting the 
+        /// subclass when called from Lua.  (Lua throws a runtime error
+        /// of "No matching overload candidates found".)
+        /// Until resolved, the Lua caller needs a "pure" ProjectionPtr
+        ProjectionPtr createOrthogonalProjection( float left,
+                                                            float right,
+                                                            float bottom,
+                                                            float top,
+                                                            float nearPlane,
+                                                            float farPlane,
+                                                            glm::vec3 direction );
+
+        /// Returns a camera with the eye at pos, looking at target.
+        /// See note for createOrthogonalProjection for why this returns a ProjectionPtr.
+        ProjectionPtr createPerspectiveProjection( const glm::vec3& pos,
+                                                              const glm::vec3& target,
+                                                              const glm::vec3& up,
+                                                              float fov,
+                                                              float nearPlane,
+                                                              float farPlane );
+
+        /// Return the default/framebuffer render target
+        /// DEPRECATED
         RenderTargetPtr getMainRenderTarget( void );
         void setMainRenderTarget( RenderTargetPtr target );
         
@@ -69,9 +94,9 @@ namespace spark
              float scaleFactor );
         
         /// Create a ScaledTextureRenderTarget that only writes depth
-        RenderTargetPtr createScaledDepthTextureRenderTarget(
+        RenderTargetPtr createDepthMapRenderTarget(
             const TextureName& depthTextureName,
-            float scaleFactor );
+            int width, int height );
 
         /// Creates newTargetTextureName as a texture and renders to it
         /// using an overlay projection

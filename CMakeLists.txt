@@ -504,6 +504,7 @@ set( HDRS
   ./include/ArcBall.hpp
   ./include/DBMSpark.hpp
   ./include/Display.hpp
+  ./include/IlluminationModel.hpp
   ./include/LSpark.hpp
   ./include/LuaInterpreter.hpp
   ./include/ESUInput.hpp
@@ -563,6 +564,7 @@ set( SRCS
   ./src/ArcBall.cpp
   ./src/DBMSpark.cpp
   ./src/Display.cpp
+  ./src/IlluminationModel.cpp
   ./src/LSpark.cpp
   ./src/LuaInterpreter.cpp
   ./src/Exceptions.cpp

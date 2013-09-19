@@ -201,7 +201,7 @@ int
 spark::Fluid
 ::getSize( void )
 {
-    return m_N + 2;
+    return (int)m_N + 2;
 }
 
 void
@@ -631,7 +631,7 @@ spark::Fluid
                                      + m_vorticityForceV[ind]*m_vorticityForceV[ind]
                                      + m_vorticityForceW[ind]*m_vorticityForceW[ind] );
                 float invlen = 0;
-                const float epsilon = 1e-10;
+                const float epsilon = 1e-10f;
                 if( len > epsilon )
                 {
                     invlen = 1.0f / len;
@@ -900,14 +900,19 @@ spark::Fluid
 
 void
 spark::Fluid
-::addSourceAtLocation( float x, float y )
+::addSourceAtLocation( float x, float y, float deltaDensity, float maxDensity )
 {
+    std::cerr << "Smoke source = " << x << ", " << y << "\n";
     const float lenOfCell = 1.0f / (m_N+2);
     int rx = (int)( (x/lenOfCell) + ( (float)(m_N+2)/2.0f - 0.5f ) );
     int ry = (int)( (y/lenOfCell) + ( (float)(m_N+2)/2.0f - 0.5f ) );
     
     size_t i = index( rx, ry, m_N );
-    m_density[ i ] = std::min( m_density[i] + 0.15, 0.4 );
+    m_density[ i ] = std::min( m_density[i] + deltaDensity, maxDensity );
+    //m_temp[ i ] = m_ambientTemp + 50.0;
+    //m_temp_prev[ i ] = m_ambientTemp + 50.0;
+
+
 
     //m_density_prev[ i ] = 0.4;
     //m_temp[ i ] = 150.0;

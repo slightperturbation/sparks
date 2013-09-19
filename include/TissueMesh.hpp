@@ -143,7 +143,22 @@ namespace spark
             int rx = (int)((x / m_voxelDimMeters) + ((float)m_N/2.0f) - 0.5f);
             int ry = (int)((y / m_voxelDimMeters) + ((float)m_N/2.0f) - 0.5f);
             size_t ind = m_N * ry + rx;
-            assert( ind < m_tissueCondition.size() );
+            if( ind >= m_tissueCondition.size() )
+            {
+                LOG_ERROR(g_log) << "ERROR -- indexFromXY( " << x 
+                    << ", " << y << " ) = " << ind 
+                    << " which is > m_tissueCondition.size()=" 
+                    << m_tissueCondition.size();
+                ind = 0;
+            }
+            if( ind >= m_heatMap.size() )
+            {
+                LOG_ERROR(g_log) << "ERROR -- indexFromXY( " << x 
+                    << ", " << y << " ) = " << ind 
+                    << " which is > m_heatMap.size() =" 
+                    << m_heatMap.size();
+                ind = 0;
+            }
             return ind;
         }
 

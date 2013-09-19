@@ -87,7 +87,8 @@ namespace spark
         void reset( void );
 
         void addBottomSource( void );
-        void addSourceAtLocation( float x, float y );
+        void addSourceAtLocation( float x, float y, 
+                                  float deltaDensity, float maxDensity );
     private:
         void reallocate( void );
         void init( void );

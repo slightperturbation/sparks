@@ -1,5 +1,5 @@
-#ifndef CAMERA_HPP
-#define CAMERA_HPP
+#ifndef SPARK_PROJECTION_HPP
+#define SPARK_PROJECTION_HPP
 
 #include "Spark.hpp"
 #include "ShaderInstance.hpp"
@@ -26,7 +26,10 @@ namespace spark
 {
     /// Projection manages state for the Model, View and Projection transforms
     /// and provides utility functions for setting camera and camera target.
-    class Projection : public ShaderUniformHolder, public GuiEventSubscriber
+    /// As a GuiEventSubscriber, handles resizeViewport events.
+    class Projection 
+    : public ShaderUniformHolder, 
+      public GuiEventSubscriber
     {
     public:
         Projection( void );
@@ -69,7 +72,8 @@ namespace spark
 
     ///////////////////////////////////////////////////////////////////////////
     /// Concrete projection for camera-style projection
-    class PerspectiveProjection : public Projection
+    class PerspectiveProjection 
+    : public Projection
     {
     public:
         PerspectiveProjection( void );
@@ -128,14 +132,22 @@ namespace spark
         glm::mat4 m_currEyeView;
         boost::optional< glm::mat4 > m_projMat;
     };
-
+    typedef spark::shared_ptr< PerspectiveProjection > PerspectiveProjectionPtr;
+    typedef spark::shared_ptr< const PerspectiveProjection > ConstPerspectiveProjectionPtr;
     ///////////////////////////////////////////////////////////////////////////
     /// Concrete orthogonal projection
-    class OrthogonalProjection : public Projection
+    class OrthogonalProjection 
+    : public Projection
     {
     public:
         OrthogonalProjection();
         virtual std::string name( void ) const;
+        
+        /// Returns the direction this projection is looking. Note that
+        /// target point is ignored, since an Orthogonal projection is
+        /// looking in the same direction for any target position.
+        /// Note: to set the look-at direction, use setLookAtDirection()
+        /// TODO: bad interface here, the semantics of look-at change from Perspective to Ortho
         virtual glm::vec3 lookAtDirection( const glm::vec3& targetPoint ) const override;
         virtual glm::vec3 upDirection( void ) const override;
 
@@ -147,20 +159,19 @@ namespace spark
         void bottom( float arg ) { m_bottom = arg; }
         float top( void ) const { return m_top; }
         void top( float arg ) { m_top = arg; }
-
-        virtual glm::mat4 viewMatrix( void ) const
-        {
-            return glm::mat4(); // default ctor provides identity matrix
-        }
-        virtual glm::mat4 projectionMatrix( void ) const
-        {
-            return glm::ortho( m_left, m_right, m_bottom, m_top, m_nearPlaneDist, m_farPlaneDist );
-        }
+        
+        void setLookAtDirection( const glm::vec3& direction );
+        virtual glm::mat4 viewMatrix( void ) const override;
+        virtual glm::mat4 projectionMatrix( void ) const override;
     protected:
         float m_left;
         float m_right;
         float m_bottom;
         float m_top;
+        glm::vec3 m_direction;
     };
+    typedef spark::shared_ptr< OrthogonalProjection > OrthogonalProjectionPtr;
+    typedef spark::shared_ptr< const OrthogonalProjection > ConstOrthogonalProjectionPtr;
+
 } // end namespace spark
 #endif

@@ -32,10 +32,13 @@ void
 spark::Scene
 ::render( void )
 {
-    LOG_TRACE(g_log) << "==== Scene::render with "
-                     << m_commands.size() << " commands, "
-                     << m_passes.size() << " passes and " 
-                     << m_renderables.size() << " renderables.";
+    if( g_log->isTrace() )
+    {
+        LOG_TRACE(g_log) << "==== Scene::render with "
+                         << m_commands.size() << " commands, "
+                         << m_passes.size() << " passes and " 
+                         << m_renderables.size() << " renderables.";
+    }
     for( auto p = m_passes.begin(); p != m_passes.end(); ++p )
     {
         LOG_TRACE(g_log) << "\tPASS: " << *p;
@@ -48,12 +51,15 @@ spark::Scene
     while( !commandsCopy.empty() )
     {
         const RenderCommand& rc = commandsCopy.top();
-        LOG_TRACE(g_log) << "\tCOMMAND: Renderable=\""
-            << rc.m_renderable->name() << "\", Pass=\""
-            << rc.m_pass->name() << "\"[\"" 
-            << rc.m_pass->targetName() << "\"]"
-            << " Material=\""
-            << rc.m_material->name() << "\"";
+        if( g_log->isTrace() )
+        {
+            LOG_TRACE(g_log) << "\tCOMMAND: Renderable=\""
+                             << rc.m_renderable->name() << "\", Pass=\""
+                             << rc.m_pass->name() << "\"[\"" 
+                             << rc.m_pass->targetName() << "\"]"
+                             << " Material=\""
+                             << rc.m_material->name() << "\"";
+        }
         commandsCopy.pop();
     }
 
@@ -155,7 +161,7 @@ void
 spark::Scene
 ::addAsyncUpdateable( UpdateablePtr up )
 {
-    float dt = 1.0/30.0;
+    float dt = 1.0f/30.0f;
     if( up )
     {
         if( std::find( m_updateables.begin(),
@@ -165,8 +171,8 @@ spark::Scene
             LOG_ERROR(g_log) << "Probably don't want an updateable to also be async'ly updated.";
             assert( false );
         }
-        //m_updateTasks.push_back( FixedUpdateTaskPtr( new FixedUpdateTask( up, dt ) ) );
-        //m_updateTasks.back()->start();
+        m_updateTasks.push_back( FixedUpdateTaskPtr( new FixedUpdateTask( up, dt ) ) );
+        m_updateTasks.back()->start();
     }
 }
 
@@ -284,6 +290,7 @@ spark::Scene::FixedUpdateTask
   : m_updateable( udp ),
     m_hasStarted( false ),
     m_isPaused( false ),
+    m_isStopped( false ),
     m_dt( dt )
 {
     m_prevUpdateTime = getTime();
@@ -308,12 +315,15 @@ spark::Scene::FixedUpdateTask
             const int waitTimeMilliseconds = int( 1000.0 * (m_dt - (getTime() - m_prevUpdateTime)) );
             if( waitTimeMilliseconds > 3 )
             {
-                //std::cerr << "FixedUpdateTask [" << m_updateable->updateableName() << " - " << boost::this_thread::get_id() << "] waiting for " << waitTimeMilliseconds << "\n";
                 boost::this_thread::sleep_for( boost::chrono::milliseconds( waitTimeMilliseconds ) );
             }
         }
+        if( m_isStopped )
+        {
+            break;
+        }
     }
-    // Never returns
+    // Never returns, expect on break for m_isStopped
 }
 
 void
@@ -345,6 +355,6 @@ void
 spark::Scene::FixedUpdateTask
 ::stop( void )
 {
-    m_isPaused = true;
-    m_thread.interrupt();
+    m_isStopped = true;
+    m_thread.timed_join( boost::posix_time::seconds( 1 ) );
 }

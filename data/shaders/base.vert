@@ -23,6 +23,7 @@ out vec4 f_vertex_screen;  // Projected vertex into the clip-space
 out vec4 f_normal_camera;  // For phong lighting
 out vec4 f_vertex_camera;  // For phong lighting
 out vec3 f_normal;
+out vec4 f_shadowPosition; // Position of light
 
 uniform vec2 u_textureRepeat = vec2(1,1);
 

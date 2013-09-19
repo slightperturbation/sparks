@@ -121,28 +121,17 @@ spark::TextureManager
     m_registry[aHandle] = textureId;
     GLint textureUnit = reserveTextureUnit();
     bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
+
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
+                 width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
     
     // GL_LINEAR for simple shadow maps (make an argument?)
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
     
     // Remove artifact on the edges of the shadowmap
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
-
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
-                 width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL );
-    
-    ////////////
-    /// TODO $$$$$ MUST BIND the FBO before this next call????
-    
-
-    // Attach this texture to a FBO target (depth)
-    glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER,
-                            GL_DEPTH_ATTACHMENT,
-                            GL_TEXTURE_2D,
-                            textureId,
-                            0 );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 }
 
 void
@@ -328,7 +317,6 @@ spark::TextureManager
         boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
         std::copy( m_commandQueue.begin(), m_commandQueue.end(),
             std::inserter( execCopy, execCopy.begin() ) );
-        m_commandQueue.clear();
     }
     for( auto iter = execCopy.begin();
          iter != execCopy.end();
@@ -336,6 +324,10 @@ spark::TextureManager
     {
         assert( *iter );
         (*iter)->operator()( this );
+    }
+    {
+        boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
+        m_commandQueue.clear();
     }
 }
 
@@ -464,8 +456,6 @@ spark::TextureManager
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, edgeParameter ) );
     unsigned int borderColor[] = {0,0,0,0};
     glTexParameterIuiv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
-    
-    GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
     
     LOG_TRACE(g_log) << "2DTexture for Volume Data \"" << aHandle
     << "\" loaded with id=" << textureId
@@ -716,7 +706,7 @@ spark::TextureManager
     if( iter == m_registry.end() )
     {
         LOG_ERROR(g_log) << "Failed to find Texture by handle \"" 
-                         << aHandle << "\".";
+                         << aHandle << "\". (OK during initialization)";
         return -1;
     }
     return iter->second;

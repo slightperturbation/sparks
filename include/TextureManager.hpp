@@ -115,7 +115,7 @@ namespace spark
         virtual ~TextureManager();
 
         //////////////////////////////////////////////////////////////////
-        /// Non-OpenGL Methods
+        /// Non-OpenGL-Thread Methods
         /// Some methods may call TextureManager from a thread not 
         /// associated with the OpenGL context.
         /// The following calls can be made from Updateable::fixedUpdate(dt)
@@ -130,6 +130,9 @@ namespace spark
                                               const std::vector<float>& aData,
                                               size_t dimPerSide );
         //////////////////////////////////////////////////////////////////
+        /// Execute all of the queued commands for this TextureManager.
+        /// Can only be called on the OpenGL thread.
+        /// See also queueLoad* methods.
         void executeQueuedCommands( void );
         //////////////////////////////////////////////////////////////////
 

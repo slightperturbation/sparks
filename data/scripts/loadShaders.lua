@@ -8,6 +8,10 @@ shaderManager:loadShaderFromFiles( "constantColorShader",
                                     "base.vert",
                                     "constantColor.frag" );
 
+shaderManager:loadShaderFromFiles( "shadowCasterShader",
+                                    "shadowCaster.vert",
+                                    "shadowCaster.frag" );
+
 shaderManager:loadShaderFromFiles( "phongShader",
                                     "base.vert",
                                     "phong.frag" );
@@ -15,6 +19,10 @@ shaderManager:loadShaderFromFiles( "phongShader",
 shaderManager:loadShaderFromFiles( "texturedOverlayShader",
                                     "base.vert",
                                     "texturedOverlay.frag" );
+
+shaderManager:loadShaderFromFiles( "simpleShadowExampleShader",
+                                    "simpleShadowExample.vert",
+                                    "simpleShadowExample.frag" );
 
 shaderManager:loadShaderFromFiles( "blurHortShader",
                                     "blurHort.vert",
@@ -41,7 +49,7 @@ shaderManager:loadShaderFromFiles( "rayCastVolumeShader",
                                     "rayCast.frag" );
 
 shaderManager:loadShaderFromFiles( "tissueShader_debug",
-                                    "tissue.vert",
+                                    "tissue_debug.vert",
                                     "tissue_debug.frag" );
 
 shaderManager:loadShaderFromFiles( "tissueShader_procedural",
@@ -51,3 +59,7 @@ shaderManager:loadShaderFromFiles( "tissueShader_procedural",
 shaderManager:loadShaderFromFiles( "tissueShader",
                                     "tissue.vert",
                                     "tissue_bump.frag" );
+
+shaderManager:loadShaderFromFiles( "tissueShader_singleSample",
+                                    "tissue_singleSample.vert",
+                                    "tissue_singleSample.frag" );

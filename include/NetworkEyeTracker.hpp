@@ -101,7 +101,7 @@ namespace spark
     public:
         NetworkEyeTracker( short listeningUdpPort = 5005 /* display size & viewport pos */ );
         virtual ~NetworkEyeTracker();
-
+        virtual void update( double dt ) override {}
         /// Update the viewport
         virtual void resizeViewport( int left, int bottom,
             int right, int top ) override;

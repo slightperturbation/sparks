@@ -64,7 +64,6 @@ spark::Renderable
     m_objectTransform = m_objectTransform * mat; 
 }
 
-
 void 
 spark::Renderable
 ::scale( const glm::vec3& scaleFactor )
@@ -149,12 +148,15 @@ spark::Renderable
     auto itr = m_materials.find( renderPassName );
     if( itr != m_materials.end() )
     {
-        LOG_TRACE(g_log) << "Using material \""
-        << (*itr).second->name()
-        << "\" for pass \""
-        << renderPassName
-        << "\" for renderable \""
-        << m_name << "\".";
+        if( g_log->isTrace() )
+        {
+            LOG_TRACE(g_log) << "Using material \""
+                             << (*itr).second->name()
+                             << "\" for pass \""
+                             << renderPassName
+                             << "\" for renderable \""
+                             << m_name << "\".";
+        }
         return (*itr).second;
     }
     else
@@ -168,9 +170,12 @@ spark::Renderable
 ::setMaterialForPassName( const spark::RenderPassName& renderPassName, 
                           spark::MaterialPtr material )
 {
-    LOG_TRACE(g_log) << "Assigning material \"" << material->name() 
-        << "\" to renderable \"" << name() << "\" for pass \"" 
-        << renderPassName << "\".";
+    if( g_log->isTrace() )
+    {
+        LOG_TRACE(g_log) << "Assigning material \"" << material->name() 
+                         << "\" to renderable \"" << name() << "\" for pass \"" 
+                         << renderPassName << "\".";
+    }
     m_materials[ renderPassName ] = material;
     GLuint shaderId = material->getGLShaderIndex();
     attachShaderAttributes( shaderId );

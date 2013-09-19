@@ -243,7 +243,7 @@ namespace spark
             std::string filePath;
             if( !m_finder->findFile( aScriptFilename, filePath ) )
             {
-                LOG_ERROR(g_log) << "FAILED to find texture file \""
+                LOG_ERROR(g_log) << "FAILED to find script file \""
                                  << aScriptFilename << "\" in search paths.";
                 assert( false );
                 return;

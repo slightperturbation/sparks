@@ -25,9 +25,7 @@ void main()
 	avgDensity += scale     * texture( s_density3d, f_blurTexCoords[4] )[0];
 	avgDensity += scale     * texture( s_density3d, f_blurTexCoords[5] )[0];
 	
-
 	outColor = vec4( f_fragColor.rgb, avgDensity );
-
 
     //outColor = f_fragColor * texture( s_density3d, f_texCoord ).x ;
     //outColor = vec4( f_fragColor.rgb, texture( s_density3d, f_texCoord )[0] );

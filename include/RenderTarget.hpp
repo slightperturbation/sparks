@@ -75,11 +75,8 @@ namespace spark
         : public RenderTarget
     {
     public:
-        enum BufferType { ColorOnly, ColorAndDepth, DepthOnly };
-
         TextureRenderTarget( const TextureName& aName,
-                             int aWidth, int aHeight,
-                             BufferType bufferType = ColorAndDepth );
+                             int aWidth, int aHeight );
         virtual ~TextureRenderTarget();
         virtual std::string name( void ) const override
         { return getTextureName(); }
@@ -100,10 +97,40 @@ namespace spark
         int m_height;
         GLuint m_framebufferId;
         GLuint m_depthRenderbufferId;
-        BufferType m_bufferType;
     };
     typedef spark::shared_ptr< TextureRenderTarget > TextureRenderTargetPtr;
 
+    ///////////////////////////////////////////////////////////////////////////
+    // DepthMapRenderTarget
+    class DepthMapRenderTarget
+    : public RenderTarget
+    {
+    public:
+        DepthMapRenderTarget( const TextureName& aName,
+                            int aWidth, int aHeight );
+        virtual ~DepthMapRenderTarget();
+        virtual std::string name( void ) const override
+        { return getTextureName(); }
+        const TextureName& getTextureName( void ) const
+        { return m_textureHandle; }
+        virtual glm::vec2 size( void ) const override;
+        
+        virtual void initialize( TextureManagerPtr& mgr ) override;
+        virtual void preRender( void ) const override;
+        virtual void postRender( void ) const override;
+        virtual void startFrame( void ) const override;
+        
+        virtual std::ostream& debugInfo( std::ostream& out ) const override;
+    protected:
+        TextureManagerPtr m_textureManager;
+        TextureName m_textureHandle;
+        int m_width;
+        int m_height;
+        GLuint m_framebufferId;
+        GLuint m_depthRenderbufferId;
+    };
+    typedef spark::shared_ptr< DepthMapRenderTarget > DepthMapRenderTargetPtr;
+    
     ///////////////////////////////////////////////////////////////////////////
     // ScaledTextureRenderTarget
 
@@ -114,8 +141,7 @@ namespace spark
     public:
         ScaledTextureRenderTarget( const TextureName& aName,
             int aViewportWidth, int aViewportHeight, 
-            float aScaleX, float aScaleY,
-            BufferType bufferType = ColorAndDepth );
+            float aScaleX, float aScaleY );
         virtual ~ScaledTextureRenderTarget();
 
         virtual void initialize( TextureManagerPtr& mgr ) override;

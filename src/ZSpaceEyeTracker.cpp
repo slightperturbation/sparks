@@ -105,7 +105,7 @@ spark::ZSpaceEyeTracker
 
 void 
 spark::ZSpaceEyeTracker
-::update( float dt ) 
+::update( double dt ) 
 {
     ZSpaceSystem& sys = ZSpaceSystem::get();
     if( !sys.m_stereoWindow || !sys.m_trackerSystem || !sys.m_stereoViewport )

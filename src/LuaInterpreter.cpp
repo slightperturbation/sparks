@@ -1,10 +1,12 @@
 #include "LuaInterpreter.hpp"
 
+#include "IlluminationModel.hpp"
 #include "TextRenderable.hpp"
 #include "TissueMesh.hpp"
 #include "SlicedVolume.hpp"
 #include "Fluid.hpp"
 #include "Utilities.hpp" // for glm operator<< functions
+#include "Projection.hpp"
 
 #include <luabind/operator.hpp>
 
@@ -42,6 +44,23 @@ void
 spark
 ::bindSceneFacade( lua_State* lua )
 {
+    // Note! The luabind docs explicitly say to bind with the base-class's
+    // smart pointer.  This is *wrong*, bind to the concrete class's
+    // smart pointer.
+
+    //////////////////////////////////////////////////////////// AmbientLight
+    luabind::module( lua )
+    [
+     luabind::class_< AmbientLight, AmbientLightPtr >( "Light" )
+     ];
+    //////////////////////////////////////////////////////////// ShadowLight
+    luabind::module( lua )
+    [
+     luabind::class_< ShadowLight, ShadowLightPtr >( "Light" )
+        .def( "setProjection", &ShadowLight::setProjection )
+        .def( "getProjection", &ShadowLight::getProjection )
+    ];
+    
     //////////////////////////////////////////////////////////// Renderable
     luabind::module( lua )
     [
@@ -135,6 +154,8 @@ spark
      .def( "setBlending",
           (void (RenderPass::*)(GLenum, GLenum, GLenum) )
           &RenderPass::setBlending )
+     .def( "addAmbientLight", &RenderPass::addAmbientLight )
+     .def( "addShadowLight", &RenderPass::addShadowLight )
      .def( "setDepthTest", &RenderPass::setDepthTest )
      .def( "setDepthWrite", &RenderPass::setDepthWrite )
      .def( "setColorWrite", &RenderPass::setColorWrite )
@@ -154,6 +175,14 @@ spark
      .def( "setClearColor", &RenderTarget::setClearColor )
      ];
 
+    ////////////////////////////////////////////////// DepthMapRenderTarget
+    luabind::module( lua )
+    [
+        luabind::class_< DepthMapRenderTarget, RenderTarget,
+                         DepthMapRenderTargetPtr >( "DepthMapRenderTarget" )
+    ];
+    
+
     //////////////////////////////////////////////////////////// Projection
     luabind::module( lua )
     [
@@ -162,9 +191,6 @@ spark
     ///////////////////////////////////////////////// PerspectiveProjection
     luabind::module( lua )
     [
-     // Note! The luabind docs explicitly say to bind with the base-class's
-     // smart pointer.  This is *wrong*, bind to the concrete class's
-     // smart pointer.
      luabind::class_< PerspectiveProjection,
      Projection,
      PerspectiveProjectionPtr >( "PerspectiveProjection" )
@@ -175,7 +201,16 @@ spark
      .def( "fov", (void (PerspectiveProjection::*)(float) )&PerspectiveProjection::fov )
      
      ];
-    
+
+    ////////////////////////////////////////////////// OrthogonalProjection
+    luabind::module( lua )
+        [
+            luabind::class_< OrthogonalProjection,
+            Projection,
+            OrthogonalProjectionPtr >( "OrthogonalProjection" )
+            .def( "setLookAtDirection", &OrthogonalProjection::setLookAtDirection )
+        ];
+
     ///////////////////////////////////////////////////////////////// Input
     luabind::module( lua )
     [
@@ -187,14 +222,6 @@ spark
      .def( "getPositionRange", &Input::getPositionRange )
      ];
     
-    ////////////////////////////////////////////////// OrthogonalProjection
-    luabind::module( lua )
-    [
-     luabind::class_< OrthogonalProjection,
-     Projection,
-     OrthogonalProjectionPtr >( "OrthogonalProjection" )
-     ];
-
     /////////////////////////////////////////////////////////// SceneFacade
     luabind::module( lua )
     [
@@ -221,10 +248,16 @@ spark
           &SceneFacade::getFrameBufferRenderTarget )
      .def( "getCamera",
           &SceneFacade::getCamera )
+     .def( "createOrthogonalProjection",
+          &SceneFacade::createOrthogonalProjection )
+     .def( "createPerspectiveProjection",
+          &SceneFacade::createPerspectiveProjection )
      .def( "createScaledTextureRenderTarget",
           &SceneFacade::createScaledTextureRenderTarget )
      .def( "createTextureRenderTarget",
           &SceneFacade::createTextureRenderTarget )
+     .def( "createDepthMapRenderTarget",
+          &SceneFacade::createDepthMapRenderTarget )
      .def( "createRenderPass",
           &SceneFacade::createRenderPass )
      .def( "createRenderPassWithProjection",

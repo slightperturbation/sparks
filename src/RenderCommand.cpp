@@ -82,9 +82,7 @@ spark::RenderCommand
     mutableMaterial->setShaderUniform<glm::vec2>( "u_targetSizeInPixels",
                                                  m_pass->targetSize() );
     
-    // Lights
-    //m_illumination->use( mutableMaterial );
-    //mutableMaterial->setShaderUniform<glm::vec4>( "u_")
+    m_illuminationModel.setShaderUniforms( mutableMaterial, m_renderable );
 
     const bool isVerboseDebug = false;
     if( isVerboseDebug )
@@ -124,16 +122,12 @@ spark::RenderCommandCompare
     return isALessThanB;
 }
 
-
 std::ostream& spark::operator<<( std::ostream& out, const RenderCommand& rc )
 {
     out << "Pass[" << rc.m_pass 
         << "]\tPersp[" << rc.m_perspective->name()
         << "]\tRenderable[" << rc.m_renderable->name() 
-        << "]\tMaterial[" << rc.m_material->name() << "]";
-    if( rc.m_illumination )
-    {
-        out << "\tIllumination[" << rc.m_illumination->name() << "]";
-    }
+        << "]\tMaterial[" << rc.m_material->name()
+        << "]\tIllumination[" << rc.m_illuminationModel << "]";
     return out;
 }

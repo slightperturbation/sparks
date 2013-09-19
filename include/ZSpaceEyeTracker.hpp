@@ -21,8 +21,7 @@ namespace spark
                                      int right, int top ) override;
 
         // From Updateable
-        virtual void update( float dt ) override;
-        virtual void fixedUpdate( float dt ) override {}
+        virtual void update( double dt ) override;
 
         // ZSpace-specific Methods
         void setInterPupillaryDistance( float distInMeters );

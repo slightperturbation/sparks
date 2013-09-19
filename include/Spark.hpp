@@ -78,6 +78,10 @@ namespace spark
     class GuiEventPublisher;
     typedef spark::shared_ptr< GuiEventPublisher > GuiEventPublisherPtr;
     
+    class IlluminationModel;
+    typedef spark::shared_ptr< IlluminationModel > IlluminationModelPtr;
+    typedef spark::shared_ptr< const IlluminationModel > ConstIlluminationModelPtr;
+
     class Input;
     typedef spark::shared_ptr< Input > InputPtr;
     typedef std::string InputDeviceName;
