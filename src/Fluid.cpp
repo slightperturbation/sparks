@@ -904,11 +904,11 @@ spark::Fluid
 {
     std::cerr << "Smoke source = " << x << ", " << y << "\n";
     const float lenOfCell = 1.0f / (m_N+2);
-    int rx = (int)( (x/lenOfCell) + ( (float)(m_N+2)/2.0f - 0.5f ) );
-    int ry = (int)( (y/lenOfCell) + ( (float)(m_N+2)/2.0f - 0.5f ) );
+    int rx = (int)( (x/lenOfCell) + ( (float)(m_N+2)/2.0f ) );//+ 0.5f ) );
+    int ry = (int)( (y/lenOfCell) + ( (float)(m_N+2)/2.0f ) );//+ 0.5f ) );
     
     size_t i = index( rx, ry, m_N );
-    m_density[ i ] = std::min( m_density[i] + deltaDensity, maxDensity );
+    m_density[ i ] = std::min( m_density[i] + deltaDensity/(m_N+2), maxDensity );
     //m_temp[ i ] = m_ambientTemp + 50.0;
     //m_temp_prev[ i ] = m_ambientTemp + 50.0;
 
