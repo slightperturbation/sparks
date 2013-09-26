@@ -30,7 +30,7 @@ spark::SimulationState
 ::load( void )
 {
     enum PerformanceType { faster, balanced, highQuality, veryHighQuality };
-    PerformanceType perf = highQuality;
+    PerformanceType perf = balanced;
     {
         int n = 0;
         int slices = 32;
@@ -47,11 +47,11 @@ spark::SimulationState
             
         case balanced:
             slices = 128;
-            n = 24; 
+            n = 32; //24; 
             m_fluidData.reset( new Fluid(n) );
-            m_fluidData->setDiffusion( 5e-3 );//1e-2 );
-            m_fluidData->setVorticity( 1e4 );//1e4 ); //1e2 );
-            m_fluidData->setGravityFactor( 0, 500, 1100 ); // +x left, +y is away from viewer, 
+            m_fluidData->setDiffusion( 5e-6 ); // 5e-3 );//1e-2 );
+            m_fluidData->setVorticity( 5e5 );//1e4 ); //1e2 );
+            m_fluidData->setGravityFactor( 10, 800, 5000 ); //( 0, 500, 1100 ); // +x left, +y is away from viewer, 
             break;
 
         case highQuality:
@@ -82,21 +82,21 @@ spark::SimulationState
         //                                               textureManager,
         //                                               shaderManager,
         //                                               m_fluidData ) );
-        float sideLength = 1.0;
+        float slicesSideLength = 0.5;
         glm::mat4 xform_scale = glm::scale( glm::mat4(), 
-            glm::vec3( sideLength, sideLength, sideLength ) );
+            glm::vec3( slicesSideLength, slicesSideLength, slicesSideLength ) );
 
         // fixed offset hard-coded in SimulationState.lua
-        glm::vec3 worldOffset_fromLua( 0, -.1, -0.125 );
+        glm::vec3 worldOffset_fromLua( 0, -0.1, -0.1 );
 
         glm::mat4 xform_move = glm::translate( glm::mat4(), 
-            glm::vec3( 0, sideLength/2.0f - (2.5f/n)*sideLength, 0 )
+            glm::vec3( 0, slicesSideLength/2.0f - (2.5f/n)*slicesSideLength, 0 )
             + worldOffset_fromLua
         ); // 2.5, 1 for boundary cell, 0.5 to center on grid
 
         glm::mat4 xform_rot = glm::rotate( glm::mat4(), 90.0f, glm::vec3( 1,0,0 ) ); // z-up to y-up
 
-        glm::mat4 xform =  xform_move * xform_rot * xform_scale;// 
+        glm::mat4 xform =  xform_move * xform_rot * xform_scale;
 
         //rayCastFluid->setTransform( xform );
         sliceVolume->setTransform( xform );
@@ -180,8 +180,8 @@ spark::SimulationState
     //}
     
     // Tie tissue vaporization to the Smoke
-    float deltaDensity = 100.5; //< depends on the scale of the tissue and the scale of the smoke!
-    float maxDensity = 20.0;
+    float deltaDensity = 10000.5;
+    float maxDensity = 1;
     std::vector<glm::vec2> vapingLocations;
     m_tissueMesh->acquireVaporizingLocations( vapingLocations );
     for( auto iter = vapingLocations.begin(); iter != vapingLocations.end(); ++iter )

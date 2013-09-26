@@ -34,8 +34,8 @@ spark::SlicedVolume
         MeshVertex v;
         v.m_position[0] = -0.5;     v.m_position[1] =  0.5;     v.m_position[2] = z;
         v.m_normal[0]   = 0;        v.m_normal[1] = 0;          v.m_normal[2] = 1;
-        v.m_diffuseColor[0] = 0.75;  v.m_diffuseColor[1] = 0.75;
-        v.m_diffuseColor[2] = 0.75; v.m_diffuseColor[3] = 0.75;
+        v.m_diffuseColor[0] = 1;  v.m_diffuseColor[1] = 1;
+        v.m_diffuseColor[2] = 1; v.m_diffuseColor[3] = 1;
         v.m_texCoord[0] = 0;        v.m_texCoord[1] = 1;        v.m_texCoord[2] = t;
         const size_t a = m_mesh->addVertex( v );
         
