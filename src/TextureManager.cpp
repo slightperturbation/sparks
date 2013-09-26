@@ -96,10 +96,7 @@ spark::TextureManager
 //    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR ); 
     //    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST );
  
-    
-    ////////////
-    /// TODO $$$$$ MUST BIND the FBO before this next call????
-    
+
     glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0 );
 }
@@ -373,7 +370,12 @@ spark::TextureManager
         return;
     }
     bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_3D );
-    GL_CHECK( glTexImage3D( GL_TEXTURE_3D, 0, GL_R32F,
+
+    // Using 16-bit floats instead of 32-bit floats
+    // decreases frame time by about 15ms with a 32x32x32 volume
+    // on the K5000 video card.
+    GLint textureDataFormat = GL_R16F;//GL_R32F;
+    GL_CHECK( glTexImage3D( GL_TEXTURE_3D, 0, textureDataFormat,
                            aVolume->dimX(),
                            aVolume->dimY(),
                            aVolume->dimZ(),
