@@ -111,67 +111,16 @@ namespace spark
         ///   0  1  2   3   4        10 11   12   INDEX <-- returned index
         ///  -.1 0  .1  .2  .3       .9  1  1.1   U parameter <-- input u
         ///  
-        size_t indexFromUV( float u, float v ) const
-        {
-            if( u < 0 || v < 0 )
-            {
-                assert( false );
-                return 0;
-            }
-            if( u > 1 || v > 1 )
-            {
-                assert( false );
-                return 0;
-            }
-            // Use negative rounding:
-            // -.09 * 10 - 0.5 = -1.4 -> -1 
-            // -.04 * 10 - 0.5 = -.9 -> 0
-            // .04 * 10 + 0.5 = .9 -> 0
-            // .09 * 10 + 0.5 = 1.4 -> 1
-            size_t x = size_t( u * m_N + (u>0 ? 0.5 : -0.5) );
-            size_t y = size_t( v * m_N + (v>0 ? 0.5 : -0.5) );
-            x = ( x == m_N ? m_N-1 : x );
-            y = ( y == m_N ? m_N-1 : y );
-            return index( x, y );
-        }
+        size_t indexFromUV( float u, float v ) const;
 
         /// Provides index for cell at "world" coordinates x,y
         /// Assumes tissue is centered at 0,0
         /// Inverse operation of indexToPosition()
-        size_t indexFromXY( float x, float y ) const
-        {
-            int rx = (int)((x / m_voxelDimMeters) + ((float)m_N/2.0f) - 0.5f);
-            int ry = (int)((y / m_voxelDimMeters) + ((float)m_N/2.0f) - 0.5f);
-            size_t ind = m_N * ry + rx;
-            if( ind >= m_tissueCondition.size() )
-            {
-                LOG_ERROR(g_log) << "ERROR -- indexFromXY( " << x 
-                    << ", " << y << " ) = " << ind 
-                    << " which is > m_tissueCondition.size()=" 
-                    << m_tissueCondition.size();
-                ind = 0;
-            }
-            if( ind >= m_heatMap.size() )
-            {
-                LOG_ERROR(g_log) << "ERROR -- indexFromXY( " << x 
-                    << ", " << y << " ) = " << ind 
-                    << " which is > m_heatMap.size() =" 
-                    << m_heatMap.size();
-                ind = 0;
-            }
-            return ind;
-        }
+        size_t indexFromXY( float x, float y ) const;
 
         /// Provides "world" x,y coordinates for cell at index ind.
         /// Assumes center (m_N/2)+0.5 is located at the origin
-        void indexToPosition( size_t ind, float* pX, float* pY ) const
-        {
-            assert( ind < m_tissueCondition.size() );
-            int y = ind / m_N; 
-            int x = ind % m_N;
-            *pX = m_voxelDimMeters * ( x - ((float)m_N/2.0f) + 0.5f );
-            *pY = m_voxelDimMeters * ( y - ((float)m_N/2.0f) + 0.5f );
-        }
+        void indexToPosition( size_t ind, float* pX, float* pY ) const;
         
         TextureName m_tempTextureName;
         TextureName m_conditionTextureName;

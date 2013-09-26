@@ -36,6 +36,8 @@ void
 spark::TissueMesh
 ::update( double dt )
 {
+    std::cerr << "--------------------------TissueMesh::update( " << dt << " )\n";
+
     if( !m_textureManager ) return;
     // Apply accumulated heat to change tissue temp
     // Q = c m dT
@@ -268,4 +270,68 @@ spark::TissueMesh
             vaping.push_back( glm::vec2( x, y ) );
         }
     }
+}
+
+size_t 
+spark::TissueMesh
+::indexFromUV( float u, float v ) const
+{
+    if( u < 0 || v < 0 )
+    {
+        assert( false );
+        return 0;
+    }
+    if( u > 1 || v > 1 )
+    {
+        assert( false );
+        return 0;
+    }
+    // Use negative rounding:
+    // -.09 * 10 - 0.5 = -1.4 -> -1 
+    // -.04 * 10 - 0.5 = -.9 -> 0
+    // .04 * 10 + 0.5 = .9 -> 0
+    // .09 * 10 + 0.5 = 1.4 -> 1
+    size_t x = size_t( u * m_N + (u>0 ? 0.5 : -0.5) );
+    size_t y = size_t( v * m_N + (v>0 ? 0.5 : -0.5) );
+    x = ( x == m_N ? m_N-1 : x );
+    y = ( y == m_N ? m_N-1 : y );
+    return index( x, y );
+}
+
+
+size_t 
+spark::TissueMesh
+::indexFromXY( float x, float y ) const
+{
+    int rx = (int)((x / m_voxelDimMeters) + ((float)m_N/2.0f) - 0.5f);
+    int ry = (int)((y / m_voxelDimMeters) + ((float)m_N/2.0f) - 0.5f);
+    size_t ind = m_N * ry + rx;
+    if( ind >= m_tissueCondition.size() )
+    {
+        LOG_ERROR(g_log) << "ERROR -- indexFromXY( " << x 
+            << ", " << y << " ) = " << ind 
+            << " which is > m_tissueCondition.size()=" 
+            << m_tissueCondition.size();
+        ind = 0;
+    }
+    if( ind >= m_heatMap.size() )
+    {
+        LOG_ERROR(g_log) << "ERROR -- indexFromXY( " << x 
+            << ", " << y << " ) = " << ind 
+            << " which is > m_heatMap.size() =" 
+            << m_heatMap.size();
+        ind = 0;
+    }
+    return ind;
+}
+
+void 
+spark::TissueMesh
+::indexToPosition( size_t ind, float* pX, float* pY ) const
+{
+    assert( ind < m_tissueCondition.size() );
+    int y = ind / m_N; 
+    int x = ind % m_N;
+    *pX = m_voxelDimMeters * ( x - ((float)m_N/2.0f) + 0.5f );
+    *pY = m_voxelDimMeters * ( y - ((float)m_N/2.0f) + 0.5f );
 }
