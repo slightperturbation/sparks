@@ -1,6 +1,6 @@
 <html>
 <script>
-var g_wattage = 20.0;
+var g_wattage = 50.0;
 var g_mode = "Cut";
 
 function toConsole( msg )
@@ -32,20 +32,20 @@ function sendUpdate()
 			toConsole( "Response: " + xmlhttp.responseText );
 		}
 	}
-	var queryString = '/win32/ESUServerCGI.cgi?Wattage=' + g_wattage;
+	var queryString = '/win32/ESUServerCGI.cgi?Wattage=' + g_wattage + "&Mode=" + g_mode;
 	toConsole( "Request: " + queryString );
 	xmlhttp.open( 'GET', queryString, true );
 	xmlhttp.send();
 }
 function upWattage()
 {
-	g_wattage = Math.min( 200, g_wattage + 10 );
+	g_wattage = Math.min( 200, g_wattage + 50 );
 	displayWattage();
 	sendUpdate();
 }
 function downWattage()
 {
-	g_wattage = Math.max( 10, g_wattage - 10 );
+	g_wattage = Math.max( 50, g_wattage - 50 );
 	displayWattage();
 	sendUpdate();
 }

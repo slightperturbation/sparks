@@ -567,6 +567,7 @@ set( SRCS
   ./src/IlluminationModel.cpp
   ./src/LSpark.cpp
   ./src/LuaInterpreter.cpp
+  ./src/ESUInputFromSharedMemory.cpp
   ./src/Exceptions.cpp
   ./src/Fluid.cpp
   ./src/FileAssetFinder.cpp
@@ -699,7 +700,11 @@ target_link_libraries(${PROJECT_NAME}
 #####################################################################
 # CGI program, uses shared memory to communicate with sparkGui
 add_executable( ESUServerCGI 
- src/ESUServer/ESUServerCGI.cpp )
+ ./src/ESUServer/ESUServerCGI.cpp 
+ ./src/ESUInputFromSharedMemory.cpp
+ ./include/ESUInput.hpp
+ ./include/ESUInputFromSharedMemory.hpp
+)
 
 target_link_libraries( ESUServerCGI
 	${PROJECT_LINK_LIBRARIES}
