@@ -17,9 +17,9 @@ namespace spark
         virtual ~GlfwMouseInputDevice();
         virtual void update( double dt ) override {}
         virtual glm::vec3 getPosition( void ) const override;
+        virtual glm::vec2 getScreenPosition( void ) const override;
         virtual glm::mat4 getTransform( void ) const override;
         virtual bool isButtonPressed( int buttonNumber ) const override;
-        virtual glm::vec3 getPositionRange( void ) const override;
     private:
         GLFWwindow* m_window; // non-owning
     };

@@ -10,9 +10,11 @@
 
 #include "ZSpace/Common/System/DisplayInfo.h"
 
+#include "ZSpace/Tracker/ITrackerVibrateCapability.h"
 #include "ZSpace/Tracker/ITrackerButtonCapability.h"
 #include "ZSpace/Tracker/TrackerSystem.h"
 #include "ZSpace/Tracker/TrackerTarget.h"
+#include "ZSpace/Tracker/TrackerDisplayIntersection.h"
 
 std::unique_ptr<spark::InputDevice> 
 spark::ZSpaceInputFactory
@@ -82,8 +84,24 @@ spark::ZSpaceInputDevice
         zspace::common::Vector3 position = primaryPose.getTrans();
         m_position = glm::vec3( position.x, position.y, position.z );
 
-//         zspace::common::Vector3 direction(-primaryPose[0][2], -primaryPose[1][2], -primaryPose[2][2]);
-//         zspace::common::Ray ray = zspace::common::Ray(position, direction);
+        zspace::common::Vector3 direction(-primaryPose[0][2], -primaryPose[1][2], -primaryPose[2][2]);
+        zspace::common::Ray ray = zspace::common::Ray(position, direction);
+
+        zspace::tracker::TrackerDisplayIntersection::setDisplayIntersectable( 0, true );
+        zspace::tracker::TrackerDisplayIntersection::setDisplayIntersectable( 1, false );
+        zspace::tracker::TrackerDisplayIntersection::setDisplayIntersectable( 2, false );
+        zspace::tracker::TrackerDisplayIntersection::IntersectionInfo intersectionInfo;
+        zspace::tracker::TrackerDisplayIntersection::intersect( primaryPose, intersectionInfo );
+
+        // Sets the position to the intersection with the screen in normalized coords
+        m_screenPosition = glm::vec2( (intersectionInfo.normalizedX - 43690) / (float)(65535-43690),
+                                      1.0f - (intersectionInfo.normalizedY / 65535.0f) ); 
+        // snippet for finding extent of display-- why isn't this zero?
+        //static int minX = 65533;
+        //if( intersectionInfo.normalizedX  > 1 )
+        //{
+        //    minX = std::min( minX,intersectionInfo.normalizedX ) ;
+        //}
     }
     // Get the primary tracker target's button capability if it exists.
     zspace::tracker::ITrackerButtonCapability* trackerButtonCapability =
@@ -102,11 +120,11 @@ spark::ZSpaceInputDevice
             // Detect any changes in state.
             if( isButtonPressed && !m_previousButtonStates[buttonId] )
             {
-                std::cerr << "Button " << buttonId << ": Pressed\n" ;
+                //std::cerr << "Button " << buttonId << ": Pressed\n" ;
             }
             else if( !isButtonPressed && m_previousButtonStates[buttonId] )
             {
-                std::cerr << "Button " << buttonId << ": Released\n" ;
+                //std::cerr << "Button " << buttonId << ": Released\n" ;
             }
             // Store off the current button state into the previous button states array
             // so that it can be referenced in the next frame.
@@ -120,6 +138,13 @@ spark::ZSpaceInputDevice
 ::getPosition( void ) const 
 {
     return m_position;
+}
+
+glm::vec2 
+spark::ZSpaceInputDevice
+::getScreenPosition( void ) const 
+{
+    return m_screenPosition;
 }
 
 glm::mat4 
@@ -136,10 +161,26 @@ spark::ZSpaceInputDevice
     return m_previousButtonStates[buttonNumber];
 }
 
-glm::vec3 
+void 
 spark::ZSpaceInputDevice
-::getPositionRange( void ) const 
+::startVibration( void )
 {
-    return glm::vec3();
+    ZSpaceSystem::get().m_vibrator->startVibration();
 }
 
+void 
+spark::ZSpaceInputDevice
+::stopVibration( void )
+{
+    ZSpaceSystem::get().m_vibrator->stopVibration();
+}
+
+void 
+spark::ZSpaceInputDevice
+::vibrateForSeconds( double duration )
+{
+    ZSpaceSystem::get().m_vibrator->setOnPeriod( duration );
+    ZSpaceSystem::get().m_vibrator->setOffPeriod( 0 );
+    ZSpaceSystem::get().m_vibrator->setRepeatCount( 1 );
+    ZSpaceSystem::get().m_vibrator->startVibration();
+}

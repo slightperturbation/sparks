@@ -2,6 +2,8 @@
 
 #include "GlfwInput.hpp"
 
+#include "Utilities.hpp"
+
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -30,9 +32,20 @@ glm::vec3
 spark::GlfwMouseInputDevice
 ::getPosition( void ) const
 {
+    return glm::vec3( getScreenPosition(), 0 );
+}
+
+glm::vec2 
+spark::GlfwMouseInputDevice
+::getScreenPosition( void ) const
+{
     double x, y;
     glfwGetCursorPos( m_window, &x, &y );
-    return glm::vec3( x, y, 0 );
+
+    int width, height;
+    glfwGetWindowSize( m_window, &width, &height );
+    glm::vec2 screenPos( x/(float)width, 1.0f - (y/(float)height) );
+    return screenPos;
 }
 
 //TODO move arcball implementation here
@@ -52,16 +65,6 @@ spark::GlfwMouseInputDevice
 ::isButtonPressed( int buttonNumber ) const
 {
     return glfwGetMouseButton( m_window, buttonNumber );
-}
-
-glm::vec3 
-spark::GlfwMouseInputDevice
-::getPositionRange( void ) const 
-{
-    int width = 0;
-    int height = 0;
-    glfwGetFramebufferSize( m_window, &width, &height);
-    return glm::vec3( width, height, 0 );
 }
 
 //////////////////////////////////////////////////////////////////////

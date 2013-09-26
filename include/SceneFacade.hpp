@@ -25,6 +25,7 @@ namespace spark
     {
     public:
         SceneFacade( ScenePtr scene,
+                     OpenGLWindow* window,
                       FileAssetFinderPtr finder,
                       TextureManagerPtr tm,
                       ShaderManagerPtr sm,
@@ -208,11 +209,19 @@ namespace spark
         
         RenderPassPtr getRenderPassByName( const RenderPassName& name );
         
+        glm::vec2 pixelsToScreenCoords( const glm::vec2& pixelPosition );
+        glm::vec2 screenCoordsToPixels( const glm::vec2& screenCoord );
+
+        glm::vec2 getWindowSize( void );
+        
+        
         /// Release all held resources, release all linked resources.
         void reset( void );
         
     private:
         RenderTargetPtr m_mainRenderTarget;
+        
+        OpenGLWindow* m_window;
 
         ScenePtr m_scene;
         // Managers

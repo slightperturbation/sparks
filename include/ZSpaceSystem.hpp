@@ -13,6 +13,7 @@ namespace zspace {
     }
     namespace tracker {
         class TrackerSystem;
+        class ITrackerVibrateCapability;
     }
     namespace common {
         class Matrix4;
@@ -49,7 +50,7 @@ namespace spark
         /// Owned by m_stereoViewport
         zspace::stereo::StereoFrustum* m_stereoFrustum;
         zspace::tracker::TrackerSystem* m_trackerSystem; //< TODO -- ownership is unclear!
-
+        zspace::tracker::ITrackerVibrateCapability* m_vibrator;
         /// The "monoscopic" perspective
         glm::mat4 m_modelViewMatrix;
     };

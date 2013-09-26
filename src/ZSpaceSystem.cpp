@@ -12,6 +12,7 @@
 
 #include "ZSpace/Tracker/TrackerSystem.h"
 #include "ZSpace/Tracker/TrackerTarget.h"
+#include "ZSpace/Tracker/ITrackerVibrateCapability.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -34,6 +35,21 @@ spark::ZSpaceSystem
         zspace::stereo::StereoLeftRightDetect::WINDOW_TYPE_GL );
 
     m_trackerSystem = new zspace::tracker::TrackerSystem();
+
+    // get the "primary" (aka only) stylus
+    zspace::tracker::TrackerTarget* primaryTarget 
+        = m_trackerSystem->getDefaultTrackerTarget( zspace::tracker::TrackerTarget::TYPE_PRIMARY );
+    if( primaryTarget )
+    {
+        // Get the vibration capability from the primary target, if the vibration capability exists.
+        m_vibrator = static_cast<zspace::tracker::ITrackerVibrateCapability*>(
+            primaryTarget->getCapability( zspace::tracker::ITrackerCapability::TYPE_VIBRATE ) );
+        m_vibrator->setEnabled( true );
+    }
+    else
+    {
+        m_vibrator = nullptr;
+    }
 }
 
 spark::ZSpaceSystem

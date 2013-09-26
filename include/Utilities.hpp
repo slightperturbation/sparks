@@ -45,6 +45,11 @@ namespace spark
         void getPosition( int* xPos, int* yPos );
         GLFWwindow* glfwWindow( void ) { return m_glfwWindow; }
         EyeTrackerPtr getEyeTracker( void )  { return m_eyeTracker; }
+        
+        /// Returns the "screen coords" (lower-left origin, extents 1,1)
+        /// of the given pixel position relative to the window
+        glm::vec2 pixelsToScreenCoords( const glm::vec2& pixelPosition );
+        glm::vec2 screenCoordsToPixels( const glm::vec2& screenCoord );
     private:
         EyeTrackerPtr m_eyeTracker;
         GLFWwindow* m_glfwWindow;
@@ -78,6 +83,7 @@ namespace spark
     void createMeshesFromFile( const char* filePath, 
                                FileAssetFinderPtr finder, 
                                std::vector< MeshPtr >& outMeshes );
+    
 
     /// Pretty printing for GLM types
     std::ostream& operator<<( std::ostream& out, const glm::vec2& v );

@@ -90,19 +90,19 @@ spark::Input
     return iter->second->isButtonPressed( buttonNumber );
 }
 
-glm::vec3 
+glm::vec2
 spark::Input
-::getPositionRange( const InputDeviceName& name ) const
+::getScreenPosition( const InputDeviceName& name ) const
 {
     auto iter = m_devices.find( name );
     if( iter == m_devices.end() )
     {
         LOG_ERROR(g_log) << "Can't find input device with name \""
-            << name << "\" in call to Input::getPositionRange().";
+            << name << "\" in call to Input::getScreenPosition().";
         //assert(false);
-        return glm::vec3();
+        return glm::vec2();
     }
-    return iter->second->getPositionRange();
+    return iter->second->getScreenPosition();
 }
 
 void
@@ -118,4 +118,52 @@ spark::Input
 ::acquireKeyboardDevice( std::unique_ptr<KeyboardInputDevice> device )
 {
     m_keyboardDevice = std::move( device );
+}
+
+void 
+spark::Input
+::startVibration( const InputDeviceName& name )
+{
+    auto iter = m_devices.find( name );
+    if( iter == m_devices.end() )
+    {
+        LOG_ERROR(g_log) << "Can't find input device with name \""
+            << name << "\" in call to Input::startVibration().";
+    }
+    else
+    {
+        iter->second->startVibration();
+    }
+}
+
+void 
+spark::Input
+::stopVibration( const InputDeviceName& name )
+{
+    auto iter = m_devices.find( name );
+    if( iter == m_devices.end() )
+    {
+        LOG_ERROR(g_log) << "Can't find input device with name \""
+            << name << "\" in call to Input::stopVibration().";
+    }
+    else
+    {
+        iter->second->stopVibration();
+    }
+}
+
+void 
+spark::Input
+::vibrateForSeconds( const InputDeviceName& name, double duration )
+{
+    auto iter = m_devices.find( name );
+    if( iter == m_devices.end() )
+    {
+        LOG_ERROR(g_log) << "Can't find input device with name \""
+            << name << "\" in call to Input::vibrateForSeconds().";    
+    }
+    else
+    {
+        iter->second->vibrateForSeconds( duration );
+    }
 }

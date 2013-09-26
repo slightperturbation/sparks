@@ -7,6 +7,9 @@
 #include "Fluid.hpp"
 #include "Utilities.hpp" // for glm operator<< functions
 #include "Projection.hpp"
+#include "ESUInput.hpp"
+#include "ESUInputFromSharedMemory.hpp"
+
 
 #include <luabind/operator.hpp>
 
@@ -131,6 +134,12 @@ spark
         .def( "reset", &Fluid::reset )
     ];
 
+    luabind::module( lua )
+    [
+        luabind::class_< TexturedSparkRenderable, Renderable, TexturedSparkRenderablePtr >( "Spark" )
+        .def( "update", &TexturedSparkRenderable::update )
+    ];
+
     /////////////////////////////////////////////////////////// FontManager
     luabind::module( lua )
     [
@@ -218,10 +227,39 @@ spark
      .def( "isKeyDown", &Input::isKeyDown )
      .def( "getTransform", &Input::getTransform )
      .def( "getPosition", &Input::getPosition )
+     .def( "getScreenPosition", &Input::getScreenPosition )
      .def( "isButtonPressed", &Input::isButtonPressed )
-     .def( "getPositionRange", &Input::getPositionRange )
+     .def( "startVibration", &Input::startVibration )
+     .def( "stopVibration", &Input::stopVibration )
+     .def( "vibrateForSeconds", &Input::vibrateForSeconds )
      ];
-    
+
+    ////////////////////////////////////////////////////////////// ESUInput
+    luabind::module( lua )
+    [
+     luabind::class_< ESUInput >( "ESUInput" )
+        .def( "wattage", &ESUInput::wattage )
+        .def( "electrode", &ESUInput::electrode )
+        .def( "mode", &ESUInput::mode )
+    ];
+    //luabind::module( lua )
+    //[
+    //    luabind::class_< ESUInputFromSharedMemory, ESUInput >( "ESUInputFromSharedMemory" )
+    //    .def( "wattage", &ESUInputFromSharedMemory::wattage )
+    //    .def( "electrode", &ESUInputFromSharedMemory::electrode )
+    //    .def( "mode", &ESUInputFromSharedMemory::mode )
+    //];
+
+    luabind::globals( lua )["ESUINPUT_HOOK"] = ESUInput::ElectrodeType::Hook;
+    luabind::globals( lua )["ESUINPUT_BALL2MM"] = ESUInput::ElectrodeType::Ball2mm;
+    luabind::globals( lua )["ESUINPUT_BALL4MM"] = ESUInput::ElectrodeType::Ball4mm;
+
+    luabind::globals( lua )["ESUINPUT_CUT"] = ESUInput::ESUMode::Cut;
+    luabind::globals( lua )["ESUINPUT_COAG"] = ESUInput::ESUMode::Coag;
+    luabind::globals( lua )["ESUINPUT_BLEND"] = ESUInput::ESUMode::Blend;
+
+    luabind::globals( lua )["esuInput"] = (ESUInput*)(ESUInputFromSharedMemory::getPtr());
+
     /////////////////////////////////////////////////////////// SceneFacade
     luabind::module( lua )
     [
@@ -286,6 +324,12 @@ spark
           &SceneFacade::getFontManager )
      .def( "getRenderPassByName",
           &SceneFacade::getRenderPassByName )
+     .def( "pixelsToScreenCoords",
+          &SceneFacade::pixelsToScreenCoords )
+     .def( "screenCoordsToPixels",
+          &SceneFacade::screenCoordsToPixels )
+     .def( "getWindowSize",
+          &SceneFacade::getWindowSize )
      ];
 
     ////////////////////////////////////////////////////////////// Material

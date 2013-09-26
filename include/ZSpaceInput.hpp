@@ -21,12 +21,16 @@ namespace spark
         virtual ~ZSpaceInputDevice();
         virtual void update( double dt ) override;
         virtual glm::vec3 getPosition( void ) const override;
+        virtual glm::vec2 getScreenPosition( void ) const override;
         virtual glm::mat4 getTransform( void ) const override;
         virtual bool isButtonPressed( int buttonNumber ) const override;
-        virtual glm::vec3 getPositionRange( void ) const override;
+        virtual void startVibration( void ) override;
+        virtual void stopVibration( void ) override;
+        virtual void vibrateForSeconds( double duration ) override;
     private:
         glm::mat4 m_transform;
         glm::vec3 m_position;
+        glm::vec2 m_screenPosition;
         bool m_isButtonPressed;
         std::vector< bool > m_previousButtonStates;
     };

@@ -3,6 +3,7 @@
 
 #include "Spark.hpp"
 #include "SceneState.hpp"
+#include "Utilities.hpp"
 
 #include <boost/optional.hpp>
 
@@ -55,6 +56,7 @@ namespace spark
         ScriptState( const StateName& name, SceneFacadePtr facade );
         ScriptState( const StateName& name,
                     ScenePtr scene,
+                    OpenGLWindow* window,
                     FileAssetFinderPtr finder,
                     TextureManagerPtr tm,
                     ShaderManagerPtr sm,

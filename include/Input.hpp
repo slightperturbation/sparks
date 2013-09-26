@@ -17,7 +17,6 @@ namespace spark
     class InputDevice;
     class KeyboardInputDevice;
     
-    //TODO consistent nameing with GuiEventPublisher
     /// Manages the Input devices and provides a single query interface
     /// for all active devices.
     class Input
@@ -36,14 +35,20 @@ namespace spark
         /// Returns the current transform indicated by the named input device.
         virtual glm::mat4 getTransform( const InputDeviceName& name ) const;
         
-        /// Returns the position of the device's cursor. For 2d controllers, the
-        /// z coordinate will be set to zero and can be ignored.
+        /// Returns the 3d world-space position of the device's cursor.
         virtual glm::vec3 getPosition( const InputDeviceName& name ) const;
-        /// Returns the size of the viewport
-        virtual glm::vec3 getPositionRange( const InputDeviceName& name ) const;
+
+        /// Returns a 2d position in normalized screen coordinates, with
+        /// (0,0) in the lower left of the screen and (1,1) in the upper-right.
+        virtual glm::vec2 getScreenPosition( const InputDeviceName& name ) const;
+
         /// Returns true if the button is currently pressed
         virtual bool isButtonPressed( const InputDeviceName& name,
                                       int buttonNumber ) const;
+
+        virtual void startVibration( const InputDeviceName& name );
+        virtual void stopVibration( const InputDeviceName& name );
+        virtual void vibrateForSeconds( const InputDeviceName& name, double duration );
         
         /// Registers the input device for future use.
         /// Ownership of the InputDevice passes to this class.

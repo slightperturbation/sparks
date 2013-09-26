@@ -14,9 +14,11 @@
 #include "LSpark.hpp"
 #include "TexturedSparkRenderable.hpp"
 #include "Projection.hpp"
+#include "Utilities.hpp"
 
 spark::SceneFacade
 ::SceneFacade( ScenePtr scene,
+               OpenGLWindow* window,
                FileAssetFinderPtr finder,
                TextureManagerPtr tm,
                ShaderManagerPtr sm,
@@ -27,6 +29,7 @@ spark::SceneFacade
               )
 
 : m_scene( scene ),
+  m_window( window ),
   m_finder( finder ),
   m_textureManager( tm ),
   m_shaderManager( sm ),
@@ -473,5 +476,43 @@ spark::SceneFacade
     return m_scene->getPass( name );
 }
 
+glm::vec2
+spark::SceneFacade
+::pixelsToScreenCoords( const glm::vec2& pixelPosition )
+{
+    glm::vec2 out;
+    if( m_window )
+    {
+        out = m_window->pixelsToScreenCoords( pixelPosition );
+    }
+    return out;
+}
+
+glm::vec2
+spark::SceneFacade
+::screenCoordsToPixels( const glm::vec2& screenCoord )
+{
+    glm::vec2 out;
+    if( m_window )
+    {
+        out = m_window->screenCoordsToPixels( screenCoord );
+    }
+    return out;
+}
+
+glm::vec2
+spark::SceneFacade
+::getWindowSize( void )
+{
+    glm::vec2 out;
+    if( m_window )
+    {
+        int width, height;
+        m_window->getSize( &width, &height );
+        out.x = width;
+        out.y = height;
+    }
+    return out;
+}
 
 
