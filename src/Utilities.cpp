@@ -242,8 +242,8 @@ spark::OpenGLWindow
     int width = mode->width;
     int height = mode->height;
 #ifndef HAS_ZSPACE
-    width /= 2;
-    height /= 2;
+    width = 960;
+    height = 540;
 #endif
     
     monitor = nullptr; // null for windowed; easier to debug, prob want FS for release?
@@ -374,6 +374,31 @@ spark::OpenGLWindow
 {
     glfwGetWindowPos( m_glfwWindow, xPos, yPos );
 }
+
+
+glm::vec2
+spark::OpenGLWindow
+::pixelsToScreenCoords( const glm::vec2& pixelPosition )
+{
+    int width, height;
+    getSize( &width, &height );
+    glm::vec2 out( pixelPosition.x/(float)width,
+                   1.0f-pixelPosition.y/(float)height );
+    return out;
+}
+
+glm::vec2
+spark::OpenGLWindow
+::screenCoordsToPixels( const glm::vec2& screenCoord )
+{
+    int width, height;
+    getSize( &width, &height );
+    glm::vec2 out( screenCoord.x*width, (1.0f-screenCoord.y)*height );
+    return out;
+}
+
+
+
 
 bool
 spark
