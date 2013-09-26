@@ -1,4 +1,5 @@
 #version 150
+// tissue_bump.frag
 
 // Standard output.  See ShaderManager::reloadShader()
 out vec4 outColor;
@@ -9,6 +10,7 @@ in vec4 f_fragColor; // interpolated color of fragment from vertex colors
 in vec3 f_texCoord;  // texture coordinate of vertex
 uniform float u_time;     // time in seconds
 uniform float u_activationTime; 
+in vec4 f_shadowPosition;       // position of fragemnt in shadow's coordinate frame
 
 // For Phong Lighting
 in vec4 f_normal_camera;
@@ -35,15 +37,16 @@ uniform vec4 u_targetCircleColor = vec4( 0, 1, 1, 1 );
 // Blur samples
 in vec2 f_blurTexCoords[25];
 
+struct ShadowLight 
+{
+    mat4 projViewModelMat;
+    mat4 biasProjViewModelMat;
+    vec4 color;
+};
+uniform ShadowLight u_shadowLight[4];
+uniform int u_currLightIndex = 0;
 
-// Phong-specific inputs
-// struct Light
-// {
-// 	vec4 position_camera; // position in camera coordinates
-// 	vec4 diffuse;  // diffuse color of light
-// };
-// uniform Light u_light;
-
+uniform sampler2D s_shadowMap;
 
 uniform vec4 u_ambientLight = vec4( 0.2, 0.2, 0.2, 1.0 ); // ambient light color
 uniform vec4 u_ks = vec4( 1, 1, 1, 1 ); // material specular coefficient, typically white
@@ -63,6 +66,25 @@ float rand(vec2 co){
 float circle( vec2 position, vec2 center, float radius ) 
 {
 	return 1.0 - smoothstep( radius*0.8, radius, length(position-center) );
+}
+
+/// Returns the amount of light the current pixel is in, between 0.2 and 1.0
+float shadowFactor()
+{
+	vec4 shadowPos = f_shadowPosition;
+	shadowPos /= shadowPos.w;  // projection divide 
+    // Switch from homogeneous coords (-1,1) to texture coords (0,1)
+    shadowPos += 1.0; 
+    shadowPos *= 0.5;
+	/// Read from the shadow map
+    float distFragToLight = texture( s_shadowMap, shadowPos.xy ).r;
+    float bias = 0.0015;
+    float factor = 1; 
+	if (  distFragToLight < (shadowPos.z - bias) )
+	{
+		factor = 0.2;
+	}
+	return factor;
 }
 
 void main()
@@ -133,8 +155,8 @@ void main()
 	}
     
 	vec4 Ia = u_ambientLight * textureColor;
-	vec4 Id = u_lightDiffuse * textureColor * max( dot (toLight_camera, normal_camera), 0.4 );
-	vec4 Is = vec4( 1,1,1,1 ) * u_ks * pow( max(dot(halfVector_camera, normal_camera), 0.1), u_ns );
+	vec4 Id = shadowFactor() * u_lightDiffuse * textureColor * max( dot (toLight_camera, normal_camera), 0.4 );
+	vec4 Is = shadowFactor() * vec4( 1,1,1,1 ) * u_ks * pow( max(dot(halfVector_camera, normal_camera), 0.1), u_ns );
     
 	outColor = Ia + Id + Is;
 }

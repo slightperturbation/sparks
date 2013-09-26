@@ -21,7 +21,9 @@ void main()
 {
 	float cutoff = 0.1;
 
-	outColor = u_color * texture( s_color, f_texCoord );
+
+	outColor = u_color;
+	//outColor = u_color * texture( s_color, f_texCoord );
 
 	// f_fragColor gives a measure of the intensity
 	//outColor.a *= f_fragColor.a;

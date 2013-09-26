@@ -48,8 +48,4 @@ void main()
 
     // Calculate the shadow position in the vertex shader and interpolate between pixels
  	f_shadowPosition = u_shadowLight[u_currLightIndex].projViewModelMat * vec4( v_position, 1.0 );
-//     f_shadowPosition /= f_shadowPosition.w;  // projection divide 
-//     // Switch from homogeneous coords (-1,1) to texture coords (0,1)
-//     f_shadowPosition += 1.0; 
-//     f_shadowPosition *= 0.5;
 }
