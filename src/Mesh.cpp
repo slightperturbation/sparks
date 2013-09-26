@@ -95,8 +95,6 @@ void
 spark::Mesh
 ::render( const RenderCommand& rc ) const
 {
-    MeshVertex::addVertexAttributes( (std::vector<VertexAttributePtr>&)m_attributes );
-
     // bind vertex array OBJECT (VAO)
     GL_CHECK( glBindVertexArray( m_vertexArrayObjectId ) );
 

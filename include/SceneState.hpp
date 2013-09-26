@@ -27,7 +27,7 @@ namespace spark
         void add( RenderablePtr renderable );
         /// Add the given RenderPass to the Scene held by this SceneState.
         void add( RenderPassPtr renderPass );
-    protected:
+    protected: // TODO -- make private
         ScenePtr m_scene;
     };
 }

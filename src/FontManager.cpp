@@ -35,15 +35,14 @@ spark::FontManager
     }
     else
     {
-        LOG_DEBUG(g_log) << "FontAtlas TextureId = "
-        << m_fontManager->atlas->id;
+        LOG_DEBUG(g_log) << "FontAtlas TextureId = " 
+                         << m_fontManager->atlas->id;
         // Let texture manager know about the font texture
         // this name is used by shaders
-        m_textureManager->acquireExternallyAllocatedTexture(
-                                                            m_textureName,
-                                                            m_fontManager->atlas->id,
-                                                            GL_TEXTURE_2D,
-                                                            textureUnit );
+        m_textureManager->acquireExternallyAllocatedTexture( m_textureName,
+                                                             m_fontManager->atlas->id,
+                                                             GL_TEXTURE_2D,
+                                                             textureUnit );
     }
 }
 
@@ -52,7 +51,6 @@ spark::FontManager
 {
     font_manager_delete( m_fontManager );
 }
-
 
 void
 spark::FontManager
@@ -90,8 +88,8 @@ spark::FontManager
     { // Create the distance map and copy it to the font atlas
         texture_atlas_t* atlas = m_fontManager->atlas;
         unsigned char *map = make_distance_map( atlas->data,
-                                               atlas->width,
-                                               atlas->height);
+                                                atlas->width,
+                                                atlas->height);
         memcpy( atlas->data, map,
                atlas->width * atlas->height * sizeof(unsigned char) );
         free(map);

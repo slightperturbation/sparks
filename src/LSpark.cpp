@@ -86,14 +86,13 @@ void
 spark::LSpark
 ::update( double dt )
 {
-    return;
     for( size_t i=0; i<m_segments.size(); ++i )
     {
         // Jitter positions around a bit
-        float jitterScale = 0.01f;
+        float jitterScale = 0.0005f;
         m_segments[i].m_pos += Vector3f( jitterScale*unitRandom(), jitterScale*unitRandom(), jitterScale*unitRandom() );
         // decrease intensity
-        m_segments[i].m_intensity *= 0.9f; // TODO -- parameterize?
+        m_segments[i].m_intensity *= 0.95f; // TODO -- parameterize?
     }
 }
 

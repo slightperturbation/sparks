@@ -80,17 +80,17 @@ spark::TextRenderable
     m_markup.strikethrough       = 0;
     m_markup.strikethrough_color = color;
     m_markup.font = m_fontManager->getFont( fontName, fontSize );
-    m_markup.font->kerning = 1;
-    m_markup.font->hinting = 1;
-    //m_markup.font->filtering = 1; // Purpose?
-    
-    // TODO!  Inverse scale by screen resolution!
-    //scale( glm::vec3( 1.0f/800.0f, 1.0f/600.0f, 1.0f ) );
-
     if( !m_markup.font )
     {
         LOG_ERROR(g_log) << "markup.font was null. aborting TextRenderable::update()";
         throw "markup.font was null. aborting TextRenderable::update()";
+        
+    }
+    else
+    {
+        m_markup.font->kerning = 1;
+        m_markup.font->hinting = 1;
+        //m_markup.font->filtering = 1; // Purpose?
     }
 }
 

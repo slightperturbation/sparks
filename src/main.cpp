@@ -168,7 +168,7 @@ int runSimulation(int argc, char** argv)
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Too slow for testing.  Maybe a cmd line flag?  Setting in GUI?
     // Also, must be off for nVidia debugging
-    useStereo = false;
+    useStereo = true;
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
     OpenGLWindow window( "Spark", enableLegacyOpenGlLogging, useStereo );
@@ -194,9 +194,7 @@ int runSimulation(int argc, char** argv)
     inputManager->acquireInputDevice( "stylus", 
                                       zSpaceInputFactory.createDevice(0) );
 #endif
-    
-    ESUInput& esuInput = ESUInputFromSharedMemory::get();
-    
+        
     // Create common managers and tell them how to find file resources
     FileAssetFinderPtr finder( new FileAssetFinder );
     finder->addRecursiveSearchPath( DATA_PATH );
@@ -256,6 +254,7 @@ int runSimulation(int argc, char** argv)
     // Dummy scene for loading common resources
     ScenePtr sceneOne( new Scene );
     SceneFacadePtr facade( new SceneFacade( sceneOne,
+                                            &window,
                                             finder,
                                             textureManager,
                                             shaderManager,
@@ -272,21 +271,29 @@ int runSimulation(int argc, char** argv)
     stateManager.addState( StatePtr(new SceneState( "sceneOne", 
                                                     sceneOne )) );
     
-    //std::vector<std::string> states = { "Loading", "Menu", "Simulation" } ;
+
+    // TODO -- load the whole directory?
+    //std::vector<std::string> states = { "Loading", "Menu", "Simulation" } ; // incomplete c++11 init support in MSVC2010
     std::vector<std::string> states;
+    states.push_back( "ShadowTest" );
+    states.push_back( "ButtonExample" );
+
+    states.push_back( "Startup" );
     states.push_back( "Loading" );
     states.push_back( "Menu" );
-    //states.push_back( "Simulation" );  // (If Simulation not already loaded)
+    states.push_back( "Instructions" );
+    states.push_back( "ESUPower" );
 
     // Create the "special" simulation state from the C++ class
     //   Note that this class augments the SimulationLua script as well.
-    stateManager.addState( StatePtr(new SimulationState( "Simulation", 
-        facade ) ) ); 
+    stateManager.addState( StatePtr(new SimulationState( "Simulation",
+        facade ) ) );
 
     for( auto iter = states.begin(); iter != states.end(); ++iter )
     {
         StatePtr newState( new ScriptState( *iter,
                                             ScenePtr( new Scene ),
+                                            &window,
                                             finder,
                                             textureManager,
                                             shaderManager,
@@ -297,9 +304,9 @@ int runSimulation(int argc, char** argv)
         stateManager.addState( newState );
         
     }
-    //stateManager.setCurrState( "Simulation" );
-    stateManager.setCurrState( "Loading" );
-
+    // Modify the StartupState.lua script to change the starting state
+    stateManager.setCurrState( "Startup" );
+    
     // Set window/textures sizes by sending signals to listeners
     // Note that the current design has a circular dependency
     // between guiEventPublisher and textures, calling resize explicitly
@@ -314,10 +321,12 @@ int runSimulation(int argc, char** argv)
     const double startTime = glfwGetTime();
     double currTime = startTime;
     double lastTime = startTime;
-    double totalTime = 0;
-    double lastReportedFps = 0;
-    double fpsReportThreshold = 1.0;
     double prevUpdateTime = 0;
+    
+    // for fps counter
+    double lastTimingUpdateTime = glfwGetTime();
+    int frameNumber = 0;
+    //
     while( window.isRunning() )
     {
         LOG_TRACE(g_log) << ".................................................";
@@ -328,20 +337,13 @@ int runSimulation(int argc, char** argv)
 
         lastTime = currTime;
         currTime = glfwGetTime();
-        vars.fps = 1.0f/(currTime - lastTime);
 
-        // Report moving average of frame time
-        const int framesPerSegment = 32;
-        totalTime = totalTime 
-            + (currTime-lastTime) // time this frame
-            - (totalTime / framesPerSegment ); // moving avg removed
-        if( std::abs( lastReportedFps - (framesPerSegment/totalTime) ) 
-            > fpsReportThreshold )
+        frameNumber++;
+        if( currTime - lastTimingUpdateTime >= 3.0 )
         {
-            std::cerr << "FPS over last " << framesPerSegment 
-                << " frames:  \t\t" 
-                << (framesPerSegment/totalTime) << "\n";
-            lastReportedFps = (framesPerSegment/totalTime);
+            std::cerr << "\t\t" << 3000.0/(double)(frameNumber) << " ms/frame\n";
+            frameNumber = 0;
+            lastTimingUpdateTime = currTime;
         }
 
         // UPDATE
@@ -411,6 +413,7 @@ int runSimulation(int argc, char** argv)
         textureManager->executeQueuedCommands();
         
         stateManager.updateState( currTime );
+        
         
         ////////////////////////////////////////////////////////////////////////
         // Process Inputs

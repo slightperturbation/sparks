@@ -208,12 +208,14 @@ namespace spark
                     errType = "Cannot open/read file";
                     break;
                 }
+                const char* errMsg = lua_tostring( m_lua, -1 );
                 std::cerr << "Unable to load lua script from file \""
                           << filePath << "\":  "
-                          << errType << "\n\n";
+                          << errType << "\n\t"
+                          << errMsg << "\n";
                 LOG_ERROR(g_log) << "Unable to load lua script from file \""
                                  << filePath << "\":  "
-                                 << errType;
+                                 << errType << " [" << errMsg << "]";
             }
             else
             {

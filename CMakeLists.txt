@@ -239,7 +239,7 @@ set( FREETYPEGL_SVN_URL "http://freetype-gl.googlecode.com/svn/trunk/"
 # the expanded patch command can easily be too long for widows CMD 
 SET( FREETYPEGL_PATCH_BATCH ${CMAKE_SOURCE_DIR}/cmake/freetype-gl-patch-rev227.patch )
 
-if( WIN32 )
+if( FALSE ) #WIN32 )
   # Batch file to be created by this CMake
   SET( FREETYPE_PATCH_BATCH_FILE ${FREETYPEGL_PREFIX}/freetypegl_patch_wrap.bat )
   # Lock file to prevent re-patching with every build
@@ -257,29 +257,36 @@ if( WIN32 )
   FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "echo Done.\n" )
 
   set( FREETYPEGL_PATCH_CMD "${FREETYPE_PATCH_BATCH_FILE}" )
-else( WIN32 )
+endif( FALSE )
+#else( WIN32 )
   #set( FREETYPEGL_PATCH_CMD "${PATCH_CMD} -d \"${FREETYPEGL_PREFIX}/src/FREETYPEGL/\" -p0 -t -i  \"${FREETYPEGL_PATCH_BATCH}\"" )
-endif( WIN32 )
+#endif( WIN32 )
 
-ExternalProject_Add(
-    FREETYPEGL
-    PREFIX ${FREETYPEGL_PREFIX}
-    SVN_REPOSITORY ${FREETYPEGL_SVN_URL}
-    #SVN_REVISION
-    # Force th output paths for the libs to help find them afterwards
-    CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
-               -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
-               -Dfreetype-gl_BUILD_DEMOS=OFF
-    # Disable install step
-    INSTALL_COMMAND ""
-    PATCH_COMMAND ${FREETYPEGL_PATCH_CMD}
-    # Log all errors 
-    LOG_DOWNLOAD ON
-    LOG_CONFIGURE ON
-    LOG_BUILD ON
-)
+if( NOT WIN32 )
+  ExternalProject_Add(
+      FREETYPEGL
+      PREFIX ${FREETYPEGL_PREFIX}
+      SVN_REPOSITORY ${FREETYPEGL_SVN_URL}
+      #SVN_REVISION
+      # Force th output paths for the libs to help find them afterwards
+      CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
+                 -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
+                 -Dfreetype-gl_BUILD_DEMOS=OFF
+      # Disable install step
+      INSTALL_COMMAND ""
+      PATCH_COMMAND ${FREETYPEGL_PATCH_CMD}
+      # Log all errors 
+      LOG_DOWNLOAD ON
+      LOG_CONFIGURE ON
+      LOG_BUILD ON
+  )
+ELSE( NOT WIN32)
+  set( FREETYPEGL_PREFIX "C:/Users/vector/Dropbox/Projects/SoftPhysics/sparks/build-VisualStudio/ext/FreeTypeGL/" )
+endif( NOT WIN32 )
 set( FREETYPEGL_INCLUDE_DIRS "${FREETYPEGL_PREFIX}/src/FREETYPEGL" )
 INCLUDE_DIRECTORIES( "${FREETYPEGL_INCLUDE_DIRS}" )
+
+
 
 set( FREETYPEGL_LIB_DIR "${FREETYPEGL_PREFIX}/src/FREETYPEGL-build" )
 # FreetypeGL compiles to a static library.  Windows uses .lib for both static and dynamic libs.
@@ -456,6 +463,16 @@ ENDIF( ASSIMP_FOUND )
 
 ###########################################################################
 
+#####################################################################
+# SDL2
+#####################################################################
+
+set( PC_SDL2_INCLUDEDIR )
+set( PC_SDL2_LIBDIR )
+
+#####################################################################
+# GIT
+#####################################################################
 # Git related macros and commands:
 find_package(Git)
 

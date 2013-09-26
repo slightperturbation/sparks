@@ -47,7 +47,7 @@ function LoadingState:load()
 	local aspect = (logoY / logoX) / displayAspectRatio -- .75 is aspect ratio of display
 	self.size = 1
 	local size = self.size
-	local sizeScale = 0.5
+	local sizeScale = 0.45
 	self.logo = spark:createQuad( vec2( sizeScale*size*.5, 1.0-(size*aspect*sizeScale*.5) ), 
 		                          vec2( sizeScale*size, -size*aspect*sizeScale ), 
 		                          self.logoMaterial, "HUDPass" )
@@ -69,26 +69,12 @@ function LoadingState:activate()
 end
 
 function LoadingState:update( dt )
-	--print( "LoadingState:update" )
-
 	local xform = self.logo:getTransform()
-
-	if( input:isButtonPressed("mouse", 0) ) then
-		local pos3 = input:getPosition("mouse")
-		-- convert device coords to unit coords
-		local width = input:getPositionRange("mouse").x
-		local height = input:getPositionRange("mouse").y
-		print( string.format( "Mouse clicked in pos: %1.2f, %1.2f", pos3.x / width, pos3.y / height ) )
-	end
 
 	if not self.hasRunOnce then
 		print( "\tLoading cemsim logo" )
 		self.hasRunOnce = true
 	end
-end
-
-function LoadingState:fixedUpdate( dt )
-	--print( "LoadingState:fixedUpdate" )	
 	self.boxB:rotate( 10, vec3(0,1,0) )
 	self.boxA:rotate( -10, vec3(0,1,0) )
 end
@@ -102,9 +88,8 @@ function LoadingState:nextState( currTime )
 	-- the next desired state back to the app
 	-- TODO should be changed to use the return value
 	--print( "LoadingState:nextState( " .. currTime .. " )")
-	if currTime > 0 then 
-		theNextState = "Simulation" 
-		--print( "Changing state to menu!" )
+	if currTime > 6 then 
+		theNextState = "Menu" 
 	else
 		theNextState = "" -- null means stay at current state
 	end

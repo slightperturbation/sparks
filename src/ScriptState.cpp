@@ -20,6 +20,7 @@ spark::ScriptState
 spark::ScriptState
 ::ScriptState( const StateName& name,
                ScenePtr scene,
+               OpenGLWindow* window,
                FileAssetFinderPtr finder,
                TextureManagerPtr tm,
                ShaderManagerPtr sm,
@@ -31,6 +32,7 @@ spark::ScriptState
   m_lua( new LuaInterpreter( finder ) )
 {
     m_facade = SceneFacadePtr( new SceneFacade( scene,
+                                                window,
                                                 finder,
                                                 tm, sm,
                                                 camera,
@@ -57,16 +59,16 @@ void
 spark::ScriptState
 ::load( void )
 {
-    //TODO spawn a thread to run the script?
     m_lua->runScriptFromString( "theState:load()" );
+    SceneState::load();
 }
 
 void
 spark::ScriptState
 ::activate( void )
 {
-    //TODO spawn a thread to run the script
     m_lua->runScriptFromString( "theState:activate()" );
+    SceneState::activate();
 }
 
 void
@@ -74,6 +76,7 @@ spark::ScriptState
 ::deactivate( void )
 {
     m_lua->runScriptFromString( "theState:deactivate()" );
+    SceneState::deactivate();
 }
 
 void
@@ -81,18 +84,19 @@ spark::ScriptState
 ::reset( void )
 {
     m_lua->runScriptFromString( "theState:reset()" );
+    SceneState::reset();
 }
 
 void
 spark::ScriptState
 ::update( double dt )
 {
-    m_scene->update( dt );
     // poll for loading thread to complete
     // when complete set flag to advance to next state
     std::stringstream cmd;
     cmd << "theState:update( " << dt << " )";
     m_lua->runScriptFromString( cmd.str().c_str() );
+    SceneState::update( dt );
 }
 
 boost::optional<spark::StateName>
