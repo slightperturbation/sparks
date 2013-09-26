@@ -26,7 +26,7 @@ void main(void)
     outColor = vec4( f_fragColor.rgb, alpha * f_fragColor.a ) ;
 
     // border
-    vec4 borderColor = vec4(0,1,0,1);
+    vec4 borderColor = vec4(0,0,0,0);
     float borderWidth = 0.001;
     float borderDist = f_texCoord.x*f_texCoord.x + 0.00001;
     outColor += borderColor * clamp( 1 - borderDist/borderWidth, 0, 1 );
