@@ -48,18 +48,24 @@ shaderManager:loadShaderFromFiles( "rayCastVolumeShader",
                                     "rayCast.vert",
                                     "rayCast.frag" );
 
-shaderManager:loadShaderFromFiles( "tissueShader_debug",
-                                    "tissue_debug.vert",
-                                    "tissue_debug.frag" );
-
-shaderManager:loadShaderFromFiles( "tissueShader_procedural",
-                                    "tissue.vert",
-                                    "tissue.frag" );
-
+-- Tissue Shaders
 shaderManager:loadShaderFromFiles( "tissueShader",
                                     "tissue.vert",
+                                    "tissue_bump.frag" );
+
+shaderManager:loadShaderFromFiles( "tissueShader_heightMap",
+                                    "heightMap.vert",
                                     "tissue_bump.frag" );
 
 shaderManager:loadShaderFromFiles( "tissueShader_singleSample",
                                     "tissue_singleSample.vert",
                                     "tissue_singleSample.frag" );
+
+shaderManager:loadShaderFromFiles( "tissueShader_debug",
+                                    "tissue_debug.vert",
+                                    "tissue_debug.frag" );
+-- Deprecated - procedural
+shaderManager:loadShaderFromFiles( "tissueShader_procedural",
+                                    "tissue.vert",
+                                    "tissue.frag" );
+

@@ -79,7 +79,7 @@ namespace spark
         void setMainRenderTarget( RenderTargetPtr target );
         
         /// Return the pass with given name.  Returns a null if not found.
-        RenderPassPtr getPass( const RenderPassName& name );
+        RenderPassPtr getRenderPass( const RenderPassName& name );
         
         /// Create and return a TextureRenderTarget of same size as the
         /// main render target that allows rendering to the texture textureName
@@ -180,12 +180,21 @@ namespace spark
                                   MaterialPtr material,
                                   const RenderPassName& pass );
 
-        /// Create a 2d quad in the z=0 plane.  Useful for HUD-style 
-        /// overlays and displaying text.
+        /// Create a 2d quad in the z=0 plane.  Assumes for HUD-style
+        /// overlays and displaying text, as it sets requireExplicitMaterial
+        /// to true.
         RenderablePtr createQuad( const glm::vec2& lowerLeft, 
                                   const glm::vec2& size,
                                   MaterialPtr material, 
                                   const RenderPassName& pass );
+        
+        /// Create a plane segment centered at center with normal (0,1,0)
+        /// Is added to the scene, attached to material for pass RenderPass.
+        RenderablePtr createPlane( const glm::vec3& center,
+                                   const glm::vec2& scale,
+                                   const glm::ivec2& subdivisions,
+                                   MaterialPtr material,
+                                   const RenderPassName& pass );
         
         /// Create the simulation tissue
         TissueMeshPtr createTissue( const RenderableName& name,

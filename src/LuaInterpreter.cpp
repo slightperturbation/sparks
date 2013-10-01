@@ -174,6 +174,8 @@ spark
      .def( "useDefaultMaterial",
           ( void (RenderPass::*)( MaterialPtr ) )
           &RenderPass::useDefaultMaterial )
+     .def( "setWireframe", &RenderPass::setWireframe )
+     .def( "wireframe", &RenderPass::wireframe )
      ];
     
     ////////////////////////////////////////////////////////// RenderTarget
@@ -298,6 +300,8 @@ spark
           &SceneFacade::createDepthMapRenderTarget )
      .def( "createRenderPass",
           &SceneFacade::createRenderPass )
+     .def( "getRenderPass",
+          &SceneFacade::getRenderPass )
      .def( "createRenderPassWithProjection",
           &SceneFacade::createRenderPassWithProjection )
      .def( "createOverlayRenderPass",
@@ -314,6 +318,8 @@ spark
           &SceneFacade::createCube )
      .def( "createQuad",
           &SceneFacade::createQuad )
+     .def( "createPlane",
+          &SceneFacade::createPlane )
      .def( "createTissue",
           &SceneFacade::createTissue )
      .def( "createLSpark",
@@ -403,6 +409,23 @@ spark
      .def( luabind::const_self * float() )
      .def( luabind::const_self * luabind::other< glm::mat2 >() )
      ];
+    luabind::module( lua )
+    [
+     luabind::class_< glm::ivec2 >( "ivec2" )
+     .def( luabind::constructor<>() )
+     .def( luabind::constructor<int,int>() )
+     .def_readwrite( "x", &glm::ivec2::x )
+     .def_readwrite( "y", &glm::ivec2::y )
+     //.def_readwrite( "r", &glm::ivec2::r )
+     //.def_readwrite( "g", &glm::ivec2::g )
+     //.def_readwrite( "s", &glm::ivec2::s )
+     //.def_readwrite( "t", &glm::ivec2::t )
+     .def( "at", &ivec2_at )
+     .def( "set", &ivec2_set )
+     .def( luabind::const_self + luabind::const_self )
+     .def( luabind::const_self - luabind::const_self )
+     .def( luabind::const_self * int() )
+     ];
     
     luabind::module( lua )
     [
@@ -424,6 +447,26 @@ spark
      .def( luabind::const_self * float() )
      .def( luabind::const_self * luabind::other< glm::mat3 >() )
      ];
+    luabind::module( lua )
+    [
+     luabind::class_< glm::ivec3 >( "ivec3" )
+     .def( luabind::constructor<>() )
+     .def( luabind::constructor<int,int,int>() )
+     .def_readwrite( "x", &glm::ivec3::x )
+     .def_readwrite( "y", &glm::ivec3::y )
+     .def_readwrite( "z", &glm::ivec3::z )
+     //.def_readwrite( "r", &glm::ivec3::r )
+     //.def_readwrite( "g", &glm::ivec3::g )
+     //.def_readwrite( "s", &glm::ivec3::s )
+     //.def_readwrite( "t", &glm::ivec3::t )
+     .def( "at", &ivec3_at )
+     .def( "set", &ivec3_set )
+     .def( luabind::const_self + luabind::const_self )
+     .def( luabind::const_self - luabind::const_self )
+     .def( luabind::const_self * int() )
+     ];
+    
+    
     luabind::module( lua )
     [
      luabind::class_< glm::vec4 >( "vec4" )

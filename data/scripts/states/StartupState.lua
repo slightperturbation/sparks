@@ -9,6 +9,8 @@ function StartupState:new()
 end
 
 function StartupState:load()
+	require "loadShaders"
+	require "loadTextures"
 end
 
 function StartupState:activate()
@@ -22,7 +24,8 @@ end
 
 function StartupState:nextState( currTime )
 	--theNextState = "Menu"
-	theNextState = "Menu"
+	--theNextState = "Loading"
+	theNextState = "Simulation"
 end
 
 theState = StartupState:new()

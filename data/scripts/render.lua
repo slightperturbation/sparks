@@ -27,7 +27,7 @@ function Render:createDefaultRenderPasses( isShadowOn )
 	opaqueRenderPass:setDepthWrite( true )
 	opaqueRenderPass:setDepthTest( true )
 	opaqueRenderPass:disableBlending()
-
+	
 	transRenderPass = spark:createRenderPass( 0.9, "TransparentPass", mainRenderTarget )
 	transRenderPass:setDepthWrite( false )
 	transRenderPass:setDepthTest( true )
@@ -37,6 +37,12 @@ function Render:createDefaultRenderPasses( isShadowOn )
 	HUDRenderPass:setDepthTest( false )
 	HUDRenderPass:setDepthWrite( false )
 	HUDRenderPass:useInterpolatedBlending()
+
+	HUDUnderRenderPass = spark:createOverlayRenderPass( 0.26, "HUDUnderPass", mainRenderTarget )
+	HUDUnderRenderPass:setDepthTest( false )
+	HUDUnderRenderPass:setDepthWrite( false )
+	HUDUnderRenderPass:useInterpolatedBlending()
+
 
 	isShadowDebugDisplayOn = false
 	if( isShadowOn ) then

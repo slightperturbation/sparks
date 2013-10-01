@@ -1,6 +1,7 @@
 <html>
 <script>
-var g_wattage = 50.0;
+
+var g_wattage = 40.0;
 var g_mode = "Cut";
 
 function toConsole( msg )
@@ -39,16 +40,45 @@ function sendUpdate()
 }
 function upWattage()
 {
-	g_wattage = Math.min( 200, g_wattage + 50 );
+	g_wattage = Math.min( 100, g_wattage + 20 );
 	displayWattage();
 	sendUpdate();
 }
 function downWattage()
 {
-	g_wattage = Math.max( 50, g_wattage - 50 );
+	g_wattage = Math.max( 20, g_wattage - 20 );
 	displayWattage();
 	sendUpdate();
 }
+function pollingRefresh()
+{
+  	var xmlhttp;
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function()
+	{
+		if( (xmlhttp.readyState == 4) && (xmlhttp.status == 200 ) )
+		{
+			responseString = xmlhttp.responseText;
+			toConsole( "Polling Response: " + responseString + "\n" );
+			// parse out wattage and mode
+			var data = {};
+			responseString.replace(/(?:^|&)([^&=]*)=?([^&]*)/g, function ($0, $1, $2) {
+				if ($1) data[$1] = $2;  
+			})
+			for( var i in data )
+			{
+				toConsole( "\t" + i + "-->" + data[i] );
+			}
+		}
+	}
+	var queryString = '/win32/ESUServerCGI.cgi'; // no options for wattage/mode query
+	toConsole( "Request: " + queryString );
+	xmlhttp.open( 'GET', queryString, true );
+	xmlhttp.send();
+
+	setTimeout( pollingRefresh, 500 )
+}
+pollingRefresh()
 </script>
 <style>
 .console { height:150px; float:left; overflow:hidden; }
@@ -58,9 +88,6 @@ function downWattage()
 .spacer { text-align: center; width:10px; float:left; overflow:hidden; background-color:white; }
 </style>
 <body onload="startup()">
-<div class="console" id="consoleMsgs">Startup...</div>
-<div class="clear"></div>
-<hr>
 <div class="spacer" style="width:80px;">&nbsp;</div><div id="wattage"></div><div class="spacer">&nbsp;</div><div id="mode"></div>
 <BR>
 <BR><BR><BR>
@@ -73,6 +100,9 @@ function downWattage()
 <div class="button" onclick="g_mode='Blend';displayMode();sendUpdate();">BLEND</div>
 <div class="spacer">&nbsp;</div>
 <div class="button" onclick="g_mode='Coag';displayMode();sendUpdate();">COAG</div>
+<hr>
+<div class="console" id="consoleMsgs">Startup...</div>
+<div class="clear"></div>
 
 </body>
 </html>

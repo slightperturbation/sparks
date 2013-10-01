@@ -52,11 +52,11 @@ function LoadingState:load()
 		                          vec2( sizeScale*size, -size*aspect*sizeScale ), 
 		                          self.logoMaterial, "HUDPass" )
 
-	self.boxMat = spark:createMaterial( "colorShader" )
-	self.boxMat:setVec4( "u_color", vec4(0.3,0.3,0.3,1.0) )
-	self.boxA = spark:createCube( vec3(0.25,0,0), 0.25, self.boxMat, "OpaquePass" )
-	self.boxB = spark:createCube( vec3(-0.25,0,0), 0.25, self.boxMat, "OpaquePass" )
-	self.boxB:rotate( self.angle, vec3(0,1,0) )
+	-- self.boxMat = spark:createMaterial( "colorShader" )
+	-- self.boxMat:setVec4( "u_color", vec4(0.3,0.3,0.3,1.0) )
+	-- self.boxA = spark:createCube( vec3(0.25,0,0), 0.25, self.boxMat, "OpaquePass" )
+	-- self.boxB = spark:createCube( vec3(-0.25,0,0), 0.25, self.boxMat, "OpaquePass" )
+	-- self.boxB:rotate( self.angle, vec3(0,1,0) )
 end
 
 function LoadingState:activate()
@@ -75,8 +75,8 @@ function LoadingState:update( dt )
 		print( "\tLoading cemsim logo" )
 		self.hasRunOnce = true
 	end
-	self.boxB:rotate( 10, vec3(0,1,0) )
-	self.boxA:rotate( -10, vec3(0,1,0) )
+	-- self.boxB:rotate( 10, vec3(0,1,0) )
+	-- self.boxA:rotate( -10, vec3(0,1,0) )
 end
 
 function LoadingState:deactivate()
@@ -88,7 +88,7 @@ function LoadingState:nextState( currTime )
 	-- the next desired state back to the app
 	-- TODO should be changed to use the return value
 	--print( "LoadingState:nextState( " .. currTime .. " )")
-	if currTime > 6 then 
+	if currTime > 3 then 
 		theNextState = "Menu" 
 	else
 		theNextState = "" -- null means stay at current state

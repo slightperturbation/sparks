@@ -7,7 +7,7 @@ out vec4 outColor;
 // From vertex shader
 in vec4 f_vertexPosition;
 in vec4 f_fragColor; // interpolated color of fragment from vertex colors
-in vec3 f_texCoord;  // texture coordinate of vertex
+in vec2 f_texCoord;  // texture coordinate of vertex
 uniform float u_time;     // time in seconds
 uniform float u_activationTime; 
 in vec4 f_shadowPosition;       // position of fragemnt in shadow's coordinate frame
@@ -23,7 +23,6 @@ uniform sampler2D s_color;
 //uniform sampler2D s_bump;
 uniform sampler2D s_normal;
 //uniform sampler2D s_ambient;
-
 
 ///////////////////////////////////////////
 // Target
@@ -91,7 +90,7 @@ void main()
 {
     //vec4 temp = texture( s_temperature, f_texCoord.xy );
     //float t = (temp.r - 37.0)/63.0;
-    vec2 texCoord = f_texCoord.xy * vec2(3.3,3.3); 
+    vec2 texCoord = f_texCoord; 
 
     vec3 liverColor = texture( s_color, texCoord).xyz; 
     //vec3 liverColor = vec3( 0.6, 0.1, 0.15 );
@@ -149,8 +148,8 @@ void main()
 	if( u_drawCircleTarget )
 	{    
 		textureColor +=  vec4( 0.8, 0.8, 0.4, 1 ) 
-			* ( circle(  f_texCoord.xy, u_targetCircleCenter, u_targetCircleOuterRadius )
-			   - circle( f_texCoord.xy, u_targetCircleCenter, u_targetCircleInnerRadius )
+			* ( circle(  f_texCoord, u_targetCircleCenter, u_targetCircleOuterRadius )
+			   - circle( f_texCoord, u_targetCircleCenter, u_targetCircleInnerRadius )
 			);
 	}
     

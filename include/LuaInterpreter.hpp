@@ -68,11 +68,19 @@ namespace spark
 
     // Pseudo member functions for lua accessors
     // Needed because we can't bind operator[]
+    // Could replace with template, but binding syntax is messy and hard to understand,
+    // this is verbose, but clear.
     inline float vec2_at( glm::vec2* v, int i ) { return (*v)[i]; }
     inline float vec2_set( glm::vec2* v, int i, float x) { return (*v)[i] = x; }
 
+    inline int   ivec2_at( glm::ivec2* v, int i ) { return (*v)[i]; }
+    inline int   ivec2_set( glm::ivec2* v, int i, int x) { return (*v)[i] = x; }
+
     inline float vec3_at( glm::vec3* v, int i ) { return (*v)[i]; }
     inline float vec3_set( glm::vec3* v, int i, float x) { return (*v)[i] = x; }
+
+    inline int   ivec3_at( glm::ivec3* v, int i ) { return (*v)[i]; }
+    inline int   ivec3_set( glm::ivec3* v, int i, int x) { return (*v)[i] = x; }
 
     inline float vec4_at( glm::vec4* v, int i ) { return (*v)[i]; }
     inline float vec4_set( glm::vec4* v, int i, float x) { return (*v)[i] = x; }

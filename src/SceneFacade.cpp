@@ -145,9 +145,9 @@ spark::SceneFacade
 /// Return the pass with given name.  Returns a null if not found.
 spark::RenderPassPtr
 spark::SceneFacade
-::getPass( const RenderPassName& name )
+::getRenderPass( const RenderPassName& name )
 {
-    return m_scene->getPass( name );
+    return m_scene->getRenderPass( name );
 }
 
 spark::RenderTargetPtr
@@ -364,7 +364,7 @@ spark::SceneFacade
               const RenderPassName& pass )
 {
     MeshPtr quad( new Mesh() );
-    quad->name( "Quad-" + material->name() + "-" + pass );
+    quad->name( "Quad-MAT:" + material->name() + "-PASS:" + pass );
     quad->addQuad(
                   glm::vec3( lowerLeft.x, lowerLeft.y, 0 ), glm::vec2(0,1), // Lower Left
                   glm::vec3( lowerLeft.x + size.x, lowerLeft.y, 0 ), glm::vec2(1,1), // Lower Right
@@ -376,6 +376,22 @@ spark::SceneFacade
     m_scene->add( quad );
     quad->setMaterialForPassName( pass, material );
     return quad;
+}
+
+spark::RenderablePtr
+spark::SceneFacade
+::createPlane( const glm::vec3& center,
+               const glm::vec2& scale,
+               const glm::ivec2& subdivisions,
+               MaterialPtr material,
+               const RenderPassName& pass )
+{
+    MeshPtr plane( new Mesh() );
+    plane->name( "Plane-MAT:" + material->name() + "-PASS:" + pass );
+    plane->plane( center, scale, subdivisions );
+    m_scene->add( plane );
+    plane->setMaterialForPassName( pass, material );
+    return plane;
 }
 
 spark::RenderablePtr
@@ -400,7 +416,7 @@ spark::SceneFacade
         new TexturedSparkRenderable( theSpark ) );
     sparkRenderable->name( "Spark" );
     sparkRenderable->setMaterialForPassName( pass,
-                                            material );
+                                             material );
     //sparkRenderable->setMaterialForPassName( g_transparencyRenderPassName,
     //                                         sparkColorMaterial );
     m_scene->add( sparkRenderable );
@@ -473,7 +489,7 @@ spark::RenderPassPtr
 spark::SceneFacade
 ::getRenderPassByName( const RenderPassName& name )
 {
-    return m_scene->getPass( name );
+    return m_scene->getRenderPass( name );
 }
 
 glm::vec2

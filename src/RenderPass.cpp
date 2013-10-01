@@ -14,7 +14,8 @@ spark::RenderPass
   m_depthMask( true ),
   m_colorMask( true ),
   m_backfaceCulling( false ),
-  m_cullFace( GL_BACK )
+  m_cullFace( GL_BACK ),
+  m_wireframe( false )
 {
     useInterpolatedBlending();
 }
@@ -78,101 +79,113 @@ void
 spark::RenderPass
 ::preRender( ConstRenderPassPtr prevPass ) const
 {
-    if( m_target ) 
+    if( !m_target )
     {
-        if( !prevPass 
-            || (prevPass->m_target != m_target )
-            )
+        return;
+    }
+    if( !prevPass
+        || (prevPass->m_target != m_target )
+        )
+    {
+        m_target->preRender();
+    }
+    // Blending
+    if( !prevPass
+        || (prevPass->m_isBlendingEnabled != m_isBlendingEnabled)
+        || (prevPass->m_blendSourceFactor != m_blendSourceFactor)
+        || (prevPass->m_blendDestinationFactor != m_blendDestinationFactor)
+        || (prevPass->m_blendEquation != m_blendEquation)
+      )
+    {
+        LOG_TRACE(g_log) << "RenderPass::preRender - setting blend mode";
+        if( m_isBlendingEnabled )
         {
-            m_target->preRender();
+            GL_CHECK( glEnable( GL_BLEND ) );
+            GL_CHECK( glBlendFunc( m_blendSourceFactor, m_blendDestinationFactor ) );
+            GL_CHECK( glBlendEquation( m_blendEquation ) );
         }
-        // Blending
-        if( !prevPass
-            || (prevPass->m_isBlendingEnabled != m_isBlendingEnabled)
-            || (prevPass->m_blendSourceFactor != m_blendSourceFactor)
-            || (prevPass->m_blendDestinationFactor != m_blendDestinationFactor)
-            || (prevPass->m_blendEquation != m_blendEquation)
-          )
+        else
         {
-            LOG_TRACE(g_log) << "RenderPass::preRender - setting blend mode";
-            if( m_isBlendingEnabled )
-            {
-                GL_CHECK( glEnable( GL_BLEND ) );
-                GL_CHECK( glBlendFunc( m_blendSourceFactor, m_blendDestinationFactor ) );
-                GL_CHECK( glBlendEquation( m_blendEquation ) );
-            }
-            else
-            {
-                GL_CHECK( glDisable( GL_BLEND ) );
-            }
+            GL_CHECK( glDisable( GL_BLEND ) );
         }
-        // Depth Mask
-        if( !prevPass || (prevPass->m_depthMask != m_depthMask) )
+    }
+    // Depth Mask
+    if( !prevPass || (prevPass->m_depthMask != m_depthMask) )
+    {
+        LOG_TRACE(g_log) << "RenderPass::preRender - glDepthMask( "
+            << ( m_depthMask ? "true" : "false") << " )";
+        GL_CHECK( glDepthMask( m_depthMask ) );
+    }
+    // Color Mask
+    if( !prevPass || (prevPass->m_colorMask != m_colorMask) )
+    {
+        LOG_TRACE(g_log) << "RenderPass::preRender - glColorMask( "
+        << ( m_colorMask ? "true" : "false") << " )";
+        GL_CHECK( glColorMask( m_colorMask,
+                               m_colorMask,
+                               m_colorMask,
+                               m_colorMask ) );
+    }        
+    // Depth Test
+    if( !prevPass || prevPass->m_depthTest != m_depthTest )
+    {
+        LOG_TRACE(g_log) << "RenderPass::preRender - glDepthTest( "
+                         << ( m_depthTest ? "true" : "false" ) << " )";
+        if( m_depthTest )
         {
-            LOG_TRACE(g_log) << "RenderPass::preRender - glDepthMask( "
-                << ( m_depthMask ? "true" : "false") << " )";
-            GL_CHECK( glDepthMask( m_depthMask ) );
+            GL_CHECK( glEnable( GL_DEPTH_TEST ) );
         }
-        // Color Mask
-        if( !prevPass || (prevPass->m_colorMask != m_colorMask) )
+        else
         {
-            LOG_TRACE(g_log) << "RenderPass::preRender - glColorMask( "
-            << ( m_colorMask ? "true" : "false") << " )";
-            GL_CHECK( glColorMask( m_colorMask,
-                                   m_colorMask,
-                                   m_colorMask,
-                                   m_colorMask ) );
-        }        
-        // Depth Test
-        if( !prevPass || prevPass->m_depthTest != m_depthTest )
-        {
-            LOG_TRACE(g_log) << "RenderPass::preRender - glDepthTest( "
-                             << ( m_depthTest ? "true" : "false" ) << " )";
-            if( m_depthTest )
-            {
-                GL_CHECK( glEnable( GL_DEPTH_TEST ) );
-            }
-            else
-            {
-                GL_CHECK( glDisable( GL_DEPTH_TEST ) );
-            }
+            GL_CHECK( glDisable( GL_DEPTH_TEST ) );
         }
-        // Backface culling
-        if( !prevPass || (prevPass->m_backfaceCulling != m_backfaceCulling) )
+    }
+    // Backface culling
+    if( !prevPass || (prevPass->m_backfaceCulling != m_backfaceCulling) )
+    {
+        if( m_backfaceCulling )
         {
-            if( m_backfaceCulling )
+            glEnable( GL_CULL_FACE );
+            if( prevPass->m_cullFace != m_cullFace )
             {
-                glEnable( GL_CULL_FACE );
-                if( prevPass->m_cullFace != m_cullFace )
+                if( (m_cullFace == GL_FRONT)
+                   || ( m_cullFace == GL_BACK)
+                   || ( m_cullFace == GL_FRONT_AND_BACK )
+                   )
                 {
-                    if( (m_cullFace == GL_FRONT)
-                       || ( m_cullFace == GL_BACK)
-                       || ( m_cullFace == GL_FRONT_AND_BACK )
-                       )
-                    {
-                        glCullFace( m_cullFace );
-                    }
-                    else
-                    {
-                        LOG_ERROR(g_log) << "Pass " << name() << " has invalid"
-                                         << " constant for cull face"
-                                         << " (setCullFace())";
-                    }
+                    glCullFace( m_cullFace );
+                }
+                else
+                {
+                    LOG_ERROR(g_log) << "Pass " << name() << " has invalid"
+                                     << " constant for cull face"
+                                     << " (setCullFace())";
                 }
             }
-            else
-            {
-                glDisable( GL_CULL_FACE );
-            }
         }
+        else
+        {
+            glDisable( GL_CULL_FACE );
+        }
+    }
+    
+    if( m_wireframe )
+    {
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     }
 }
 
-void 
+void
 spark::RenderPass
 ::postRender( ConstRenderPassPtr nextPass ) const
 {
-    if(    m_target 
+    // Assume wireframe rendering is "rare"
+    if( m_wireframe )
+    {
+        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    }
+
+    if(    m_target
         && ( !nextPass || (nextPass->m_target != m_target) ) ) 
     { 
         m_target->postRender(); 
@@ -328,7 +341,22 @@ spark::RenderPass
     return m_colorMask;
 }
 
-bool 
+void
+spark::RenderPass
+::setWireframe( bool isWireframeMode )
+{
+    m_wireframe = isWireframeMode;
+}
+
+bool
+spark::RenderPass
+::wireframe( void ) const
+{
+    return m_wireframe;
+}
+
+
+bool
 spark
 ::renderPassCompareByPriority( ConstRenderPassPtr a,
                                ConstRenderPassPtr b )

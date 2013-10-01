@@ -147,7 +147,7 @@ namespace spark
         size_t m_diffusionIters;
         /// Overshoot factor for SOR, must be 1.0 or more and less than 2.0
         /// 1.0 equivalent to Guass-Seidel; 2.0 is unstable!
-        double m_SORovershoot;
+        //double m_SORovershoot;
 
         double m_dessicationThresholdTemp;
     };

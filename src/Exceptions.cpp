@@ -9,7 +9,6 @@ spark
 : runtime_error( msg )
 {
     LOG_ERROR(g_log) << "SparkRunTimeException thrown: " << msg;
-    std::cerr << "\nSparkRunTimeException thrown: " << msg << "\n\n";
 }
 
 spark
@@ -21,6 +20,8 @@ spark
     m_msg = msg; m_shaderSource = shaderSource;
     LOG_DEBUG(g_log) << "ShaderCompilationException on shader source: "
                      << shaderSource;
+    std::cerr << "\nShaderCompilationException thrown [\"" 
+        << shaderSource << "\"]:\n" << msg << "\n\n";
 }
 
 const char*

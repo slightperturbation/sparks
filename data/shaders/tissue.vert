@@ -19,7 +19,7 @@ uniform float u_activationTime;
 
 // Out to fragment shader
 out vec4 f_fragColor;      // interpolated color of fragment from vertex colors 
-out vec3 f_texCoord;       // texture coordinate of vertex
+out vec2 f_texCoord;       // texture coordinate of vertex
 out vec4 f_vertex_screen;  // Projected vertex into the clip-space
 out vec4 f_normal_camera;  // For phong lighting
 out vec4 f_vertex_camera;  // For phong lighting
@@ -34,7 +34,7 @@ struct ShadowLight
 
 uniform ShadowLight u_shadowLight[4];
 uniform int u_currLightIndex = 0;
-uniform vec3 u_textureRepeat = vec3(1,1,1);
+uniform vec2 u_textureRepeat = vec2(1,1);
 
 // blurred texture coords for smoothing the tissue map
 out vec2 f_blurTexCoords[25];
@@ -49,7 +49,7 @@ void main()
 	f_normal_camera = vec4( u_normalMat * v_normal, 0.0 ); // dir
 	f_vertex_camera = u_viewModelMat * vec4( v_position, 1.0 ); // point
     f_fragColor = v_color ;
-    f_texCoord = u_textureRepeat * v_texCoord;  
+    f_texCoord = u_textureRepeat * v_texCoord.st;  
     f_vertex_screen = u_projViewModelMat * vec4( v_position, 1.0 );
     f_shadowPosition = u_shadowLight[u_currLightIndex].projViewModelMat * vec4( v_position, 1.0 );
     gl_Position = f_vertex_screen;

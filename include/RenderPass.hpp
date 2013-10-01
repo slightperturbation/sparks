@@ -101,6 +101,10 @@ namespace spark
         
         /// Passes with higher priority are rendered first.
         float priority( void ) const  { return m_priority; }
+        
+        /// If set to true, pass renders as wireframes.
+        void setWireframe( bool isWireframeMode );
+        bool wireframe( void ) const;
 
         //TODO-implement per-pass render order
         // void setRenderCommandComparison( )
@@ -152,6 +156,8 @@ namespace spark
         bool m_backfaceCulling;
         /// OpenGL enum for facet to cull:  GL_FRONT, GL_BACK, GL_FRONT_AND_BACK
         GLenum m_cullFace;
+        /// True if the pass is rendering in wireframe mode
+        bool m_wireframe;
     };
 
     bool renderPassCompareByPriority( ConstRenderPassPtr a, 

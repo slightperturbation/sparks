@@ -13,7 +13,7 @@ spark::TissueMesh
   m_N( heatDim + 2 ),
   m_voxelDimMeters( totalLengthMeters / (float)heatDim ),
   m_diffusionIters( 10 ),
-  m_SORovershoot( 1.00001 ),
+  //m_SORovershoot( 1.00001 ),
   m_dessicationThresholdTemp( 63.0 )
 {
     m_heatMap.resize( m_N * m_N, 0.0 );
@@ -36,8 +36,6 @@ void
 spark::TissueMesh
 ::update( double dt )
 {
-    std::cerr << "--------------------------TissueMesh::update( " << dt << " )\n";
-
     if( !m_textureManager ) return;
     // Apply accumulated heat to change tissue temp
     // Q = c m dT

@@ -211,7 +211,7 @@ spark::Scene
 
 spark::RenderPassPtr 
 spark::Scene
-::getPass( const RenderPassName& name ) const
+::getRenderPass( const RenderPassName& name ) const
 {
     for( auto iter = m_passes.begin(); iter != m_passes.end(); ++iter )
     {

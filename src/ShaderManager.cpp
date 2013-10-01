@@ -105,10 +105,14 @@ spark::ShaderManager
     GLuint fragmentShader = 0;
     try
     {
-        vertexShader = createShaderWithErrorHandling( GL_VERTEX_SHADER,
-            vertexShaderString );
-        fragmentShader = createShaderWithErrorHandling( GL_FRAGMENT_SHADER,
-            fragmentShaderString );
+        vertexShader 
+            = createShaderWithErrorHandling( GL_VERTEX_SHADER,
+                                             vertexShaderString,
+                                             m_files[aHandle].vertexFilePath );
+        fragmentShader 
+            = createShaderWithErrorHandling( GL_FRAGMENT_SHADER,
+                                             fragmentShaderString, 
+                                             m_files[aHandle].fragmentFilePath );
 
         GL_CHECK( glAttachShader( shaderProgram, vertexShader ) );
         GL_CHECK( glAttachShader( shaderProgram, fragmentShader ) );

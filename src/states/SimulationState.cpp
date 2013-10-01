@@ -90,7 +90,7 @@ spark::SimulationState
         glm::vec3 worldOffset_fromLua( 0, -0.1, -0.1 );
 
         glm::mat4 xform_move = glm::translate( glm::mat4(), 
-            glm::vec3( 0, slicesSideLength/2.0f - (2.5f/n)*slicesSideLength, 0 )
+            glm::vec3( 0, slicesSideLength/2.0f - (0.5f/n)*slicesSideLength, 0 )
             + worldOffset_fromLua
         ); // 2.5, 1 for boundary cell, 0.5 to center on grid
 

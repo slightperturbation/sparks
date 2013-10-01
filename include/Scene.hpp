@@ -123,7 +123,7 @@ namespace spark
         void logRenderables( void ) const;
         
         /// Return existing render pass with given name, if registered.
-        RenderPassPtr getPass( const RenderPassName& name ) const;
+        RenderPassPtr getRenderPass( const RenderPassName& name ) const;
     private:
         RenderPassList m_passes;
         /// The current list of commands.  The first command is always

@@ -174,6 +174,13 @@ namespace spark
         /// Construction methods
         void unitCube( void );
         void cube( float scale );
+
+        /// Add triangles for a plane positioned at center, with a normal
+        /// vector at 0,0,1, and scale units in x,y directions.
+        /// The plane is subdivided into the given number of quads along each axis.
+        void plane( const glm::vec3& center,
+                    const glm::vec2& scale,
+                    const glm::ivec2& subdivisions );
     
         /// Load the mesh and associated materials from the given filename
         bool createMeshFromFile( const std::string& filename,
@@ -187,6 +194,7 @@ namespace spark
         static RenderablePtr createBox( TextureManagerPtr tm, 
                                         ShaderManagerPtr sm,
                                         const RenderPassName& renderPassName );
+        
     protected:
         GLuint m_vertexArrayObjectId;
         GLuint m_vertexBufferId;

@@ -173,6 +173,7 @@ int runSimulation(int argc, char** argv)
 #endif
     OpenGLWindow window( "Spark", enableLegacyOpenGlLogging, useStereo );
 
+
     using namespace std;
     InteractionVars vars;
     
@@ -255,44 +256,62 @@ int runSimulation(int argc, char** argv)
     g_guiEventPublisher->subscribe( frameBufferTarget );
 
     // Dummy scene for loading common resources
-    ScenePtr sceneOne( new Scene );
-    SceneFacadePtr facade( new SceneFacade( sceneOne,
-                                            &window,
-                                            finder,
-                                            textureManager,
-                                            shaderManager,
-                                            cameraPerspective,
-                                            frameBufferTarget,
-                                            inputManager,
-                                            g_guiEventPublisher ) );
-    // lua handles loading default objects
-    LuaInterpreter lua( finder );
-    lua.setFacade( facade );
-    lua.runScriptFromFile( "loadShaders.lua" );
-    lua.runScriptFromFile( "loadTextures.lua" );
-    lua.runScriptFromFile( "loadRenderPasses.lua" );
-    stateManager.addState( StatePtr(new SceneState( "sceneOne", 
-                                                    sceneOne )) );
+    //ScenePtr sceneOne( new Scene );
+    //SceneFacadePtr facade( new SceneFacade( sceneOne,
+    //                                        &window,
+    //                                        finder,
+    //                                        textureManager,
+    //                                        shaderManager,
+    //                                        cameraPerspective,
+    //                                        frameBufferTarget,
+    //                                        inputManager,
+    //                                        g_guiEventPublisher ) );
+    //// lua handles loading default objects
+    //LuaInterpreter lua( finder );
+    //lua.setFacade( facade );
+    //lua.runScriptFromFile( "loadShaders.lua" );
+    //lua.runScriptFromFile( "loadTextures.lua" );
+    ////lua.runScriptFromFile( "loadRenderPasses.lua" );
+
+
+    //stateManager.addState( StatePtr(new SceneState( "sceneOne", 
+    //                                                sceneOne )) );
     
 
-    // TODO -- load the whole directory?
-    //std::vector<std::string> states = { "Loading", "Menu", "Simulation" } ; // incomplete c++11 init support in MSVC2010
-    std::vector<std::string> states;
-    states.push_back( "ShadowTest" );
-    states.push_back( "ButtonExample" );
 
-    states.push_back( "Startup" );
-    states.push_back( "Loading" );
-    states.push_back( "Menu" );
-    states.push_back( "Instructions" );
-    states.push_back( "ESUPower" );
 
-    // Create the "special" simulation state from the C++ class
-    //   Note that this class augments the SimulationLua script as well.
-    stateManager.addState( StatePtr(new SimulationState( "Simulation",
-        facade ) ) );
+    // Create the "special" simulation states from the C++ class
+    // The specific functionality is provided in the Lua script,
+    // the C++ class provides the tissue & smoke.
+    std::vector< std::string > simStates; 
+    simStates.push_back( "Simulation" );
+    simStates.push_back( "ESUPower" );
 
-    for( auto iter = states.begin(); iter != states.end(); ++iter )
+    for( auto iter = simStates.begin(); iter != simStates.end(); ++iter )
+    {
+        StatePtr simState( new SimulationState( *iter, SceneFacadePtr( 
+            new SceneFacade( ScenePtr( new Scene ),
+                            &window,
+                            finder,
+                            textureManager,
+                            shaderManager,
+                            cameraPerspective,
+                            frameBufferTarget,
+                            inputManager,
+                            g_guiEventPublisher ) ) ) );
+        stateManager.addState( simState );
+    }
+
+    std::vector<std::string> scriptStates;
+    // Examples
+    scriptStates.push_back( "ShadowTest" );
+    scriptStates.push_back( "ButtonExample" );
+    // Actual States
+    scriptStates.push_back( "Startup" );
+    scriptStates.push_back( "Loading" );
+    scriptStates.push_back( "Menu" );
+    scriptStates.push_back( "Instructions" );
+    for( auto iter = scriptStates.begin(); iter != scriptStates.end(); ++iter )
     {
         StatePtr newState( new ScriptState( *iter,
                                             ScenePtr( new Scene ),
@@ -305,7 +324,6 @@ int runSimulation(int argc, char** argv)
                                             inputManager,
                                             g_guiEventPublisher ) );
         stateManager.addState( newState );
-        
     }
     // Modify the StartupState.lua script to change the starting state
     stateManager.setCurrState( "Startup" );

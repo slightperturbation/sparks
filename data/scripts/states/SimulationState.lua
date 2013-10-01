@@ -29,6 +29,7 @@ function SimulationState:new()
 		                  [ESUINPUT_BLEND] = "[Blend]" },
 		activationTime = 0,
 		currTime = 0, 
+		contactArea = 0,
 		theNextState = ""
 	}
 	self.__index = self
@@ -41,13 +42,20 @@ function SimulationState:load()
 
 	local isShadowOn = true
 	Render:createDefaultRenderPasses( isShadowOn )
-
+	
+	wireRenderPass = spark:createRenderPass( 0.95, "WirePass", mainRenderTarget )
+	wireRenderPass:setDepthWrite( true )
+	wireRenderPass:setDepthTest( true )
+	wireRenderPass:disableBlending()
+	wireRenderPass:setWireframe( true )
 
 	-- specifies where the tissue is relative to world coords
 	self.worldOffset = vec3( 0, -.1, -.1 ) -- -0.0625 ) -- -0.125 )
 
 	-- Create the tissue
 	Sim.createTissue( self, self.worldOffset )
+	--Sim.createTable( self, self.worldOffset )
+	
 	-- Add HUD elements to the top of the screen
 	Sim.createHUDElements( self )
 
@@ -60,14 +68,14 @@ function SimulationState:load()
 	--self.mySpark = spark:createLSpark()
 
 	local scale = 0.02
-	local cursorMat = spark:createMaterial( "constantColorShader" )
-	cursorMat:setVec4( "u_color", vec4(1,0.2,0.2,1.0) );
+	local redMat = spark:createMaterial( "constantColorShader" )
+	redMat:setVec4( "u_color", vec4(1,0.2,0.2,1.0) );
 
 	-- Tmp -- 3D mouse cursor
 	useMouseCursorCube = false
 	if( useMouseCursorCube ) then
 		self.markerBox = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
-			scale, cursorMat, "OpaquePass" )
+			scale, redMat, "OpaquePass" )
 		if( isShadowOn ) then
 			self.markerBox:setMaterialForPassName( "ShadowPass", shadowMaterial )
 		end
@@ -82,17 +90,32 @@ function SimulationState:load()
 	end
 
 	-- Here's a nice little marker for the origin
-	local bool useZeroMarker = false
+	local bool useZeroMarker = true
 	if( useZeroMarker ) then
-		local debugMat = spark:createMaterial( "colorShader" )
-		debugMat.name = "DebugMaterial"
-		debugMat:setVec4( "u_color", vec4( 1, 1, 1, 1 ) )
-		local scale = 0.03
-		local box = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
-			                          scale, debugMat, "OpaquePass" )
+		local scale = 0.01
+
+		local rMat = spark:createMaterial( "constantColorShader" )
+		rMat:setVec4( "u_color", vec4( 1, 0.1, 0.1, 0.5 ) )
+		local boxX = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
+			                          scale, rMat, "WirePass" )
+		boxX:scale( vec3(1, 0.1, 0.1) )
+
+		local gMat = spark:createMaterial( "constantColorShader" )
+		gMat:setVec4( "u_color", vec4( 0.1, 1, 0.1, 0.5 ) )
+		local boxY = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
+			                          scale, gMat, "WirePass" )
+		boxY:scale( vec3(0.1, 1, 0.1) )
+
+		local bMat = spark:createMaterial( "constantColorShader" )
+		bMat:setVec4( "u_color", vec4( 0.1, 0.1, 1, 0.5 ) )
+		local boxZ = spark:createCube( vec3( -scale/2.0, -scale/2.0, -scale/2.0 ), 
+			                          scale, bMat, "WirePass" )
+		boxZ:scale( vec3(0.1, 0.1, 1) )
 		--box:translate( self.worldOffset )	
 		if( isShadowOn ) then
-			box:setMaterialForPassName( "ShadowPass", shadowMaterial )
+			boxX:setMaterialForPassName( "ShadowPass", shadowMaterial )
+			boxY:setMaterialForPassName( "ShadowPass", shadowMaterial )
+			boxZ:setMaterialForPassName( "ShadowPass", shadowMaterial )
 		end
 	end
 
@@ -144,17 +167,24 @@ function SimulationState:update( dt )
 	self.modeDisplay:setText( self.ESUModeLabels[ self.currMode ] ) 
 
 	-- Get control inputs
-	local stylusPos = vec3()
-	local stylusMat = mat4()
 
 	if( isWindows() ) then
-		stylusPos = input:getPosition( "stylus" )
-		stylusMat = input:getTransform( "stylus" )
+		inputDeviceName = "stylus"
 	else
-		-- Debugging (and on non-zspace machines, use mouse)
-		stylusPos = input:getPosition( "mouse" ) -- TODO -- Transform to coords mimicing stylus?
-		stylusMat = mat4() --input:getTransform( "mouse" )
+		inputDeviceName = "mouse"
 	end
+
+	local stylusPos = input:getPosition( inputDeviceName )
+	local stylusMat = input:getTransform( inputDeviceName )
+
+	-- if( isWindows() ) then
+	-- 	stylusPos = input:getPosition( "stylus" )
+	-- 	stylusMat = input:getTransform( "stylus" )
+	-- else
+	-- 	-- Debugging (and on non-zspace machines, use mouse)
+	-- 	stylusPos = input:getPosition( "mouse" ) -- TODO -- Transform to coords mimicing stylus?
+	-- 	stylusMat = mat4() --input:getTransform( "mouse" )
+	-- end
 
 	local screenSpaceOffset = vec3( 0, 0.25, 0 )
 	-- green block on final pos & orient
@@ -176,10 +206,10 @@ function SimulationState:update( dt )
 	local isNearHolster = stylusPos.x > 0.275
 	-- Vibrate when below surface (?)
 	if( isBelowSurface and not isNearHolster and not self.hasVibrated ) then
-		input:vibrateForSeconds( "stylus", .15 )
+		input:vibrateForSeconds( inputDeviceName, .15 )
 		self.hasVibrated = true
 	else
-		input:stopVibration( "stylus" )
+		input:stopVibration( inputDeviceName )
 	end
 	-- Reset the vibration flag once above surface
 	if( not isBelowSurface ) then
@@ -221,7 +251,7 @@ function SimulationState:update( dt )
 			isActivated = true
 		end
 	else
-		if( input:isButtonPressed( "mouse", 0 ) ) then
+		if( input:isButtonPressed( "mouse", 1 ) ) then
 			-- hack to allow testing with mouse
 			stylusPos.y = floorHeight
 			isActivated = true
@@ -234,24 +264,30 @@ function SimulationState:update( dt )
 		
 		local distFromTissue = toolTipPos - floorHeight
 		
-		--if abs( distFromTissue ) < touchThreshold then
+		if abs( distFromTissue ) < touchThreshold then
 			-- Contact heating
-			-- stylusPos is directly from zSpace, need to transform it to the "world"
-			
-			--theTissueSim:accumulateHeat( 2*(stylusPos.x - self.worldOffset.x), 2*(stylusPos.z - self.worldOffset.z), self.currWattage ) 
-		
-		--else
-		if abs(distFromTissue) < sparkThreshold then
+			-- contact area proportional to the depth of penetration
+			local sampleCount = 1
+			if( distFromTissue < 0 ) then
+				sampleCount = sampleCount + 3 -- TODO
+			end
+			local widthOfInstrument = 0.005
+			for count = 0, sampleCount do
+				local xpos = 2*(stylusPos.x - self.worldOffset.x) + widthOfInstrument * math.random()
+				local ypos = 2*(stylusPos.z - self.worldOffset.z) + widthOfInstrument * math.random()
+				theTissueSim:accumulateHeat( xpos, ypos, Sim.computeJoules( dt, self.currWattage, sampleCount ) ) 
+			end
+		elseif abs(distFromTissue) < sparkThreshold then
 			-- Non-Contact heating
 			-- create visual spark from worldCoord  
 			local spreadAngle = 90.0 * math.pi / 180.0 -- 30 degrees
 			local spreadSlope = math.tan( spreadAngle * 0.5 )
 			-- multi-sample the spark hits
-			sampleCount = 8
+			local sampleCount = 8
 			for count = 0, sampleCount do
 				local xpos = 2*(stylusPos.x - self.worldOffset.x) + distFromTissue * math.random() * spreadSlope
 				local ypos = 2*(stylusPos.z - self.worldOffset.z) + distFromTissue * math.random() * spreadSlope
-				theTissueSim:accumulateHeat( xpos, ypos, self.currWattage/sampleCount ) 
+				theTissueSim:accumulateHeat( xpos, ypos, Sim.computeJoules( dt, self.currWattage, sampleCount ) ) 
 			end
 		end
 
@@ -269,7 +305,9 @@ function SimulationState:deactivate()
 	print( "SimulationState:deactivate" )
 
 	-- terminate vibration incase it's still on
-	input:stopVibration( "stylus" )
+	if( isWindows() ) then
+		input:stopVibration( "stylus" )
+	end
 end
 
 function SimulationState:nextState( currTime )
@@ -285,8 +323,10 @@ function SimulationState:nextState( currTime )
 	-- else
 	-- 	theNextState = ""
 	-- end
-	if input:isButtonPressed( "stylus", 2 ) then
-		theNextState = "Menu"
+	if( isWindows() ) then
+		if input:isButtonPressed( "stylus", 2 ) then
+			theNextState = "Menu"
+		end
 	end
 end
 

@@ -352,7 +352,69 @@ spark::Mesh
     bindDataToBuffers();
 }
 
-void 
+void
+spark::Mesh
+::plane( const glm::vec3& center,
+         const glm::vec2& scale,
+         const glm::ivec2& subdivisions )
+{
+    glm::vec3 basePos = center - glm::vec3( 0.5f*scale.x, 0.5f*scale.y, 0.0f );
+    float stepx = scale[0] / subdivisions[0];
+    float stepz = scale[1] / subdivisions[1];
+    for( int x = 0; x < subdivisions[0]; ++x )
+    {
+        float prevtexx = (float)(x-1)/subdivisions[0];
+        float texx = (float)x/subdivisions[0];
+        for( int z = 1; z < subdivisions[1]; ++z )
+        {
+            float prevtexz = (float)(z-1)/subdivisions[1];
+            float texz = (float)z/subdivisions[1];
+            // 0,1 1,1
+            //  c   d
+            //  *---*
+            //  |\  |
+            //  + \ +  (begin->end)
+            //  |  \|
+            //  *---*
+            //  a   b
+            // 0,0 1,0
+            //0
+            glm::vec3 a = basePos;
+            a[0]     += x*stepx;
+            a[2]     += (z-1)*stepz;
+            glm::vec2 aCoord( texx, prevtexz );
+
+            //1
+            glm::vec3 b = basePos;
+            b[0]     += (x-1)*stepx;
+            b[2]     += (z-1)*stepz;
+            glm::vec2 bCoord( prevtexx, prevtexz );
+
+            //2
+            glm::vec3 c = basePos;
+            c[0]     += x*stepx;
+            c[2]     += z*stepz;
+            glm::vec2 cCoord( texx, texz );
+
+            //3
+            glm::vec3 d = basePos;
+            d[0]     += (x-1)*stepx;
+            d[2]     += z*stepz;
+            glm::vec2 dCoord( prevtexx, texz );
+
+            glm::vec3 normal( 0, 1, 0 );
+            
+            addQuad( a, aCoord,
+                     b, bCoord,
+                     c, cCoord,
+                     d, dCoord,
+                     normal );
+        }
+    }
+}
+
+
+void
 spark::Mesh
 ::bindDataToBuffers( void )
 {
