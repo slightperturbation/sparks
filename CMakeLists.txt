@@ -466,9 +466,35 @@ ENDIF( ASSIMP_FOUND )
 #####################################################################
 # SDL2
 #####################################################################
+#  SDL2_INCLUDE_DIRS - The location of the headers, e.g., SDL.h.
+#  SDL2_LIBRARIES - The libraries to link against to use SDL2.
+#  SDL2_FOUND - If false, do not try to use SDL2.
+#  SDL2_VERSION_STRING - Human-readable string containing the version of SDL2.
+find_path( SDL2_INCLUDE_DIRS 
+  NAMES SDL.h
+  HINTS
+    "${CMAKE_SOURCE_DIR}/ext/SDL2-2.0.0/include/"
+    /usr/local/include/
+    /usr/include/
+  PATH_SUFFIXES SDL2
+)
+find_library( SDL2_MAIN_LIBRARY
+  NAMES SDL2 
+  HINTS
+    "${CMAKE_SOURCE_DIR}/ext/SDL2-2.0.0/lib/"
+    /usr/local/lib
+    /usr/lib
+  PATH_SUFFIXES x64
+)
 
-set( PC_SDL2_INCLUDEDIR )
-set( PC_SDL2_LIBDIR )
+if( SDL2_INCLUDE_DIRS AND SDL2_MAIN_LIBRARY )
+  message( STATUS "SDL2 found" )
+  include_directories( ${SDL2_INCLUDE_DIRS} )
+  set( SDL2_LIBRARIES ${SDL2_MAIN_LIBRARY} )
+else( SDL2_INCLUDE_DIRS AND SDL2_MAIN_LIBRARY )
+  message( "------------------------ Error: SDL2 not found.")
+  set( SDL2_LIBRARIES "" )
+endif( SDL2_INCLUDE_DIRS AND SDL2_MAIN_LIBRARY )
 
 #####################################################################
 # GIT
@@ -492,6 +518,7 @@ LIST( APPEND PROJECT_LINK_LIBRARIES
   ${IL_LIBRARIES}
   ${ILU_LIBRARIES}
   ${ASSIMP_LIBRARIES}
+  ${SDL2_LIBRARIES}
 )
 
 
@@ -507,8 +534,8 @@ if( BUILD_DOCUMENTATION )
   set( DOXYGEN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/docs/doxygen/")
   set( README_FILE "Readme.markdown")
   set( SOURCE_DIR "${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/Readme.markdown" )
-  configure_file( ${CMAKE_SOURCE_DIR}/doxygen/Doxyfile.in 
-                  ${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile  @ONLY IMMEDIATE)
+  configure_file( "${CMAKE_SOURCE_DIR}/doxygen/Doxyfile.in" 
+                  "${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile"  @ONLY IMMEDIATE)
   #-- Add a custom target to run Doxygen when ever the project is built
   add_custom_target( Docs 
                       COMMAND ${DOXYGEN_EXECUTABLE} "${CMAKE_CURRENT_BINARY_DIR}/doxygen/Doxyfile"

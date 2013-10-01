@@ -153,6 +153,90 @@ spark
     delete[] frameBuffer;
 }
 
+spark::AudioManager
+::AudioManager( FileAssetFinderPtr finder )
+: m_finder( finder )
+{
+    // init()
+}
+
+spark::AudioManager
+::~AudioManager()
+{
+    // shut everything down
+    SDL_CloseAudio();
+    SDL_FreeWAV(wav_buffer);
+}
+
+void
+spark::AudioManager
+::init( void ) 
+{
+    // Initialize SDL.
+    if (SDL_Init(SDL_INIT_AUDIO) < 0)
+    {
+        return;
+    }
+
+    /* Load the WAV */
+    // the specs, length and buffer of our wav are filled
+    
+    std::string soundFilePath;
+    m_finder->findFile( "thermo.wav", soundFilePath );
+    if( SDL_LoadWAV( soundFilePath.c_str(), &wav_spec, &wav_buffer, &wav_length ) == NULL )
+    {
+        return;
+    }
+    // set the callback function
+    wav_spec.callback = AudioManager::audio_callback;
+    wav_spec.userdata = this;
+    // set our global static variables
+    audio_pos = wav_buffer; // copy sound buffer
+    audio_len = wav_length; // copy file length
+
+
+}
+
+void
+spark::AudioManager
+::playSound( void )
+{
+    if( audio_len <= 0 )
+    {
+        //already playing
+        return;
+    }
+    /* Open the audio device */
+    
+    //SDL_OpenAudioDevice
+    if ( SDL_OpenAudio(&wav_spec, NULL) < 0 )
+    {
+        std::cerr << "Couldn't open audio: " << SDL_GetError() << "\n";
+        return;
+    }
+    /* Start playing */
+    SDL_PauseAudio(0);
+}
+
+void
+spark::AudioManager
+::audio_callback(void *userdata, Uint8 *stream, int len)
+{
+    
+    AudioManager* audioMgr = (AudioManager*)userdata;
+    if (audioMgr->audio_len ==0)
+        return;
+
+    len = ( len > audioMgr->audio_len ? audioMgr->audio_len : len );
+    SDL_memcpy (stream, audioMgr->audio_pos, len); 					// simply copy from one buffer into the other
+    //SDL_memset(stream, 0, len);
+    //SDL_MixAudio(stream, audioMgr->audio_pos, len, SDL_MIX_MAXVOLUME);// mix from one buffer into another
+
+    audioMgr->audio_pos += len;
+    audioMgr->audio_len -= len;
+}
+
+
 /// Startup OpenGL and create the rendering context and window.
 spark::OpenGLWindow
 ::OpenGLWindow( const char* programName, 
@@ -674,7 +758,9 @@ spark
 
 GLuint 
 spark
-::createShaderWithErrorHandling( GLuint shaderType, const std::string& shaderSource )
+::createShaderWithErrorHandling( GLuint shaderType, 
+                                 const std::string& shaderSource,
+                                 const std::string& filename )
 {
     //////////////////
     // Load the Shader with error handling
@@ -691,14 +777,16 @@ spark
         GL_CHECK( glGetShaderInfoLog( shader, buffSize, NULL, buff ) );
         if( strnlen(buff, buffSize) )
         {
-            LOG_WARN(g_log) << "Shader Compilation message:\n------------\n"
-            << buff << "\n------------\n";
+            LOG_WARN(g_log) << "Shader Compilation [\"" << filename
+                << "\"] message:\n------------\n"
+                << buff << "\n------------\n";
         }
         if( shaderStatus != GL_TRUE )
         {
-            LOG_ERROR(g_log) << "Failed to compile shader:\n-------------\n"
-            << shaderSource << "\n-------------\n";
-            throw( ShaderCompilationException( buff, shaderSource ) );
+            LOG_ERROR(g_log) << "Failed to compile shader [\"" << filename
+                << "\"]:\n-------------\n"
+                << shaderSource << "\n-------------\n";
+            throw( ShaderCompilationException( buff, filename ) );
         }
     }
     return shader;
@@ -725,8 +813,8 @@ spark::getErrorShader( void )
             "}\n";
 
         shaderProgram = glCreateProgram();
-        GLuint v = createShaderWithErrorHandling( GL_VERTEX_SHADER, vertexSource );
-        GLuint f = createShaderWithErrorHandling( GL_FRAGMENT_SHADER, fragmentSource );
+        GLuint v = createShaderWithErrorHandling( GL_VERTEX_SHADER, vertexSource, "ERROR_SHADER_VERTEX" );
+        GLuint f = createShaderWithErrorHandling( GL_FRAGMENT_SHADER, fragmentSource, "ERROR_SHADER_FRAGMENT" );
         glAttachShader( shaderProgram, v );
         glAttachShader( shaderProgram, f );
         glLinkProgram( shaderProgram );

@@ -202,7 +202,10 @@ int runSimulation(int argc, char** argv)
     shaderManager->setAssetFinder( finder );
     TextureManagerPtr textureManager( new TextureManager );
     textureManager->setAssetFinder( finder );
-    
+
+    AudioManager audioMgr( finder );
+    audioMgr.init();
+
     int width = 0; int height = 0;
     window.getSize( &width, &height );
 
@@ -422,6 +425,10 @@ int runSimulation(int argc, char** argv)
         {
             stateManager.currState()->reset();
         }
+        if( window.getKey( GLFW_KEY_DOWN ) == GLFW_PRESS )
+        {
+            audioMgr.playSound();
+        }
         if( window.getKey( GLFW_KEY_ENTER ) == GLFW_PRESS )
         {
             LOG_INFO(g_log) << "Reloading all shaders";
@@ -531,5 +538,6 @@ int main( int argc, char* argv[] )
         delete g_log;
         delete g_baseLogger;
     }
+    return 0;
 }
 
