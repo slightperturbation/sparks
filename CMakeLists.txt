@@ -337,10 +337,10 @@ source_group( "External Source" FILES ${EXT_SRC} )
 FIND_PACKAGE(OpenGL REQUIRED)
 
 #####################################################################
-# GLFW 3.01
+# GLFW 3.03
 #####################################################################
 set( GLFW3_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/ext/GLFW3" )
-set( GLFW3_URL "http://sourceforge.net/projects/glfw/files/glfw/3.0.1/glfw-3.0.1.zip/download")
+set( GLFW3_URL "http://sourceforge.net/projects/glfw/files/glfw/3.0.3/glfw-3.0.3.zip/download")
 ExternalProject_Add(
     GLFW3
     PREFIX ${GLFW3_PREFIX}
