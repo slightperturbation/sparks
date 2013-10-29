@@ -512,6 +512,34 @@ else()
 endif()
 
 
+#####################################################################
+# Ascension-Tech magnetic tracker (trakStar)
+#####################################################################
+# Should move to a separate cmake package file
+if( WIN32 )
+  find_path( ASCENSION_TECH_INCLUDE_DIR ATC3DG.h
+             HINTS "${CMAKE_CURRENT_SOURCE_DIR}/ext/ascensionTech_win64/3DGuidanceAPI"
+  )
+  find_library( ASCENSION_TECH_BIRD_LIBRARY ATC3DG64
+                HINTS "${CMAKE_CURRENT_SOURCE_DIR}/ext/ascensionTech_win64/3DGuidanceAPI"
+  )
+  if( ASCENSION_TECH_INCLUDE_DIR-NOTFOUND OR ASCENSION_TECH_BIRD_LIBRARY-NOTFOUND )
+    message( "--------FAILED to find Ascension-Tech magnetic tracker." )
+  else( ASCENSION_TECH_INCLUDE_DIR-NOTFOUND OR ASCENSION_TECH_BIRD_LIBRARY-NOTFOUND )
+    set( ASCENSION_TECH_INCLUDE_DIRS ${ASCENSION_TECH_INCLUDE_DIR} )
+    set( ASCENSION_TECH_LIBRARIES ${ASCENSION_TECH_BIRD_LIBRARY} )
+    set( ASCENSION_TECH_FOUND true )
+    add_definitions( "-DHAS_ASCENSIONTECH" )
+    message( STATUS "Found Ascension-Tech magnetic tracker lib as ${ASCENSION_TECH_LIBRARIES}" )
+  endif( ASCENSION_TECH_INCLUDE_DIR-NOTFOUND OR ASCENSION_TECH_BIRD_LIBRARY-NOTFOUND )
+  if( ASCENSION_TECH_FOUND )
+    include_directories( ${ASCENSION_TECH_INCLUDE_DIRS} )
+  endif( ASCENSION_TECH_FOUND )
+endif( WIN32 )
+
+#####################################################################
+# Final gather of libraries 
+#####################################################################
 LIST( APPEND PROJECT_LINK_LIBRARIES 
   ${GLFW_LIBRARY}
   ${OPENGL_LIBRARIES}
@@ -519,9 +547,13 @@ LIST( APPEND PROJECT_LINK_LIBRARIES
   ${ILU_LIBRARIES}
   ${ASSIMP_LIBRARIES}
   ${SDL2_LIBRARIES}
+  ${ASCENSION_TECH_LIBRARIES}
 )
 
 
+#####################################################################
+# Doxygen
+#####################################################################
 # Add an Option to toggle the generation of the API documentation
 OPTION( BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" ON)
 if( BUILD_DOCUMENTATION )
@@ -665,6 +697,11 @@ if( SIXENSE_FOUND )
   LIST( APPEND SRCS ./src/SixenseInputDevice.cpp )
 endif( SIXENSE_FOUND )
 
+if( ASCENSION_TECH_FOUND )
+  LIST( APPEND SRCS ./src/AscensionTechInputDevice.cpp )
+  LIST( APPEND HDRS ./include/AscensionTechInputDevice.hpp )
+endif( ASCENSION_TECH_FOUND )
+
 set( STATES_HDRS
   ./include/states/SimulationState.hpp
 )
@@ -768,5 +805,5 @@ if(APPLE)
 endif(APPLE)
 
 if(WIN32)
-  MESSAGE( "Executables will require dependency DLLs to be in the path.  E.g., C:/dev_dlls/" )
+  MESSAGE( STATUS "Executables will require dependency DLLs to be in the path.  E.g., C:/dev_dlls/" )
 endif()
