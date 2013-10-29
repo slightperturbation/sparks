@@ -281,7 +281,7 @@ if( NOT WIN32 )
       LOG_BUILD ON
   )
 ELSE( NOT WIN32)
-  set( FREETYPEGL_PREFIX "C:/Users/vector/Dropbox/Projects/SoftPhysics/sparks/build-VisualStudio/ext/FreeTypeGL/" )
+  set( FREETYPEGL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/ext/FreeTypeGL/" )
 endif( NOT WIN32 )
 set( FREETYPEGL_INCLUDE_DIRS "${FREETYPEGL_PREFIX}/src/FREETYPEGL" )
 INCLUDE_DIRECTORIES( "${FREETYPEGL_INCLUDE_DIRS}" )
