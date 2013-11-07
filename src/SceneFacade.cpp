@@ -255,6 +255,7 @@ spark::SceneFacade
                      glm::vec3(0,1,0), glm::vec2(0,0), // Upper Left
                      glm::vec3(1,1,0), glm::vec2(1,0), // Upper Right
                      glm::vec3(0,0,-1) ); // Normal points according to right-hand system
+    overlay->bindDataToBuffers();
     overlay->setRequireExplicitMaterial( true );
     overlay->setMaterialForPassName( name, effectMaterial );
     m_scene->add( overlay );
@@ -372,6 +373,7 @@ spark::SceneFacade
                   glm::vec3( lowerLeft.x + size.x, lowerLeft.y + size.y, 0 ), glm::vec2(1,0), // Upper Right
                   glm::vec3( 0,0,-1 ) // Normal
                   );
+    quad->bindDataToBuffers();
     quad->setRequireExplicitMaterial( true );
     m_scene->add( quad );
     quad->setMaterialForPassName( pass, material );

@@ -24,8 +24,9 @@ end
 
 function StartupState:nextState( currTime )
 	--theNextState = "Menu"
-	--theNextState = "Loading"
-	theNextState = "Simulation"
+	theNextState = "Loading"
+	--theNextState = "Simulation"
+	--theNextState = "Calibration"
 end
 
 theState = StartupState:new()

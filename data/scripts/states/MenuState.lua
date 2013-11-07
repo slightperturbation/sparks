@@ -58,7 +58,7 @@ function MenuState:load()
 	self.buttons["Introduction"].onClick = function () self.theNextState = "Introduction" end
 	self.buttons["Introduction"].onMouseOver = function () 
 		self.explanationText:setText(
-[[A brief overview of the VEST hand's-on 
+[[A brief overview of the VEST hands-on 
 electosurgery simulator.]])
 	end
 
@@ -71,7 +71,7 @@ end
 	self.buttons["ESU Power"].onMouseOver = function ()
 		self.explanationText:setText( 
 [[The power setting (wattage) has the
-and most direct impact on tissue temperature.]])
+and most direct impact on tissue effects.]])
 	end
 
 	ypos = ypos - lineHeight

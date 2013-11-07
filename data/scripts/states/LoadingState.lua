@@ -88,7 +88,7 @@ function LoadingState:nextState( currTime )
 	-- the next desired state back to the app
 	-- TODO should be changed to use the return value
 	--print( "LoadingState:nextState( " .. currTime .. " )")
-	if currTime > 3 then 
+	if currTime > 6 then 
 		theNextState = "Menu" 
 	else
 		theNextState = "" -- null means stay at current state

@@ -38,14 +38,14 @@ spark::Scene
                          << m_commands.size() << " commands, "
                          << m_passes.size() << " passes and " 
                          << m_renderables.size() << " renderables.";
-    }
-    for( auto p = m_passes.begin(); p != m_passes.end(); ++p )
-    {
-        LOG_TRACE(g_log) << "\tPASS: " << *p;
-    }
-    for( auto r = m_renderables.begin(); r != m_renderables.end(); ++r )
-    {
-        LOG_TRACE(g_log) << "\tRENDERABLE: " << *r;
+        for( auto p = m_passes.begin(); p != m_passes.end(); ++p )
+        {
+            LOG_TRACE(g_log) << "\tPASS: " << *p;
+        }
+        for( auto r = m_renderables.begin(); r != m_renderables.end(); ++r )
+        {
+            LOG_TRACE(g_log) << "\tRENDERABLE: " << *r;
+        }
     }
     RenderCommandQueue commandsCopy = m_commands;
     while( !commandsCopy.empty() )

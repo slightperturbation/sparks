@@ -116,43 +116,6 @@ void APIENTRY debugOpenGLMessageCallback( GLenum source,
     assert(false);
 }
 
-void 
-spark
-::writeFrameBufferToFile( const std::string& frameBaseFileName ) 
-{
-    static unsigned int frameNumber = 1;
-
-    // TODO
-    int width = 800;
-    int height = 600;
-    //glfwGetFramebufferSize( &width, &height );
-
-    unsigned char* frameBuffer = new unsigned char[ 3 * width * height * sizeof(unsigned char) ];
-
-    GL_CHECK( glPixelStorei( GL_PACK_ALIGNMENT, 1 ) ); // align start of pixel row on byte
-
-    std::stringstream frameFileName;
-    frameFileName << frameBaseFileName << std::setfill('0') << std::setw(4) << frameNumber++ << ".ppm";
-    std::ofstream frameFile( frameFileName.str().c_str(), std::ios::binary | std::ios::trunc );
-    GL_CHECK( glReadBuffer( GL_FRONT ) ); 
-    GL_CHECK( glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, frameBuffer ) );
-
-    // PPM header.  P6 is binary RGB
-    frameFile << "P6\n" << width << " " << height << "\n255\n";
-    for( int j = height-1; j>=0; --j )  // opengl vs image is swapped top-bottom
-    {
-        for( int i = 0; i < width; ++i )
-        {
-            frameFile << (char)frameBuffer[3*width*j + 3*i + 0] 
-            << (char)frameBuffer[3*width*j + 3*i + 1] 
-            << (char)frameBuffer[3*width*j + 3*i + 2] 
-            ;
-        }
-    }
-    frameFile.close();
-    delete[] frameBuffer;
-}
-
 spark::AudioManager
 ::AudioManager( FileAssetFinderPtr finder )
 : m_finder( finder )
@@ -182,7 +145,7 @@ spark::AudioManager
     // the specs, length and buffer of our wav are filled
     
     std::string soundFilePath;
-    m_finder->findFile( "thermo.wav", soundFilePath );
+    m_finder->findFile( "cuttingsound.wav", soundFilePath );
     if( SDL_LoadWAV( soundFilePath.c_str(), &wav_spec, &wav_buffer, &wav_length ) == NULL )
     {
         return;
@@ -241,8 +204,10 @@ spark::AudioManager
 spark::OpenGLWindow
 ::OpenGLWindow( const char* programName, 
                 bool enableLegacyOpenGlLogging, 
-                bool enableStereo )
-: m_isOK( false )
+                bool enableStereo,
+                bool createLoadingContext,
+                bool enableFullScreen )
+: m_isOK( false ), m_glfwLoadingThreadWindow( nullptr )
 {
     LOG_DEBUG(g_log) << "glfwInit...";
     if( !glfwInit() )
@@ -251,6 +216,14 @@ spark::OpenGLWindow
     }
     LOG_DEBUG(g_log) << "done.\n";
 
+    // Create an invisible/dummy window as a handle for resource 
+    // thread's rendering context
+    if( createLoadingContext )
+    {
+        glfwWindowHint( GLFW_VISIBLE, GL_FALSE );
+        m_glfwLoadingThreadWindow = glfwCreateWindow( 1,1, "LoadingThreadWindow", nullptr, nullptr );
+    }
+    
     // Default window position, upper left
     int x = 0;
     int y = 0;
@@ -298,8 +271,7 @@ spark::OpenGLWindow
     glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE );
 #endif
 
-    // Avoid flashes on startup
-    glfwWindowHint( GLFW_VISIBLE, GL_FALSE );
+    glfwWindowHint( GLFW_VISIBLE, GL_TRUE );
 
     //////////////////////////////////////////////////////////////////////
     // V-Sync
@@ -325,31 +297,38 @@ spark::OpenGLWindow
     const GLFWvidmode* mode = glfwGetVideoMode( monitor );
     int width = mode->width;
     int height = mode->height;
-#ifndef HAS_ZSPACE
-    width = 960;
-    height = 540;
-#endif
     
-    monitor = nullptr; // null for windowed; easier to debug, prob want FS for release?
+    if( enableFullScreen )
+    {
+        // force to "main" display if not using zspace
+        //monitor = glfwGetPrimaryMonitor();
+    }
+    else
+    {
+        monitor = nullptr;
+        //width = 960;
+        //height = 540;
+    }
 
     LOG_DEBUG(g_log) << "glfwOpenWindow...";
-    m_glfwWindow = glfwCreateWindow( width, height,
+    m_glfwRenderWindow = glfwCreateWindow( width, height,
                                      programName, 
                                      monitor, // non-null for fullscreen
-                                     NULL );
-    if( !m_glfwWindow )
+                                     m_glfwLoadingThreadWindow );
+    if( !m_glfwRenderWindow )
     {
         LOG_FATAL(g_log) << "Unable to open GLFW window.";
         glfwTerminate();
         return;
     }
-    glfwSetWindowPos( m_glfwWindow, x, y );
-    glfwMakeContextCurrent( m_glfwWindow );
-    glfwShowWindow( m_glfwWindow );
+    glfwMakeContextCurrent( m_glfwRenderWindow );
+
+    glfwSetWindowPos( m_glfwRenderWindow, x, y );
+    glfwShowWindow( m_glfwRenderWindow );
     
     checkOpenGLErrors();
     LOG_DEBUG(g_log) << " done.\n";
-    LOG_DEBUG(g_log) << "glewInit... ";
+    LOG_DEBUG(g_log) << "glewInit on render thread.";
     glewExperimental = GL_TRUE;
     GLenum err = glewInit();
     if( err != GLEW_OK )
@@ -420,28 +399,28 @@ void
 spark::OpenGLWindow
 ::makeContextCurrent( void )
 {
-    glfwMakeContextCurrent( m_glfwWindow );
+    glfwMakeContextCurrent( m_glfwRenderWindow );
 }
 
 bool
 spark::OpenGLWindow
 ::isRunning( void )
 {
-    return !glfwWindowShouldClose( m_glfwWindow );
+    return !glfwWindowShouldClose( m_glfwRenderWindow );
 }
 
 int
 spark::OpenGLWindow
 ::getKey( int key )
 {
-    return glfwGetKey( m_glfwWindow, key );
+    return glfwGetKey( m_glfwRenderWindow, key );
 }
 
 void
 spark::OpenGLWindow
 ::swapBuffers( void )
 {
-    glfwSwapBuffers( m_glfwWindow );
+    glfwSwapBuffers( m_glfwRenderWindow );
     glfwPollEvents();
 }
 
@@ -449,14 +428,14 @@ void
 spark::OpenGLWindow
 ::getSize( int* width, int* height )
 {
-    glfwGetWindowSize( m_glfwWindow, width, height );
+    glfwGetWindowSize( m_glfwRenderWindow, width, height );
 }
 
 void 
 spark::OpenGLWindow
 ::getPosition( int* xPos, int* yPos )
 {
-    glfwGetWindowPos( m_glfwWindow, xPos, yPos );
+    glfwGetWindowPos( m_glfwRenderWindow, xPos, yPos );
 }
 
 
@@ -482,6 +461,45 @@ spark::OpenGLWindow
 }
 
 
+
+void 
+spark::OpenGLWindow
+::writeFrameBufferToFile( const std::string& frameBaseFileName ) 
+{
+    static unsigned int frameNumber = 1;
+
+    int width = 800;
+    int height = 600;
+    glfwGetFramebufferSize( m_glfwRenderWindow, &width, &height );
+
+    unsigned char* frameBuffer = new unsigned char[ 3 * width * height * sizeof(unsigned char) ];
+
+    GL_CHECK( glPixelStorei( GL_PACK_ALIGNMENT, 1 ) ); // align start of pixel row on byte
+
+    std::stringstream frameFileName;
+    frameFileName << frameBaseFileName << std::setfill('0') << std::setw(4) << frameNumber++ << ".ppm";
+    std::ofstream frameFile( frameFileName.str().c_str(), std::ios::binary | std::ios::trunc );
+    GL_CHECK( glReadBuffer( GL_FRONT ) ); 
+    GL_CHECK( glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, frameBuffer ) );
+
+    // PPM header.  P6 is binary RGB
+    frameFile << "P6\n" << width << " " << height << "\n255\n";
+    for( int j = height-1; j>=0; --j )  // opengl vs image is swapped top-bottom
+    {
+        for( int i = 0; i < width; ++i )
+        {
+            frameFile << (char)frameBuffer[3*width*j + 3*i + 0] 
+            << (char)frameBuffer[3*width*j + 3*i + 1] 
+            << (char)frameBuffer[3*width*j + 3*i + 2] 
+            ;
+        }
+    }
+    frameFile.close();
+    delete[] frameBuffer;
+}
+
+// END OpenGLWindow
+//////////////////////////////////////////////////////////////////////////
 
 
 bool

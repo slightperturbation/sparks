@@ -38,6 +38,10 @@
   #include "ZSpaceInput.hpp"
 #endif
 
+#ifdef HAS_ASCENSIONTECH
+  #include "AscensionTechInputDevice.hpp"
+#endif
+
 #include "StateManager.hpp"
 #include "State.hpp"
 #include "SceneState.hpp"
@@ -60,7 +64,7 @@
 #include <iomanip>
 #include <cmath>
 #include <stdlib.h>
-
+#include <boost/thread.hpp>
 
 #include "freetype-gl.h"
 
@@ -156,22 +160,73 @@ void setGLFWCallbacks( GLFWwindow* glfwWindow )
 #endif
 }
 
+void textureManagerCommandThreadOp( OpenGLWindow* window, TextureManager* textureManager )
+{
+    if( !window )
+    {
+        LOG_ERROR(g_log) << "Null OpenGLWindow passed to textureManagerCommandThreadOp()";
+        assert(false);
+        return;
+    }
+    if( !(window->glfwLoadingThreadWindow()) )
+    {
+        LOG_ERROR(g_log) << "Null glfwThreadWindow in textureManagerCommandThreadOp()";
+        assert(false);
+        return;
+    }
+    if( !textureManager )
+    {        
+        LOG_ERROR(g_log) << "Null textureManager in textureManagerCommandThreadOp()";
+        assert(false);
+        return;
+    }
+    LOG_DEBUG(g_log) << "Setting current context for loading thread";
+    glfwMakeContextCurrent( window->glfwLoadingThreadWindow() );
+
+    LOG_DEBUG(g_log) << "glewInit on resource thread.";
+    glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+    if( err != GLEW_OK )
+    {
+        LOG_DEBUG(g_log) << "glewInit() failed!\n";
+    }
+    glewInit(); // needed for each thread
+
+    while( window->isRunning() )
+    {
+        // Need to call glFlush() often (no more than ~30 ms
+        double textureLoadStartTimeInSeconds = glfwGetTime();
+        const double maxTextureLoadTimeInSeconds = (30.0)/(1000.0); // 30 ms in seconds
+        while( textureManager->executeSingleQueuedCommand() 
+               && (glfwGetTime() - textureLoadStartTimeInSeconds) < maxTextureLoadTimeInSeconds )
+        {
+            ;
+        }
+        //glFinish();
+        glFlush();
+        //boost::this_thread::sleep_for( boost::chrono::nanoseconds( 1 ) );
+        boost::this_thread::yield();
+    }
+}
+
 /// Online simulation and display of fluid
 int runSimulation(int argc, char** argv)
 {
     // Create Window
+    // Option Flags
+
     // legacy logging is great, but conflicts with nSight debugger
     const bool enableLegacyOpenGlLogging  = false;
-
-    bool useStereo = false;
-#ifdef HAS_ZSPACE
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Too slow for testing.  Maybe a cmd line flag?  Setting in GUI?
-    // Also, must be off for nVidia debugging
-    useStereo = true;
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#endif
-    OpenGLWindow window( "Spark", enableLegacyOpenGlLogging, useStereo );
+    // Stero view, e.g., with ZSpace
+    const bool useStereo = false;
+    // Create a separate thread to load background textures
+    const bool useBackgroundResourceLoading = false;
+    const bool enableFullScreen = false;
+    OpenGLWindow window( "Spark", 
+                         enableLegacyOpenGlLogging, 
+                         useStereo, 
+                         useBackgroundResourceLoading,
+                         enableFullScreen );
 
 
     using namespace std;
@@ -195,12 +250,26 @@ int runSimulation(int argc, char** argv)
     inputManager->acquireInputDevice( "stylus", 
                                       zSpaceInputFactory.createDevice(0) );
 #endif
-        
+#ifdef HAS_ASCENSIONTECH
+    try
+    {
+        AscensionTechInputFactory atInputFactory;
+        inputManager->acquireInputDevice( "trakStar",
+            atInputFactory.createDevice(0) );
+    }
+    catch(...)
+    {
+        LOG_ERROR(g_log) << "Unable to create trakStar input device";
+    }
+    
+#endif
+
     // Create common managers and tell them how to find file resources
     FileAssetFinderPtr finder( new FileAssetFinder );
     finder->addRecursiveSearchPath( DATA_PATH );
     ShaderManagerPtr shaderManager( new ShaderManager );
     shaderManager->setAssetFinder( finder );
+
     TextureManagerPtr textureManager( new TextureManager );
     textureManager->setAssetFinder( finder );
 
@@ -255,30 +324,6 @@ int runSimulation(int argc, char** argv)
     frameBufferTarget->setClearColor( glm::vec4( 0,0,0,0 ) );
     g_guiEventPublisher->subscribe( frameBufferTarget );
 
-    // Dummy scene for loading common resources
-    //ScenePtr sceneOne( new Scene );
-    //SceneFacadePtr facade( new SceneFacade( sceneOne,
-    //                                        &window,
-    //                                        finder,
-    //                                        textureManager,
-    //                                        shaderManager,
-    //                                        cameraPerspective,
-    //                                        frameBufferTarget,
-    //                                        inputManager,
-    //                                        g_guiEventPublisher ) );
-    //// lua handles loading default objects
-    //LuaInterpreter lua( finder );
-    //lua.setFacade( facade );
-    //lua.runScriptFromFile( "loadShaders.lua" );
-    //lua.runScriptFromFile( "loadTextures.lua" );
-    ////lua.runScriptFromFile( "loadRenderPasses.lua" );
-
-
-    //stateManager.addState( StatePtr(new SceneState( "sceneOne", 
-    //                                                sceneOne )) );
-    
-
-
 
     // Create the "special" simulation states from the C++ class
     // The specific functionality is provided in the Lua script,
@@ -307,10 +352,12 @@ int runSimulation(int argc, char** argv)
     scriptStates.push_back( "ShadowTest" );
     scriptStates.push_back( "ButtonExample" );
     // Actual States
+    // -- TODO -- get all State.lua files in the States directory
     scriptStates.push_back( "Startup" );
     scriptStates.push_back( "Loading" );
     scriptStates.push_back( "Menu" );
     scriptStates.push_back( "Instructions" );
+    scriptStates.push_back( "Calibration" );
     for( auto iter = scriptStates.begin(); iter != scriptStates.end(); ++iter )
     {
         StatePtr newState( new ScriptState( *iter,
@@ -346,34 +393,65 @@ int runSimulation(int argc, char** argv)
     
     // for fps counter
     double lastTimingUpdateTime = glfwGetTime();
-    int frameNumber = 0;
+    int framesSinceLastReport = 0;
     //
+    std::map< std::string, double > secondsInComponentSinceLastReport;
+
+    // Start Threads
+
+    // Allow texture manager to process asynchronously using a second "window"
+    if( useBackgroundResourceLoading )
+    {
+        TextureManager* tmRawPtr = textureManager.get();
+        boost::thread textureManagerCommandThread( textureManagerCommandThreadOp, &window, tmRawPtr );
+    }
+
+    // Main event loop -- responsible for input, rendering and synchronous updating
     while( window.isRunning() )
     {
-        LOG_TRACE(g_log) << ".................................................";
         if( g_log->isTrace() )
         {
+            LOG_TRACE(g_log) << ".................................................";
             textureManager->logTextures();
         }
 
         lastTime = currTime;
         currTime = glfwGetTime();
 
-        frameNumber++;
-        if( currTime - lastTimingUpdateTime >= 3.0 )
+        ////////////////////////////////////////////////////////////////////////
+        // Report profiling (every few seconds)
+        // 
+        double secondsBetweenProfileReports = 3.0;
+        if(   (currTime - lastTimingUpdateTime >= secondsBetweenProfileReports)
+            && framesSinceLastReport > 0 )
         {
-            std::cerr << "\t\t" << 3000.0/(double)(frameNumber) << " ms/frame\n";
-            frameNumber = 0;
+            std::cerr << "\t" << (1000.0*secondsBetweenProfileReports)/(double)(framesSinceLastReport) << " ms/frame\n";
+            double totalSeconds = 0.0;
+            for( auto iter = secondsInComponentSinceLastReport.begin();
+                 iter != secondsInComponentSinceLastReport.end(); 
+                 ++iter )
+            {
+                std::cerr << "\t\t" << setw(20) << iter->first << "\t"
+                    << setw(5) << (1000.0)*iter->second/(double)(framesSinceLastReport) 
+                    << " ms\n";
+                totalSeconds += iter->second;
+                iter->second = 0.0; // reset accumulated time
+            }
+            std::cerr << "\t" << setw(20) << "Total:" << "\t"
+                << setw(5) << (1000.0)*totalSeconds/(double)(framesSinceLastReport) 
+                << " ms\n";
+            framesSinceLastReport = 0;
             lastTimingUpdateTime = currTime;
         }
+        framesSinceLastReport++;
 
-        // UPDATE
-        const float dt = 1.0f/60.0f;
         
         ////////////////////////////////////////////////////////////////////////
         // Update System (physics, collisions, etc.)
         //
         // Periodic updates roughly every dt
+        const float dt = 1.0f/60.0f;
+        double updateStartTime = glfwGetTime();
         if( (currTime - prevUpdateTime) > dt )
         {
             LOG_TRACE(g_log) << "Update at " << currTime;
@@ -384,28 +462,44 @@ int runSimulation(int argc, char** argv)
             }
             prevUpdateTime = currTime;
         }
-        //////
-        // Input handlers called with each frame
+        stateManager.updateState( currTime );
+        secondsInComponentSinceLastReport["Update"] += glfwGetTime() - updateStartTime;
+
+        ////////////////////////////////////////////////////////////////////////
+        // Input handlers 
+        // 
+        double inputUpdateStartTime = glfwGetTime();
         LOG_TRACE(g_log) << "Update at " << currTime;
         if( inputManager )
         {
             inputManager->update( currTime - lastTime );
         }
-        if( eyeTracker )
-        {
-            eyeTracker->update( currTime - lastTime );
-        }
         if( g_arcBall )
         {
             g_arcBall->updatePerspective( cameraPerspective );
         }
-        // TODO
-        //std::cerr << "Wattage: " << esuInput.wattage() << "\n";
+        secondsInComponentSinceLastReport["InputUpdate"] += glfwGetTime() - inputUpdateStartTime;
         
+        ////////////////////////////////////////////////////////////////////////
+        // Data load
+        // parallel updates are handled once per frame,
+        // handle the queue'd opengl requests before rendering next frame
+        if( ! useBackgroundResourceLoading )
+        {
+            double textureLoadStartTime = glfwGetTime();
+            double maxTextureLoadMillisecondsPerFrame = (10.0)/(1000.0); // 10 ms in seconds
+            while( textureManager->executeSingleQueuedCommand() &&
+                (glfwGetTime()-textureLoadStartTime) < maxTextureLoadMillisecondsPerFrame )
+            {
+                ;
+            }
+            secondsInComponentSinceLastReport["TextureLoad"] += glfwGetTime() - textureLoadStartTime;
+        }
 
         ////////////////////////////////////////////////////////////////////////
-        // Render
-        window.makeContextCurrent();
+        // Render Setup
+        // 
+        double renderSetupStartTime = glfwGetTime();
         if( eyeTracker && !useStereo )
         {
             eyeTracker->updatePerspective( cameraPerspective );
@@ -413,32 +507,32 @@ int runSimulation(int argc, char** argv)
         if( eyeTracker && useStereo )
         {
             glDrawBuffer( GL_BACK_RIGHT );
-            LOG_TRACE(g_log) << "Switching to RIGHT Buffer";
             eyeTracker->updatePerspective( cameraPerspective, EyeTracker::rightEye );
             stateManager.render(); // Extra scene render in stereo mode
 
             glDrawBuffer( GL_BACK_LEFT );
-            LOG_TRACE(g_log) << "Switching to LEFT Buffer";
             eyeTracker->updatePerspective( cameraPerspective, EyeTracker::leftEye );
         }
+        // render the leftEye or the non-stereo view
         stateManager.render();
+        secondsInComponentSinceLastReport["RenderSetup"] += glfwGetTime() - renderSetupStartTime;
+        
+
+        ////////////////////////////////////////////////////////////////////////
+        // Render
+        // 
+        double renderStartTime = glfwGetTime();
         window.swapBuffers();
+        secondsInComponentSinceLastReport["Render"] += glfwGetTime() - renderStartTime;
 
         LOG_TRACE(g_log) << "Scene end - glfwSwapBuffers()";
-        if( vars.isSavingFrames ) writeFrameBufferToFile( "sparks_" );
-        
-        ////////////////////////////////////////////////////////////////////////
-        // Data load
-        // parallel updates are handled once per frame,
-        // handle the queue'd opengl requests before rendering next frame
-        textureManager->executeQueuedCommands();
-        
-        stateManager.updateState( currTime );
-        
-        
+        if( vars.isSavingFrames ) window.writeFrameBufferToFile( "sparks_" );
+
+
         ////////////////////////////////////////////////////////////////////////
         // Process Inputs
         // See: http://www.glfw.org/docs/3.0/group__keys.html
+        double inputProcessStartTime = glfwGetTime();
         if( window.getKey( GLFW_KEY_UP ) == GLFW_PRESS )
         {
             stateManager.currState()->reset();
@@ -512,7 +606,21 @@ int runSimulation(int argc, char** argv)
             //    LOG_DEBUG(g_log) << "Decreasing interoccular distance to " << dist << "\n";
             //}
         }
+        if( window.getKey( GLFW_KEY_HOME ) == GLFW_PRESS )
+        {
+            vars.isSavingFrames = true;
+        }
+        if( window.getKey( GLFW_KEY_END ) == GLFW_PRESS )
+        {
+            vars.isSavingFrames = false;
+        }
+        secondsInComponentSinceLastReport["InputProcessing"] += glfwGetTime() - inputProcessStartTime;
+
     }
+    //if( useBackgroundResourceLoading )
+    //{
+    //    textureManagerCommandThread.join();
+    //}
     stateManager.shutdown();
     textureManager->releaseAll();
     return 0;

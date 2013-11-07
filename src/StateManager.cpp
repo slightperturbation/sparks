@@ -67,8 +67,9 @@ spark::StateManager
     if( !hasStateByName(nextState) )
     {
         LOG_ERROR(g_log) << "Attempt to setCurrState(\"" << nextState
-        << "\") but no such state is managed by this StateManager.";
-        // TODO throw?  what does this mean?  who made a mistake?
+        << "\") but no such state is managed by this StateManager. "
+        << "(Remember to remove the \"State.lua\" suffix from file names, "
+        << "e.g, use \"Xxx\" for the state defined in XxxState.lua)";
         return;
     }
     if( m_currState )
@@ -156,7 +157,7 @@ spark::StateManager
     if( m_currState )
     {
         boost::optional<StateName> nextState = m_currState->nextState( currTime );
-        if( nextState && hasStateByName( nextState.get() ) )
+        if( nextState )
         {
             setCurrState( nextState.get() );
         }

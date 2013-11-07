@@ -1,108 +1,132 @@
+<!DOCTYPE html>
 <html>
-<script>
-
-var g_wattage = 40.0;
-var g_mode = "Cut";
-
-function toConsole( msg )
-{
-	document.getElementById("consoleMsgs").innerHTML = msg + "<BR>--<BR>" + document.getElementById("consoleMsgs").innerHTML;
-}
-function displayWattage()
-{
-	document.getElementById("wattage").innerHTML = "" + g_wattage + " watts";
-}
-function displayMode()
-{
-	document.getElementById("mode").innerHTML = g_mode;
-}
-function startup()
-{
-	displayWattage();
-	displayMode();
-}
-
-function sendUpdate()
-{
-  	var xmlhttp;
-	xmlhttp = new XMLHttpRequest();
-	xmlhttp.onreadystatechange = function()
-	{
-		if( (xmlhttp.readyState == 4) && (xmlhttp.status == 200 ) )
-		{
-			toConsole( "Response: " + xmlhttp.responseText );
+  <head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="chrome=1,IE=edge" />
+	<title>index</title>
+	<style>
+		body {
+			background-color: #FFFFFF;
+			margin: 0px;
 		}
-	}
-	var queryString = '/win32/ESUServerCGI.cgi?Wattage=' + g_wattage + "&Mode=" + g_mode;
-	toConsole( "Request: " + queryString );
-	xmlhttp.open( 'GET', queryString, true );
-	xmlhttp.send();
-}
-function upWattage()
+	</style>
+
+	<!-- copy these lines to your document head: -->
+
+	<meta name="viewport" content="user-scalable=yes, width=600" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<link href='https://fonts.googleapis.com/css?family=Cardo&subset=latin-ext' rel='stylesheet' type='text/css'>
+
+	
+	
+	<script type="text/javascript">
+function getResponse(responseString, variable) 
 {
-	g_wattage = Math.min( 100, g_wattage + 20 );
-	displayWattage();
-	sendUpdate();
+    var vars = responseString.split( '&' );
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split( '=' );
+        if (decodeURIComponent( pair[0] ) == variable) {
+            return decodeURIComponent( pair[1] );
+        }
+    }
+    console.log('Query variable %s not found', variable);
 }
-function downWattage()
+
+	
+function callServer( hypeDocument, commandString )
 {
-	g_wattage = Math.max( 20, g_wattage - 20 );
-	displayWattage();
-	sendUpdate();
-}
-function pollingRefresh()
-{
-  	var xmlhttp;
+	var xmlhttp;
 	xmlhttp = new XMLHttpRequest();
 	xmlhttp.onreadystatechange = function()
 	{
-		if( (xmlhttp.readyState == 4) && (xmlhttp.status == 200 ) )
+		var modeName = null;
+		var cutPower = null;
+		var coagPower = null;
+		console.log( "xmlhttp.readyState = %d", xmlhttp.readyState );
+		if( xmlhttp.readyState == 4 )
 		{
-			responseString = xmlhttp.responseText;
-			toConsole( "Polling Response: " + responseString + "\n" );
-			// parse out wattage and mode
-			var data = {};
-			responseString.replace(/(?:^|&)([^&=]*)=?([^&]*)/g, function ($0, $1, $2) {
-				if ($1) data[$1] = $2;  
-			})
-			for( var i in data )
+			if( xmlhttp.status == 200 )
 			{
-				toConsole( "\t" + i + "-->" + data[i] );
+			    console.log('callServer: recv successful: "%s"', xmlhttp.responseText);
+				modeName = getResponse( xmlhttp.responseText, 'mode' );
+				cutPower = getResponse( xmlhttp.responseText, 'cut' );
+				coagPower = getResponse( xmlhttp.responseText, 'coag' );
+				if( xmlhttp.responseText.indexOf( "Error" ) != -1 )
+				{
+					console.log( "Error in response: %s", xmlhttp.responseText );
+					hypeDocument.getElementById('ErrorMsg').innerText = xmlhttp.responseText;
+				}
+			}
+			else
+			{
+			    console.log('callServer: recv not successful: "%s"', xmlhttp.readyState);
+				hypeDocument.getElementById('ErrorMsg').innerText = '(Problem communicating with VEST Simulator.)';
 			}
 		}
+	
+		hypeDocument.getElementById('CoagPowerReading').innerText = (!coagPower) ? "--" : coagPower;
+		hypeDocument.getElementById('CutPowerReading').innerText = (!cutPower) ? "--" : cutPower;
+		
+		if( modeName == 'cut' )
+		{
+			hypeDocument.startTimelineNamed('cutMode')
+		}
+		else if( modeName == 'coag' )
+		{
+			hypeDocument.startTimelineNamed('coagMode')
+		}
+		else
+		{
+			hypeDocument.startTimelineNamed('blendMode')
+		}
 	}
-	var queryString = '/win32/ESUServerCGI.cgi'; // no options for wattage/mode query
-	toConsole( "Request: " + queryString );
+	var queryString = '/win32/ESUServerCGI.cgi?' + commandString;
+    console.log('callServer: sending query: "%s"', queryString);
+    hypeDocument.getElementById('ErrorMsg').innerText = "";
 	xmlhttp.open( 'GET', queryString, true );
-	xmlhttp.send();
+	xmlhttp.send();	
+}	
+	
+	</script>
+	<!-- end copy -->
 
-	setTimeout( pollingRefresh, 500 )
-}
-pollingRefresh()
-</script>
-<style>
-.console { height:150px; float:left; overflow:hidden; }
-.clear { clear:both; }
-.button { font-size:150%; text-align: center; width:130px; float:left; overflow:hidden; background-color:lightgray;}
-#wattage, #mode { font-size:150%; text-align: center; width:100px; float:left; overflow:hidden; background-color:lightblue;}
-.spacer { text-align: center; width:10px; float:left; overflow:hidden; background-color:white; }
-</style>
-<body onload="startup()">
-<div class="spacer" style="width:80px;">&nbsp;</div><div id="wattage"></div><div class="spacer">&nbsp;</div><div id="mode"></div>
-<BR>
-<BR><BR><BR>
-<img width=130 height=20 src="http://upload.wikimedia.org/wikipedia/commons/5/52/Spacer.gif"/>
-<img width=50 src="http://upload.wikimedia.org/wikipedia/commons/9/9e/U%2B2191.svg" onclick="upWattage()" />
-<img width=50 src="http://upload.wikimedia.org/wikipedia/commons/f/f2/U%2B2193.svg" onclick="downWattage()" />
-<BR>
-<div class="button" onclick="g_mode='Cut';displayMode();sendUpdate();">CUT</div>
-<div class="spacer">&nbsp;</div>
-<div class="button" onclick="g_mode='Blend';displayMode();sendUpdate();">BLEND</div>
-<div class="spacer">&nbsp;</div>
-<div class="button" onclick="g_mode='Coag';displayMode();sendUpdate();">COAG</div>
-<hr>
-<div class="console" id="consoleMsgs">Startup...</div>
-<div class="clear"></div>
+  </head>
+  <body>
+	<div style ="margin:auto;width:600px">
 
-</body>
+
+	
+	<!-- copy these lines to your document: -->
+
+	<div id="index_hype_container" style="position:relative;overflow:hidden;width:600px;height:400px;">
+		<script type="text/javascript" charset="utf-8" src="index.hyperesources/index_hype_generated_script.js?32115"></script>
+	</div>
+
+	<!-- end copy -->
+
+
+	</div>
+	
+
+
+	<!-- text content for search engines: -->
+
+	<div style="display:none">
+
+		<div></div>
+		<div>100</div>
+		<div>⬇</div>
+		<div>
+</div>
+		<div>⬆</div>
+		<div>Cut</div>
+		<div>Watts</div>
+		<div>Coag</div>
+		<div>Blend</div>
+
+	</div>
+
+	<!-- end text content: -->
+
+  </body>
 </html>

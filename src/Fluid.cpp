@@ -902,7 +902,7 @@ void
 spark::Fluid
 ::addSourceAtLocation( float x, float y, float deltaDensity, float maxDensity )
 {
-    std::cerr << "Smoke source = " << x << ", " << y << "\n";
+    //std::cerr << "Smoke source = " << x << ", " << y << "\n";
     const float lenOfCell = 1.0f / (m_N+2);
     int rx = (int)( (x/lenOfCell) + ( (float)(m_N+2)/2.0f ) );//+ 0.5f ) );
     int ry = (int)( (y/lenOfCell) + ( (float)(m_N+2)/2.0f ) );//+ 0.5f ) );

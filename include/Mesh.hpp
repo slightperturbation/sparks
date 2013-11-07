@@ -153,13 +153,40 @@ namespace spark
         size_t addVertex( const MeshVertex& v );
         void addTriangleByIndex( unsigned int a, unsigned int b, unsigned int c );
 
-        void addQuad( const glm::vec3& a, const glm::vec2& aCoord, 
+        /// Adds a quadrilateral to the Mesh.
+        /// Must call bindDataToBuffers() before
+        /// rendering this mesh.
+        ///
+        ///  c   d
+        ///  *---*
+        ///  |\  |
+        ///  + \ +
+        ///  |  \|
+        ///  *---*
+        ///  a   b
+        ///
+        /// Indexes of triangles (CCW): (abc) (cbd)
+        void addQuad( const glm::vec3& a, const glm::vec2& aCoord,
                       const glm::vec3& b, const glm::vec2& bCoord, 
                       const glm::vec3& c, const glm::vec2& cCoord, 
                       const glm::vec3& d, const glm::vec2& dCoord, 
                       const glm::vec3& norm );
 
-        void addQuad( const Eigen::Vector3f& a, const Eigen::Vector2f& aCoord, 
+        
+        /// Adds a quadrilateral to the Mesh.
+        /// Must call bindDataToBuffers() before
+        /// rendering this mesh.
+        ///
+        ///  c   d
+        ///  *---*
+        ///  |\  |
+        ///  + \ +
+        ///  |  \|
+        ///  *---*
+        ///  a   b
+        ///
+        /// Indexes of triangles (CCW): (abc) (cbd)
+        void addQuad( const Eigen::Vector3f& a, const Eigen::Vector2f& aCoord,
                       const Eigen::Vector3f& b, const Eigen::Vector2f& bCoord, 
                       const Eigen::Vector3f& c, const Eigen::Vector2f& cCoord, 
                       const Eigen::Vector3f& d, const Eigen::Vector2f& dCoord, 

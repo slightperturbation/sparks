@@ -229,21 +229,12 @@ float rand(vec2 co){
 
 void main()
 {
-
-
-    //vec4 temp = texture( s_temperature, f_texCoord.xy );
-    //float t = (temp.r - 37.0)/63.0;
-
-    vec3 liverColor = vec3( 0.6, 0.1, 0.15 );
-    vec3 dessicatedColor = vec3( 0.9, 0.9, 0.9 ) + vec3(0.1) * rand(f_vertexPosition.xy);
-    vec3 vaporizingColor = vec3( 0.9, 0.5, 0.3 ) + vec3(0.2) * rand(f_vertexPosition.xy * u_time);
+	vec3 liverSpecular = vec3( .35, .31, .28 );
+    vec3 liverColor = vec3( 0.2, 0.137, 0.105 );
+    vec3 dessicatedColor = vec3( 0.5, 0.4, 0.3 ) + vec3(0.05) * rand(f_vertexPosition.xy);
+    vec3 vaporizingColor = vec3( 0.74, 0.651, 0.69 ) + vec3(0.2) * rand(f_vertexPosition.xy * u_time);
+    vec3 vaporizedColor = liverColor + vec3(0.1);
     vec3 charredColor = vec3( 0.1, 0.025, 0.01 ) + vec3(0.2) * rand(f_vertexPosition.xy); 
-
-    // vec3 liverColor = vec3( 1, 0, 0 );
-    // vec3 dessicatedColor = vec3( 0.9, 0.9, 0.9 );
-    // vec3 vaporizingColor = vec3( 0, 0.9, 0 );
-    // vec3 charredColor = vec3( 0, 0.025, 1 ); 
-
 
     float blurWeight[25] = float[]( 1.0/273.0, 4.0/273.0, 7.0/273.0, 4.0/273.0, 1.0/273.0,
     	                            4.0/273.0,16.0/273.0,26.0/273.0,16.0/273.0, 4.0/273.0,
@@ -251,32 +242,38 @@ void main()
     	                            4.0/273.0,16.0/273.0,26.0/273.0,16.0/273.0, 4.0/273.0,
     	                            1.0/273.0, 4.0/273.0, 7.0/273.0, 4.0/273.0, 1.0/273.0 );
 
-    vec3 tissueColor = vec3(0,0,0);
-    for( int i = 0; i < 25; ++i )
+    vec3 tissueColor = vaporizingColor;
+    // Don't blur vaporizing
+    uint condCenter = texture( s_condition, f_blurTexCoords[12].xy ).r;
+    if(  condCenter != 2u )
     {
-	    uvec4 cond4 = texture( s_condition, f_blurTexCoords[i].xy );
-		uint cond = cond4.r;
+        for( int i = 0; i < 25; ++i )
+	    {
+		    uint cond = texture( s_condition, f_blurTexCoords[i].xy ).r;
 
-	    /// normalTissue=0, dessicatedTissue=1, vaporizingTissue=2, charredTissue=3.
-		if( cond == 0u )
-		{
-			tissueColor += blurWeight[i] * liverColor;
+		    /// normalTissue=0, dessicatedTissue=1, vaporizingTissue=2, charredTissue=3.
+			if( cond == 0u )
+			{
+				tissueColor += blurWeight[i] * liverColor;
+			}
+			if( cond == 1u )
+			{
+				tissueColor += blurWeight[i] * dessicatedColor;
+			}
+			if( cond == 2u ) 
+			{
+				tissueColor += blurWeight[i] * vaporizingColor;
+			}
+			if( cond == 3u ) 
+			{
+				tissueColor += blurWeight[i] * vaporizedColor;
+			}
+			if( cond == 4u )
+			{
+				tissueColor += blurWeight[i] * charredColor;
+			}
 		}
-		if( cond == 1u )
-		{
-			tissueColor += blurWeight[i] * dessicatedColor;
-		}
-		if( cond == 2u ) 
-		{
-			tissueColor += blurWeight[i] * vaporizingColor;
-		}
-		if( cond == 3u )
-		{
-			tissueColor += blurWeight[i] * charredColor;
-		}
-	}
-
-
+    }
 
     // define the scale of the pattern
     vec2 F = cellular( 80.0 * f_vertexPosition.xyz );

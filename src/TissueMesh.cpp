@@ -2,6 +2,8 @@
 #include "TissueMesh.hpp"
 #include "TextureManager.hpp"
 
+#include <glm/glm.hpp>
+
 spark::TissueMesh
 ::TissueMesh( const RenderableName& name,
               TextureManagerPtr tm,
@@ -9,18 +11,22 @@ spark::TissueMesh
               size_t heatDim )
 : m_tempTextureName( name + "_TISSUE_TEMPERATURE_TEXTURE" ),
   m_conditionTextureName( name + "_TISSUE_CONDITION_TEXTURE" ),
+  m_vaporizationDepthMapTextureName( name + "_TISSUE_VAPORIZATION_DEPTH_TEXTURE" ),
   m_textureManager( tm ),
   m_N( heatDim + 2 ),
   m_voxelDimMeters( totalLengthMeters / (float)heatDim ),
   m_diffusionIters( 10 ),
   //m_SORovershoot( 1.00001 ),
-  m_dessicationThresholdTemp( 63.0 )
+  m_dessicationThresholdTemp( 273.15 + 37.0 + 20.0 ), //63.0 ),
+  m_charThresholdTemp( 273.15 + 37.0 + 250.0 )
 {
     m_heatMap.resize( m_N * m_N, 0.0 );
     // body temp is 37C
-    m_tempMapA.resize( m_N * m_N, 37.0 );
-    m_tempMapB.resize( m_N * m_N, 37.0 );
+    m_tempMapA.resize( m_N * m_N, 273.15 + 37.0 );
+    m_tempMapB.resize( m_N * m_N, 273.15 + 37.0 );
     m_tissueCondition.resize( m_N * m_N, normalTissue );
+    m_vaporizationDepthMap.resize( m_N * m_N );
+
     // Arbitrarily assign temp maps to current and next
     m_currTempMap = &m_tempMapA;
     m_nextTempMap = &m_tempMapB;
@@ -52,11 +58,91 @@ spark::TissueMesh
             m_heatMap[i] = 0.0;
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////
+    // Update tissue condition based on temperature
+    const float vaporizationDepth = 0.002;
+    size_t ind = 0;
+    for( size_t y = 1; y < m_N-1; ++y )
+    {
+        for( size_t x = 1; x < m_N-1; ++x )
+        {
+            ind = index(x,y);
+            float tempKelvin = (*m_currTempMap)[ind];
+
+            // as the temp rises above 100, can start vaporizing
+            // the total energy (J) needed to complete the vaporization
+            // can be represented as a change in temp
+            float vapeHeatAsKelvin 
+                =   273.15f + 100.0f 
+                  + latentHeatOfVaporization(x,y) / specificHeat(x,y);
+            //  =   J/g / (J/(gK)) --> temp in kelvin
+            if(    (m_tissueCondition[ind] == normalTissue)
+                && (tempKelvin > vapeHeatAsKelvin) )
+            {
+                // Vaporized tissue, from normalTissue
+                m_tissueCondition[ind] = vaporizingTissue;
+            }
+            else if( m_tissueCondition[ind] == vaporizingTissue )
+            {
+                // was vaporizing previously, now remove and set as gone
+                // TODO -- how long to vaporize?  Just one timestep seems
+                // arbitrary, especially if visualized
+                // still good to keep it discrete though for 
+                // efficiency moving to the graphics card.
+                // Possibly, introduce intermediate vaporizing states?
+                m_tissueCondition[ind] = vaporizedTissue;
+                
+                /////////////////////////////////////////////////////////
+                //// TODO -------  
+                //// Depth must be limited by current tool depth!
+                //// HACK -------
+                //// depth limited by arbitrary constant!
+                //// see SimulationState.lua local passDepth in update() method
+                const float maxVaporizationDepth = 0.003;
+
+                m_vaporizationDepthMap[ind] = std::min( m_vaporizationDepthMap[ind] + vaporizationDepth,
+                                                        maxVaporizationDepth );
+                
+                // For diffusion purposes, vaporized tissue
+                // is at a much reduced temperature-- it's not there anymore
+                // to diffuse heat from.
+                (*m_currTempMap)[ind] -= vapeHeatAsKelvin;
+                (*m_nextTempMap)[ind] -= vapeHeatAsKelvin;
+            }
+            else if( m_tissueCondition[ind] == vaporizedTissue )
+            {
+                // Depth has been altered, underlying tissue is normal
+               // m_tissueCondition[ind] = normalTissue;
+               // (*m_currTempMap)[ind] = 273.15f + 37.0f;
+               // (*m_nextTempMap)[ind] = 273.15f + 37.0f;
+            }
+            
+            // Dessication 
+            if(    (m_tissueCondition[ind] == normalTissue)
+                && (tempKelvin > m_dessicationThresholdTemp) )
+            {
+                m_tissueCondition[ind] = dessicatedTissue;
+            }
+            // Charring
+            if(    (m_tissueCondition[ind] == dessicatedTissue)
+                && (tempKelvin > m_charThresholdTemp) )
+            {
+                m_tissueCondition[ind] = charredTissue;
+            }
+        }
+    } // end condition update
+
+    // Request for condition to be pushed to graphics card
+    m_textureManager->queueLoad2DByteTextureFromData( m_conditionTextureName, 
+                                                      m_tissueCondition, 
+                                                      m_N );
+
+    ///////////////////////////////////////////////////////////////////////
     // Diffuse temperature by Fourier's law of thermal conduction
     // q = -k \nabla T
-    const double a = 1e-5;//1e-7; // diffusion rate
-    const double decayRate = 1e-5f; // 1e-4f
-    size_t ind = 0;
+    const double a = 1e-8;//1e-5;//1e-7; // diffusion rate
+    const double decayRate = 1e-5f;//0.33f; // 1e-5f
     double k = dt * a / (m_diffusionIters * m_voxelDimMeters * m_voxelDimMeters );
     if( k > 0.25 ) 
     {
@@ -141,49 +227,13 @@ spark::TissueMesh
         }
     } // End diffusion
 
-    // Update tissue condition based on temperature
-    for( size_t y = 1; y < m_N-1; ++y )
-    {
-        for( size_t x = 1; x < m_N-1; ++x )
-        {
-            ind = index(x,y);
-            float temp = (*m_nextTempMap)[ind];
-            if( (m_tissueCondition[ind] == normalTissue) && (temp > m_dessicationThresholdTemp) )
-            {
-                m_tissueCondition[ind] = dessicatedTissue;
-                continue;
-            }
-            if( (m_tissueCondition[ind] == vaporizingTissue) && (temp < 100) )
-            {
-                m_tissueCondition[ind] = charredTissue;
-                continue;
-            }
-            if( (m_tissueCondition[ind] == dessicatedTissue) && (temp > 100) )
-            {
-                m_tissueCondition[ind] = vaporizingTissue;
-                (*m_currTempMap)[ind] = std::min( 110.0f, temp );
-                continue;
-            }
-            // as the temp rises above 100, it's vaporizing
-            // the total energy (J) needed to complete the vaporization
-            // can be represented as a change in temp:
-            float vapeHeatAsKelvin 
-                = latentHeatOfVaporization(x,y) / specificHeat(x,y);
-            if( temp > (100 + 5) ) //vapeHeatAsKelvin) )
-            {
-                m_tissueCondition[ind] = charredTissue;
-                (*m_currTempMap)[ind] = 90.0f;
-                (*m_nextTempMap)[ind] = 90.0f;
-
-            }
-        }
-    } // end condition update
+ 
 
     // push temp data to graphics card
-    m_textureManager->queueLoad2DFloatTextureFromData( m_tempTextureName, *m_nextTempMap, m_N );
-    m_textureManager->queueLoad2DByteTextureFromData( m_conditionTextureName, 
-        m_tissueCondition, 
-        m_N );
+    m_textureManager->queueLoad2DFloatTextureFromData( m_vaporizationDepthMapTextureName,
+                                                       m_vaporizationDepthMap, 
+                                                       m_N );
+    //m_textureManager->queueLoad2DFloatTextureFromData( m_tempTextureName, *m_nextTempMap, m_N );
     swapTempMaps();
 }
 
@@ -193,6 +243,67 @@ spark::TissueMesh
 {
     size_t centerIndex = indexFromXY( x, y );
     m_heatMap[centerIndex] += heatInJoules;
+    if( heatInJoules > 1e6 )
+    {
+        assert(false);
+    }
+}
+void 
+spark::TissueMesh
+::accumulateElectricalEnergy( float posx, float posy,
+                              float voltage,
+                              float current,
+                              float dutyCycle,
+                              float radiusOfContact,
+                              float dt )
+{
+    // potentially wasteful, but touch every voxel is an easy way to 
+    // capture the full heating effect
+    int ind = 0;
+    glm::vec2 center( posx, posy );
+    glm::vec2 cellPos;
+    float cellX = 0;
+    float cellY = 0;
+    float distCellToContactCenter2;
+    float distCellToContactCenter;
+    float radiusOfContact2 = radiusOfContact*radiusOfContact;
+    float areaOfContact = M_PI*radiusOfContact2;
+    float currentDensity2 = current*current / areaOfContact;
+    float unitsFactor = 1e-8;
+    for( size_t y = 1; y < m_N-1; ++y )
+    {
+        for( size_t x = 1; x < m_N-1; ++x )
+        {
+            ind = index(x,y);
+            indexToPosition( ind, &cellX, &cellY );
+            cellPos.x = cellX - center.x;
+            cellPos.y = cellY - center.y;
+            distCellToContactCenter2 = glm::dot( cellPos, cellPos );
+            distCellToContactCenter = std::sqrt( distCellToContactCenter2 );
+            // are we inside the direct contact radius?
+            if( distCellToContactCenter2 < radiusOfContact2 )
+            {
+                m_heatMap[ind] += unitsFactor * currentDensity2 * dutyCycle * dt;
+            }
+            else
+            {
+                // surface effect is dissipating with the cube of distance
+                float d = distCellToContactCenter - radiusOfContact;
+                float invDist3 = 1.0f / (d*d*d);
+                {
+                    float localCurrDensity2 = (current*current);// / (m_voxelDimMeters*m_voxelDimMeters);
+                    m_heatMap[ind] += unitsFactor * localCurrDensity2 * dutyCycle * dt * invDist3;
+                }
+            }
+        }
+    }
+}
+
+const spark::TextureName&
+spark::TissueMesh
+::getVaporizationDepthMapTextureName( void ) const
+{
+    return m_vaporizationDepthMapTextureName;
 }
 
 const spark::TextureName&
@@ -251,8 +362,8 @@ spark::TissueMesh
 {
     // For water: 
     // http://www.engineeringtoolbox.com/fluids-evaporation-latent-heat-d_147.html
-    // assume 10% water
-    return 0.1 * 2.257e6;
+    // assume 80% water
+    return 0.8 * 2.257e6; // J/kg
 }
 
 void 
@@ -260,7 +371,9 @@ spark::TissueMesh
 ::acquireVaporizingLocations( std::vector<glm::vec2>& vaping )
 {
     float x = 0; float y = 0;
-    for( size_t i = 0; i < m_tissueCondition.size(); ++i )
+    for( size_t i = 0; 
+         (i < m_tissueCondition.size()) && vaping.size() < 32; // max # of cells vaping 
+         ++i )
     {
         if( m_tissueCondition[i] == vaporizingTissue )
         {

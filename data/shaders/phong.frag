@@ -37,7 +37,7 @@ void main()
 	vec4 halfVector_camera = normalize( toCamera_camera + toLight_camera ); // Blinn's half-vector
 	//vec4 reflect_camera = reflect( -toLight_camera, toCamera_camera ); // Phong's reflection model
 
-	vec4 textureColor = texture( s_color, f_texCoord );
+	vec4 textureColor = texture( s_color, f_texCoord ); 
 	if( textureColor.a < cutoff )
 	{
 		discard;

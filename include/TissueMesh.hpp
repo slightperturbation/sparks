@@ -21,6 +21,7 @@ namespace spark
         enum TissueCondition { normalTissue, 
                                dessicatedTissue, 
                                vaporizingTissue, 
+                               vaporizedTissue,
                                charredTissue };
     public:
         TissueMesh( const RenderableName& name,
@@ -35,12 +36,30 @@ namespace spark
         /// Add a source of heat for this time-step
         /// Heat sources are cleared/zero'd each update
         /// x,y are in "world" scale, with center of tissue at 0,0
+        /// This is the heat energy imparted to the voxel over the 
+        /// update() timestep.
         void accumulateHeat( float x, float y, float heatInJoules );
 
+        /// Calculate the joule heating effect for electrical energy
+        /// applied at the location x,y.
+        /// radiusOfContact assumes a circle of contact centered at x,y
+        /// Elements inside the radius are given energy directly,
+        /// elements outside receive dissipating energy.
+        void accumulateElectricalEnergy( float x, float y,
+                                         float voltage,
+                                         float current,
+                                         float dutyCycle,
+                                         float radiusOfContact,
+                                         float dt );
+
         /// Returns the handle/name of the texture holding the temperature 
-        /// map.  Note that 37.0C is typical body temperature and should
+        /// map.  Note that 310.15 Kelvin is typical body temperature and should
         /// be considered the baseline temperature.
         const TextureName& getTempMapTextureName( void ) const;
+        
+        /// Returns the handle/name of the map holding the height of the
+        /// tissue at the given position.
+        const TextureName& getVaporizationDepthMapTextureName( void ) const;
         
         /// Returns the handle/name of the texture holding the discrete
         /// condition of the tissue at each location.  Possible values are:
@@ -124,6 +143,7 @@ namespace spark
         
         TextureName m_tempTextureName;
         TextureName m_conditionTextureName;
+        TextureName m_vaporizationDepthMapTextureName;
         TextureManagerPtr m_textureManager;
         /// number of elements per dim, including two boundary elements
         /// at 0 and m_N-1
@@ -131,6 +151,9 @@ namespace spark
         /// Length of the edge of a single voxel
         float m_voxelDimMeters;
         /// 2D map of surface temperatures
+        /// All temperatures in Kelvin
+        /// Temperatures are effectively just measures of heat content,
+        /// phase transitions are managed in update() method.
         std::vector< float > m_tempMapA;
         std::vector< float > m_tempMapB;
         std::vector< float >* m_currTempMap;
@@ -142,7 +165,9 @@ namespace spark
         /// integer component gives the condition of the tissue (see TissueCondition)
         /// fractional component gives how long 
         std::vector< unsigned char > m_tissueCondition;
-
+        /// Holds the depth of tissue removed due to vaporization effects.
+        std::vector< float > m_vaporizationDepthMap;
+        
         /// Iteration count for SOR diffusion calcs
         size_t m_diffusionIters;
         /// Overshoot factor for SOR, must be 1.0 or more and less than 2.0
@@ -150,6 +175,7 @@ namespace spark
         //double m_SORovershoot;
 
         double m_dessicationThresholdTemp;
+        double m_charThresholdTemp;
     };
     typedef spark::shared_ptr< TissueMesh > TissueMeshPtr;
 }

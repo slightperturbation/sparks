@@ -25,6 +25,8 @@ void
 spark::TextureManager
 ::deleteTexture( const TextureName& aHandle )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     auto iter = m_registry.find( aHandle );
     if( iter == m_registry.end() )
     {
@@ -59,6 +61,8 @@ spark::TextureManager
 ::createTargetTexture( const TextureName& aHandle,
                       int width, int height )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     GLuint textureId;
     if( exists(aHandle) )
     {
@@ -106,6 +110,8 @@ spark::TextureManager
 ::createDepthTargetTexture( const TextureName& aHandle,
                               int width, int height )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     GLuint textureId;
     deleteTexture( aHandle );
     GL_CHECK( glGenTextures( 1, &textureId ) );
@@ -135,6 +141,8 @@ void
 spark::TextureManager
 ::loadTestTexture( const TextureName& aHandle, GLint textureUnit )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     if( textureUnit == -1 )
     {
         textureUnit = reserveTextureUnit();
@@ -178,6 +186,8 @@ void
 spark::TextureManager
 ::loadCheckerTexture( const TextureName& aHandle, GLint textureUnit )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     if( textureUnit == -1 )
     {
         textureUnit = reserveTextureUnit();
@@ -221,6 +231,8 @@ spark::TextureManager
                                      GLenum aTextureType,
                                      GLint aTextureUnit )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     GLint textureUnit = aTextureUnit;
     if( textureUnit == -1 )
     {
@@ -235,6 +247,8 @@ spark::TextureManager
 ::loadTextureFromImageFile( const TextureName& aHandle, 
                             const char* aTextureFileName )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     GLint textureUnit = reserveTextureUnit();
 
     LOG_DEBUG(g_log) << "Searching for texture file \""
@@ -293,6 +307,8 @@ spark::TextureManager
                            GLint& outTextureUnit,
                            GLuint& outTextureId )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     outTextureId = getTextureIdForHandle( aHandle );
     if( outTextureId == -1 )
     {
@@ -302,13 +318,42 @@ spark::TextureManager
         return;
     }
     outTextureUnit = ensureTextureUnitBoundToId( outTextureId );
+}
 
+bool 
+spark::TextureManager
+::executeSingleQueuedCommand( void )
+{
+    if( m_commandQueue.empty() )
+    {
+        return false;
+    }
+    std::set<TextureManagerCommandPtr, TextureManagerCommandComparator>::iterator oldestIter;
+    {
+        boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
+        // get the command that has been waiting the longest, ie. smallest time/oldest
+        oldestIter = m_commandQueue.begin();
+        for( auto iter = m_commandQueue.begin();
+             iter != m_commandQueue.end();
+             ++iter )
+        {
+            if( (*iter)->m_creationTime < (*oldestIter)->m_creationTime )
+            {
+                oldestIter = iter;
+            }
+        }
+        //std::cerr << "\t Loading texture: " << (*oldestIter)->m_handle << "\n";
+        (*oldestIter)->operator()( this );
+        m_commandQueue.erase( oldestIter );
+    }
+    return !m_commandQueue.empty();
 }
 
 void 
 spark::TextureManager
 ::executeQueuedCommands( void )
 {
+    //std::cerr << "------------\n";
     std::set< TextureManagerCommandPtr, TextureManagerCommandComparator > execCopy;
     {
         boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
@@ -320,12 +365,14 @@ spark::TextureManager
          ++iter )
     {
         assert( *iter );
+        //std::cerr << "\t COMMAND: " << (*iter)->m_handle << "\n";
         (*iter)->operator()( this );
     }
     {
         boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
         m_commandQueue.clear();
     }
+    //std::cerr << "------------\n";
 }
 
 void 
@@ -334,6 +381,7 @@ spark::TextureManager
                                     VolumeDataPtr aVolume )
 {
     boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
+
     m_commandQueue.insert( TextureManagerCommandPtr( 
         new Load3DTextureFromVolumeDataCommand( aHandle, aVolume ) ) );
 }
@@ -343,6 +391,8 @@ spark::TextureManager
 ::load3DTextureFromVolumeData( const TextureName& aHandle,
                                VolumeDataPtr aVolume )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     // Ok to call many times, if so, reuse texture id
     GLuint textureId;
     if( exists( aHandle ) )
@@ -410,12 +460,87 @@ spark::TextureManager
         new Load2DByteTextureFromDataCommand( aHandle, aData, dimPerSide ) ) );
 }
 
+// DEAD METHOD
+void
+spark::TextureManager
+::backgroundLoad2DByteTextureFromData( const TextureName& aHandle,
+    const std::vector<unsigned char>& aData,
+    size_t dimPerSide )
+{
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
+    // Allocate a new textureId for our created background texture
+    GLuint backgroundTextureId;
+    GL_CHECK( glGenTextures( 1, &backgroundTextureId ) );
+    if( -1 == backgroundTextureId )
+    {
+        LOG_ERROR(g_log) << "OpenGL failed to allocate background texture id.";
+        assert(false);
+        return;
+    }
+
+    // bind the background texture to a texture unit
+    GLint textureUnit = reserveTextureUnit();
+    bindTextureIdToUnit( backgroundTextureId, textureUnit, GL_TEXTURE_2D );
+    GL_CHECK( glTexImage2D( GL_TEXTURE_2D, 0, GL_R8UI,
+        dimPerSide,
+        dimPerSide,
+        0, GL_RED_INTEGER, GL_UNSIGNED_BYTE,
+        &(aData[0]) ) );
+
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST ) );
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ) );
+
+    const GLenum edgeParameter = GL_CLAMP_TO_BORDER; //GL_CLAMP_TO_EDGE
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, edgeParameter ) );
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, edgeParameter ) );
+    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, edgeParameter ) );
+    unsigned int borderColor[] = {0,0,0,0};
+    glTexParameterIuiv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
+
+    GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
+
+    LOG_TRACE(g_log) << "2DTexture for Data \"" << aHandle
+        << "\" loaded with id=" << backgroundTextureId
+        << " into texture unit=" << textureUnit ;
+
+    // At this point the new texture has been loaded into backgroundTextureId
+    // so assign the handle to this new texture Id, 
+    // and delete the old texture
+
+    GLuint oldTextureId;
+    if( exists( aHandle ) )
+    {
+        oldTextureId = getTextureIdForHandle( aHandle );
+        // delete old texture
+        GL_CHECK( glDeleteTextures( 1, &oldTextureId ) );
+        // and remove it from the binding map
+        for( auto p = m_bindingTextureUnitToTextureId.begin(); 
+             p != m_bindingTextureUnitToTextureId.end(); 
+             /* no incr */ )
+        {
+            if( p->first == oldTextureId )
+            {
+                p = m_bindingTextureUnitToTextureId.erase( p );
+            }
+            else
+            {
+                ++p;
+            }
+        }
+    }
+    acquireExternallyAllocatedTexture( aHandle, backgroundTextureId, GL_TEXTURE_2D, textureUnit );
+}
+
 void
 spark::TextureManager
 ::load2DByteTextureFromData( const TextureName& aHandle,
                              const std::vector<unsigned char>& aData,
                              size_t dimPerSide )
 {
+
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     // Ok to call many times, if so, reuse texture id
     GLuint textureId;
     if( exists( aHandle ) )
@@ -442,6 +567,7 @@ spark::TextureManager
         assert(false);
         return;
     }
+
     bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
     GL_CHECK( glTexImage2D( GL_TEXTURE_2D, 0, GL_R8UI,
                            dimPerSide,
@@ -458,6 +584,8 @@ spark::TextureManager
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, edgeParameter ) );
     unsigned int borderColor[] = {0,0,0,0};
     glTexParameterIuiv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
+    
+    //GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
     
     LOG_TRACE(g_log) << "2DTexture for Volume Data \"" << aHandle
     << "\" loaded with id=" << textureId
@@ -481,6 +609,7 @@ spark::TextureManager
                               const std::vector<float>& aData,
                               size_t dimPerSide )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
     // Ok to call many times, if so, reuse texture id
     GLuint textureId;
     if( exists( aHandle ) )
@@ -535,6 +664,7 @@ bool
 spark::TextureManager
 ::isTextureReady( const TextureName& aHandle )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
     auto iter = m_registry.find( aHandle );
     if( iter == m_registry.end() ) 
     {
@@ -548,6 +678,7 @@ GLint
 spark::TextureManager
 ::getTextureUnitForHandle( const TextureName& aHandle )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
     GLint texId = getTextureIdForHandle( aHandle );
     if( texId == -1 ) 
     {
@@ -562,6 +693,8 @@ void
 spark::TextureManager
 ::activateTextureUnitForHandle( const TextureName& aHandle )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     GLint unit = getTextureUnitForHandle( aHandle );
     GL_CHECK( glActiveTexture( GL_TEXTURE0 + unit ) );
 }
@@ -570,6 +703,8 @@ void
 spark::TextureManager
 ::bindTextureIdToUnit( GLint aTextureId, GLint aTextureUnit, GLenum aTextureType )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     GL_CHECK( glActiveTexture( GL_TEXTURE0 + aTextureUnit ) );
     m_textureType[ aTextureId ] = aTextureType;
     GL_CHECK( glBindTexture( aTextureType, aTextureId ) );
@@ -591,6 +726,8 @@ GLint
 spark::TextureManager
 ::reserveTextureUnit( void )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     m_nextAvailableTextureUnit = (m_nextAvailableTextureUnit+1) % m_maxTextureUnits;
     auto iter = m_bindingTextureUnitToTextureId.begin();
     while( iter != m_bindingTextureUnitToTextureId.end() )
@@ -622,6 +759,8 @@ GLint
 spark::TextureManager
 ::getTextureUnitBoundToId( GLuint aTextureId ) const
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     auto iter = m_bindingTextureUnitToTextureId.begin();
     for( ; iter != m_bindingTextureUnitToTextureId.end(); ++iter )
     {
@@ -638,6 +777,8 @@ GLint
 spark::TextureManager
 ::ensureTextureUnitBoundToId( GLuint aTextureId ) 
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     if( aTextureId == -1 )
     {
         LOG_ERROR(g_log) << "Attempt to bind to unloaded texture (-1).";
@@ -658,6 +799,8 @@ GLuint
 spark::TextureManager
 ::getTextureIdBoundToUnit( GLint aTextureUnit ) const
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     auto iter = m_bindingTextureUnitToTextureId.begin();
     for( ; iter != m_bindingTextureUnitToTextureId.end(); ++iter )
     {
@@ -677,6 +820,8 @@ spark::TextureManager
                         GLenum pname, 
                         GLint param )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     auto iter = m_registry.find( aHandle );
     if( iter != m_registry.end() )
     {
@@ -704,6 +849,8 @@ GLuint
 spark::TextureManager
 ::getTextureIdForHandle( const TextureName& aHandle ) const
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     auto iter = m_registry.find( aHandle );
     if( iter == m_registry.end() )
     {
@@ -718,6 +865,8 @@ bool
 spark::TextureManager
 ::exists( const TextureName& aHandle ) const
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     return m_registry.end() != m_registry.find( aHandle );
 }
 
@@ -725,6 +874,8 @@ spark::TextureName
 spark::TextureManager
 ::getTextureHandleFromTextureId( GLuint aTextureId ) const
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     for( auto iter = m_registry.begin(); iter != m_registry.end(); ++iter )
     {
         if( iter->second == aTextureId )
@@ -739,6 +890,8 @@ void
 spark::TextureManager
 ::releaseAll( void )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     auto iter = m_registry.begin();
     for( ; iter != m_registry.end(); ++iter )
     {
@@ -752,6 +905,8 @@ void
 spark::TextureManager
 ::logTextures( void ) const
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+
     LOG_INFO(g_log) << "TextureManager resources:";
     for( auto iter = m_registry.begin(); iter != m_registry.end(); ++iter )
     {

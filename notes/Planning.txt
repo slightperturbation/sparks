@@ -1,0 +1,29 @@
+Planning.txt
+
+Two interfaces:
+
+1) Lap IF - 2D Monitor, faux tissue, magentic tracker.
+   - Monitor mount/stand
+   - Height adjustable table holding FLS box
+2) Benchtop IF - 3D Monitor, faux tissue, magentic tracker.
+   - zSpace display with affixed faux tissue
+
+Next iteration: (For Oct 17)
+- 3d tracking API for trakstar (<1 day)
+- calibration option on main screen
+
+----
+- purchase/find monitor mount for lap IF
+- purchase adjustable table for FLS box
+- purchase (or use from NOTES setup) foot pedal activator (replace zspace button for activation)
+- mount trakstar sensor in tool handle (<1 day)
+- Fix and texture 3d spatula model for open (1 day)
+- improve tissue appearance (3 days)
+- update rate improvement (2 days)
+- instructions, mostly text/descriptions (w/Jaisa,Hussna) for modules (on going)
+
+Back-log
+- on-screen display of waveform (<1 day)
+- on-screen display of temperature (<1 day)
+- improved ESU appearance (1 day)
+- tool-accurate contact area calculation (<1 day)

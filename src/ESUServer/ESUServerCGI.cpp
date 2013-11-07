@@ -9,64 +9,29 @@
 #include <cstdlib>
 #include <boost/version.hpp>
 #include <iostream>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/fusion/include/std_pair.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <map>
+#undef main
 
 using namespace boost::interprocess;
 using namespace spark;
 
-namespace qi = boost::spirit::qi;
 
-/// Parser for processing the query string
-namespace queryProcessing
-{
-    typedef std::map<std::string, std::string> pairs_type;
-
-    template <typename Iterator>
-    struct key_value_sequence 
-        : qi::grammar<Iterator, pairs_type()>
-    {
-        key_value_sequence()
-            : key_value_sequence::base_type(query)
-        {
-            query =  pair >> *((qi::lit(';') | '&') >> pair);
-            pair  =  key >> -('=' >> value);
-            key   =  qi::char_("a-zA-Z_") >> *qi::char_("a-zA-Z_0-9\\.\\-\\+");
-            value = +qi::char_("a-zA-Z_0-9\\.\\-\\+");
-        }
-
-        qi::rule<Iterator, pairs_type()> query;
-        qi::rule<Iterator, std::pair<std::string, std::string>()> pair;
-        qi::rule<Iterator, std::string()> key, value;
-    };
-}
-
-/// Main CGI function-- expect args from 
+/// Main CGI function
+/// See 
 int main(int argc, char *argv[])
 {
-    std::cout << "Content-type: text/html\n\n";
-    
+    std::cout << "Content-type: text/html\n\n";  //"mode=blend&cut=12&coag=34";
+
     char* queryString =  getenv( "QUERY_STRING" );
     if( !queryString )
     {
         std::cout << "Error: null query string.";
+        std::cout.flush();
         return 0;
     }
     std::string s( queryString );
-
-    std::cout << "Debug: QUERY_STRING=\"" << s << "\"<br>";
-
-    queryProcessing::key_value_sequence<std::string::iterator> p;
-    queryProcessing::pairs_type dataMap;
-
-    if( !qi::parse(s.begin(), s.end(), p, dataMap) )
-    {
-        std::cout << "Error: unable to parse arguments.<br>";
-        return 0;
-    }
 
     // Open the managed segment to share our results
     try
@@ -81,45 +46,73 @@ int main(int argc, char *argv[])
             if( res.second != 1 )
             {
                 // Failure!
-                std::cerr << "Error: Unable to find shared memory ESUInput object: \"" << g_sharedMemoryObjectName << "\"<br>";
+                std::cout << "Error: Unable to find shared memory ESUInput object: \"" << g_sharedMemoryObjectName << "\".";
+                std::cout.flush();
                 return 0;
             }
             ESUState& state = *(res.first);
+            // Update state based on input
+            if( s == "coagUp" )   state.m_coagWattage += state.m_wattageDelta;
+            if( s == "coagDown" ) state.m_coagWattage -= state.m_wattageDelta;
+
+            if( s == "cutUp" )    state.m_cutWattage  += state.m_wattageDelta;
+            if( s == "cutDown" )  state.m_cutWattage  -= state.m_wattageDelta;
+
+            if( s == "modeBlend" ) state.m_mode = ESUInput::ESUMode::Blend;
+            if( s == "modeCut" )   state.m_mode = ESUInput::ESUMode::Cut;
+            if( s == "modeCoag" )  state.m_mode = ESUInput::ESUMode::Coag;
+
+            if( s == "electrodeSpatula" )    state.m_electrode = ESUInput::ElectrodeType::Spatula;
+            if( s == "electrodeNeedle" )     state.m_electrode = ESUInput::ElectrodeType::Needle;
+            if( s == "electrodeBall3mm" )    state.m_electrode = ESUInput::ElectrodeType::Ball3mm;
+            if( s == "electrodeBall5mm" )    state.m_electrode = ESUInput::ElectrodeType::Ball5mm;
+            if( s == "electrodeLapHook" )    state.m_electrode = ESUInput::ElectrodeType::LapHook;
+            if( s == "electrodeLapSpatula" ) state.m_electrode = ESUInput::ElectrodeType::LapSpatula;
+            //////////////////////////////////////////////////////////////
+            // Report new state
+            std::cout << "cut=" << state.m_cutWattage 
+                << "&coag=" << state.m_coagWattage;
+            switch( state.m_mode )
             {
-                // If we got a new wattage, apply it
-                queryProcessing::pairs_type::iterator iter = dataMap.find("Wattage");
-                if( iter != dataMap.end() )
-                {
-                    state.m_wattage = boost::lexical_cast< double >( (*iter).second );
-                }
+            case ESUInput::ESUMode::Blend: 
+                std::cout << "&mode=blend"; 
+                break;
+            case ESUInput::ESUMode::Cut: 
+                std::cout << "&mode=cut"; 
+                break;
+            case ESUInput::ESUMode::Coag: 
+                std::cout << "&mode=coag"; 
+                break;
             }
-            {
-                // If we got a new mode, apply it
-                queryProcessing::pairs_type::iterator iter = dataMap.find("Mode");
-                if( iter != dataMap.end() )
-                {
-                    const std::string& mode = (*iter).second;
-                    if( mode == "Cut" )
-                    {
-                        state.m_mode = ESUInput::ESUMode::Cut;
-                    }
-                    if( mode == "Coag" )
-                    {
-                        state.m_mode = ESUInput::ESUMode::Coag;
-                    }
-                    if( mode == "Blend" )
-                    {
-                        state.m_mode = ESUInput::ESUMode::Blend;
-                    }
-                }
-            }
+            //switch( state.m_electrode )
+            //{
+            //case ESUInput::ElectrodeType::Spatula:
+            //    std::cout << "&electrode=spatula";
+            //    break;
+            //case ESUInput::ElectrodeType::Needle:
+            //    std::cout << "&electrode=needle";
+            //    break;
+            //case ESUInput::ElectrodeType::Ball3mm:
+            //    std::cout << "&electrode=ball3mm";
+            //    break;
+            //case ESUInput::ElectrodeType::Ball5mm:
+            //    std::cout << "&electrode=ball5mm";
+            //    break;
+            //case ESUInput::ElectrodeType::LapHook:
+            //    std::cout << "&electrode=lapHook";
+            //    break;
+            //case ESUInput::ElectrodeType::LapSpatula:
+            //    std::cout << "&electrode=lapSpatula";
+            //    break;
+            //}
         }
     }
     catch( ... )
     {
         std::cout << "Error: unable to open shared memory segment.";
     }
-    
+    // Must flush to avoid webserver hangs
+    std::cout.flush();
     return 0;
 }
 

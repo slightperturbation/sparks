@@ -7,6 +7,7 @@
 #include "FileAssetFinder.hpp"
 
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 
 #include <string>
 #include <map>
@@ -33,12 +34,18 @@ namespace spark
         struct TextureManagerCommand
         {
             TextureManagerCommand( const TextureName& aHandle )
-                : m_handle( aHandle ) {}
+                : m_handle( aHandle ),
+                  m_creationTime( glfwGetTime() )
+            {}
             virtual ~TextureManagerCommand() {}
             virtual void operator()( TextureManager* tm ) const = 0;
             const TextureName m_handle;
+            const double m_creationTime;
         };
         typedef spark::shared_ptr< TextureManagerCommand > TextureManagerCommandPtr;
+
+        /// Comparisons between TextureManagerCommands are only on the 
+        /// handle, *not* on the creation timestamp.
         struct TextureManagerCommandComparator
         {
             bool operator()( const TextureManagerCommandPtr& lhs, 
@@ -69,20 +76,25 @@ namespace spark
                                   const std::vector<unsigned char>& aData,
                                   size_t dimPerSide )
             : TextureManagerCommand( aHandle ),
-              m_dimPerSide( dimPerSide )
+              m_dimPerSide( dimPerSide ),
+              m_useBackgroundLoad( false )
             {
-                m_data.reserve( aData.size() );
-                for( auto iter = aData.begin(); iter != aData.end(); ++iter )
-                {
-                    m_data.push_back(*iter);
-                }
+                m_data.assign( aData.begin(), aData.end() ); 
             }
             virtual void operator()( TextureManager* tm ) const override
             {
-                tm->load2DByteTextureFromData( m_handle, m_data, m_dimPerSide );
+                if( m_useBackgroundLoad )
+                {
+                    tm->backgroundLoad2DByteTextureFromData( m_handle, m_data, m_dimPerSide );
+                }
+                else
+                {
+                    tm->load2DByteTextureFromData( m_handle, m_data, m_dimPerSide );
+                }
             }
             std::vector<unsigned char> m_data;
             const size_t m_dimPerSide;
+            bool m_useBackgroundLoad;
         };
         // TODO -- template on data type; need to overload load method for data type in support.
         struct Load2DFloatTextureFromDataCommand
@@ -108,9 +120,16 @@ namespace spark
             const size_t m_dimPerSide;
         };
         std::set< TextureManagerCommandPtr, TextureManagerCommandComparator > m_commandQueue;
-        boost::mutex m_commandQueueMutex;
+
+        // Must always acquire commandQueueMutex first, if both are acquired.
+        mutable boost::mutex m_commandQueueMutex;
+        mutable boost::recursive_mutex m_registryMutex;
     public:
         TextureManager( void );
+
+        // Disable copy constructor & assignment op
+        TextureManager( const TextureManager& ); // No impl
+        const TextureManager& operator= ( const TextureManager& ); // No impl
         TextureManager( FileAssetFinderPtr finder ) : m_finder( finder ) { }
         virtual ~TextureManager();
 
@@ -134,6 +153,12 @@ namespace spark
         /// Can only be called on the OpenGL thread.
         /// See also queueLoad* methods.
         void executeQueuedCommands( void );
+        
+        /// Execute a single command for this TextureManager.
+        /// Returns true if additional commands remain in the queue
+        /// after a single one has been executed and removed.
+        /// Can only be called on the OpenGL thread.
+        bool executeSingleQueuedCommand( void );
         //////////////////////////////////////////////////////////////////
 
     
@@ -189,6 +214,11 @@ namespace spark
         void load2DByteTextureFromData( const TextureName& aHandle,
                                         const std::vector<unsigned char>& aData,
                                         size_t dimPerSide );
+        /// Load texture using a "background" texture, then swap when done.
+        void backgroundLoad2DByteTextureFromData( const TextureName& aHandle,
+            const std::vector<unsigned char>& aData,
+            size_t dimPerSide );
+
         void load2DFloatTextureFromData( const TextureName& aHandle,
                                          const std::vector<float>& aData,
                                          size_t dimPerSide );

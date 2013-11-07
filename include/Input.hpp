@@ -29,7 +29,10 @@ namespace spark
         void update( double dt );
 
         /// Returns true if the key is currently down.
+        /// http://www.glfw.org/docs/3.0/group__keys.html
         /// TODO Using GLFW key codes; should abstract from GLFW
+        /// in lua, can use string.byte(), e.g.:
+        ///   input:isKeyDown( string.byte('X') ) -- Note, capital letters only
         virtual bool isKeyDown( int keyCode ) const;
         
         /// Returns the current transform indicated by the named input device.

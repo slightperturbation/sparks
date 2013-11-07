@@ -43,11 +43,11 @@ spark::SimulationState
             m_fluidData->setDiffusion( 5e-3 );//1e-2 );
             m_fluidData->setVorticity( 1e4 );//1e4 ); //1e2 );
             m_fluidData->setGravityFactor( 0, 500, 1100 ); // +x left, +y is away from viewer, 
-            break;
+            break; 
             
         case balanced:
-            slices = 128;
-            n = 32; //24; 
+            slices = 100;
+            n = 32;//24; 
             m_fluidData.reset( new Fluid(n) );
             m_fluidData->setDiffusion( 5e-6 ); // 5e-3 );//1e-2 );
             m_fluidData->setVorticity( 5e5 );//1e4 ); //1e2 );
@@ -55,8 +55,8 @@ spark::SimulationState
             break;
 
         case highQuality:
-            slices = 256;
-            n = 48; // looks good, still too slow 
+            slices = 100;
+            n = 36; // looks good, still too slow 
             m_fluidData.reset( new Fluid(n) );
             m_fluidData->setDiffusion( 5e-3 );//1e-2 );
             m_fluidData->setVorticity( 1e4 );//1e4 ); //1e2 );
@@ -90,9 +90,11 @@ spark::SimulationState
         glm::vec3 worldOffset_fromLua( 0, -0.1, -0.1 );
 
         glm::mat4 xform_move = glm::translate( glm::mat4(), 
-            glm::vec3( 0, slicesSideLength/2.0f - (0.5f/n)*slicesSideLength, 0 )
+            glm::vec3( 0,  
+                       slicesSideLength/2.0f - (0.5f/n)*slicesSideLength, // 0.5 to center on grid
+                       0 ) 
             + worldOffset_fromLua
-        ); // 2.5, 1 for boundary cell, 0.5 to center on grid
+        ); 
 
         glm::mat4 xform_rot = glm::rotate( glm::mat4(), 90.0f, glm::vec3( 1,0,0 ) ); // z-up to y-up
 
@@ -113,7 +115,7 @@ spark::SimulationState
         cellCountPerSide = 126;
         break;
     case balanced:
-        cellCountPerSide = 254;
+        cellCountPerSide = 510;//254;
         break;
     case highQuality:
         cellCountPerSide = 510;
@@ -126,8 +128,7 @@ spark::SimulationState
         new TissueMesh( name() + "_TISSUE_SIMULATION",
                         m_facade->getTextureManager(),
                         0.5, // scale
-                        cellCountPerSide //254 // level of detail 510-- good, 126 for debugging
-                        )
+                        cellCountPerSide )
     );
     m_scene->addAsyncUpdateable( m_tissueMesh );  // register for updates
     // Register tissue mesh with lua 
@@ -181,7 +182,7 @@ spark::SimulationState
     
     // Tie tissue vaporization to the Smoke
     float deltaDensity = 10000.5;
-    float maxDensity = 1;
+    float maxDensity = 0.9;//2;
     std::vector<glm::vec2> vapingLocations;
     m_tissueMesh->acquireVaporizingLocations( vapingLocations );
     for( auto iter = vapingLocations.begin(); iter != vapingLocations.end(); ++iter )

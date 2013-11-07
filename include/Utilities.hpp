@@ -58,7 +58,9 @@ namespace spark
     public:
         OpenGLWindow( const char* programName, 
                       bool enableLegacyOpenGlLogging,
-                      bool enableStereo ); 
+                      bool enableStereo,
+                      bool createLoadingContext = false,
+                      bool enableFullScreen = false ); 
         ~OpenGLWindow();
         void makeContextCurrent( void );
         bool isOK( void ) { return m_isOK; }
@@ -67,16 +69,21 @@ namespace spark
         void swapBuffers( void );
         void getSize( int* width, int* height );
         void getPosition( int* xPos, int* yPos );
-        GLFWwindow* glfwWindow( void ) { return m_glfwWindow; }
+        GLFWwindow* glfwWindow( void ) { return m_glfwRenderWindow; }
+        GLFWwindow* glfwLoadingThreadWindow( void ) { return m_glfwLoadingThreadWindow; }
+        GLFWwindow* glfwRenderThreadWindow( void ) { return m_glfwRenderWindow; }
         EyeTrackerPtr getEyeTracker( void )  { return m_eyeTracker; }
         
         /// Returns the "screen coords" (lower-left origin, extents 1,1)
         /// of the given pixel position relative to the window
         glm::vec2 pixelsToScreenCoords( const glm::vec2& pixelPosition );
         glm::vec2 screenCoordsToPixels( const glm::vec2& screenCoord );
-    private:
+        void writeFrameBufferToFile( const std::string& frameBaseFileName );
+    
+private:
         EyeTrackerPtr m_eyeTracker;
-        GLFWwindow* m_glfwWindow;
+        GLFWwindow* m_glfwRenderWindow;
+        GLFWwindow* m_glfwLoadingThreadWindow;
         bool m_isOK;
     };
 

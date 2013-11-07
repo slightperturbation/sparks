@@ -26,7 +26,7 @@ void main()
 	//ivec2 x = textureSize( s_color, 0 );
 	//outColor = vec4( x.x/4.0, x.y/4.0, 0.0, 1.0 );  
 	
-	outColor = vec4( texture( s_color2, f_texCoord ).xyz, 1.0 );
+	outColor = vec4( texture( s_color, f_texCoord ).xyz, 1.0 );
 	
 	//outColor = vec4( f_texCoord, 1.0,  1.0 );
 	// if( outColor.a < cutoff )

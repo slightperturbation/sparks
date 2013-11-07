@@ -109,7 +109,8 @@ spark
     luabind::module( lua )
     [
      luabind::class_< TissueMesh, Renderable, TissueMeshPtr >( "TissueMesh" )
-     .def( "accumulateHeat", &TissueMesh::accumulateHeat )
+     .def( "accumulateElectricalEnergy", &TissueMesh::accumulateElectricalEnergy )
+     .def( "getVaporizationDepthMapTextureName", &TissueMesh::getVaporizationDepthMapTextureName )
      .def( "getTempMapTextureName", &TissueMesh::getTempMapTextureName )
      .def( "getConditionMapTextureName", &TissueMesh::getConditionMapTextureName )
      ];
@@ -240,27 +241,24 @@ spark
     luabind::module( lua )
     [
      luabind::class_< ESUInput >( "ESUInput" )
-        .def( "wattage", &ESUInput::wattage )
+        .def( "cutWattage", &ESUInput::cutWattage )
+        .def( "coagWattage", &ESUInput::coagWattage )
         .def( "electrode", &ESUInput::electrode )
         .def( "mode", &ESUInput::mode )
     ];
-    //luabind::module( lua )
-    //[
-    //    luabind::class_< ESUInputFromSharedMemory, ESUInput >( "ESUInputFromSharedMemory" )
-    //    .def( "wattage", &ESUInputFromSharedMemory::wattage )
-    //    .def( "electrode", &ESUInputFromSharedMemory::electrode )
-    //    .def( "mode", &ESUInputFromSharedMemory::mode )
-    //];
-
-    luabind::globals( lua )["ESUINPUT_HOOK"] = ESUInput::ElectrodeType::Hook;
-    luabind::globals( lua )["ESUINPUT_BALL2MM"] = ESUInput::ElectrodeType::Ball2mm;
-    luabind::globals( lua )["ESUINPUT_BALL4MM"] = ESUInput::ElectrodeType::Ball4mm;
+    
+    luabind::globals( lua )["ESUINPUT_SPATULA"] = ESUInput::ElectrodeType::Spatula;
+    luabind::globals( lua )["ESUINPUT_NEEDLE"] = ESUInput::ElectrodeType::Needle;
+    luabind::globals( lua )["ESUINPUT_LAPHOOK"] = ESUInput::ElectrodeType::LapHook;
+    luabind::globals( lua )["ESUINPUT_LAPSPATULA"] = ESUInput::ElectrodeType::LapSpatula;
+    luabind::globals( lua )["ESUINPUT_BALL3MM"] = ESUInput::ElectrodeType::Ball3mm;
+    luabind::globals( lua )["ESUINPUT_BALL5MM"] = ESUInput::ElectrodeType::Ball5mm;
 
     luabind::globals( lua )["ESUINPUT_CUT"] = ESUInput::ESUMode::Cut;
     luabind::globals( lua )["ESUINPUT_COAG"] = ESUInput::ESUMode::Coag;
     luabind::globals( lua )["ESUINPUT_BLEND"] = ESUInput::ESUMode::Blend;
 
-    luabind::globals( lua )["esuInput"] = (ESUInput*)(ESUInputFromSharedMemory::getPtr());
+    luabind::globals( lua )["theESUInput"] = (ESUInput*)(ESUInputFromSharedMemory::getPtr());
 
     /////////////////////////////////////////////////////////// SceneFacade
     luabind::module( lua )

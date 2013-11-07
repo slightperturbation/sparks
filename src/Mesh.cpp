@@ -103,8 +103,10 @@ spark::Mesh
                    ((GLsizei)m_vertexIndicies.size()),
                    GL_UNSIGNED_INT,
                    nullptr ) );  // start at the beginning
-    LOG_TRACE(g_log) << "Mesh \"" << name() << "\"  glDrawElements( " << m_vertexIndicies.size() << " );\n";
-    GL_CHECK( glBindVertexArray( 0 ) );
+    if( g_log->isTrace() )
+    {
+        LOG_TRACE(g_log) << "Mesh \"" << name() << "\"  glDrawElements( " << m_vertexIndicies.size() << " );\n";
+    }
 }
 
 void
@@ -257,8 +259,6 @@ spark::Mesh
     m_vertexIndicies.push_back( cIdx );
     m_vertexIndicies.push_back( bIdx );
     m_vertexIndicies.push_back( dIdx );
-
-    bindDataToBuffers();
 }
 
 void 
@@ -411,6 +411,7 @@ spark::Mesh
                      normal );
         }
     }
+    bindDataToBuffers();
 }
 
 
