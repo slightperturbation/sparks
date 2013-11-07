@@ -117,3 +117,6 @@ Example Lua state script:
 
 States can be implemented in C++ by subclassing State.  If desired, ScriptState can be subclassed to use or augment a Lua script state.  Well suited for States that do non-trival computation in update methods.  See include/states/SimulationState.hpp for an example.
 
+# Troubleshooting / Common Problems / Known Bugs
+
+* On Windows, building any config other than "Debug" and "Release" depends on libs built in "Debug" or "Release".  E.g., To build "RelWithDebInfo", first build "Release", which builds libs (GLFW3) for release, then try building "RelWithDebInfo".
