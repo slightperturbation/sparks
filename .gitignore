@@ -1,5 +1,5 @@
 build-VisualStudio/
-build-VisualStudio_Win64/
+build-VisualStudio10_Win64/
 build-xcode/
 build-xcode2/
 ext/
