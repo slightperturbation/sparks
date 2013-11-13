@@ -160,6 +160,31 @@ void setGLFWCallbacks( GLFWwindow* glfwWindow )
 #endif
 }
 
+void inputManagerUpdateThreadOp( OpenGLWindow* window, InputPtr inputManager )
+{
+    if( !window )
+    {
+        LOG_ERROR(g_log) << "Null OpenGLWindow passed to inputManagerUpdateThreadOp()";
+        assert(false);
+        return;
+    }
+    if( !inputManager )
+    {        
+        LOG_ERROR(g_log) << "Null inputManager in inputManagerUpdateThreadOp()";
+        assert(false);
+        return;
+    }
+    double lastUpdate = glfwGetTime();
+    while( window->isRunning() )
+    {
+        inputManager->update( glfwGetTime() - lastUpdate );
+        lastUpdate = glfwGetTime();
+        boost::this_thread::sleep_for( boost::chrono::nanoseconds( 1 ) );
+        //boost::this_thread::yield();
+    }
+
+}
+
 void textureManagerCommandThreadOp( OpenGLWindow* window, TextureManager* textureManager )
 {
     if( !window )
@@ -221,14 +246,16 @@ int runSimulation(int argc, char** argv)
     const bool useStereo = false;
     // Create a separate thread to load background textures
     const bool useBackgroundResourceLoading = false;
+    // Create a seperate thread for input updates
+    const bool useBackgroundInputUpdates = true;
+    // If should use full screen mode on the zspace or primary monitor (if no zspace)
     const bool enableFullScreen = false;
+
     OpenGLWindow window( "Spark", 
                          enableLegacyOpenGlLogging, 
                          useStereo, 
                          useBackgroundResourceLoading,
                          enableFullScreen );
-
-
     using namespace std;
     InteractionVars vars;
     
@@ -259,9 +286,9 @@ int runSimulation(int argc, char** argv)
     }
     catch(...)
     {
+        std::cerr << "Unable to create AscensionTech TrakStar input device.\n";
         LOG_ERROR(g_log) << "Unable to create trakStar input device";
     }
-    
 #endif
 
     // Create common managers and tell them how to find file resources
@@ -402,8 +429,15 @@ int runSimulation(int argc, char** argv)
     // Allow texture manager to process asynchronously using a second "window"
     if( useBackgroundResourceLoading )
     {
+        // Lifespan of Window.isRunning is guaranteed shorter than textureManager
         TextureManager* tmRawPtr = textureManager.get();
         boost::thread textureManagerCommandThread( textureManagerCommandThreadOp, &window, tmRawPtr );
+    }
+
+    if( useBackgroundInputUpdates )
+    {
+        // Lifespan of Window.isRunning is guaranteed shorter than inputManager
+        boost::thread inputManagerUpdateThread( inputManagerUpdateThreadOp, &window, inputManager );
     }
 
     // Main event loop -- responsible for input, rendering and synchronous updating
@@ -465,21 +499,7 @@ int runSimulation(int argc, char** argv)
         stateManager.updateState( currTime );
         secondsInComponentSinceLastReport["Update"] += glfwGetTime() - updateStartTime;
 
-        ////////////////////////////////////////////////////////////////////////
-        // Input handlers 
-        // 
-        double inputUpdateStartTime = glfwGetTime();
-        LOG_TRACE(g_log) << "Update at " << currTime;
-        if( inputManager )
-        {
-            inputManager->update( currTime - lastTime );
-        }
-        if( g_arcBall )
-        {
-            g_arcBall->updatePerspective( cameraPerspective );
-        }
-        secondsInComponentSinceLastReport["InputUpdate"] += glfwGetTime() - inputUpdateStartTime;
-        
+
         ////////////////////////////////////////////////////////////////////////
         // Data load
         // parallel updates are handled once per frame,
@@ -494,6 +514,24 @@ int runSimulation(int argc, char** argv)
                 ;
             }
             secondsInComponentSinceLastReport["TextureLoad"] += glfwGetTime() - textureLoadStartTime;
+        }
+
+        ////////////////////////////////////////////////////////////////////////
+        // Input handlers 
+        // 
+        if( ! useBackgroundInputUpdates )
+        {
+            double inputUpdateStartTime = glfwGetTime();
+            LOG_TRACE(g_log) << "Update at " << currTime;
+            if( inputManager )
+            {
+                inputManager->update( currTime - lastTime );
+            }
+            if( g_arcBall )
+            {
+                g_arcBall->updatePerspective( cameraPerspective );
+            }
+            secondsInComponentSinceLastReport["InputUpdate"] += glfwGetTime() - inputUpdateStartTime;
         }
 
         ////////////////////////////////////////////////////////////////////////

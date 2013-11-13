@@ -4,6 +4,7 @@
 
 spark::AscensionTechInputDevice
 ::AscensionTechInputDevice( void )
+: m_read( 0 ), m_write( 1 )
 {
     // Initialize the ATC3DG driver and DLL
     LOG_DEBUG(g_log) << "Init ATC3DG (AscensionTech) Tracker";
@@ -114,32 +115,32 @@ spark::AscensionTechInputDevice
     double scaleFactor = 1.0/1000.0; // convert mm to meters
     glm::vec3 positionOffsetInWorldCoords( 0, 0.15, -0.4 );
     //glm::vec3 positionOffsetInWorldCoords( 0, 0, -0.4 );
-    m_position.x = - data.y * scaleFactor;
-    m_position.y = - data.z * scaleFactor;
-    m_position.z =   data.x * scaleFactor;
-    m_position += positionOffsetInWorldCoords;
-    m_position += screenSpaceOffset;
+    m_position[m_write].x = - data.y * scaleFactor;
+    m_position[m_write].y = - data.z * scaleFactor;
+    m_position[m_write].z =   data.x * scaleFactor;
+    m_position[m_write] += positionOffsetInWorldCoords;
+    m_position[m_write] += screenSpaceOffset;
 
     // Translate from TrakStar coordinates to OpenGL (y-up, +z toward camera)
-    m_transform[0][0] =   data.s[1][1];
-    m_transform[0][1] =   data.s[1][2];
-    m_transform[0][2] = - data.s[1][0];
-    m_transform[0][3] =   0;
+    m_transform[m_write][0][0] =   data.s[1][1];
+    m_transform[m_write][0][1] =   data.s[1][2];
+    m_transform[m_write][0][2] = - data.s[1][0];
+    m_transform[m_write][0][3] =   0;
 
-    m_transform[1][0] =   data.s[2][1];
-    m_transform[1][1] =   data.s[2][2];
-    m_transform[1][2] = - data.s[2][0];
-    m_transform[1][3] =   0;
+    m_transform[m_write][1][0] =   data.s[2][1];
+    m_transform[m_write][1][1] =   data.s[2][2];
+    m_transform[m_write][1][2] = - data.s[2][0];
+    m_transform[m_write][1][3] =   0;
 
-    m_transform[2][0] = - data.s[0][1];
-    m_transform[2][1] = - data.s[0][2];
-    m_transform[2][2] =   data.s[0][0];
-    m_transform[2][3] =   0;
+    m_transform[m_write][2][0] = - data.s[0][1];
+    m_transform[m_write][2][1] = - data.s[0][2];
+    m_transform[m_write][2][2] =   data.s[0][0];
+    m_transform[m_write][2][3] =   0;
 
-    m_transform[3][0] = m_position.x; //- data.y * scaleFactor;
-    m_transform[3][1] = m_position.y; //- data.z * scaleFactor;
-    m_transform[3][2] = m_position.z; //  data.x * scaleFactor;
-    m_transform[3][3] =   1.0;
+    m_transform[m_write][3][0] = m_position[m_write].x; //- data.y * scaleFactor;
+    m_transform[m_write][3][1] = m_position[m_write].y; //- data.z * scaleFactor;
+    m_transform[m_write][3][2] = m_position[m_write].z; //  data.x * scaleFactor;
+    m_transform[m_write][3][3] =   1.0;
 
     // orient to x+ for stylus direction
 
@@ -153,30 +154,38 @@ spark::AscensionTechInputDevice
  
     // TODO -- project to screen coordinates
     double screenScaleFactor = scaleFactor; // TODO ?
-    m_screenPosition.x = data.x;
-    m_screenPosition.y = data.y;
+    m_screenPosition[m_write].x = data.x;
+    m_screenPosition[m_write].y = data.y;
 
+    // Done writing, swap
+    {
+        boost::lock_guard< boost::mutex > lock( m_mutex );
+        size_t tmp = m_read; m_read = m_write; m_write = tmp;
+    }
 }
 
 glm::vec3
 spark::AscensionTechInputDevice
 ::getPosition( void ) const
 {
-    return m_position;
+    boost::lock_guard< boost::mutex > lock( m_mutex );
+    return m_position[m_read];
 }
 
 glm::vec2
 spark::AscensionTechInputDevice
 ::getScreenPosition( void ) const
 {
-    return m_screenPosition;
+    boost::lock_guard< boost::mutex > lock( m_mutex );
+    return m_screenPosition[m_read];
 }
 
 glm::mat4
 spark::AscensionTechInputDevice
 ::getTransform( void ) const
 {
-    return m_transform;
+    boost::lock_guard< boost::mutex > lock( m_mutex );
+    return m_transform[m_read];
 }
 
 void

@@ -6,6 +6,8 @@
 
 #include "ATC3DG.h"
 
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/locks.hpp>
 
 namespace spark
 {
@@ -32,9 +34,12 @@ namespace spark
     private:
         void handleErrorCode( int errorCode );
     private:
-        glm::mat4 m_transform;
-        glm::vec3 m_position;
-        glm::vec2 m_screenPosition;
+        mutable boost::mutex m_mutex;
+        size_t m_read;
+        size_t m_write;
+        glm::mat4 m_transform[2];
+        glm::vec3 m_position[2];
+        glm::vec2 m_screenPosition[2];
 
         SYSTEM_CONFIGURATION m_systemConfig; //CSystem ATC3DG
         std::vector< SENSOR_CONFIGURATION > m_sensorConfigs; //CSensor pSensor
