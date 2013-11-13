@@ -109,7 +109,8 @@ function Sim.createTissue( owner, worldOffset )
 	useHeightMap = true
 	if( useHeightMap ) then
 		--owner.tissueMat = spark:createMaterial( "tissueShader_debug" )
-		owner.tissueMat = spark:createMaterial( "tissueShader_heightMap" )
+		--owner.tissueMat = spark:createMaterial( "tissueShader_heightMap" )
+		owner.tissueMat = spark:createMaterial( "tissueShader_fast" )
 	else
 		--tissueShader
 		owner.tissueMat = spark:createMaterial( "tissueShader_procedural" )

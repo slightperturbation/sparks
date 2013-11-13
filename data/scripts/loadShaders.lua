@@ -57,9 +57,12 @@ shaderManager:loadShaderFromFiles( "tissueShader_heightMap",
                                     "heightMap.vert",
                                     "tissue_bump.frag" );
 
-shaderManager:loadShaderFromFiles( "tissueShader_singleSample",
-                                    "tissue_singleSample.vert",
-                                    "tissue_singleSample.frag" );
+
+
+shaderManager:loadShaderFromFiles( "tissueShader_fast",
+                                    "tissue_fast.vert",
+                                    "tissue_fast.frag" );
+
 
 shaderManager:loadShaderFromFiles( "tissueShader_debug",
                                     "tissue_debug.vert",
