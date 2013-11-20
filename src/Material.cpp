@@ -92,6 +92,12 @@ spark::Material
 ::addTexture( const ShaderUniformName& samplerName,
               const TextureName& textureName )
 { 
+    if( !m_textureManager->exists( textureName ) )
+    {
+        LOG_ERROR(g_log) << "Texture \"" 
+            << textureName
+            << "\" used in material \"" << m_name << "\" but doesn't exist.";
+    }
     if( !m_textureManager->isTextureReady( textureName ) )
     {
         LOG_WARN(g_log) << "Adding texture \"" 

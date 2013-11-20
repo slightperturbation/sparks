@@ -31,7 +31,12 @@ function SimulationState:new()
 		activationTime = 0,
 		currTime = 0, 
 		contactArea = 0,  -- area of contact (m^2) between tissue and electrode
-		theNextState = ""
+		tissueDistance = 0,  -- distance to tissue in mm
+		theNextState = "",
+
+		-- TODO: get tracking mode from Facade
+		trackingMode = "zSpace"
+		--trackingMode = "trakStar"
 	}
 	self.__index = self
 	return setmetatable(newObj, self)
@@ -43,30 +48,24 @@ function SimulationState:load()
 
 	local isShadowOn = true
 	Render:createDefaultRenderPasses( isShadowOn )
-	
-	wireRenderPass = spark:createRenderPass( 0.95, "WirePass", mainRenderTarget )
-	wireRenderPass:setDepthWrite( true )
-	wireRenderPass:setDepthTest( true )
-	wireRenderPass:disableBlending()
-	wireRenderPass:setWireframe( true )
+
+
+	--TransparentPass
 
 	-- specifies where the tissue is relative to world coords
 	self.worldOffset = vec3( 0, -.1, -.1 ) -- -0.0625 ) -- -0.125 )
 
 	-- Create the tissue
 	Sim.createTissue( self, self.worldOffset )
-	Sim.createTable( self, self.worldOffset )
-	
+	self.table = Sim.createTable( self, self.worldOffset )
+	if( isShadowOn ) then
+		self.table:setMaterialForPassName( "ShadowPass", shadowMaterial )
+	end
+
 	-- Add HUD elements to the top of the screen
 	Sim.createHUDElements( self, ESUModel.theESUModel )
 
 
-	-- local showSmoke = true
-	-- if( showSmoke ) then
-	-- 	theSmokeVolume:translate( self.worldOffset )
-	-- end
-
-	--self.mySpark = spark:createLSpark()
 
 	local scale = 0.0025
 	local redMat = spark:createMaterial( "constantColorShader" )
@@ -120,6 +119,21 @@ function SimulationState:load()
 		end
 	end
 
+	local bool use10CMMarkers = false
+	if use10CMMarkers then
+	    self.boxMat = spark:createMaterial( "colorShader" )
+	    self.boxMat:setVec4( "u_color", vec4(1.0,0.3,0.3,1.0) )
+
+	    --self.boxA = spark:createCube( vec3(-0.0105, -0.15, -0.1172), 0.01, self.boxMat, "OpaquePass" )
+	    self.boxA = spark:createCube( vec3(-0.05, 0, 0), 0.01, self.boxMat, "OpaquePass" )
+		if( isShadowOn ) then
+			self.boxA:setMaterialForPassName( "ShadowPass", shadowMaterial )
+		end
+		self.boxB = spark:createCube( vec3( 0.05, 0, 0), 0.01, self.boxMat, "OpaquePass" )
+		if( isShadowOn ) then
+			self.boxB:setMaterialForPassName( "ShadowPass", shadowMaterial )
+		end
+	end
 
 
 	--Load hook
@@ -139,13 +153,8 @@ function SimulationState:load()
 	end
 	--self.instrument = spark:loadMesh( "hook_cautery_new.3DS", cursorMat, "OpaquePass" )
 
-	self.sparkMat = spark:createMaterial( "texturedSparkShader" )
-	self.sparkMat:setVec4( "u_color", vec4( 1, 1, 0, 1) )
-	--sparkMat:addTexture( "s_color")
-	self.aSpark = spark:createLSpark( self.worldOffset + vec3(0, 0.01, 0), self.worldOffset + vec3(0,0,0), 1, 1, 3, 0.4, "OpaquePass", self.sparkMat )
-	-- self.aSpark = spark:createLSpark( self.worldOffset + vec3(0, 0.01, 0), self.worldOffset + vec3(0,0,0), 1, 1, 3, 0.4, "TransparentPass", self.sparkMat )
 
-
+	 ESUModel.theESUModel:createSpark()
 end
 
 function SimulationState:activate()
@@ -153,15 +162,26 @@ function SimulationState:activate()
 	self.startTime = -1
 
 	local camera = spark:getCamera()
-	camera:cameraPos( 0.0, 0.345, 0.222 )
-	camera:cameraTarget( 0.0, 0.0, 0.0 )
-	camera:cameraUp( 0,1,0 )
+
+	if self.trackingMode == "zSpace" then
+		--camera:cameraPos( 0.0, 0.345, 0.222 )
+		camera:cameraPos( 0.0, 0.125, 0.18 )
+		camera:cameraTarget( 0, -0.02, 0 )
+		camera:cameraUp( 0,1,0 )
+	end
+	if self.trackingMode == "trakStar" then
+		camera:cameraPos( 0.0, 0.1, -0.025 )
+		camera:cameraTarget( 0.0, -0.1, -0.1 )
+		camera:cameraUp( 0,1,0 )
+	end
+
 end
 
 
 function SimulationState:update( dt )
 	-- Convey updates from the UI to the current ESU settings
- 	ESUModel.theESUModel:update( theESUInput )
+ 	ESUModel.theESUModel:updateInput( theESUInput )
+
 
 	self.wattDisplay:setText( string.format( "%2.0f / %2.0f", 
 		                                     ESUModel.theESUModel.cutWattage, 
@@ -171,11 +191,12 @@ function SimulationState:update( dt )
 
 	-- Get control inputs
 
-	if( isWindows() ) then
-		--inputDeviceName = "stylus"
+	inputDeviceName = "mouse"
+	if isWindows() and self.trackingMode == "zSpace" then
+		inputDeviceName = "stylus"
+	end
+	if isWindows() and self.trackingMode == "trakStar" then
 		inputDeviceName = "trakStar"
-	else
-		inputDeviceName = "mouse"
 	end
 
 	local stylusPos = input:getPosition( inputDeviceName )
@@ -221,16 +242,16 @@ function SimulationState:update( dt )
 		self.markerBox:setTransform( mat4() )
 		self.markerBox:translate( stylusPos )
 	end
-	local floorHeight = self.worldOffset.y - screenSpaceOffset.y
+	local tissueHeight = self.worldOffset.y - screenSpaceOffset.y
 	if inputDeviceName == "trakStar" then
 		-- HACK for ascension trakStar
-		floorHeight = -0.1 -- self.worldOffset.y - screenSpaceOffset.y
+		tissueHeight = -0.1 -- self.worldOffset.y - screenSpaceOffset.y
 	end
 	local passDepth = 0.0010
 	local useOnlyPosition = false -- for debugging only
 	local limitDepth = true
 
-	local isBelowSurface = stylusPos.y < (floorHeight - passDepth)
+	local isBelowSurface = stylusPos.y < (tissueHeight - passDepth)
 	local isNearHolster = stylusPos.x > 0.275
 	-- Vibrate when below surface (?)
 	if( isBelowSurface and not isNearHolster and not self.hasVibrated ) then
@@ -258,9 +279,9 @@ function SimulationState:update( dt )
 		else
 			self.instrument:setTransform( mat4() )
 			self.instrument:translate( screenSpaceOffset )
-			if( mat4_at(stylusMat, 3, 1 ) < (floorHeight - passDepth) ) then
-				mat4_set(stylusMat, 3,1, floorHeight - passDepth )
-				stylusPos = vec3( stylusPos.x, floorHeight - passDepth, stylusPos.z )
+			if( mat4_at(stylusMat, 3, 1 ) < (tissueHeight - passDepth) ) then
+				mat4_set(stylusMat, 3,1, tissueHeight - passDepth )
+				stylusPos = vec3( stylusPos.x, tissueHeight - passDepth, stylusPos.z )
 			end 
 			self.instrument:applyTransform( stylusMat )
 			self.instrument:rotate( -90,  vec3(0,1,0) )
@@ -280,13 +301,13 @@ function SimulationState:update( dt )
 			self.instrument:scale( 0.002 )
 		else
 			self.instrument:setTransform( mat4() )
-			if( mat4_at(stylusMat, 3, 1 ) < (floorHeight - passDepth) ) then
+			if( mat4_at(stylusMat, 3, 1 ) < (tissueHeight - passDepth) ) then
 				-- force both the position and the transform to honor
 				-- the floor height
-				mat4_set(stylusMat, 3,1, floorHeight - passDepth )
-				stylusPos = vec3( stylusPos.x, floorHeight - passDepth, stylusPos.z )
+				mat4_set(stylusMat, 3,1, tissueHeight - passDepth )
+				stylusPos = vec3( stylusPos.x, tissueHeight - passDepth, stylusPos.z )
 			end 
-			--print( "FloorHeight:\t" .. floorHeight )
+			--print( "tissueHeight:\t" .. tissueHeight )
 			self.instrument:applyTransform( stylusMat )
 			self.instrument:rotate( 90,  vec3(0,1,0) )
 			self.instrument:scale( 0.002 )
@@ -294,9 +315,9 @@ function SimulationState:update( dt )
 
 			-- self.instrument:setTransform( mat4() )
 			-- --self.instrument:translate( screenSpaceOffset )
-			-- -- if( mat4_at(stylusMat, 3, 1 ) < (floorHeight - passDepth) ) then
-			-- -- 	mat4_set(stylusMat, 3,1, floorHeight - passDepth )
-			-- -- 	stylusPos = vec3( stylusPos.x, floorHeight - passDepth, stylusPos.z )
+			-- -- if( mat4_at(stylusMat, 3, 1 ) < (tissueHeight - passDepth) ) then
+			-- -- 	mat4_set(stylusMat, 3,1, tissueHeight - passDepth )
+			-- -- 	stylusPos = vec3( stylusPos.x, tissueHeight - passDepth, stylusPos.z )
 			-- -- end 
 			-- self.instrument:applyTransform( stylusMat )
 			-- --self.instrument:rotate( -90,  vec3(0,1,0) )
@@ -312,14 +333,35 @@ function SimulationState:update( dt )
 		isActivated = true
 	end
 
+
+	if inputDeviceName == "stylus" then
+		if( input:isButtonPressed( "stylus", 0 ) ) then
+			isActivated = true
+		end
+		if( input:isButtonPressed( "stylus", 1 ) ) then
+			isActivated = true
+		end
+	end
+
+	local worldStylusPos = vec3( stylusPos.x, stylusPos.y, stylusPos.z )
+	worldStylusPos.y = worldStylusPos.y + screenSpaceOffset.y
+
+	--print( "STYLUS POS: " .. worldStylusPos.x .. ", " .. worldStylusPos.y .. ", ".. worldStylusPos.z )
+	
+	local tissueContactPos = vec3( stylusPos.x, stylusPos.y, stylusPos.z )
+	tissueContactPos.y = self.worldOffset.y -- 0.025
+	
+	-- Map from world coordinates to Tissue UV coordinates (xpos,ypos)
+	local toolTipPos = stylusPos.y
+	local distFromTissue = toolTipPos - tissueHeight -- tissueHeight already has worldOffset baked in
+
+	self.distDisplay:setText( string.format( "%3.0f", math.max(distFromTissue, 0) * 1000.0 ) ) -- convert to mm
+
 	if( isActivated ) then
-		local toolTipPos = stylusPos.y
 		--print( "Activation:\t" .. stylusPos.x .. ",\t\t" .. stylusPos.y .. ",\t\t" .. stylusPos.z .. ",\t\tmat.y=" .. mat4_at(stylusMat, 3, 1 )  )
 		-- print( "Activation at " .. ESUModel.theESUModel.cutWattage .. " / " .. ESUModel.theESUModel.coagWattage 
 		-- 	.. " watts " .. self.ESUModeLabels[ESUModel.theESUModel.mode] 
-		-- 	.. " at dist " .. abs( toolTipPos - floorHeight ) )
-		
-		local distFromTissue = toolTipPos - floorHeight -- floorHeight already has worldOffset baked in
+		-- 	.. " at dist " .. abs( toolTipPos - tissueHeight ) )
 		local xpos = 2*(stylusPos.x - self.worldOffset.x) -- tissue has been moved by worldOffset
 		local ypos = 2*(stylusPos.z - self.worldOffset.z) 
 
@@ -333,6 +375,8 @@ function SimulationState:update( dt )
 		radiusOfContact = 0.002 -- debug override!
 		ESUModel.theESUModel:activate( theTissueSim, 
 			xpos, ypos,                        -- location of activation
+			worldStylusPos,                         -- vec3 tool-tip position
+			tissueContactPos,                  -- vec3 positon on tissue nearest to tool
 			math.max( 0.0, distFromTissue),    -- positive distance from tissue
 			radiusOfContact, dt )
 
@@ -356,13 +400,25 @@ function SimulationState:update( dt )
 
 	-- Debugging tool
 	if( input:isKeyDown( string.byte('X') ) ) then
+		local touchThreshold = 0.0004 -- meters
+		local sparkThreshold = 0.001 -- meters
 		local xpos = 0 + math.random() * 0.2 - 0.1
 		local ypos = 0 + math.random() * 0.2 - 0.1
-		local distFromTissue = 0
+		local distFromTissue = 0.0005
 		local radiusOfContact = 0.002
-		ESUModel.theESUModel:activate( theTissueSim, xpos, ypos, distFromTissue, radiusOfContact, dt )
+		-- local tissuePos = vec3( xpos/2.0 + self.worldOffset.x, 0.1 + self.worldOffset.y, ypos/2.0 + self.worldOffset.z )
+		-- local tipPos = tissuePos + vec3( 0, 0.15 + self.worldOffset.y, 0 )
+		local tissuePos = vec3( xpos/2.0 + self.worldOffset.x, self.worldOffset.y, ypos/2.0 + self.worldOffset.z )
+		local tipPos = tissuePos + vec3( 0, 0.025, 0 )
+
+		print( "Spark tip: " .. tipPos.x .. ", " .. tipPos.y .. ", " .. tipPos.z )
+		ESUModel.theESUModel:activate( theTissueSim, xpos, ypos, 
+			tipPos,                         -- vec3 tool-tip position
+			tissuePos,                  -- vec3 positon on tissue nearest to tool
+			distFromTissue, radiusOfContact, dt )
 	end
 
+ 	ESUModel.theESUModel:update( dt )
 end
 
 function SimulationState:deactivate()

@@ -21,6 +21,9 @@ namespace spark
 {
     class Segment;
     typedef std::vector< Segment > Segments;
+    /// A segment is a just a single location with a reference (index)
+    /// to it's parent segment.  Note that nothing about the width 
+    /// or how the segment is drawn is stored here.
     class Segment
     {
     public:
@@ -40,6 +43,9 @@ namespace spark
 
     /// Lindenmayer-system (L-System) spark, recursively built by random 
     /// splitting and forking.
+    /// This class maintains a linked list of positions, stored using
+    /// Segments.
+    /// For rendering, see class TexturedSparkRenderable
     class LSpark
     {
     public:

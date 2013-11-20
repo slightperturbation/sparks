@@ -396,7 +396,7 @@ spark::SceneFacade
     return plane;
 }
 
-spark::RenderablePtr
+spark::TexturedSparkRenderablePtr
 spark::SceneFacade
 ::createLSpark( const glm::vec3& from, const glm::vec3& to,
                 float intensity,
@@ -419,8 +419,6 @@ spark::SceneFacade
     sparkRenderable->name( "Spark" );
     sparkRenderable->setMaterialForPassName( pass,
                                              material );
-    //sparkRenderable->setMaterialForPassName( g_transparencyRenderPassName,
-    //                                         sparkColorMaterial );
     m_scene->add( sparkRenderable );
     m_scene->addUpdateable( sparkRenderable );
     return sparkRenderable;

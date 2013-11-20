@@ -201,12 +201,13 @@ namespace spark
                                     float lengthInMeters,
                                     size_t numVoxelsPerDim );
 
-        RenderablePtr createLSpark( const glm::vec3& from, const glm::vec3& to,
-            float intensity,
-            float scale,
-            int recursiveDepth,
-            float forkProb,
-            const RenderPassName& pass, MaterialPtr material );
+        TexturedSparkRenderablePtr createLSpark( const glm::vec3& from, const glm::vec3& to,
+                                    float intensity,
+                                    float scale,
+                                    int recursiveDepth,
+                                    float forkProb,
+                                    const RenderPassName& pass, 
+                                    MaterialPtr material );
 
         FontManagerPtr getFontManager( void );
         

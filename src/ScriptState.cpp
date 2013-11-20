@@ -89,6 +89,13 @@ spark::ScriptState
 
 void
 spark::ScriptState
+::shutdown( void )
+{
+    m_facade->getScene()->shutdown();
+}
+
+void
+spark::ScriptState
 ::update( double dt )
 {
     // poll for loading thread to complete

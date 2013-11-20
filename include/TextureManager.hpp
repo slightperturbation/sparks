@@ -85,7 +85,7 @@ namespace spark
             {
                 if( m_useBackgroundLoad )
                 {
-                    tm->backgroundLoad2DByteTextureFromData( m_handle, m_data, m_dimPerSide );
+                    tm->doubleBufferedLoad2DByteTextureFromData( m_handle, m_data, m_dimPerSide );
                 }
                 else
                 {
@@ -96,6 +96,62 @@ namespace spark
             const size_t m_dimPerSide;
             bool m_useBackgroundLoad;
         };
+        
+        struct SubsetLoad2DByteTextureFromDataCommand : public TextureManagerCommand
+        {
+            SubsetLoad2DByteTextureFromDataCommand( const TextureName& aHandle,
+                const std::vector<unsigned char>& aData,
+                int m_N,
+                int minX, int minY, 
+                int maxX, int maxY )
+                : TextureManagerCommand( aHandle ),
+                  m_dimPerSide( m_N ),
+                  m_minX( minX ), m_minY( minY ),
+                  m_maxX( maxX ), m_maxY( maxY ),
+                  m_useBackgroundLoad( false )
+            {
+                if( (maxX-minX)*(maxY-minY) <= 0 )
+                {
+                    return;
+                }
+                // the texture is m_N x m_N, and we want a subset of it:
+                m_subsetData.reserve( (maxX-minX)*(maxY-minY) );
+                for( int y = m_minY; y <= m_maxY; ++y )
+                {
+                    for( int x = m_minX; x <= m_maxX; ++x )
+                    {
+                        // see TissueMesh::index()
+                        int i = x + m_N*y;
+                        m_subsetData.push_back( aData[i] );
+                    }
+                }
+            }
+            virtual void operator()( TextureManager* tm ) const override
+            {
+                if( m_useBackgroundLoad )
+                {
+                    // Not yet implemented
+                    assert( false );
+                    //tm->backgroundSubsetLoad2DByteTextureFromData( m_handle, m_data, m_dimPerSide, 
+                    //     m_minX, m_minY, m_maxX, m_maxY );
+                }
+                else
+                {
+                    tm->subsetLoad2DByteTextureFromData( m_handle, m_subsetData,
+                                                         m_dimPerSide,
+                                                         m_minX, m_minY,
+                                                         m_maxX, m_maxY );
+                }
+            }
+            std::vector<unsigned char> m_subsetData;
+            int m_dimPerSide;
+            int m_minX;
+            int m_minY;
+            int m_maxX;
+            int m_maxY;
+            bool m_useBackgroundLoad;
+        };
+
         // TODO -- template on data type; need to overload load method for data type in support.
         struct Load2DFloatTextureFromDataCommand
         : public TextureManagerCommand
@@ -145,6 +201,11 @@ namespace spark
         void queueLoad2DByteTextureFromData( const TextureName& aHandle, 
                                              const std::vector<unsigned char>& aData, 
                                              size_t dimPerSide );
+        void queueSubsetLoad2DByteTextureFromData( const TextureName& aHandle, 
+                                                   const std::vector<unsigned char>& aData,
+                                                   int dimPerSide,
+                                                   int minX, int minY, 
+                                                   int maxX, int maxY );
         void queueLoad2DFloatTextureFromData( const TextureName& aHandle,
                                               const std::vector<float>& aData,
                                               size_t dimPerSide );
@@ -214,10 +275,13 @@ namespace spark
         void load2DByteTextureFromData( const TextureName& aHandle,
                                         const std::vector<unsigned char>& aData,
                                         size_t dimPerSide );
-        /// Load texture using a "background" texture, then swap when done.
-        void backgroundLoad2DByteTextureFromData( const TextureName& aHandle,
+        void subsetLoad2DByteTextureFromData( const TextureName& aHandle,
             const std::vector<unsigned char>& aData,
-            size_t dimPerSide );
+            size_t dimPerSide,
+            int minX, int minY, 
+            int maxX, int maxY );
+        /// Load texture using a "background" texture, then swap when done.
+        void doubleBufferedLoad2DByteTextureFromData( const TextureName& aHandle, const std::vector<unsigned char>& aData, size_t dimPerSide );
 
         void load2DFloatTextureFromData( const TextureName& aHandle,
                                          const std::vector<float>& aData,

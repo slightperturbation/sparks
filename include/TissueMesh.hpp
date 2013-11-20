@@ -7,6 +7,8 @@
 #include "Renderable.hpp"
 #include "Mesh.hpp"
 
+#include <limits>
+
 namespace spark
 {
     /// 2D model of tissue temperature that provides methods for adding
@@ -30,7 +32,7 @@ namespace spark
                     size_t heatDim );
         virtual ~TissueMesh();
                 
-        /// Update the VBO based on changes to the data.
+        /// Update the condition map based on accumulated heat.
         virtual void update( double dt ) override;
         
         /// Add a source of heat for this time-step
@@ -110,6 +112,27 @@ namespace spark
         /// Unites: J/kg
         float latentHeatOfVaporization( size_t x, size_t y ) const;
     private:
+        struct BoundingBox
+        {
+            int minX;
+            int minY;
+            int maxX;
+            int maxY;
+            BoundingBox() { reset(); }
+            void reset() 
+            { 
+                minX = minY = std::numeric_limits<int>::max();
+                maxX = maxY = 0; }
+            /// Extend the region to encompass the given point.
+            void addPoint( int x, int y )
+            {
+                minX = std::min( x, minX ); 
+                minY = std::min( y, minY ); 
+                maxX = std::max( x, maxX ); 
+                maxY = std::max( y, maxY ); 
+            }
+        };
+
         void swapTempMaps( void )
         {
             std::vector<float>* tmp = m_currTempMap;
@@ -165,6 +188,7 @@ namespace spark
         /// integer component gives the condition of the tissue (see TissueCondition)
         /// fractional component gives how long 
         std::vector< unsigned char > m_tissueCondition;
+        BoundingBox m_tissueConditionUpdateBounds;
         /// Holds the depth of tissue removed due to vaporization effects.
         std::vector< float > m_vaporizationDepthMap;
         

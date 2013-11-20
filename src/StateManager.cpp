@@ -171,6 +171,7 @@ spark::StateManager
     if( m_currState )
     {
         m_currState->deactivate();
+        m_currState->shutdown();
     }
     if( m_pendingRemoval && m_pendingRemoval.get() == m_currState->name() )
     {

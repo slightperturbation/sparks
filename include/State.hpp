@@ -41,6 +41,9 @@ namespace spark
 
         /// Restore the initial conditions of this state.
         virtual void reset( void ) = 0;
+        
+        // Stop all remaining threads of execution
+        virtual void shutdown( void ) = 0;
 
         /// Returns a StateName to request switching to a different
         /// State.  The StateManager (generally) honors this as a request

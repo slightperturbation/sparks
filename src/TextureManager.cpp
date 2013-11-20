@@ -460,12 +460,22 @@ spark::TextureManager
         new Load2DByteTextureFromDataCommand( aHandle, aData, dimPerSide ) ) );
 }
 
-// DEAD METHOD
+void 
+spark::TextureManager
+::queueSubsetLoad2DByteTextureFromData( const TextureName& aHandle, 
+    const std::vector<unsigned char>& aData, 
+    int dimPerSide,
+    int minX, int minY, 
+    int maxX, int maxY )
+{
+    boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
+    m_commandQueue.insert( TextureManagerCommandPtr( 
+        new SubsetLoad2DByteTextureFromDataCommand( aHandle, aData, dimPerSide, minX, minY, maxX, maxY ) ) );
+}
+
 void
 spark::TextureManager
-::backgroundLoad2DByteTextureFromData( const TextureName& aHandle,
-    const std::vector<unsigned char>& aData,
-    size_t dimPerSide )
+::doubleBufferedLoad2DByteTextureFromData( const TextureName& aHandle, const std::vector<unsigned char>& aData, size_t dimPerSide )
 {
     boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
 
@@ -538,7 +548,86 @@ spark::TextureManager
                              const std::vector<unsigned char>& aData,
                              size_t dimPerSide )
 {
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+    GLuint textureId;
+    if( ! exists( aHandle ) )
+    {
+        // On first call, create new texture
+        GL_CHECK( glGenTextures( 1, &textureId ) );
+        if( -1 == textureId )
+        {
+            LOG_ERROR(g_log) << "OpenGL failed to allocate a texture id.";
+            assert(false);
+            return;
+        }
+        m_registry[aHandle] = textureId;
+        GLint textureUnit = reserveTextureUnit();
+        bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
+        textureUnit = ensureTextureUnitBoundToId( textureId );
+        if( textureUnit == -1 )
+        {
+            LOG_ERROR(g_log) << "Failed to get a texture unit.";
+            assert(false);
+            return;
+        }
+        GL_CHECK( glTexImage2D( GL_TEXTURE_2D, 0, GL_R8UI,
+            dimPerSide,
+            dimPerSide,
+            0, GL_RED_INTEGER, GL_UNSIGNED_BYTE,
+            &(aData[0]) ) );
 
+        GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST ) );
+        GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ) );
+
+        const GLenum edgeParameter = GL_CLAMP_TO_BORDER; //GL_CLAMP_TO_EDGE
+        GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, edgeParameter ) );
+        GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, edgeParameter ) );
+        GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, edgeParameter ) );
+        unsigned int borderColor[] = {0,0,0,0};
+        glTexParameterIuiv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
+
+    }
+    else
+    {
+        // On all subsequent calls, use TexSubImage to write over the existing texture
+        textureId = getTextureIdForHandle( aHandle );
+        GLint textureUnit = ensureTextureUnitBoundToId( textureId );
+        bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
+        if( textureUnit == -1 )
+        {
+            LOG_ERROR(g_log) << "Failed to get a texture unit.";
+            assert(false);
+            return;
+        }
+        bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
+        GL_CHECK( glTexSubImage2D( GL_TEXTURE_2D, 0, 
+            0, 0, 
+            dimPerSide, dimPerSide,
+            GL_RED_INTEGER, // GL_ALPHA? 
+            GL_UNSIGNED_BYTE,
+            &(aData[0]) ) );
+    }
+    //GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
+}
+
+void
+spark::TextureManager
+::subsetLoad2DByteTextureFromData( const TextureName& aHandle,
+    const std::vector<unsigned char>& aData,
+    size_t dimPerSide,
+    int minX, int minY, 
+    int maxX, int maxY )
+{
+    assert( false ); // NYI 
+    if( (maxX < minX) || (maxY < minY) )
+    {
+        return;
+    }
+    if( maxX == 0 && minX == 0 )
+    {
+        return;
+    }
+    assert( aData.size() == (1+maxX-minX)*(1+maxY-minY) );
     boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
 
     // Ok to call many times, if so, reuse texture id
@@ -569,28 +658,34 @@ spark::TextureManager
     }
 
     bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
-    GL_CHECK( glTexImage2D( GL_TEXTURE_2D, 0, GL_R8UI,
-                           dimPerSide,
-                           dimPerSide,
-                           0, GL_RED_INTEGER, GL_UNSIGNED_BYTE,
-                           &(aData[0]) ) );
-    
+    GL_CHECK( glTexSubImage2D(
+        GL_TEXTURE_2D, 
+        0,  // mipmap level 
+        minX,
+        minY,
+        1 + maxX - minX, 
+        1 + maxY - minY,
+        GL_RED, //GL_RED_INTEGER, 
+        GL_UNSIGNED_BYTE,
+        &(aData[0]) ) );
+
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST ) );
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ) );
-    
+
     const GLenum edgeParameter = GL_CLAMP_TO_BORDER; //GL_CLAMP_TO_EDGE
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, edgeParameter ) );
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, edgeParameter ) );
     GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, edgeParameter ) );
     unsigned int borderColor[] = {0,0,0,0};
     glTexParameterIuiv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
-    
+
     //GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
-    
+
     LOG_TRACE(g_log) << "2DTexture for Volume Data \"" << aHandle
-    << "\" loaded with id=" << textureId
-    << " into texture unit=" << textureUnit ;
+        << "\" loaded with id=" << textureId
+        << " into texture unit=" << textureUnit ;
 }
+
 
 void
 spark::TextureManager
@@ -612,12 +707,9 @@ spark::TextureManager
     boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
     // Ok to call many times, if so, reuse texture id
     GLuint textureId;
-    if( exists( aHandle ) )
+    if( !exists( aHandle ) )
     {
-        textureId = getTextureIdForHandle( aHandle );
-    }
-    else
-    {
+        // First call, need to create the texture
         GL_CHECK( glGenTextures( 1, &textureId ) );
         if( -1 == textureId )
         {
@@ -628,36 +720,62 @@ spark::TextureManager
         m_registry[aHandle] = textureId;
         GLint textureUnit = reserveTextureUnit();
         bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
+
+        GL_CHECK( glTexImage2D( GL_TEXTURE_2D, 0, GL_R32F,
+            dimPerSide,
+            dimPerSide,
+            0, GL_RED, GL_FLOAT,
+            &(aData[0]) ) );
+
+        GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST ) );
+        GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ) );
+
+        //GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR ) );
+        //GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) );
+
+        const GLenum edgeParameter = GL_CLAMP_TO_BORDER; //GL_CLAMP_TO_EDGE
+        GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, edgeParameter ) );
+        GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, edgeParameter ) );
+        GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, edgeParameter ) );
+        float borderColor[] = {0,0,0,0};
+        glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
+
+        //GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
+
+        LOG_TRACE(g_log) << "2DTexture for Volume Data \"" << aHandle
+            << "\" loaded with id=" << textureId
+            << " into texture unit=" << textureUnit ;
     }
-    GLint textureUnit = ensureTextureUnitBoundToId( textureId );
-    if( textureUnit == -1 )
+    else
     {
-        LOG_ERROR(g_log) << "Failed to get a texture unit.";
-        assert(false);
-        return;
+        // Texture already created, just reload data
+        textureId = getTextureIdForHandle( aHandle );
+        GLint textureUnit = ensureTextureUnitBoundToId( textureId );
+        bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
+        if( textureUnit == -1 )
+        {
+            LOG_ERROR(g_log) << "Failed to get a texture unit.";
+            assert(false);
+            return;
+        }
+        checkOpenGLErrors();
+        GL_CHECK( glTexSubImage2D( 
+            GL_TEXTURE_2D, 0, 
+            0, 0, // xoffset, yoffset
+            dimPerSide, // width
+            dimPerSide, // height
+            GL_RED, GL_FLOAT,
+            &(aData[0]) ) );
+
+        //GL_CHECK( glTexImage2D( GL_TEXTURE_2D, 0, GL_R32F,
+        //    dimPerSide,
+        //    dimPerSide,
+        //    0, GL_RED, GL_FLOAT,
+        //    &(aData[0]) ) );
+
+        //GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
+
     }
-    bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
-    GL_CHECK( glTexImage2D( GL_TEXTURE_2D, 0, GL_R32F,
-                            dimPerSide,
-                            dimPerSide,
-                            0, GL_RED, GL_FLOAT,
-                            &(aData[0]) ) );
-
-    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR ) );
-    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) );
-
-    const GLenum edgeParameter = GL_CLAMP_TO_BORDER; //GL_CLAMP_TO_EDGE
-    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, edgeParameter ) );
-    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, edgeParameter ) );
-    GL_CHECK( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, edgeParameter ) );
-    float borderColor[] = {0,0,0,0};
-    glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
-
-    GL_CHECK( glGenerateMipmap( GL_TEXTURE_2D ) );
-
-    LOG_TRACE(g_log) << "2DTexture for Volume Data \"" << aHandle
-        << "\" loaded with id=" << textureId
-        << " into texture unit=" << textureUnit ;
 }
 
 bool

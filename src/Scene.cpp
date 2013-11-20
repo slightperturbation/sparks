@@ -285,6 +285,18 @@ spark::Scene
     m_renderables.clear();
 }
 
+void
+spark::Scene
+::shutdown( void )
+{
+    for( auto taskIter = m_updateTasks.begin();
+        taskIter != m_updateTasks.end();
+        ++taskIter )
+    {
+        (*taskIter)->join();
+    }
+}
+
 spark::Scene::FixedUpdateTask
 ::FixedUpdateTask( UpdateablePtr udp, float dt )
   : m_updateable( udp ),
@@ -358,3 +370,11 @@ spark::Scene::FixedUpdateTask
     m_isStopped = true;
     m_thread.timed_join( boost::posix_time::seconds( 1 ) );
 }
+
+void
+spark::Scene::FixedUpdateTask
+::join( void )
+{
+    m_thread.join();
+}
+

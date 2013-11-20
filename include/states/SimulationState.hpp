@@ -7,7 +7,8 @@
 
 namespace spark
 {
-    /// Concrete state handling the simulation.
+    /// Concrete state handling the simulation, including
+    /// tissue effects, sparks, smoke, etc.
     /// Augments the Lua SimulationState script.
     class SimulationState : public ScriptState
     {
@@ -21,6 +22,7 @@ namespace spark
         virtual void deactivate( void )       override;
         virtual void update( double dt )      override;
         virtual void render( void )           override;
+        virtual void shutdown( void )         override;
         
         boost::optional<spark::StateName> nextState( double currTime ) override;
     private:

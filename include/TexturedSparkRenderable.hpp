@@ -27,6 +27,8 @@
 namespace spark
 {
     /// Renders the component spark with a textured set of triangles.
+    /// Responsible for rendering details such as the width of the stroke
+    /// and how Spark intensities affect drawing.
     class TexturedSparkRenderable
     : public Renderable,
       public Updateable
@@ -35,6 +37,14 @@ namespace spark
         TexturedSparkRenderable( LSparkPtr spark );
         virtual ~TexturedSparkRenderable() {}
 
+        /// Move the spark to the new given position and reset the
+        /// intensity to starting levels.
+        void reseat( const glm::vec3& fromPos, const glm::vec3& toPos,
+                     float a_intensity,
+                     float a_scale,
+                     int   a_depth,
+                     float a_forkProb );
+        
         virtual void render( const RenderCommand& rc ) const override;
         virtual void attachShaderAttributes( GLuint shaderIndex ) override;
         virtual void update( double dt ) override;

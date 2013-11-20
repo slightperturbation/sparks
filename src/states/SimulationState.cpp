@@ -118,7 +118,7 @@ spark::SimulationState
         cellCountPerSide = 510;//254;
         break;
     case highQuality:
-        cellCountPerSide = 510;
+        cellCountPerSide = 1022;
         break;
     case veryHighQuality:
         cellCountPerSide = 1022;
@@ -181,8 +181,8 @@ spark::SimulationState
     //}
     
     // Tie tissue vaporization to the Smoke
-    float deltaDensity = 10000.5;
-    float maxDensity = 0.9;//2;
+    float deltaDensity = 0.25;//10000.5;
+    float maxDensity = 0.5;//0.9;//2;
     std::vector<glm::vec2> vapingLocations;
     m_tissueMesh->acquireVaporizingLocations( vapingLocations );
     for( auto iter = vapingLocations.begin(); iter != vapingLocations.end(); ++iter )
@@ -190,7 +190,7 @@ spark::SimulationState
         glm::vec2& pos = *iter;
         m_fluidData->addSourceAtLocation( pos.x, pos.y, deltaDensity, maxDensity  );
     }
-
+    
     ScriptState::update( dt );
 }
 
@@ -199,6 +199,13 @@ spark::SimulationState
 ::render( void )
 {
     ScriptState::render();    
+}
+
+void
+spark::SimulationState
+::shutdown( void )
+{
+    ScriptState::shutdown();
 }
 
 boost::optional<spark::StateName>

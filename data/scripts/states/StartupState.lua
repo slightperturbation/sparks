@@ -23,8 +23,12 @@ function StartupState:deactivate()
 end
 
 function StartupState:nextState( currTime )
-	--theNextState = "Menu"
-	theNextState = "Loading"
+	-- theNextState = "Loading"
+
+	--theNextState = "Example"
+	--theNextState = "TextureTest"
+	--theNextState = "ESUPower"
+	theNextState = "Menu"
 	--theNextState = "Simulation"
 	--theNextState = "Calibration"
 end

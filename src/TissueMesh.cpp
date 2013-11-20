@@ -15,7 +15,7 @@ spark::TissueMesh
   m_textureManager( tm ),
   m_N( heatDim + 2 ),
   m_voxelDimMeters( totalLengthMeters / (float)heatDim ),
-  m_diffusionIters( 10 ),
+  m_diffusionIters( 100 ),
   //m_SORovershoot( 1.00001 ),
   m_dessicationThresholdTemp( 273.15 + 37.0 + 20.0 ), //63.0 ),
   m_charThresholdTemp( 273.15 + 37.0 + 250.0 )
@@ -82,6 +82,7 @@ spark::TissueMesh
             {
                 // Vaporized tissue, from normalTissue
                 m_tissueCondition[ind] = vaporizingTissue;
+                m_tissueConditionUpdateBounds.addPoint( x, y );
             }
             else if( m_tissueCondition[ind] == vaporizingTissue )
             {
@@ -92,14 +93,15 @@ spark::TissueMesh
                 // efficiency moving to the graphics card.
                 // Possibly, introduce intermediate vaporizing states?
                 m_tissueCondition[ind] = vaporizedTissue;
-                
+                m_tissueConditionUpdateBounds.addPoint( x, y );
+
                 /////////////////////////////////////////////////////////
                 //// TODO -------  
                 //// Depth must be limited by current tool depth!
                 //// HACK -------
                 //// depth limited by arbitrary constant!
                 //// see SimulationState.lua local passDepth in update() method
-                const float maxVaporizationDepth = 0.003;
+                const float maxVaporizationDepth = 0.03;
 
                 m_vaporizationDepthMap[ind] = std::min( m_vaporizationDepthMap[ind] + vaporizationDepth,
                                                         maxVaporizationDepth );
@@ -123,21 +125,40 @@ spark::TissueMesh
                 && (tempKelvin > m_dessicationThresholdTemp) )
             {
                 m_tissueCondition[ind] = dessicatedTissue;
+                m_tissueConditionUpdateBounds.addPoint( x, y );
             }
             // Charring
             if(    (m_tissueCondition[ind] == dessicatedTissue)
                 && (tempKelvin > m_charThresholdTemp) )
             {
                 m_tissueCondition[ind] = charredTissue;
+                m_tissueConditionUpdateBounds.addPoint( x, y );
             }
         }
     } // end condition update
 
     // Request for condition to be pushed to graphics card
-    m_textureManager->queueLoad2DByteTextureFromData( m_conditionTextureName, 
-                                                      m_tissueCondition, 
-                                                      m_N );
-
+    const bool useSubsetLoading = false;
+    if( useSubsetLoading )
+    {
+        m_textureManager->queueSubsetLoad2DByteTextureFromData( m_conditionTextureName,
+            m_tissueCondition,
+            m_N,
+            m_tissueConditionUpdateBounds.minX,
+            m_tissueConditionUpdateBounds.minY,
+            m_tissueConditionUpdateBounds.maxX,
+            m_tissueConditionUpdateBounds.maxY
+            );
+    }
+    else
+    {
+        m_textureManager->queueLoad2DByteTextureFromData( m_conditionTextureName, 
+                                                          m_tissueCondition, 
+                                                          m_N );
+    }
+    m_textureManager->queueLoad2DFloatTextureFromData( m_vaporizationDepthMapTextureName,
+        m_vaporizationDepthMap, 
+        m_N );
     ///////////////////////////////////////////////////////////////////////
     // Diffuse temperature by Fourier's law of thermal conduction
     // q = -k \nabla T
@@ -230,9 +251,7 @@ spark::TissueMesh
  
 
     // push temp data to graphics card
-    m_textureManager->queueLoad2DFloatTextureFromData( m_vaporizationDepthMapTextureName,
-                                                       m_vaporizationDepthMap, 
-                                                       m_N );
+
     //m_textureManager->queueLoad2DFloatTextureFromData( m_tempTextureName, *m_nextTempMap, m_N );
     swapTempMaps();
 }

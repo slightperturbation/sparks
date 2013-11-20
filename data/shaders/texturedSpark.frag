@@ -19,10 +19,10 @@ uniform vec4 u_color = vec4( 1, 1, 1, 1 );
 
 void main()
 {
-	float cutoff = 0.1;
+	float cutoff = 0.3;
 
 
-	outColor = u_color;
+	outColor = f_fragColor * u_color;
 	//outColor = u_color * texture( s_color, f_texCoord );
 
 	// f_fragColor gives a measure of the intensity

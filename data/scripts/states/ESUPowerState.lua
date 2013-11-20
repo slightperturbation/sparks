@@ -161,8 +161,9 @@ end
 
 function ESUPowerState:update( dt )
     -- Convey updates from the UI to the current ESU settings
-    ESUModel.theESUModel:update( theESUInput )
-
+    ESUModel.theESUModel:updateInput( theESUInput )
+    ESUModel.theESUModel:update( dt )
+    
     self.wattDisplay:setText( string.format( "%2.0f / %2.0f", 
                                              ESUModel.theESUModel.cutWattage, 
                                              ESUModel.theESUModel.coagWattage) )

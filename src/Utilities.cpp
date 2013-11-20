@@ -207,7 +207,7 @@ spark::OpenGLWindow
                 bool enableStereo,
                 bool createLoadingContext,
                 bool enableFullScreen )
-: m_isOK( false ), m_glfwLoadingThreadWindow( nullptr )
+: m_glfwLoadingThreadWindow( nullptr ), m_isOK( false )
 {
     LOG_DEBUG(g_log) << "glfwInit...";
     if( !glfwInit() )
@@ -266,7 +266,7 @@ spark::OpenGLWindow
     {
         glfwWindowHint( GLFW_STEREO, GL_TRUE );
     }
-    
+   
 #ifdef _DEBUG
     glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE );
 #endif
@@ -306,8 +306,10 @@ spark::OpenGLWindow
     else
     {
         monitor = nullptr;
-        //width = 960;
-        //height = 540;
+#ifdef __APPLE__
+        width *= 0.25;
+        height *= 0.25;
+#endif
     }
 
     LOG_DEBUG(g_log) << "glfwOpenWindow...";
@@ -322,6 +324,9 @@ spark::OpenGLWindow
         return;
     }
     glfwMakeContextCurrent( m_glfwRenderWindow );
+
+    // Hide the mouse cursor
+    glfwSetInputMode( m_glfwRenderWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN );
 
     glfwSetWindowPos( m_glfwRenderWindow, x, y );
     glfwShowWindow( m_glfwRenderWindow );

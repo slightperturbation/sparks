@@ -54,6 +54,9 @@ namespace spark
             /// If the thread is not running or if hasn't been previously
             /// paused, then resume() has no effect.
             void resume( void );
+            
+            /// Wait for the held thread to complete.
+            void join( void );
 
             void executeTask( void );
         private:
@@ -115,6 +118,9 @@ namespace spark
 
         /// Delete references to all held resources
         void reset( void );
+        
+        /// Wait until all update threads have ended
+        void shutdown( void );
 
         /// Print all passes to INFO-level log
         void logPasses( void ) const;

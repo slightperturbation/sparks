@@ -65,20 +65,34 @@ function Sim.createHUDElements( owner, esuModel )
 		                            "Seconds" )
 	timeUnitMsg:translate( 0.685, 0.98, 0 )
 
-	-- Contact Area
-	owner.contactAreaDisplay = spark:createText( fontDesc.name, 
+	----------------------------------------------
+	-- Height from tissue
+	owner.distDisplay = spark:createText( fontDesc.name, 
  			                             fontDesc.size, 
 			                             fontDesc.material,
 			                             "HUDPass", 
-			                             string.format("%2.1f", owner.contactArea) )
-	owner.contactAreaDisplay:translate( 0.91, 0.985, 0 )
+			                             string.format("%2.1f", owner.tissueDistance) )
+	owner.distDisplay:translate( 0.91, 0.985, 0 )
 	areaUnitMsg = spark:createText( fontDesc.name, 
 		                            smallFontSize, 
 		                            fontDesc.material, 
 		                            "HUDPass", 
-		                            "mm^2" )
+		                            "mm" )
 	areaUnitMsg:translate( 0.95, 0.98, 0 )
 
+	-- Contact Area
+	-- owner.contactAreaDisplay = spark:createText( fontDesc.name, 
+ -- 			                             fontDesc.size, 
+	-- 		                             fontDesc.material,
+	-- 		                             "HUDPass", 
+	-- 		                             string.format("%2.1f", owner.contactArea) )
+	-- owner.contactAreaDisplay:translate( 0.91, 0.985, 0 )
+	-- areaUnitMsg = spark:createText( fontDesc.name, 
+	-- 	                            smallFontSize, 
+	-- 	                            fontDesc.material, 
+	-- 	                            "HUDPass", 
+	-- 	                            "mm^2" )
+	-- areaUnitMsg:translate( 0.95, 0.98, 0 )
 
 	-- --Highlight GUI w/ quad
 	local bgAccentMat = spark:createMaterial( "constantColorShader" )
@@ -86,6 +100,8 @@ function Sim.createHUDElements( owner, esuModel )
 	local bgQuad = spark:createQuad( vec2(0,0.915), vec2(1.0,1.0),
 		bgAccentMat, "HUDUnderPass" )
 	bgQuad:translate( 0,0,0 )
+
+
 end
 
 
@@ -103,6 +119,7 @@ function Sim.createTable( owner, worldOffset )
 	owner.clothMat:setVec2( "u_textureRepeat", vec2(4,4) )
 	local table = spark:createCube( worldOffset + vec3(-0.5, -0.025, -0.5), 1, owner.clothMat, "OpaquePass" )
 	table:rotate( 90, vec3(1,0,0) )
+	return table
 end
 
 function Sim.createTissue( owner, worldOffset )

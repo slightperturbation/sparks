@@ -9,7 +9,7 @@
 #include "Projection.hpp"
 #include "ESUInput.hpp"
 #include "ESUInputFromSharedMemory.hpp"
-
+#include "TexturedSparkRenderable.hpp"
 
 #include <luabind/operator.hpp>
 
@@ -135,10 +135,13 @@ spark
         .def( "reset", &Fluid::reset )
     ];
 
+    /////////////////////////////////////////////////////////// TexturedSparkRenderable/Spark
     luabind::module( lua )
     [
         luabind::class_< TexturedSparkRenderable, Renderable, TexturedSparkRenderablePtr >( "Spark" )
+        .def( "reseat", &TexturedSparkRenderable::reseat )
         .def( "update", &TexturedSparkRenderable::update )
+        .def( "setViewProjection", &TexturedSparkRenderable::setViewProjection )
     ];
 
     /////////////////////////////////////////////////////////// FontManager

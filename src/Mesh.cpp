@@ -229,25 +229,25 @@ spark::Mesh
     for( size_t i=0; i<3; ++i ) v.m_position[i] = a(i);
     v.m_texCoord[0] = aCoord[0];    v.m_texCoord[1] = aCoord[1];
     v.m_texCoord[2] = 0;
-    v.m_diffuseColor[0] = 1; v.m_diffuseColor[1] = 0; v.m_diffuseColor[2] = 0; v.m_diffuseColor[3] = 0;
+    v.m_diffuseColor[0] = 1; v.m_diffuseColor[1] = 1; v.m_diffuseColor[2] = 1; v.m_diffuseColor[3] = 1;
     size_t aIdx = m_vertexData.size();
     m_vertexData.push_back( v );
     // b
     for( size_t i=0; i<3; ++i ) v.m_position[i] = b(i);
     v.m_texCoord[0] = bCoord[0];    v.m_texCoord[1] = bCoord[1];
-    v.m_diffuseColor[0] = 0; v.m_diffuseColor[1] = 1; v.m_diffuseColor[2] = 0; v.m_diffuseColor[3] = 0;
+    v.m_diffuseColor[0] = 1; v.m_diffuseColor[1] = 1; v.m_diffuseColor[2] = 1; v.m_diffuseColor[3] = 1;
     size_t bIdx = m_vertexData.size();
     m_vertexData.push_back( v );
     // c
     for( size_t i=0; i<3; ++i ) v.m_position[i] = c(i);
     v.m_texCoord[0] = cCoord[0];    v.m_texCoord[1] = cCoord[1];
-    v.m_diffuseColor[0] = 0; v.m_diffuseColor[1] = 0; v.m_diffuseColor[2] = 1; v.m_diffuseColor[3] = 0;
+    v.m_diffuseColor[0] = 1; v.m_diffuseColor[1] = 1; v.m_diffuseColor[2] = 1; v.m_diffuseColor[3] = 1;
     size_t cIdx = m_vertexData.size();
     m_vertexData.push_back( v );
     // d
     for( size_t i=0; i<3; ++i ) v.m_position[i] = d(i);
     v.m_texCoord[0] = dCoord[0];    v.m_texCoord[1] = dCoord[1];
-    v.m_diffuseColor[0] = 1; v.m_diffuseColor[1] = 1; v.m_diffuseColor[2] = 1; v.m_diffuseColor[3] = 0;
+    v.m_diffuseColor[0] = 1; v.m_diffuseColor[1] = 1; v.m_diffuseColor[2] = 1; v.m_diffuseColor[3] = 1;
     size_t dIdx = m_vertexData.size();
     m_vertexData.push_back( v );
     
@@ -280,50 +280,50 @@ spark::Mesh
     v.m_position[0]     =  0;     v.m_position[1]     =  scale; v.m_position[2]     =  0;
     v.m_texCoord[0]     =  0;     v.m_texCoord[1]     =  1;     v.m_texCoord[2]     =  0;
     v.m_normal[0]       = -third; v.m_normal[1]       =  third; v.m_normal[2]       = -third;
-    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  0.0;   v.m_diffuseColor[2] =  0.0;
+    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0; v.m_diffuseColor[3] = 1.0;
     m_vertexData.push_back( v );
     //1
     v.m_position[0]     =  scale; v.m_position[1]     =  scale; v.m_position[2]     =  0;
     v.m_texCoord[0]     =  1;     v.m_texCoord[1]     =  1;     v.m_texCoord[2]     =  0;
     v.m_normal[0]       =  third; v.m_normal[1]       =  third; v.m_normal[2]       = -third;
-    v.m_diffuseColor[0] =  0.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  0.0;
+    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0; v.m_diffuseColor[3] = 1.0;
     m_vertexData.push_back( v );
     //2
     v.m_position[0]     =  scale; v.m_position[1]     =  0;     v.m_position[2]     =  0;
     v.m_texCoord[0]     =  1;     v.m_texCoord[1]     =  0;     v.m_texCoord[2]     =  0;
     v.m_normal[0]       =  third; v.m_normal[1]       = -third; v.m_normal[2]       = -third;
-    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  0.0;   v.m_diffuseColor[2] =  1.0;
+    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0; v.m_diffuseColor[3] = 1.0;
     m_vertexData.push_back( v );
     //3
     v.m_position[0]     =  0;     v.m_position[1]     =  0;     v.m_position[2]     =  0;
     v.m_texCoord[0]     =  0;     v.m_texCoord[1]     =  0;     v.m_texCoord[2]     =  0;
     v.m_normal[0]       = -third; v.m_normal[1]       = -third; v.m_normal[2]       = -third;
-    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0;
+    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0; v.m_diffuseColor[3] = 1.0;
     m_vertexData.push_back( v );
     
     //4
     v.m_position[0]     =  0;     v.m_position[1]     =  scale; v.m_position[2]     =  scale;
     v.m_texCoord[0]     =  0;     v.m_texCoord[1]     =  1;     v.m_texCoord[2]     =  1;
     v.m_normal[0]       = -third; v.m_normal[1]       =  third; v.m_normal[2]       =  third;
-    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0;
+    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0; v.m_diffuseColor[3] = 1.0;
     m_vertexData.push_back( v );
     //5
     v.m_position[0]     =  scale; v.m_position[1]     =  scale; v.m_position[2]     =  scale;
     v.m_texCoord[0]     =  1;     v.m_texCoord[1]     =  1;     v.m_texCoord[2]     =  1;
     v.m_normal[0]       =  third; v.m_normal[1]       =  third; v.m_normal[2]       =  third;
-    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0;
+    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0; v.m_diffuseColor[3] = 1.0;
     m_vertexData.push_back( v );
     //6
     v.m_position[0]     =  scale; v.m_position[1]     =  0;     v.m_position[2]     =  scale;
     v.m_texCoord[0]     =  1;     v.m_texCoord[1]     =  0;     v.m_texCoord[2]     =  1;
     v.m_normal[0]       =  third; v.m_normal[1]       = -third; v.m_normal[2]       =  third;
-    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0;
+    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0; v.m_diffuseColor[3] = 1.0;
     m_vertexData.push_back( v );
     //7
     v.m_position[0]     =  0;     v.m_position[1]     =  0;     v.m_position[2]     =  scale;
     v.m_texCoord[0]     =  0;     v.m_texCoord[1]     =  0;     v.m_texCoord[2]     =  1;
     v.m_normal[0]       = -third; v.m_normal[1]       = -third; v.m_normal[2]       =  third;
-    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0;
+    v.m_diffuseColor[0] =  1.0;   v.m_diffuseColor[1] =  1.0;   v.m_diffuseColor[2] =  1.0; v.m_diffuseColor[3] = 1.0;
     m_vertexData.push_back( v );
     
     GLuint vertexIndicies[] = {

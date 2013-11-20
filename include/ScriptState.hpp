@@ -70,6 +70,8 @@ namespace spark
         virtual void update( double dt )      override;
         virtual void deactivate( void )       override;
         virtual void reset( void )            override;
+        virtual void shutdown( void )         override;
+        
         boost::optional<spark::StateName> nextState( double currTime ) override;
 
         void reloadScript( void ); // TODO-implement reload

@@ -43,8 +43,13 @@ function Render:createDefaultRenderPasses( isShadowOn )
 	HUDUnderRenderPass:setDepthWrite( false )
 	HUDUnderRenderPass:useInterpolatedBlending()
 
+	wireRenderPass = spark:createRenderPass( 0.95, "WirePass", mainRenderTarget )
+	wireRenderPass:setDepthWrite( true )
+	wireRenderPass:setDepthTest( true )
+	wireRenderPass:disableBlending()
+	wireRenderPass:setWireframe( true )
 
-	isShadowDebugDisplayOn = false
+	local isShadowDebugDisplayOn = false
 	if( isShadowOn ) then
 		--Shader uniform must be set:  s_shadowMap = "light0_shadowMap"
 		shadowTarget = spark:createDepthMapRenderTarget( "light0_shadowMap", 2048, 2048 )
@@ -52,12 +57,12 @@ function Render:createDefaultRenderPasses( isShadowOn )
 		-- Either ortho (=directional light) or perspective (=local/spot light) can be used
 		--shadowCamera = spark:createOrthogonalProjection( -0.5, 0.5, -0.5, 0.5, 0, 5, vec3( -0.5, 2, 1 ) )
 		--shadowCamera = spark:createPerspectiveProjection( vec3( -1, 1.345, 1.222 ), vec3(0,0,0), vec3(0,1,0), 10.0, 0.5, 5.0 )
-		shadowCamera = spark:createPerspectiveProjection( vec3( 0.02, 0.5, 0.2 ), -- source
+		shadowCamera = spark:createPerspectiveProjection( vec3( 0.25, 0.5, 0.05 ), -- source
 			                                              vec3( 0, 0, 0 ),        -- target
 			                                              vec3( 0, 1, 0 ),        -- up
 			                                              28.0, -- FOV
 			                                              0.5,  -- near plane
-			                                              3 )   -- far plane
+			                                              5 )--3 )   -- far plane
 
 		-- The RenderPass's projection is used to compute the shadowmap and
 		-- fill shadowTarget with depth info.

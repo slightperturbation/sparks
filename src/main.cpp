@@ -251,6 +251,10 @@ int runSimulation(int argc, char** argv)
     // If should use full screen mode on the zspace or primary monitor (if no zspace)
     const bool enableFullScreen = false;
 
+    const bool useZSpaceEyeTracking = true;
+    const bool useZSpaceStylus = true;
+    const bool useTrakStarStylus = false;
+
     OpenGLWindow window( "Spark", 
                          enableLegacyOpenGlLogging, 
                          useStereo, 
@@ -273,21 +277,27 @@ int runSimulation(int argc, char** argv)
                                      glfwInputFactory->createDevice(0) );
 
 #ifdef HAS_ZSPACE
-    ZSpaceInputFactory zSpaceInputFactory;
-    inputManager->acquireInputDevice( "stylus", 
-                                      zSpaceInputFactory.createDevice(0) );
+    if( useZSpaceStylus )
+    {
+        ZSpaceInputFactory zSpaceInputFactory;
+        inputManager->acquireInputDevice( "stylus", 
+            zSpaceInputFactory.createDevice(0) );
+    }
 #endif
 #ifdef HAS_ASCENSIONTECH
-    try
+    if( useTrakStarStylus )
     {
-        AscensionTechInputFactory atInputFactory;
-        inputManager->acquireInputDevice( "trakStar",
-            atInputFactory.createDevice(0) );
-    }
-    catch(...)
-    {
-        std::cerr << "Unable to create AscensionTech TrakStar input device.\n";
-        LOG_ERROR(g_log) << "Unable to create trakStar input device";
+        try
+        {
+            AscensionTechInputFactory atInputFactory;
+            inputManager->acquireInputDevice( "trakStar",
+                atInputFactory.createDevice(0) );
+        }
+        catch(...)
+        {
+            std::cerr << "Unable to create AscensionTech TrakStar input device.\n";
+            LOG_ERROR(g_log) << "Unable to create trakStar input device";
+        }
     }
 #endif
 
@@ -310,12 +320,16 @@ int runSimulation(int argc, char** argv)
     g_arcBall->resizeViewport( 0, 0, width, height );
     g_guiEventPublisher->subscribe( g_arcBall );
     
+
     // Eye Tracker
     EyeTrackerPtr eyeTracker;
     // Create eyeTracker if desired
     {
 #ifdef HAS_ZSPACE
-        eyeTracker = window.getEyeTracker();
+        if( useZSpaceEyeTracking )
+        {
+            eyeTracker = window.getEyeTracker();
+        }
 #endif
         if( !eyeTracker )
         {
@@ -380,11 +394,14 @@ int runSimulation(int argc, char** argv)
     scriptStates.push_back( "ButtonExample" );
     // Actual States
     // -- TODO -- get all State.lua files in the States directory
+    scriptStates.push_back( "Example" );
     scriptStates.push_back( "Startup" );
     scriptStates.push_back( "Loading" );
     scriptStates.push_back( "Menu" );
     scriptStates.push_back( "Instructions" );
     scriptStates.push_back( "Calibration" );
+    scriptStates.push_back( "ModeInstruction" );
+
     for( auto iter = scriptStates.begin(); iter != scriptStates.end(); ++iter )
     {
         StatePtr newState( new ScriptState( *iter,
@@ -519,20 +536,20 @@ int runSimulation(int argc, char** argv)
         ////////////////////////////////////////////////////////////////////////
         // Input handlers 
         // 
+        double inputUpdateStartTime = glfwGetTime();
         if( ! useBackgroundInputUpdates )
         {
-            double inputUpdateStartTime = glfwGetTime();
             LOG_TRACE(g_log) << "Update at " << currTime;
             if( inputManager )
             {
                 inputManager->update( currTime - lastTime );
             }
-            if( g_arcBall )
-            {
-                g_arcBall->updatePerspective( cameraPerspective );
-            }
-            secondsInComponentSinceLastReport["InputUpdate"] += glfwGetTime() - inputUpdateStartTime;
         }
+        if( g_arcBall )
+        {
+            g_arcBall->updatePerspective( cameraPerspective );
+        }
+        secondsInComponentSinceLastReport["InputUpdate"] += glfwGetTime() - inputUpdateStartTime;
 
         ////////////////////////////////////////////////////////////////////////
         // Render Setup
@@ -659,6 +676,9 @@ int runSimulation(int argc, char** argv)
     //{
     //    textureManagerCommandThread.join();
     //}
+    
+    // Join scene background threads, which should be closing
+    // due to Scene::FixedTaskUpdate::m_isStopped == true
     stateManager.shutdown();
     textureManager->releaseAll();
     return 0;

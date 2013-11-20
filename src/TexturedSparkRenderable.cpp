@@ -31,13 +31,31 @@ spark::TexturedSparkRenderable
     const Vector3f upDir = (camDir.cross( sparkDir )).normalized();
     return upDir * width;
 }
+
+void
+spark::TexturedSparkRenderable
+::reseat( const glm::vec3& fromPos, const glm::vec3& toPos,
+          float a_intensity,
+          float a_scale,
+          int   a_depth,
+          float a_forkProb )
+{
+    Eigen::Vector3f from( fromPos[0], fromPos[1], fromPos[2] );
+    Eigen::Vector3f to( toPos[0], toPos[1], toPos[2] );
+    m_spark->create( from, to,
+                     a_intensity,
+                     a_scale,
+                     a_depth,
+                     a_forkProb );
+    
+}
     
 void 
 spark::TexturedSparkRenderable
 ::render( const RenderCommand& rc ) const
 {
     //    const float width = 0.005f * m_spark->length();
-    const float width = 0.025f * m_spark->length();
+    const float width = 0.075f * m_spark->length();
     m_mesh->clearGeometry();
     Segments& segments = m_spark->segments();
     // two verts per segment, so vertexIndex = (2i, 2i+1)  (bottom, top)

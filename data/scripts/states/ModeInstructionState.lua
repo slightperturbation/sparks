@@ -4,23 +4,23 @@ local Button = require "button"
 local Render = require "render"
 ----------------------------------------
 
-MenuState = {}
+ModeInstructionState = {}
  
-function MenuState:new()
-	print( "MenuState:new" )
+function ModeInstructionState:new()
+	print( "ModeInstructionState:new" )
 	newObj = { 
 		angle = 45, 
 		hasRunOnce = false, 
 		startTime = -1,
-		buttons = {}, 
+		buttons = {},  
 		theNextState = ""
 	}
 	self.__index = self
 	return setmetatable(newObj, self)
 end
 
-function MenuState:load()
-	print( "MenuState:load" )
+function ModeInstructionState:load()
+	print( "ModeInstructionState:load" )
 
 	spark:createPostProcessingRenderPass( 0.0, 
 	      "MSAAFinalRenderPass",
@@ -41,82 +41,95 @@ function MenuState:load()
 
 	explanationMat = spark:createMaterial( "TextShader" )
 	explanationMat:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
-	explanationMat:setVec4( "u_color", vec4( 0.8, 0.8, 0.8, 0.8 ) )
+	explanationMat:setVec4( "u_color", vec4( 0.9, 0.9, 0.9, 1.0 ) )
 	self.explanationText = spark:createText( "Sans", 
 		                                     32, 
 		                                     explanationMat, 
 		                            		 "HUDPass", "..." )
 	self.explanationText:translate( vec3( 0.5, 0.75, 0 ) ) 
-	self.explanationText:setText( "Select a lesson from the list to the left." )
+	self.explanationText:setText( 
+		[[The two major ESU (electrosurgical unit) modes
+ are 'cut' and 'coag'.
+
+Choose the mode yuo want to use next.
+ ]] )
 
 	-------------------------------------------------
 	-- Buttons
 	local xpos = 0.1
 	local ypos = 0.9
 	local lineHeight = 0.15
-	self.buttons["Introduction"] = Button:newLargeButton( xpos, ypos, "Introduction" )
-	self.buttons["Introduction"].onClick = function () self.theNextState = "Introduction" end
-	self.buttons["Introduction"].onMouseOver = function () 
+	self.buttons["Cut Mode"] = Button:newLargeButton( xpos, ypos, "Cut Mode" )
+	self.buttons["Cut Mode"].onClick = function () self.theNextState = "Simulation" end
+	self.buttons["Cut Mode"].onMouseOver = function () 
 		self.explanationText:setText(
-[[A brief overview of the VEST hands-on 
-electosurgery simulator.]])
+[[The CUT mode provides a 100% duty cycle,
+allowing vaporization with less dessication.
+
+The CUT lesson asks you to:
+
+  1) Create a spark from the tool to the tissue,
+     you should learn that electrical arcs are 
+     more difficult to create in cut mode than coag mode.
+
+  2) Vaporize a small region of tissue with minimal
+		thermal spread.
+     You should learn that cut minimizes spread 
+     compared to coag.
+]])
 	end
 
 	ypos = ypos - lineHeight
-	self.buttons["ESU Power"] = Button:newLargeButton( xpos, ypos, "ESU Power" )
-	self.buttons["ESU Power"].onClick = function () 
-		self.theNextState = "ESUPower" 
-		print("Switching to ESUPower state")
+	self.buttons["Coag Mode"] = Button:newLargeButton( xpos, ypos, "Coag Mode" )
+	self.buttons["Coag Mode"].onClick = function () 
+		self.theNextState = "Simulation" 
+		print("Switching to Simulation state")
 end
-	self.buttons["ESU Power"].onMouseOver = function ()
+	self.buttons["Coag Mode"].onMouseOver = function ()
 		self.explanationText:setText( 
-[[The power setting (wattage) has the
-and most direct impact on tissue effects.]])
+[[The COAG mode outputs high-voltage
+bursts, allowing easier arcing to nearby tissue.
+Often used to fulgurate a broad area of tissue.
+
+The COAG lesson asks you to:
+
+  1) Create a spark from the tool to the tissue,
+     you should learn that electrical arcs are 
+     much easier to create in coag mode than cut mode,
+     and that the electricity can arc further.
+
+  2) Vaporize a small region of tissue with minimal
+		thermal spread.
+     You should learn that coag is more difficult to
+     limit the spread compared to coag.
+]])
 	end
 
 	ypos = ypos - lineHeight
-	self.buttons["ESU Modes"] = Button:newLargeButton( xpos, ypos, "ESU Modes" )
-	self.buttons["ESU Modes"].onClick = function () self.theNextState = "ModeInstruction" end
-	self.buttons["ESU Modes"].onMouseOver = function ()
+	self.buttons["Blend Mode"] = Button:newLargeButton( xpos, ypos, "Blend Mode" )
+	self.buttons["Blend Mode"].onClick = function () self.theNextState = "Simulation" end
+	self.buttons["Blend Mode"].onMouseOver = function ()
 		self.explanationText:setText(
-[[Learn the role of each of the three modes of 
-operation of the ESU:
-	
-	Coag, Cut and Blend]])
+[[Provides a blend that
+has features of both Cut and Coag.
+]])
 	end
 
-	ypos = ypos - lineHeight
-	self.buttons["Contact Area"] = Button:newLargeButton( xpos, ypos, "Contact Area" )
-	self.buttons["Contact Area"].onClick = function ()  self.theNextState = "" end
-	self.buttons["Contact Area"].onMouseOver = function () 
-		self.explanationText:setText(
-[[The area of contact between the electrode (bovie) 
-and the tissue has a surprisingly large impact on the
-heating effect.]])
-	end
-
-	ypos = ypos - lineHeight
-	self.buttons["Freestyle"] = Button:newLargeButton( xpos, ypos, "Freestyle" )
-	self.buttons["Freestyle"].onClick = function ()  self.theNextState = "Simulation" end
-	self.buttons["Freestyle"].onMouseOver = function () 
-		self.explanationText:setText( 
-[[Experiment freely on simulated tisse.]])
-	end
 
 	self.cursorScale = 0.02
 	local cursorMat = spark:createMaterial( "constantColorShader" )
-	cursorMat:setVec4( "u_color", vec4( 1, 0.5, 0.5, 0.5) );
+	cursorMat:setVec4( "u_color", vec4( 1, 0.5, 0.5, 0.8) );
 	self.cursor = spark:loadMesh( "sphere.obj", cursorMat, "HUDPass" )
 
 end
 
-function MenuState:activate()
-	print( "MenuState:activate" )
+function ModeInstructionState:activate()
+	print( "ModeInstructionState:activate" )
 	self.startTime = -1
 
 end
 
-function MenuState:update( dt )
+function ModeInstructionState:update( dt )
 	if( isWindows() ) then
 		inputDeviceName = "stylus"
 	else
@@ -136,17 +149,17 @@ function MenuState:update( dt )
 	end
 end
 
-function MenuState:deactivate()
-	print( "MenuState:deactivate" )
+function ModeInstructionState:deactivate()
+	print( "ModeInstructionState:deactivate" )
 	self.theNextState = ""
 end
 
-function MenuState:nextState( currTime )
+function ModeInstructionState:nextState( currTime )
 	theNextState = self.theNextState
 	-- For now, theNextState global is used to pass
 	-- the next desired state back to the app
 	-- TODO should be changed to use the return value
-	-- print( "MenuState:nextState( " .. currTime .. " )")
+	-- print( "ModeInstructionState:nextState( " .. currTime .. " )")
 	-- if self.startTime == -1 then
 	-- 	self.startTime = currTime
 	-- end
@@ -159,6 +172,6 @@ function MenuState:nextState( currTime )
 	-- end
 end
 
-theState = MenuState:new()
+theState = ModeInstructionState:new()
 theNextState = ""
 

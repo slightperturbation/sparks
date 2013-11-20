@@ -86,13 +86,30 @@ void
 spark::LSpark
 ::update( double dt )
 {
-    for( size_t i=0; i<m_segments.size(); ++i )
+    const double decayTime = 0.2; // todo--parameterize decayTime
+    // m_intensity goes from 1 to 0 over decayTime
+    // in dt, m_intensity should drop by dt/decayTime (e.g., dt=0.01,
+    // and decayTime = 0.5, then each dt, m_intensity -= 0.02)
+    // decayTime = 1, dt = 1, step = 1
+    // decayTime = 1, dt = 0.1, step = .1
+    // decayTime = 10, dt = 0.1, step = .01
+    // step = dt/decayTime
+    
+    const double step = dt / decayTime;
+    for( size_t i = 0; i < m_segments.size(); ++i )
     {
-        // Jitter positions around a bit
-        float jitterScale = 0.0005f;
-        //m_segments[i].m_pos += Vector3f( jitterScale*unitRandom(), jitterScale*unitRandom(), jitterScale*unitRandom() );
         // decrease intensity
-        m_segments[i].m_intensity *= 0.95f; // TODO -- parameterize?
+        m_segments[i].m_intensity -= step;
+        // don't jitter endpoints
+        if( (i == 0) || (i == 1))
+        {
+            continue;
+        }
+        // Jitter positions around a bit
+        float jitterScale = dt * 0.25f * length();
+        m_segments[i].m_pos += Vector3f( jitterScale*unitRandom(),
+                                         jitterScale*unitRandom(), 
+                                         jitterScale*unitRandom() );
     }
 }
 
@@ -100,7 +117,11 @@ void
 spark::LSpark
 ::advect( VelocityFieldInterfacePtr velocityField )
 {
-    // TODO
+    const float dt = 0.03;
+    for( size_t i = 2; i < m_segments.size(); ++i )
+    {
+        m_segments[i].m_pos += dt * velocityField->velocityAtPosition( m_segments[i].m_pos );
+    }
 }
 
 float
@@ -135,7 +156,7 @@ spark::LSpark
     //
     // Parent <---- newSegment <--- a_index
     //
-    const float intensityFalloff = 0.9f;
+    const float intensityFalloff = 1.0f;
     const Segment& s = m_segments[a_index];
     const Vector3f parentPos = s.parentPos(m_segments);
     const Vector3f dir = parentPos - s.m_pos;  // long dir of segment

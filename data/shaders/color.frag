@@ -22,5 +22,5 @@ uniform vec4 u_color = vec4( 1, 1, 1, 1 );
 
 void main()
 {
-	outColor = vec4(f_texCoord.st,1,1); //f_fragColor ;//* tex;
+	outColor = f_fragColor * u_color;
 }
