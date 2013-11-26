@@ -163,15 +163,23 @@ function ESUPowerState:update( dt )
     -- Convey updates from the UI to the current ESU settings
     ESUModel.theESUModel:updateInput( theESUInput )
     ESUModel.theESUModel:update( dt )
-    
-    self.wattDisplay:setText( string.format( "%2.0f / %2.0f", 
-                                             ESUModel.theESUModel.cutWattage, 
-                                             ESUModel.theESUModel.coagWattage) )
+    if ESUModel.theESUModel.mode == ESUINPUT_BLEND then
+        self.wattDisplay:setText( string.format( "%2.0f / %2.0f", 
+                                                 ESUModel.theESUModel.cutWattage, 
+                                                 ESUModel.theESUModel.coagWattage) )
+    end
+    if ESUModel.theESUModel.mode == ESUINPUT_COAG then
+        self.wattDisplay:setText( string.format( "%2.0f", 
+                                                 ESUModel.theESUModel.coagWattage) )
+    end
+    if ESUModel.theESUModel.mode == ESUINPUT_CUT then
+        self.wattDisplay:setText( string.format( "%2.0f", 
+                                                 ESUModel.theESUModel.cutWattage) )
+    end
     self.modeDisplay:setText( self.ESUModeLabels[ ESUModel.theESUModel.mode ] ) 
 
 
     -- Get control inputs
-
     if( isWindows() ) then
         inputDeviceName = "stylus"
         --inputDeviceName = "trakStar"

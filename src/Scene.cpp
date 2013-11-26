@@ -2,8 +2,10 @@
 #include "Scene.hpp"
 #include "Updateable.hpp"
 #include "Mesh.hpp"
+#include "Utilities.hpp"
 
 #include <boost/chrono.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <functional>
 #include <algorithm>
@@ -312,6 +314,9 @@ void
 spark::Scene::FixedUpdateTask
 ::executeTask( void )
 {
+    LOG_INFO(g_log) << "In thread " << getThreadId()
+        << " for FixedUpdateTask for updateable \"" 
+        << m_updateable->updateableName();
     while( true )
     {
         double currTime = getTime();
@@ -342,6 +347,9 @@ void
 spark::Scene::FixedUpdateTask
 ::pause( void )
 {
+    LOG_INFO(g_log) << "Pausing FixedUpdateTask for updateable \"" 
+        << m_updateable->updateableName() 
+        << "\" on thread " << getThreadId();
     m_isPaused = true;
 }
 
@@ -349,6 +357,9 @@ void
 spark::Scene::FixedUpdateTask
 ::resume( void )
 {
+    LOG_INFO(g_log) << "Resuming FixedUpdateTask for updateable \"" 
+        << m_updateable->updateableName() 
+        << "\" on thread " << getThreadId();
     m_isPaused = false;
 }
 
@@ -360,6 +371,10 @@ spark::Scene::FixedUpdateTask
     {
         m_hasStarted = true;
         m_thread = boost::thread( &FixedUpdateTask::executeTask, this );
+
+        LOG_INFO(g_log) << "Started FixedUpdateTask for updateable \"" 
+            << m_updateable->updateableName() 
+            << "\" on thread " << getThreadId();
     }
 }
 
@@ -367,6 +382,9 @@ void
 spark::Scene::FixedUpdateTask
 ::stop( void )
 {
+    LOG_INFO(g_log) << "Stopping FixedUpdateTask for updateable \"" 
+        << m_updateable->updateableName() 
+        << "\" on thread " << getThreadId();
     m_isStopped = true;
     m_thread.timed_join( boost::posix_time::seconds( 1 ) );
 }
@@ -375,6 +393,19 @@ void
 spark::Scene::FixedUpdateTask
 ::join( void )
 {
+    LOG_INFO(g_log) << "Joining FixedUpdateTask for updateable \"" 
+        << m_updateable->updateableName() 
+        << "\" on thread " << getThreadId();
     m_thread.join();
+}
+
+unsigned long 
+spark::Scene::FixedUpdateTask
+::getThreadId( void )
+{
+    std::string threadBoostId = boost::lexical_cast< std::string >( m_thread.get_id() );
+    unsigned long numericId = 0;
+    sscanf( threadBoostId.c_str(), "%lx", &numericId );
+    return numericId;
 }
 

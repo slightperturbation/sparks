@@ -18,7 +18,7 @@ function Sim.createHUDElements( owner, esuModel )
 	fontDesc.name = "Sans"
 	fontDesc.fontFilename = "HelveticaNeueLight.ttf"
 	fontDesc.size = 48
-	local smallFontSize = 12
+	local smallFontSize = 16
 
 	fontDesc.material = spark:createMaterial( "TextShader" )
 	fontDesc.material:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
@@ -78,7 +78,7 @@ function Sim.createHUDElements( owner, esuModel )
 		                            fontDesc.material, 
 		                            "HUDPass", 
 		                            "mm" )
-	areaUnitMsg:translate( 0.95, 0.98, 0 )
+	areaUnitMsg:translate( 0.962, 0.98, 0 )
 
 	-- Contact Area
 	-- owner.contactAreaDisplay = spark:createText( fontDesc.name, 

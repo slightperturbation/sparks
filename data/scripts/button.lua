@@ -13,11 +13,11 @@ Button.defaultFontDesc.size = largeFontSize
 
 Button.defaultFontDesc.material = spark:createMaterial( "TextShader" )
 Button.defaultFontDesc.material:addTexture( "s_color", Button.fontMgr:getFontAtlasTextureName() )
-Button.defaultFontDesc.material:setVec4( "u_color", vec4( 0.7, 0.7, 0.7, 0.8 ) )
+Button.defaultFontDesc.material:setVec4( "u_color", vec4( 0.8, 0.8, 0.8, 1 ) )
 
 Button.defaultFontDesc.rolloverMaterial = spark:createMaterial( "TextShader" )
 Button.defaultFontDesc.rolloverMaterial:addTexture( "s_color", Button.fontMgr:getFontAtlasTextureName() )
-Button.defaultFontDesc.rolloverMaterial:setVec4( "u_color", vec4( 0.9, 0.9, 0.9, 0.8 ) )
+Button.defaultFontDesc.rolloverMaterial:setVec4( "u_color", vec4( 0.9, 0.9, 0.9, 1 ) )
 
 Button.defaultFontDesc.pressedMaterial = spark:createMaterial( "TextShader" )
 Button.defaultFontDesc.pressedMaterial:addTexture( "s_color", Button.fontMgr:getFontAtlasTextureName() )
@@ -26,16 +26,17 @@ Button.defaultFontDesc.pressedMaterial:setVec4( "u_color", vec4( 1.0, 1.0, 1.0, 
 Button.fontMgr:addFont( Button.defaultFontDesc.name, Button.defaultFontDesc.size, Button.defaultFontDesc.fontFilename );
 Button.fontMgr:addFont( Button.defaultFontDesc.name, mediumFontSize, Button.defaultFontDesc.fontFilename );
 
-function Button:newLargeButton( posX, posY, msg, onClickFunc )
+function Button:newLargeButton( posX, posY, argKeycode, msg, onClickFunc )
 	Button.defaultFontDesc.size = largeFontSize
-	return Button:newButton( posX, posY, msg, Button.defaultFontDesc )
+	return Button:newButton( posX, posY, argKeycode, msg, Button.defaultFontDesc )
 end
 
-function Button:newButton( posX, posY, msg, argFontDesc, onClickFunc, onMouseOverFunc, onMouseOutFunc )
+function Button:newButton( posX, posY, argKeycode, msg, argFontDesc, onClickFunc, onMouseOverFunc, onMouseOutFunc )
 	newObj = 
 	{ 
 		x = posX, 
 		y = posY,
+		keycode = argKeycode,
 		isPressed = false, 
 		isIn = false,
 		fontDesc = argFontDesc,
@@ -79,6 +80,11 @@ function Button:setText( msg )
 end
 
 function Button:update( projectedMousePosX, projectedMousePosY, buttonState )
+	-- check for our shortcut key (use string.byte() to convert from ascii)
+	if input:isKeyDown( self.keycode ) then
+		self:onClick()
+	end
+
 	-- padding around button for near-misses
 	local buttonPadding = vec2( 10,15 )
 	local buttonSizeInScreenCoords = spark:pixelsToScreenCoords( self.text:getSizeInPixels() + buttonPadding )

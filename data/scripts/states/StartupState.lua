@@ -28,8 +28,8 @@ function StartupState:nextState( currTime )
 	--theNextState = "Example"
 	--theNextState = "TextureTest"
 	--theNextState = "ESUPower"
-	theNextState = "Menu"
-	--theNextState = "Simulation"
+	--theNextState = "Menu"
+	theNextState = "Simulation"
 	--theNextState = "Calibration"
 end
 

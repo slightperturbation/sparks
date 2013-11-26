@@ -54,16 +54,16 @@ function MenuState:load()
 	local xpos = 0.1
 	local ypos = 0.9
 	local lineHeight = 0.15
-	self.buttons["Introduction"] = Button:newLargeButton( xpos, ypos, "Introduction" )
-	self.buttons["Introduction"].onClick = function () self.theNextState = "Introduction" end
-	self.buttons["Introduction"].onMouseOver = function () 
-		self.explanationText:setText(
-[[A brief overview of the VEST hands-on 
-electosurgery simulator.]])
-	end
+-- 	self.buttons["Introduction"] = Button:newLargeButton( xpos, ypos, "1", "Introduction" )
+-- 	self.buttons["Introduction"].onClick = function () self.theNextState = "Introduction" end
+-- 	self.buttons["Introduction"].onMouseOver = function () 
+-- 		self.explanationText:setText(
+-- [[A brief overview of the VEST hands-on 
+-- electosurgery simulator.]])
+-- 	end
 
 	ypos = ypos - lineHeight
-	self.buttons["ESU Power"] = Button:newLargeButton( xpos, ypos, "ESU Power" )
+	self.buttons["ESU Power"] = Button:newLargeButton( xpos, ypos, KEY_KP_1, "[1] ESU Power" )
 	self.buttons["ESU Power"].onClick = function () 
 		self.theNextState = "ESUPower" 
 		print("Switching to ESUPower state")
@@ -75,7 +75,7 @@ and most direct impact on tissue effects.]])
 	end
 
 	ypos = ypos - lineHeight
-	self.buttons["ESU Modes"] = Button:newLargeButton( xpos, ypos, "ESU Modes" )
+	self.buttons["ESU Modes"] = Button:newLargeButton( xpos, ypos, KEY_KP_2, "[2] ESU Modes" )
 	self.buttons["ESU Modes"].onClick = function () self.theNextState = "ModeInstruction" end
 	self.buttons["ESU Modes"].onMouseOver = function ()
 		self.explanationText:setText(
@@ -86,7 +86,7 @@ operation of the ESU:
 	end
 
 	ypos = ypos - lineHeight
-	self.buttons["Contact Area"] = Button:newLargeButton( xpos, ypos, "Contact Area" )
+	self.buttons["Contact Area"] = Button:newLargeButton( xpos, ypos, KEY_KP_3, "[3] Current Density" )
 	self.buttons["Contact Area"].onClick = function ()  self.theNextState = "" end
 	self.buttons["Contact Area"].onMouseOver = function () 
 		self.explanationText:setText(
@@ -96,7 +96,7 @@ heating effect.]])
 	end
 
 	ypos = ypos - lineHeight
-	self.buttons["Freestyle"] = Button:newLargeButton( xpos, ypos, "Freestyle" )
+	self.buttons["Freestyle"] = Button:newLargeButton( xpos, ypos, KEY_KP_4, "[4] Simulation" )
 	self.buttons["Freestyle"].onClick = function ()  self.theNextState = "Simulation" end
 	self.buttons["Freestyle"].onMouseOver = function () 
 		self.explanationText:setText( 

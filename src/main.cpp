@@ -246,8 +246,8 @@ int runSimulation(int argc, char** argv)
     const bool useStereo = false;
     // Create a separate thread to load background textures
     const bool useBackgroundResourceLoading = false;
-    // Create a seperate thread for input updates
-    const bool useBackgroundInputUpdates = true;
+    // Create a separate thread for input updates
+    const bool useBackgroundInputUpdates = false;
     // If should use full screen mode on the zspace or primary monitor (if no zspace)
     const bool enableFullScreen = false;
 

@@ -9,6 +9,7 @@
 
 spark::Input
 ::Input( void )
+: m_defaultDevice( "NO_DEFAULT_DEVICE_SPECIFIED" )
 {
     // Noop
 }
@@ -60,6 +61,13 @@ spark::Input
     return iter->second->getTransform();
 }
 
+glm::mat4
+spark::Input
+::getDefaultDeviceTransform( void ) const
+{
+    return getTransform( m_defaultDevice );
+}
+
 glm::vec3
 spark::Input
 ::getPosition( const InputDeviceName& name ) const
@@ -73,6 +81,13 @@ spark::Input
         return glm::vec3();
     }
     return iter->second->getPosition();
+}
+
+glm::vec3
+spark::Input
+::getDefaultDevicePosition( void ) const 
+{
+    return getPosition( m_defaultDevice );
 }
 
 bool
@@ -90,6 +105,13 @@ spark::Input
     return iter->second->isButtonPressed( buttonNumber );
 }
 
+bool
+spark::Input
+::isDefaultDeviceButtonPressed( int buttonNumber ) const
+{
+    return isButtonPressed( m_defaultDevice, buttonNumber );
+}
+
 glm::vec2
 spark::Input
 ::getScreenPosition( const InputDeviceName& name ) const
@@ -105,12 +127,42 @@ spark::Input
     return iter->second->getScreenPosition();
 }
 
+glm::vec2
+spark::Input
+::getDefaultDeviceScreenPosition( void ) const
+{
+    return getScreenPosition( m_defaultDevice );
+}
+
+
 void
 spark::Input
 ::acquireInputDevice( const InputDeviceName& name,
                       std::unique_ptr<InputDevice> device )
 {
     m_devices[name] = std::move( device );
+}
+
+void 
+spark::Input
+::acquireInputDeviceAsDefault( const InputDeviceName& name,
+                               std::unique_ptr<InputDevice> device )
+{
+    acquireInputDevice( name, std::move( device ) );
+    setDefaultInputDeviceName( name );
+}
+void 
+spark::Input
+::setDefaultInputDeviceName( const InputDeviceName& name )
+{
+    m_defaultDevice = name;
+}
+
+const spark::InputDeviceName& 
+spark::Input
+::getDefaultInputDeviceName( void ) const
+{
+    return m_defaultDevice;
 }
 
 void

@@ -59,7 +59,7 @@ Choose the mode yuo want to use next.
 	local xpos = 0.1
 	local ypos = 0.9
 	local lineHeight = 0.15
-	self.buttons["Cut Mode"] = Button:newLargeButton( xpos, ypos, "Cut Mode" )
+	self.buttons["Cut Mode"] = Button:newLargeButton( xpos, ypos, "1", "[1] Cut Mode" )
 	self.buttons["Cut Mode"].onClick = function () self.theNextState = "Simulation" end
 	self.buttons["Cut Mode"].onMouseOver = function () 
 		self.explanationText:setText(
@@ -80,7 +80,7 @@ The CUT lesson asks you to:
 	end
 
 	ypos = ypos - lineHeight
-	self.buttons["Coag Mode"] = Button:newLargeButton( xpos, ypos, "Coag Mode" )
+	self.buttons["Coag Mode"] = Button:newLargeButton( xpos, ypos, "2", "[2] Coag Mode" )
 	self.buttons["Coag Mode"].onClick = function () 
 		self.theNextState = "Simulation" 
 		print("Switching to Simulation state")
@@ -105,15 +105,15 @@ The COAG lesson asks you to:
 ]])
 	end
 
-	ypos = ypos - lineHeight
-	self.buttons["Blend Mode"] = Button:newLargeButton( xpos, ypos, "Blend Mode" )
-	self.buttons["Blend Mode"].onClick = function () self.theNextState = "Simulation" end
-	self.buttons["Blend Mode"].onMouseOver = function ()
-		self.explanationText:setText(
-[[Provides a blend that
-has features of both Cut and Coag.
-]])
-	end
+-- 	ypos = ypos - lineHeight
+-- 	self.buttons["Blend Mode"] = Button:newLargeButton( xpos, ypos, "Blend Mode" )
+-- 	self.buttons["Blend Mode"].onClick = function () self.theNextState = "Simulation" end
+-- 	self.buttons["Blend Mode"].onMouseOver = function ()
+-- 		self.explanationText:setText(
+-- [[Provides a blend that
+-- has features of both Cut and Coag.
+-- ]])
+-- 	end
 
 
 	self.cursorScale = 0.02

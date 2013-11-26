@@ -14,7 +14,6 @@
 #include "RenderPass.hpp"
 #include "RenderCommand.hpp"
 #include "Updateable.hpp"
-#include "Utilities.hpp" // getTime()
 
 #include <boost/thread.hpp>
 
@@ -22,7 +21,9 @@ namespace spark
 {
     /// Scene manages the set of renderables to be drawn with 
     /// Renderable::render() and updated with Renderable::update().
-    /// Different instances of Scene can share Renderables and RenderPasses
+    /// Different instances of Scene can share Renderables and RenderPasses.
+    /// Common usage is that a single Scene object is the stuff-to-be-rendered
+    /// in a given State instance.
     class Scene
     {
         /// Calls the Updateable's update method unless pause()'d or
@@ -30,6 +31,8 @@ namespace spark
         class FixedUpdateTask
         {
         public:
+            /// Create a new task that will call udp->update( dt ) at most
+            /// every dt seconds.
             FixedUpdateTask( UpdateablePtr udp, float dt );
             
             /// Create a thread to regularly update the associated
@@ -44,7 +47,7 @@ namespace spark
             void stop( void );
            
             /// Allows the thread to continue running, but
-            /// no longer calles the Updateable's update() method.
+            /// no longer calls the Updateable's update() method.
             /// Reverse pause() by calling resume().
             void pause( void );
             
@@ -58,20 +61,27 @@ namespace spark
             /// Wait for the held thread to complete.
             void join( void );
 
-            void executeTask( void );
         private:
+            /// Function that is executed by the thread.
+            /// Repeatably calls m_updateable->update() at most per m_dt seconds
+            /// Terminates when m_isStopped is set.
+            void executeTask( void );
+
+            /// Returns the thread ID that matches the ID used by Visual Studio's debugger.
+            unsigned long getThreadId( void );
+
             // MSVC doesn't have move semantics, so disable copy-ctor and op=
             FixedUpdateTask( const FixedUpdateTask& ); // empty
             FixedUpdateTask operator=( const FixedUpdateTask& ); // empty
         private:
             boost::thread m_thread;
             UpdateablePtr m_updateable;
-            bool m_hasStarted; //< TODO: shouldn't be needed, test if thread is not-a-thread
+            bool m_hasStarted; //< TODO: shouldn't be needed, could test if thread is not-a-thread
             bool m_isPaused;
             bool m_isStopped;
             double m_dt;
             double m_prevUpdateTime;
-        };
+        }; // End class Scene::FixedUpdateTask
         typedef spark::shared_ptr< FixedUpdateTask > FixedUpdateTaskPtr;
     public:
         Scene( void );

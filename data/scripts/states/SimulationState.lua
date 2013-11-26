@@ -164,8 +164,8 @@ function SimulationState:activate()
 	local camera = spark:getCamera()
 
 	if self.trackingMode == "zSpace" then
-		--camera:cameraPos( 0.0, 0.345, 0.222 )
-		camera:cameraPos( 0.0, 0.125, 0.18 )
+		camera:cameraPos( 0.0, 0.345, 0.222 )
+		--camera:cameraPos( 0.0, 0.125, 0.18 ) -- close-up, good for screen shots
 		camera:cameraTarget( 0, -0.02, 0 )
 		camera:cameraUp( 0,1,0 )
 	end
@@ -270,6 +270,7 @@ function SimulationState:update( dt )
 	-- zSpace Tracker
 	if( inputDeviceName == "stylus" ) then
 		if( useOnlyPosition ) then
+			-- Only useful for debugging transforms
 			self.instrument:setTransform( mat4() )
 			self.instrument:translate( stylusPos )
 			self.instrument:translate( 0,.3,0 )
@@ -293,6 +294,7 @@ function SimulationState:update( dt )
 	-- TrakStar
 	if( inputDeviceName == "trakStar" ) then
 		if( useOnlyPosition ) then
+			-- Only useful for debugging transforms
 			self.instrument:setTransform( mat4() )
 			self.instrument:translate( stylusPos )
 			self.instrument:translate( 0,.3,0 )
@@ -333,7 +335,8 @@ function SimulationState:update( dt )
 		isActivated = true
 	end
 
-
+	-- When using the zSpace, query the buttons on the 
+	-- stylus handle as well
 	if inputDeviceName == "stylus" then
 		if( input:isButtonPressed( "stylus", 0 ) ) then
 			isActivated = true

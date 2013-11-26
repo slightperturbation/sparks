@@ -231,10 +231,19 @@ spark
     [
      luabind::class_< Input, InputPtr >( "Input" )
      .def( "isKeyDown", &Input::isKeyDown )
+
      .def( "getTransform", &Input::getTransform )
+     .def( "getDefaultDeviceTransform", &Input::getDefaultDeviceTransform )
+     
      .def( "getPosition", &Input::getPosition )
+     .def( "getDefaultDevicePosition", &Input::getDefaultDevicePosition )
+
      .def( "getScreenPosition", &Input::getScreenPosition )
+     .def( "getDefaultDeviceScreenPosition", &Input::getDefaultDeviceScreenPosition )
+
      .def( "isButtonPressed", &Input::isButtonPressed )
+     .def( "isDefaultDeviceButtonPressed", &Input::isDefaultDeviceButtonPressed )
+
      .def( "startVibration", &Input::startVibration )
      .def( "stopVibration", &Input::stopVibration )
      .def( "vibrateForSeconds", &Input::vibrateForSeconds )
@@ -262,6 +271,13 @@ spark
     luabind::globals( lua )["ESUINPUT_BLEND"] = ESUInput::ESUMode::Blend;
 
     luabind::globals( lua )["theESUInput"] = (ESUInput*)(ESUInputFromSharedMemory::getPtr());
+
+
+    ////////////////////////////////////////////////////////// Input Mode
+    //luabind::globals( lua )["INPUT_TRAKSTAR"] = ;
+    //luabind::globals( lua )["INPUT_MOUSE"] = ;
+    //luabind::globals( lua )["INPUT_ZSPACE"] = ;
+
 
     /////////////////////////////////////////////////////////// SceneFacade
     luabind::module( lua )
@@ -557,6 +573,23 @@ spark
         luabind::def( "isApple", &spark::isApple ),
         luabind::def( "isLinux", &spark::isLinux )
     ];
+
+    // GLFW Keypad codes
+    luabind::globals( lua )["KEY_KP_0"] = GLFW_KEY_KP_0;
+    luabind::globals( lua )["KEY_KP_1"] = GLFW_KEY_KP_1;
+    luabind::globals( lua )["KEY_KP_2"] = GLFW_KEY_KP_2;
+    luabind::globals( lua )["KEY_KP_3"] = GLFW_KEY_KP_3;
+    luabind::globals( lua )["KEY_KP_4"] = GLFW_KEY_KP_4;
+    luabind::globals( lua )["KEY_KP_5"] = GLFW_KEY_KP_5;
+    luabind::globals( lua )["KEY_KP_6"] = GLFW_KEY_KP_6;
+    luabind::globals( lua )["KEY_KP_7"] = GLFW_KEY_KP_7;
+    luabind::globals( lua )["KEY_KP_8"] = GLFW_KEY_KP_8;
+    luabind::globals( lua )["KEY_KP_9"] = GLFW_KEY_KP_9;
+    luabind::globals( lua )["KEY_KP_ENTER"] = GLFW_KEY_KP_ENTER;
+    luabind::globals( lua )["KEY_KP_ADD"] = GLFW_KEY_KP_ADD;
+    luabind::globals( lua )["KEY_KP_SUBTRACT"] = GLFW_KEY_KP_SUBTRACT;
+    luabind::globals( lua )["KEY_KP_DECIMAL"] = GLFW_KEY_KP_DECIMAL;
+
 }
 
 void
