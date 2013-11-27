@@ -2,6 +2,5 @@ build-VisualStudio/
 build-VisualStudio10_Win64/
 build-xcode/
 build-xcode2/
-ext/
 docs/doxygen/
 CMakeFiles/
