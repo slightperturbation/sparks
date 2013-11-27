@@ -4,3 +4,15 @@ build-xcode/
 build-xcode2/
 docs/doxygen/
 CMakeFiles/
+ext/Assimp/samples/
+ext/Assimp/test/
+ext/Assimp/scripts/
+ext/FreeTypeGL/src/FREETYPEGL/.svn/
+ext/FreeTypeGL/src/FREETYPEGL-build/
+ext/FreeTypeGL/src/FREETYPEGL-stamp/
+ext/FreeTypeGL/tmp/
+ext/luabind-0.9.1/src/luabind-build/
+ext/luabind-0.9.1/src/luabind-stamp/
+ext/luabind-0.9.1/tmp/
+ext/lua-5.2.2/src/lua-stamp/
+ext/lua-5.2.2/tmp/
