@@ -45,11 +45,21 @@ HomeBrew is recommended.  Required packages:
 
 Only out-of-source builds are supported.
 
-> cd spark
-> mkdir build-vs2010
-> cd build-vs2010
+First, clone the git repository locally from:
+
+https://bitbucket.org/cemsim_rpi/sparks.git
+
+Then gather dependencies and create the Visual Studio project file:
+
+> cd sparks
+> mkdir build-VisualStudio10Win64
+> cd build-VisualStudio10Win64
 > cmake .. -G "Visual Studio 10 Win64"
 > start sparks.sln
+
+Build the entire project TWICE (the first time will download and build some dependencies, including Intel TBB).
+
+The second build should complete, then you can run the sparksGui program.
 
 ## Building - MacOSX ##
 
