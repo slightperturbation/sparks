@@ -230,6 +230,9 @@ spark
     luabind::module( lua )
     [
      luabind::class_< Input, InputPtr >( "Input" )
+     .def( "setDefaultDeviceName", &Input::setDefaultDeviceName )
+     .def( "getDefaultDeviceName", &Input::getDefaultDeviceName )
+     
      .def( "isKeyDown", &Input::isKeyDown )
 
      .def( "getTransform", &Input::getTransform )

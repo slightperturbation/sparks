@@ -190,50 +190,21 @@ function SimulationState:update( dt )
 
 
 	-- Get control inputs
-
-	inputDeviceName = "mouse"
-	if isWindows() and self.trackingMode == "zSpace" then
-		inputDeviceName = "stylus"
-	end
-	if isWindows() and self.trackingMode == "trakStar" then
-		inputDeviceName = "trakStar"
+	inputDeviceName = input:getDefaultDeviceName()
+	if inputDeviceName == "NO_DEFAULT_DEVICE_SPECIFIED" then
+		-- ERROR
+		print( "Error: "..inputDeviceName )
 	end
 
-	local stylusPos = input:getPosition( inputDeviceName )
-	local stylusMat = input:getTransform( inputDeviceName )
+	local stylusPos = input:getDefaultDevicePosition()
+	local stylusMat = input:getDefaultDeviceTransform()
 
-	-- if( inputDeviceName == "trakStar" ) then
-
-	-- end 
-
-	-- if( input:isKeyDown( string.byte('C') ) ) then
-	-- 	print( "stylusOffset.x = " .. stylusPos.x )
-	-- 	print( "stylusOffset.y = " .. stylusPos.y )
-	-- 	print( "stylusOffset.z = " .. stylusPos.z )
-	-- 	self.stylusOffsetStart = stylusPos
-	-- 	self.stylusOffsetEnd = stylusPos
-	-- end
-	-- if( input:isKeyDown( string.byte('D') ) ) then
-	-- 	self.stylusOffsetEnd = stylusPos
-	-- end
-	-- if( input:isKeyDown( string.byte('G') ) ) then
-	-- 	self.stylusOffsetStart = vec3(0,0,0)
-	-- 	self.stylusOffsetEnd = vec3(0,0,0)
-	-- end
-
-	-- stylusPos = stylusPos + (self.stylusOffsetStart - self.stylusOffsetEnd)
-
-	-- if( isWindows() ) then
-	-- 	stylusPos = input:getPosition( "stylus" )
-	-- 	stylusMat = input:getTransform( "stylus" )
-	-- else
-	-- 	-- Debugging (and on non-zspace machines, use mouse)
-	-- 	stylusPos = input:getPosition( "mouse" ) -- TODO -- Transform to coords mimicing stylus?
-	-- 	stylusMat = mat4() --input:getTransform( "mouse" )
-	-- end
-
+	-- TODO -- screenSpaceOffset is a bit of a hack for getting the zspace world to 
+	--  where we want it.  Is overriden when using TrakStar
+	--  Should remove this and use only world coords
 	local screenSpaceOffset = vec3( 0, 0.25, 0 )
-	-- green block on final pos & orient
+
+	-- green cube on final pos & orient
 	if useMouseCursorCube then 
 		-- green as the full, unmodified transform
 		self.markerBox2:setTransform( stylusMat )
@@ -245,7 +216,7 @@ function SimulationState:update( dt )
 	local tissueHeight = self.worldOffset.y - screenSpaceOffset.y
 	if inputDeviceName == "trakStar" then
 		-- HACK for ascension trakStar
-		tissueHeight = -0.1 -- self.worldOffset.y - screenSpaceOffset.y
+		tissueHeight = -0.1 -- self.worldOffset.y - screenSpaceOffset.y = -0.35 != -0.1
 	end
 	local passDepth = 0.0010
 	local useOnlyPosition = false -- for debugging only
@@ -253,7 +224,7 @@ function SimulationState:update( dt )
 
 	local isBelowSurface = stylusPos.y < (tissueHeight - passDepth)
 	local isNearHolster = stylusPos.x > 0.275
-	-- Vibrate when below surface (?)
+	-- Vibrate when below surface
 	if( isBelowSurface and not isNearHolster and not self.hasVibrated ) then
 		input:vibrateForSeconds( inputDeviceName, .15 )
 		self.hasVibrated = true
@@ -267,84 +238,37 @@ function SimulationState:update( dt )
 
 
 	------------------------------------------------
-	-- zSpace Tracker
-	if( inputDeviceName == "stylus" ) then
-		if( useOnlyPosition ) then
-			-- Only useful for debugging transforms
-			self.instrument:setTransform( mat4() )
-			self.instrument:translate( stylusPos )
-			self.instrument:translate( 0,.3,0 )
-			self.instrument:rotate( 120,  vec3(0,0,1) )
-			self.instrument:rotate( 30,  vec3(0,1,0) )
-			self.instrument:scale( 0.002 )
-		else
-			self.instrument:setTransform( mat4() )
-			self.instrument:translate( screenSpaceOffset )
-			if( mat4_at(stylusMat, 3, 1 ) < (tissueHeight - passDepth) ) then
-				mat4_set(stylusMat, 3,1, tissueHeight - passDepth )
-				stylusPos = vec3( stylusPos.x, tissueHeight - passDepth, stylusPos.z )
-			end 
-			self.instrument:applyTransform( stylusMat )
+	if( useOnlyPosition ) then
+		-- Only useful for debugging 
+		self.instrument:setTransform( mat4() )
+		self.instrument:translate( stylusPos )
+		self.instrument:translate( 0,.3,0 )
+		self.instrument:rotate( 120,  vec3(0,0,1) )
+		self.instrument:rotate( 30,  vec3(0,1,0) )
+		self.instrument:scale( 0.002 )
+	else
+		self.instrument:setTransform( mat4() )
+		self.instrument:translate( screenSpaceOffset )
+		if( mat4_at(stylusMat, 3, 1 ) < (tissueHeight - passDepth) ) then
+			mat4_set(stylusMat, 3,1, tissueHeight - passDepth )
+			stylusPos = vec3( stylusPos.x, tissueHeight - passDepth, stylusPos.z )
+		end 
+		self.instrument:applyTransform( stylusMat )
+	end
+
+	-- What is happening here?  x - z axis confusion between the input spaces?
+	-- This block should be removed
+	if not useOnlyPosition then
+		-- zSpace Tracker
+		if( inputDeviceName == "stylus" ) then
 			self.instrument:rotate( -90,  vec3(0,1,0) )
-			self.instrument:scale( 0.002 )
 		end
-	end
-
-	------------------------------------------------
-	-- TrakStar
-	if( inputDeviceName == "trakStar" ) then
-		if( useOnlyPosition ) then
-			-- Only useful for debugging transforms
-			self.instrument:setTransform( mat4() )
-			self.instrument:translate( stylusPos )
-			self.instrument:translate( 0,.3,0 )
-			self.instrument:rotate( 120,  vec3(0,0,1) )
-			self.instrument:rotate( 30,  vec3(0,1,0) )
-			self.instrument:scale( 0.002 )
-		else
-			self.instrument:setTransform( mat4() )
-			if( mat4_at(stylusMat, 3, 1 ) < (tissueHeight - passDepth) ) then
-				-- force both the position and the transform to honor
-				-- the floor height
-				mat4_set(stylusMat, 3,1, tissueHeight - passDepth )
-				stylusPos = vec3( stylusPos.x, tissueHeight - passDepth, stylusPos.z )
-			end 
-			--print( "tissueHeight:\t" .. tissueHeight )
-			self.instrument:applyTransform( stylusMat )
-			self.instrument:rotate( 90,  vec3(0,1,0) )
-			self.instrument:scale( 0.002 )
-
-
-			-- self.instrument:setTransform( mat4() )
-			-- --self.instrument:translate( screenSpaceOffset )
-			-- -- if( mat4_at(stylusMat, 3, 1 ) < (tissueHeight - passDepth) ) then
-			-- -- 	mat4_set(stylusMat, 3,1, tissueHeight - passDepth )
-			-- -- 	stylusPos = vec3( stylusPos.x, tissueHeight - passDepth, stylusPos.z )
-			-- -- end 
-			-- self.instrument:applyTransform( stylusMat )
-			-- --self.instrument:rotate( -90,  vec3(0,1,0) )
-			-- --self.instrument:scale( 0.002 )
+		-- TrakStar
+		if( inputDeviceName == "trakStar" ) then
+				self.instrument:rotate( 90,  vec3(0,1,0) )
 		end
+		self.instrument:scale( 0.002 )
 	end 
-
-	local isActivated = false
-	if( input:isButtonPressed( "mouse", 0 ) ) then
-		isActivated = true
-	end
-	if( input:isButtonPressed( "mouse", 1 ) ) then
-		isActivated = true
-	end
-
-	-- When using the zSpace, query the buttons on the 
-	-- stylus handle as well
-	if inputDeviceName == "stylus" then
-		if( input:isButtonPressed( "stylus", 0 ) ) then
-			isActivated = true
-		end
-		if( input:isButtonPressed( "stylus", 1 ) ) then
-			isActivated = true
-		end
-	end
 
 	local worldStylusPos = vec3( stylusPos.x, stylusPos.y, stylusPos.z )
 	worldStylusPos.y = worldStylusPos.y + screenSpaceOffset.y
@@ -359,6 +283,28 @@ function SimulationState:update( dt )
 	local distFromTissue = toolTipPos - tissueHeight -- tissueHeight already has worldOffset baked in
 
 	self.distDisplay:setText( string.format( "%3.0f", math.max(distFromTissue, 0) * 1000.0 ) ) -- convert to mm
+
+	--------------------------------------------------------
+	-- Activate ESU
+
+	local isActivated = input:isDefaultDeviceButtonPressed( 0 ) or input:isDefaultDeviceButtonPressed( 1 ) 
+	-- if( input:isButtonPressed( "mouse", 0 ) ) then
+	-- 	isActivated = true
+	-- end
+	-- if( input:isButtonPressed( "mouse", 1 ) ) then
+	-- 	isActivated = true
+	-- end
+
+	-- When using the zSpace, query the buttons on the 
+	-- stylus handle as well
+	-- if inputDeviceName == "stylus" then
+	-- 	if( input:isButtonPressed( "stylus", 0 ) ) then
+	-- 		isActivated = true
+	-- 	end
+	-- 	if( input:isButtonPressed( "stylus", 1 ) ) then
+	-- 		isActivated = true
+	-- 	end
+	-- end
 
 	if( isActivated ) then
 		--print( "Activation:\t" .. stylusPos.x .. ",\t\t" .. stylusPos.y .. ",\t\t" .. stylusPos.z .. ",\t\tmat.y=" .. mat4_at(stylusMat, 3, 1 )  )

@@ -149,18 +149,19 @@ spark::Input
                                std::unique_ptr<InputDevice> device )
 {
     acquireInputDevice( name, std::move( device ) );
-    setDefaultInputDeviceName( name );
+    setDefaultDeviceName( name );
 }
+
 void 
 spark::Input
-::setDefaultInputDeviceName( const InputDeviceName& name )
+::setDefaultDeviceName( const InputDeviceName& name )
 {
     m_defaultDevice = name;
 }
 
 const spark::InputDeviceName& 
 spark::Input
-::getDefaultInputDeviceName( void ) const
+::getDefaultDeviceName( void ) const
 {
     return m_defaultDevice;
 }

@@ -273,15 +273,20 @@ int runSimulation(int argc, char** argv)
     std::unique_ptr<InputFactory> glfwInputFactory(
         new GlfwInputFactory( window.glfwWindow() ) );
     inputManager->acquireKeyboardDevice( glfwInputFactory->createKeyboard() );
-    inputManager->acquireInputDevice( "mouse",
-                                     glfwInputFactory->createDevice(0) );
+    
+    //
+    // Setup input devices.  The order specifies the priority--
+    // First, trakStar, then zSpace then mouse
+    //
+    inputManager->acquireInputDeviceAsDefault( "mouse",
+                                               glfwInputFactory->createDevice(0) );
 
 #ifdef HAS_ZSPACE
     if( useZSpaceStylus )
     {
         ZSpaceInputFactory zSpaceInputFactory;
-        inputManager->acquireInputDevice( "stylus", 
-            zSpaceInputFactory.createDevice(0) );
+        inputManager->acquireInputDeviceAsDefault( "stylus",
+                                                   zSpaceInputFactory.createDevice(0) );
     }
 #endif
 #ifdef HAS_ASCENSIONTECH
@@ -290,8 +295,8 @@ int runSimulation(int argc, char** argv)
         try
         {
             AscensionTechInputFactory atInputFactory;
-            inputManager->acquireInputDevice( "trakStar",
-                atInputFactory.createDevice(0) );
+            inputManager->acquireInputDeviceAsDefault( "trakStar",
+                                                       atInputFactory.createDevice(0) );
         }
         catch(...)
         {

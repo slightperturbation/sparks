@@ -81,11 +81,11 @@ namespace spark
                                           std::unique_ptr<InputDevice> device );
         /// Sets the default device to use for calls that do not explicitly
         /// provide an InputDeviceName.
-        void setDefaultInputDeviceName( const InputDeviceName& name );
+        void setDefaultDeviceName( const InputDeviceName& name );
 
         /// Returns the current default device, as set by either acquireInputDeviceAsDefault()
         /// or setDefaultInputDeviceName()
-        const InputDeviceName& getDefaultInputDeviceName( void ) const;
+        const InputDeviceName& getDefaultDeviceName( void ) const;
 
         /// Registers the one keyboard input device for future use.
         /// Ownership of the device passes to this class.
