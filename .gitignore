@@ -4,3 +4,6 @@ build-VisualStudio10_Win64/
 build-xcode/
 docs/doxygen/
 CMakeFiles/
+
+# OBJ geometry files should be tracked (override standard globals)
+!*.obj
