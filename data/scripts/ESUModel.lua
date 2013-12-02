@@ -5,8 +5,8 @@ function ESUModel:new()
 	print( "ESUModel:new()" )
 	newObj = 
 	{
-		cutWattage = 90,
-		coagWattage = 90,
+		cutWattage = 30,
+		coagWattage = 30,
 		mode = spark.ESUINPUT_COAG,
 		electrode = spark.ESUINPUT_SPATULA,
 		hasCreatedSpark = false

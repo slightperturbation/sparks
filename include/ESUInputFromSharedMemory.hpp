@@ -23,6 +23,9 @@ namespace spark
     extern const char* g_sharedMemorySectionName;
     extern const char* g_sharedMemoryObjectName;
     
+    const double g_defaultCoagPower = 30.0;
+    const double g_defaultCutPower = 30.0;
+    
     class ESUInputFromSharedMemory : public ESUInput
     {
     public:
@@ -44,6 +47,7 @@ namespace spark
         virtual double cutWattage( void ) const
         {
             using namespace boost::interprocess;
+            double cut = g_defaultCutPower; // default value
             try
             {
                 managed_shared_memory segment( open_only, g_sharedMemorySectionName );
@@ -51,11 +55,7 @@ namespace spark
                     = segment.find<ESUState>( g_sharedMemoryObjectName );
                 if( res.first && res.second )
                 {
-                    return res.first->m_cutWattage;
-                }
-                else
-                {
-                    return 30.0;
+                    cut = res.first->m_cutWattage;
                 }
             }
             catch( ... )
@@ -63,11 +63,13 @@ namespace spark
                 LOG_ERROR(g_log) << "Failed to acquire Shared ESU State.";
                 shared_memory_object::remove( g_sharedMemorySectionName );
             }
+            return cut;
         }
 
         virtual double coagWattage( void ) const
         {
             using namespace boost::interprocess;
+            double coag = g_defaultCoagPower;
             try
             {
                 managed_shared_memory segment( open_only, g_sharedMemorySectionName );
@@ -75,11 +77,7 @@ namespace spark
                     = segment.find<ESUState>( g_sharedMemoryObjectName );
                 if( res.first && res.second )
                 {
-                    return res.first->m_coagWattage;
-                }
-                else
-                {
-                    return 30.0;
+                    coag = res.first->m_coagWattage;
                 }
             }
             catch( ... )
@@ -87,11 +85,13 @@ namespace spark
                 LOG_ERROR(g_log) << "Failed to acquire Shared ESU State.";
                 shared_memory_object::remove( g_sharedMemorySectionName );
             }
+            return coag;
         }
         
         virtual ESUMode mode( void ) const
         {
             using namespace boost::interprocess;
+            ESUMode mode = ESUMode::Coag;
             try
             {
                 managed_shared_memory segment( open_only, g_sharedMemorySectionName );
@@ -99,11 +99,7 @@ namespace spark
                     = segment.find<ESUState>( g_sharedMemoryObjectName );
                 if( res.first && res.second )
                 {
-                    return res.first->m_mode;
-                }
-                else
-                {
-                    return ESUMode::Coag;
+                    mode = res.first->m_mode;
                 }
             }
             catch( ... )
@@ -111,11 +107,13 @@ namespace spark
                 LOG_ERROR(g_log) << "Failed to acquire Shared ESU State.";
                 shared_memory_object::remove( g_sharedMemorySectionName );
             }
+            return mode;
         }
         
         virtual ElectrodeType electrode( void ) const
         {
             using namespace boost::interprocess;
+            ElectrodeType electrode = ElectrodeType::Spatula;
             try
             {
                 managed_shared_memory segment( open_only, g_sharedMemorySectionName );
@@ -123,11 +121,7 @@ namespace spark
                     = segment.find<ESUState>( g_sharedMemoryObjectName );
                 if( res.first && res.second )
                 {
-                    return res.first->m_electrode;
-                }
-                else
-                {
-                    return ElectrodeType::Spatula;
+                    electrode = res.first->m_electrode;
                 }
             }
             catch( ... )
@@ -135,6 +129,7 @@ namespace spark
                 LOG_ERROR(g_log) << "Failed to acquire Shared ESU State.";
                 shared_memory_object::remove( g_sharedMemorySectionName );
             }
+            return electrode;
         }
     private:
         ESUInputFromSharedMemory( void )
@@ -146,13 +141,13 @@ namespace spark
             {
                 //Create a new segment with given name and size
                 managed_shared_memory segment( open_or_create, 
-                    g_sharedMemorySectionName, 
-                    65536 );
+                                              g_sharedMemorySectionName,
+                                              65536 ); // 65Kb should be plenty
 
                 //Create an object of ESUState initialized to {Blend, 30.0f cut power, 30.0f coag power}
-                ESUState* esu = segment.construct< ESUState >
+                segment.construct< ESUState >
                     ( g_sharedMemoryObjectName )  //name of the object
-                    ( ElectrodeType::Spatula, ESUMode::Blend, 30.0f, 30.0f ); //constructor arguments
+                    ( ElectrodeType::Spatula, ESUMode::Blend, g_defaultCutPower, g_defaultCoagPower ); //constructor arguments
             }
             catch( ... )
             {
