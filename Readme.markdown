@@ -61,6 +61,8 @@ Build the entire project TWICE (the first time will download and build some depe
 
 The second build should complete, then you can run the sparksGui program.
 
+Note that you'll need to build the everything (ALL_BUILD) as Release before bulding the RelWithDebug target, as the Release version of the GLFW libraries are used for RelWithDebug.
+
 ## Building - MacOSX ##
 
 Note:  MacOSX is only supported for testing, neither primary interface (zSpace nor TrakStar) is supported on OSX. Only out-of-source builds are supported.
