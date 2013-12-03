@@ -34,9 +34,6 @@ function SimulationState:new()
 		tissueDistance = 0,  -- distance to tissue in mm
 		theNextState = "",
 
-		-- TODO: get tracking mode from Facade
-		trackingMode = "zSpace"
-		--trackingMode = "trakStar"
 	}
 	self.__index = self
 	return setmetatable(newObj, self)
@@ -163,13 +160,16 @@ function SimulationState:activate()
 
 	local camera = spark:getCamera()
 
-	if self.trackingMode == "zSpace" then
-		camera:cameraPos( 0.0, 0.345, 0.222 )
-		--camera:cameraPos( 0.0, 0.125, 0.18 ) -- close-up, good for screen shots
-		camera:cameraTarget( 0, -0.02, 0 )
-		camera:cameraUp( 0,1,0 )
-	end
-	if self.trackingMode == "trakStar" then
+	local inputDeviceName = input:getDefaultDeviceName()
+	-- Setup the camera based on the input device
+
+	-- Default view
+	camera:cameraPos( 0.0, 0.345, 0.222 )
+	--camera:cameraPos( 0.0, 0.125, 0.18 ) -- close-up, good for screen shots
+	camera:cameraTarget( 0, -0.02, 0 )
+	camera:cameraUp( 0,1,0 )
+
+	if inputDeviceName == "trakStar" then
 		camera:cameraPos( 0.0, 0.1, -0.025 )
 		camera:cameraTarget( 0.0, -0.1, -0.1 )
 		camera:cameraUp( 0,1,0 )
@@ -347,7 +347,7 @@ function SimulationState:update( dt )
 
 	end
 
-	-- Debugging tool
+	-- Debugging -- Cause randomly located activation with current settings
 	if( input:isKeyDown( string.byte('X') ) ) then
 		local touchThreshold = 0.0004 -- meters
 		local sparkThreshold = 0.001 -- meters
