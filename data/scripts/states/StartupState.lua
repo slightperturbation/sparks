@@ -25,11 +25,12 @@ end
 function StartupState:nextState( currTime )
 	-- theNextState = "Loading"
 
+	theNextState = "Menu"
+	--theNextState = "CoagMode"
+	--theNextState = "Simulation"
 	--theNextState = "Example"
 	--theNextState = "TextureTest"
 	--theNextState = "ESUPower"
-	--theNextState = "Menu"
-	theNextState = "Simulation"
 	--theNextState = "Calibration"
 end
 

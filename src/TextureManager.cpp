@@ -704,6 +704,10 @@ spark::TextureManager
                               const std::vector<float>& aData,
                               size_t dimPerSide )
 {
+    if( aData.empty() || dimPerSide == 0 || aHandle.empty() )
+    {
+        return;
+    }
     boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
     // Ok to call many times, if so, reuse texture id
     GLuint textureId;

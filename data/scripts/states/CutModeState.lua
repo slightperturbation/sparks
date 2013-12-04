@@ -42,9 +42,18 @@ function CutModeState:load()
 
     ESUModel.theESUModel:createSpark()
 
-    Sim.createInstructionText( owner, 
-[[Set the ESU to CUT mode
-]])
+    self.targetWattage = 30
+    self.targetMode = ESUINPUT_CUT
+    Sim.createInstructionText( self, string.format( 
+[[
+Change the MODE setting on the ESU 
+touchscreen to "CUT" mode (yellow),
+ 
+And set the power to %d watts.
+ 
+(Waiting...)
+]], self.targetWattage ) )
+    self.step = "Settings"
 
 end
 
@@ -60,6 +69,29 @@ function CutModeState:update( dt )
     -- Convey updates from the UI to the current ESU settings
     ESUModel.theESUModel:updateInput( theESUInput )
 
+    if self.step == "Settings" 
+        and ESUModel.theESUModel.mode == self.targetMode 
+        and ESUModel.theESUModel.cutWattage == self.targetWattage then
+            self.instructionText:setText( 
+[[
+The ESU is now in CUT mode.
+ 
+Now use the tool to vaporize
+the circular region marked on the tissue.
+ 
+Try increasing and decreasing the
+ESU wattage and notice the difference
+in height from the tissue that the 
+electricity arcs.
+ 
+Try switching to COAG mode to
+see the difference in arcing
+distance vs CUT mode.
+ 
+Press "Enter" when finished.
+]])
+    end
+
     Sim.update( self, dt )
 end
 
@@ -68,18 +100,10 @@ function CutModeState:deactivate()
 end
 
 function CutModeState:nextState( currTime )
-    theNextState = self.theNextState
-    -- For now, theNextState global is used to pass
-    -- the next desired state back to the app
-    -- TODO should be changed to use the return value
-    -- print( "CutModeState:nextState( " .. currTime .. " )")
-    --self.activationText:translate( 0.01, 0.65, 0 )
-    -- if (currTime - self.startTime) > 10 then 
-    --  theNextState = "Loading" 
-    --  print( "Changing state to menu!" )
-    -- else
-    --  theNextState = ""
-    -- end
+    if input:isKeyDown( KEY_KP_ENTER ) then
+        theNextState = "Menu"
+    end
+
     if input:isButtonPressed( "stylus", 2 ) then
         theNextState = "Menu"
     end

@@ -50,10 +50,12 @@ function SimulationState:load()
 
 	ESUModel.theESUModel:createSpark()
 
-	Sim.createInstructionText( owner, 
-[[This is a the theState
-uyoupf9g
-uyb
+	Sim.createInstructionText( self, 
+[[Prototype Simulation State
+
+This area should contain the 
+instructions for this learning
+module.
 ]])
 
 	---------------------------------------------------------
@@ -141,7 +143,6 @@ end
 function SimulationState:update( dt )
 	-- Convey updates from the UI to the current ESU settings
  	ESUModel.theESUModel:updateInput( theESUInput )
-
  	Sim.update( self, dt )
 end
 
@@ -151,18 +152,10 @@ end
 
 function SimulationState:nextState( currTime )
 	theNextState = self.theNextState
-	-- For now, theNextState global is used to pass
-	-- the next desired state back to the app
-	-- TODO should be changed to use the return value
-	-- print( "SimulationState:nextState( " .. currTime .. " )")
-	--self.activationText:translate( 0.01, 0.65, 0 )
-	-- if (currTime - self.startTime) > 10 then 
-	-- 	theNextState = "Loading" 
-	-- 	print( "Changing state to menu!" )
-	-- else
-	-- 	theNextState = ""
-	-- end
-	if input:isButtonPressed( "stylus", 2 ) then
+	if input:isKeyDown( KEY_KP_ENTER ) then
+		theNextState = "Menu"
+	end
+ 	if input:isButtonPressed( "stylus", 2 ) then
 		theNextState = "Menu"
 	end
 end

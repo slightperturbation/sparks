@@ -85,20 +85,23 @@ function ESUModel:activate( theTissueSim, xpos, ypos, stylusPos, tissueContactPo
 
 	local touchThreshold = 0.0004 -- meters
 
-	if( mode == ESUINPUT_CUT ) then
-		dutyCycle = 1
-		current = self.cutWattage * 0.5 
-		voltage = self.cutWattage * 0.5
+
+	print( "ESUINPUT_CUT = "..ESUINPUT_CUT..", ESUINPUT_COAG = "..ESUINPUT_COAG.." self.mode = "..self.mode )
+
+	if( self.mode == ESUINPUT_CUT ) then
+		dutyCycle = 0.75
+		current = self.cutWattage * dutyCycle 
+		voltage = self.cutWattage / dutyCycle
 	end
-	if( mode == ESUINPUT_COAG ) then
-		dutyCycle = 0.1
+	if( self.mode == ESUINPUT_COAG ) then
+		dutyCycle = 0.2
 		current = self.coagWattage * dutyCycle
 		voltage = self.coagWattage / dutyCycle
 	end
-	if( mode == ESUINPUT_BLEND ) then
+	if( self.mode == ESUINPUT_BLEND ) then
 		dutyCycle = 0.5
-		current = (self.coagWattage + self.cutWattage ) * 0.5 * dutyCycle
-		voltage = (self.coagWattage + self.cutWattage ) * 0.5 / dutyCycle
+		current = (self.coagWattage + self.cutWattage ) * dutyCycle
+		voltage = (self.coagWattage + self.cutWattage ) / dutyCycle
 	end
 
 	-- sparkThreshold is proportional to voltage
@@ -107,7 +110,7 @@ function ESUModel:activate( theTissueSim, xpos, ypos, stylusPos, tissueContactPo
 	-- min coag, v = 100, max coag = 1200
 	-- @1000V, spark threshold =ex 0.01
 	-- @10V,  spark threshold = 0
-	local sparkThreshold = touchThreshold + ( voltage - 10 ) * 0.01/1000 -- meters
+	local sparkThreshold = touchThreshold + voltage * 0.02/1000 -- meters/volts
 
 	if abs( distFromTissue ) < touchThreshold then
 		-- Contact heating
@@ -140,7 +143,7 @@ function ESUModel:activate( theTissueSim, xpos, ypos, stylusPos, tissueContactPo
 		-- ypos = ypos + distFromTissue * math.random() * spreadSlope
 
 		local widthOfInstrument = 0.005 -- TODO -- get from electrode type
-		if( mode == ESUINPUT_COAG ) then
+		if( self.mode == ESUINPUT_COAG ) then
 			-- Hacky -- when in coag, always have larger spread
 			widthOfInstrument = widthOfInstrument * 1.5
 		end
@@ -158,7 +161,7 @@ function ESUModel:activate( theTissueSim, xpos, ypos, stylusPos, tissueContactPo
 	                             1.0, --intensity
 	                             0.33, --scale 
 	                             4, --3, --recursiveDepth
-	                             0.5 --forkProb
+	                             0.4 --forkProb
 	                             )
 		    -- end
 

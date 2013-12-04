@@ -243,13 +243,17 @@ int runSimulation(int argc, char** argv)
     // legacy logging is great, but conflicts with nSight debugger
     const bool enableLegacyOpenGlLogging  = false;
     // Stero view, e.g., with ZSpace
-    const bool useStereo = false;
+    const bool useStereo = true;
     // Create a separate thread to load background textures
     const bool useBackgroundResourceLoading = false;
     // Create a separate thread for input updates
     const bool useBackgroundInputUpdates = false;
     // If should use full screen mode on the zspace or primary monitor (if no zspace)
     const bool enableFullScreen = false;
+
+    const bool useZSpaceEyeTracking = true;
+    const bool useZSpaceStylus = true;
+    const bool useTrakStarStylus = false;
 
     OpenGLWindow window( "Spark", 
                          enableLegacyOpenGlLogging, 

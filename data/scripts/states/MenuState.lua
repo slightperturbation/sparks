@@ -85,15 +85,15 @@ operation of the ESU:
 	Coag, Cut and Blend]])
 	end
 
-	ypos = ypos - lineHeight
-	self.buttons["Contact Area"] = Button:newLargeButton( xpos, ypos, KEY_KP_3, "[3] Contact Area" )
-	self.buttons["Contact Area"].onClick = function ()  self.theNextState = "" end
-	self.buttons["Contact Area"].onMouseOver = function () 
-		self.explanationText:setText(
-[[The area of contact between the electrode 
-and the tissue has a surprisingly large impact on the
-heating effect.]])
-	end
+-- 	ypos = ypos - lineHeight
+-- 	self.buttons["Contact Area"] = Button:newLargeButton( xpos, ypos, KEY_KP_3, "[3] Contact Area" )
+-- 	self.buttons["Contact Area"].onClick = function ()  self.theNextState = "" end
+-- 	self.buttons["Contact Area"].onMouseOver = function () 
+-- 		self.explanationText:setText(
+-- [[The area of contact between the electrode 
+-- and the tissue has a surprisingly large impact on the
+-- heating effect.]])
+-- 	end
 
 -- 	ypos = ypos - lineHeight
 -- 	self.buttons["Freestyle"] = Button:newLargeButton( xpos, ypos, KEY_KP_4, "[4] Simulation" )
@@ -117,15 +117,10 @@ function MenuState:activate()
 end
 
 function MenuState:update( dt )
-	if( isWindows() ) then
-		inputDeviceName = "stylus"
-	else
-		inputDeviceName = "mouse"
-	end
-	stylusPos = input:getPosition( inputDeviceName )
-	stylusScreenPos = input:getScreenPosition( inputDeviceName )
-	stylusMat = input:getTransform( inputDeviceName )
-	buttonState = input:isButtonPressed( inputDeviceName, 0 )
+	stylusPos = input:getDefaultDevicePosition()
+	stylusScreenPos = input:getDefaultDeviceScreenPosition( )
+	stylusMat = input:getDefaultDeviceTransform( )
+	buttonState = input:isDefaultDeviceButtonPressed( 0 )
 
 	self.cursor:setTransform( mat4() )
 	self.cursor:translate( vec3(stylusScreenPos.x, stylusScreenPos.y, 0.1) )

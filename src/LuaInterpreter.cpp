@@ -597,7 +597,7 @@ spark
     luabind::globals( lua )["KEY_KP_ADD"] = GLFW_KEY_KP_ADD;
     luabind::globals( lua )["KEY_KP_SUBTRACT"] = GLFW_KEY_KP_SUBTRACT;
     luabind::globals( lua )["KEY_KP_DECIMAL"] = GLFW_KEY_KP_DECIMAL;
-
+    luabind::globals( lua )["KEY_KP_SUBTRACT"] = GLFW_KEY_KP_SUBTRACT;
 }
 
 void

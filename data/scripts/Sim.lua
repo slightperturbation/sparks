@@ -138,16 +138,15 @@ function Sim.createInstructionText( owner, instructions )
 									  fontDesc.material,
 									  "HUDPass", 
 									  instructions )
-	owner.instructionText:translate( 0.025, 0.785, 0 )
+	owner.instructionText:translate( 0.025, 0.8, 0 )
 
 	-- --Highlight GUI w/ quad
 	local bgAccentMat = spark:createMaterial( "constantColorShader" )
-	bgAccentMat:setVec4( "u_color", vec4( 0, 0, 0, 0.2 ) )
-	local bgQuad = spark:createQuad( 
-		vec2( 0.015, 0.4 ), -- position of lower-left corner, 0,0 is bottom-left of screen
-		vec2( 0.25,0.5 ),  -- size
+	bgAccentMat:setVec4( "u_color", vec4( 0, 0, 0, 0.1 ) )
+	owner.instructionBackground = spark:createQuad( 
+		vec2( 0.015, 0.2 ), -- position of lower-left corner, 0,0 is bottom-left of screen
+		vec2( 0.3, 0.6 ),  -- size
 		bgAccentMat, "HUDUnderPass" )
-
 end
 
 
@@ -396,7 +395,6 @@ function Sim.update( owner, dt )
 	end
 
  	ESUModel.theESUModel:update( dt )
-
 end
 
 --[[

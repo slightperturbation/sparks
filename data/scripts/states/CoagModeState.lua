@@ -1,4 +1,3 @@
-CoagModeState.lua
 ----------------------------------------
 -- Include standard libraries
 local Button = require "button"
@@ -43,9 +42,17 @@ function CoagModeState:load()
 
     ESUModel.theESUModel:createSpark()
 
-    Sim.createInstructionText( owner, 
-[[Set the ESU to CUT mode
-]])
+    self.targetWattage = 30
+    Sim.createInstructionText( self, string.format( 
+[[
+Change the MODE setting on the ESU 
+touchscreen to "COAG" mode (blue),
+ 
+And set the power to %d watts.
+ 
+(Waiting...)
+]], self.targetWattage ) )
+    self.step = "Settings"
 
 end
 
@@ -61,6 +68,29 @@ function CoagModeState:update( dt )
     -- Convey updates from the UI to the current ESU settings
     ESUModel.theESUModel:updateInput( theESUInput )
 
+    if self.step == "Settings" 
+        and ESUModel.theESUModel.mode == ESUINPUT_COAG 
+        and ESUModel.theESUModel.coagWattage == self.targetWattage then
+            self.instructionText:setText( 
+[[
+The ESU is now in COAG mode.
+ 
+Now use the tool to dessicate
+the circular region marked on the tissue.
+ 
+Try increasing and decreasing the
+ESU wattage and notice the difference
+in height from the tissue that the 
+electricity arcs.
+ 
+Try switching to CUT mode to
+see the difference in arcing
+distance vs COAG mode.
+ 
+Press "Enter" when finished.
+]])
+    end
+
     Sim.update( self, dt )
 end
 
@@ -69,18 +99,10 @@ function CoagModeState:deactivate()
 end
 
 function CoagModeState:nextState( currTime )
-    theNextState = self.theNextState
-    -- For now, theNextState global is used to pass
-    -- the next desired state back to the app
-    -- TODO should be changed to use the return value
-    -- print( "CoagModeState:nextState( " .. currTime .. " )")
-    --self.activationText:translate( 0.01, 0.65, 0 )
-    -- if (currTime - self.startTime) > 10 then 
-    --  theNextState = "Loading" 
-    --  print( "Changing state to menu!" )
-    -- else
-    --  theNextState = ""
-    -- end
+    if input:isKeyDown( KEY_KP_ENTER ) then
+        theNextState = "Menu"
+    end
+
     if input:isButtonPressed( "stylus", 2 ) then
         theNextState = "Menu"
     end
