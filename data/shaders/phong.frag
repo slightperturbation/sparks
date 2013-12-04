@@ -12,6 +12,7 @@ in float f_time;     // time in seconds
 // For Phong Lighting
 in vec4 f_normal_camera;
 in vec4 f_vertex_camera;
+in vec3 f_normal;
 
 // Samplers are named s_TEXTURENAME
 uniform sampler2D s_color;
@@ -31,6 +32,7 @@ void main()
 {
 	const float cutoff = 0.1;
 
+	// the coordinate system follows the subscript (camera == view)
 	vec4 normal_camera = normalize( f_normal_camera );
 	vec4 toLight_camera = normalize( u_light.position_camera - f_vertex_camera );
 	vec4 toCamera_camera = normalize( -f_vertex_camera );
@@ -47,5 +49,5 @@ void main()
 	vec4 Id = u_light.diffuse * textureColor * max( dot (toLight_camera, normal_camera), 0.0 );
 	vec4 Is = vec4( 1,1,1,1 ) * u_ks * pow( max(dot(halfVector_camera, normal_camera), 0.0), u_ns );
 
-	outColor = Ia + Id + Is;
+	outColor = vec4(0.5*f_normal + vec3(.5),1);//Ia + Id + Is;
 }

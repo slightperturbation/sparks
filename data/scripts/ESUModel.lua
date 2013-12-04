@@ -7,9 +7,12 @@ function ESUModel:new()
 	{
 		cutWattage = 30,
 		coagWattage = 30,
-		mode = spark.ESUINPUT_COAG,
-		electrode = spark.ESUINPUT_SPATULA,
-		hasCreatedSpark = false
+		mode = ESUINPUT_COAG,
+		electrode = ESUINPUT_SPATULA,
+		hasCreatedSpark = false,
+		ESUModeLabels = { [ESUINPUT_CUT] = "[Cut]", 
+						  [ESUINPUT_COAG] = "[Coag]", 
+						  [ESUINPUT_BLEND] = "[Blend]" }
 	}
 	self.__index = self
 	return setmetatable( newObj, self )
@@ -85,17 +88,17 @@ function ESUModel:activate( theTissueSim, xpos, ypos, stylusPos, tissueContactPo
 	local touchThreshold = 0.0004 -- meters
 	local sparkThreshold = 0.01 -- meters
 
-	if( mode == spark.ESUINPUT_CUT ) then
+	if( mode == ESUINPUT_CUT ) then
 		dutyCycle = 1
 		current = self.cutWattage * 0.8 
 		voltage = self.cutWattage * 0.2
 	end
-	if( mode == spark.ESUINPUT_COAG ) then
+	if( mode == ESUINPUT_COAG ) then
 		dutyCycle = 0.06
 		current = self.coagWattage * dutyCycle
 		voltage = self.coagWattage / dutyCycle
 	end
-	if( mode == spark.ESUINPUT_BLEND ) then
+	if( mode == ESUINPUT_BLEND ) then
 		dutyCycle = 0.5
 		current = (self.coagWattage + self.cutWattage ) * 0.5 * dutyCycle
 		voltage = (self.coagWattage + self.cutWattage ) * 0.5 / dutyCycle

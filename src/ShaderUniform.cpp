@@ -11,6 +11,13 @@ spark::ShaderUniform<float>
 }
 template<>
 void 
+spark::ShaderUniform<double>
+::applyImpl( void ) const
+{
+    GL_CHECK( glUniform1d( m_locationInShader, m_val ) );
+}
+template<>
+void 
 spark::ShaderUniform<int>
 ::applyImpl( void ) const
 {
@@ -22,6 +29,16 @@ spark::ShaderUniform<unsigned int>
 ::applyImpl( void ) const
 {
     GL_CHECK( glUniform1ui( m_locationInShader, (GLuint)m_val ) );
+}
+template<>
+void 
+spark::ShaderUniform<bool>
+::applyImpl( void ) const
+{
+    // Note, there's no way to pass a bool per se.
+    // and the uniform bool takes 32-bits just as the int does,
+    // so there wouldn't be any savings to passing a bool.
+    GL_CHECK( glUniform1i( m_locationInShader, (GLint)m_val ) );
 }
 template<>
 void 

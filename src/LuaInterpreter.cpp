@@ -365,10 +365,15 @@ spark
      MaterialPtr >( "Material" )
      .property( "name", (const std::string& (Material::*)(void) const )&Material::name,
                         (void (Material::*)(const std::string&) )&Material::name )
-     .def( "setFloat", &Material::setShaderUniform<float> )
+     // To add a new type of shaderUniform, add the concrete template
+     // specialization in ShaderUniform.hpp & ShaderUniform.cpp as well
+     .def( "setDouble", &Material::setShaderUniform<double> )
+     .def( "setFloat", &Material::setShaderUniform<float> ) // Lua doesn't actually use floats, but will convert to match GLSL
      .def( "setVec2", &Material::setShaderUniform<glm::vec2> )
      .def( "setVec3", &Material::setShaderUniform<glm::vec3> )
      .def( "setVec4", &Material::setShaderUniform<glm::vec4> )
+     .def( "setBool", &Material::setShaderUniform<bool> )
+     .def( "setInt", &Material::setShaderUniform<int> )
      .def( "addTexture", &Material::addTexture )
      .def( "dumpShaderUniforms", &Material::dumpShaderUniforms )
      ];

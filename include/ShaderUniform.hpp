@@ -93,13 +93,17 @@ namespace spark
         virtual void applyImpl( void ) const;
     };
 
-    // Specializations for supported types.
+    // Concrete specializations for supported types.
     template<>
     void ShaderUniform<float>::applyImpl( void ) const;
+    template<>
+    void ShaderUniform<double>::applyImpl( void ) const;
     template<>
     void ShaderUniform<int>::applyImpl( void ) const;
     template<>
     void ShaderUniform<unsigned int>::applyImpl( void ) const;
+    template<>
+    void ShaderUniform<bool>::applyImpl( void ) const;
     template<>
     void ShaderUniform<glm::vec2>::applyImpl( void ) const;
     template<>
