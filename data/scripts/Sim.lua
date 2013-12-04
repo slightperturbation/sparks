@@ -122,6 +122,35 @@ function Sim.createHUDElements( owner, esuModel )
 
 end
 
+function Sim.createInstructionText( owner, instructions )
+	local fontMgr = spark:getFontManager()
+	local fontDesc = {}
+	fontDesc.name = "Sans"
+	fontDesc.fontFilename = "HelveticaNeueLight.ttf"
+	fontDesc.size = 32
+	fontDesc.material = spark:createMaterial( "TextShader" )
+	fontDesc.material:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
+	fontDesc.material:setVec4( "u_color", vec4( 1, 1, 0.8, 1 ) )
+
+	fontMgr:addFont( fontDesc.name, fontDesc.size, fontDesc.fontFilename )
+	owner.instructionText = spark:createText( fontDesc.name, 
+									  fontDesc.size, 
+									  fontDesc.material,
+									  "HUDPass", 
+									  instructions )
+	owner.instructionText:translate( 0.025, 0.785, 0 )
+
+	-- --Highlight GUI w/ quad
+	local bgAccentMat = spark:createMaterial( "constantColorShader" )
+	bgAccentMat:setVec4( "u_color", vec4( 0, 0, 0, 0.2 ) )
+	local bgQuad = spark:createQuad( 
+		vec2( 0.015, 0.4 ), -- position of lower-left corner, 0,0 is bottom-left of screen
+		vec2( 0.25,0.5 ),  -- size
+		bgAccentMat, "HUDUnderPass" )
+
+end
+
+
 --[[
 	Handle events on State load
 --]]
