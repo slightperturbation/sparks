@@ -79,31 +79,31 @@ and most direct impact on tissue effects.]])
 	self.buttons["ESU Modes"].onClick = function () self.theNextState = "ModeInstruction" end
 	self.buttons["ESU Modes"].onMouseOver = function ()
 		self.explanationText:setText(
-[[Learn the role of each of the three modes of 
+[[Learn the effects of the modes of 
 operation of the ESU:
 	
 	Coag, Cut and Blend]])
 	end
 
 	ypos = ypos - lineHeight
-	self.buttons["Contact Area"] = Button:newLargeButton( xpos, ypos, KEY_KP_3, "[3] Current Density" )
+	self.buttons["Contact Area"] = Button:newLargeButton( xpos, ypos, KEY_KP_3, "[3] Contact Area" )
 	self.buttons["Contact Area"].onClick = function ()  self.theNextState = "" end
 	self.buttons["Contact Area"].onMouseOver = function () 
 		self.explanationText:setText(
-[[The area of contact between the electrode (bovie) 
+[[The area of contact between the electrode 
 and the tissue has a surprisingly large impact on the
 heating effect.]])
 	end
 
-	ypos = ypos - lineHeight
-	self.buttons["Freestyle"] = Button:newLargeButton( xpos, ypos, KEY_KP_4, "[4] Simulation" )
-	self.buttons["Freestyle"].onClick = function ()  self.theNextState = "Simulation" end
-	self.buttons["Freestyle"].onMouseOver = function () 
-		self.explanationText:setText( 
-[[Experiment freely on simulated tisse.]])
-	end
+-- 	ypos = ypos - lineHeight
+-- 	self.buttons["Freestyle"] = Button:newLargeButton( xpos, ypos, KEY_KP_4, "[4] Simulation" )
+-- 	self.buttons["Freestyle"].onClick = function ()  self.theNextState = "Simulation" end
+-- 	self.buttons["Freestyle"].onMouseOver = function () 
+-- 		self.explanationText:setText( 
+-- [[Experiment freely on simulated tisse.]])
+-- 	end
 
-	self.cursorScale = 0.02
+	self.cursorScale = 0.025
 	local cursorMat = spark:createMaterial( "constantColorShader" )
 	cursorMat:setVec4( "u_color", vec4( 1, 0.5, 0.5, 0.5) );
 	self.cursor = spark:loadMesh( "sphere.obj", cursorMat, "HUDPass" )

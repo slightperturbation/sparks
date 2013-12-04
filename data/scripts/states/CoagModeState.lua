@@ -1,3 +1,4 @@
+CoagModeState.lua
 ----------------------------------------
 -- Include standard libraries
 local Button = require "button"
@@ -10,10 +11,10 @@ local ESUModel = require "ESUModel"
 
 --]]
 
-ESUPowerState = {}
+CoagModeState = {}
 
-function ESUPowerState:new()
-    print( "ESUPowerState:new" )
+function CoagModeState:new()
+    print( "CoagModeState:new" )
     newObj = 
     { 
         buttons = {}, 
@@ -31,8 +32,8 @@ function ESUPowerState:new()
 end
 
 
-function ESUPowerState:load()
-    print( "ESUPowerState:load" )
+function CoagModeState:load()
+    print( "CoagModeState:load" )
 
     local isShadowOn = true
 
@@ -43,36 +44,36 @@ function ESUPowerState:load()
     ESUModel.theESUModel:createSpark()
 
     Sim.createInstructionText( owner, 
-[[Set power to 60 Watts
+[[Set the ESU to CUT mode
 ]])
 
 end
 
-function ESUPowerState:activate()
-    print( "ESUPowerState:activate" )
+function CoagModeState:activate()
+    print( "CoagModeState:activate" )
     self.startTime = -1
 
     Sim.activate( self )
 end
 
 
-function ESUPowerState:update( dt )
+function CoagModeState:update( dt )
     -- Convey updates from the UI to the current ESU settings
     ESUModel.theESUModel:updateInput( theESUInput )
 
     Sim.update( self, dt )
 end
 
-function ESUPowerState:deactivate()
-    print( "ESUPowerState:deactivate" )
+function CoagModeState:deactivate()
+    print( "CoagModeState:deactivate" )
 end
 
-function ESUPowerState:nextState( currTime )
+function CoagModeState:nextState( currTime )
     theNextState = self.theNextState
     -- For now, theNextState global is used to pass
     -- the next desired state back to the app
     -- TODO should be changed to use the return value
-    -- print( "ESUPowerState:nextState( " .. currTime .. " )")
+    -- print( "CoagModeState:nextState( " .. currTime .. " )")
     --self.activationText:translate( 0.01, 0.65, 0 )
     -- if (currTime - self.startTime) > 10 then 
     --  theNextState = "Loading" 
@@ -85,6 +86,6 @@ function ESUPowerState:nextState( currTime )
     end
 end
 
-theState = ESUPowerState:new()
+theState = CoagModeState:new()
 theNextState = ""
 

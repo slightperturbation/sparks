@@ -10,10 +10,10 @@ local ESUModel = require "ESUModel"
 
 --]]
 
-ESUPowerState = {}
+CutModeState = {}
 
-function ESUPowerState:new()
-    print( "ESUPowerState:new" )
+function CutModeState:new()
+    print( "CutModeState:new" )
     newObj = 
     { 
         buttons = {}, 
@@ -31,8 +31,8 @@ function ESUPowerState:new()
 end
 
 
-function ESUPowerState:load()
-    print( "ESUPowerState:load" )
+function CutModeState:load()
+    print( "CutModeState:load" )
 
     local isShadowOn = true
 
@@ -43,36 +43,36 @@ function ESUPowerState:load()
     ESUModel.theESUModel:createSpark()
 
     Sim.createInstructionText( owner, 
-[[Set power to 60 Watts
+[[Set the ESU to CUT mode
 ]])
 
 end
 
-function ESUPowerState:activate()
-    print( "ESUPowerState:activate" )
+function CutModeState:activate()
+    print( "CutModeState:activate" )
     self.startTime = -1
 
     Sim.activate( self )
 end
 
 
-function ESUPowerState:update( dt )
+function CutModeState:update( dt )
     -- Convey updates from the UI to the current ESU settings
     ESUModel.theESUModel:updateInput( theESUInput )
 
     Sim.update( self, dt )
 end
 
-function ESUPowerState:deactivate()
-    print( "ESUPowerState:deactivate" )
+function CutModeState:deactivate()
+    print( "CutModeState:deactivate" )
 end
 
-function ESUPowerState:nextState( currTime )
+function CutModeState:nextState( currTime )
     theNextState = self.theNextState
     -- For now, theNextState global is used to pass
     -- the next desired state back to the app
     -- TODO should be changed to use the return value
-    -- print( "ESUPowerState:nextState( " .. currTime .. " )")
+    -- print( "CutModeState:nextState( " .. currTime .. " )")
     --self.activationText:translate( 0.01, 0.65, 0 )
     -- if (currTime - self.startTime) > 10 then 
     --  theNextState = "Loading" 
@@ -85,6 +85,6 @@ function ESUPowerState:nextState( currTime )
     end
 end
 
-theState = ESUPowerState:new()
+theState = CutModeState:new()
 theNextState = ""
 

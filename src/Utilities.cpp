@@ -307,8 +307,8 @@ spark::OpenGLWindow
     {
         monitor = nullptr;
 #ifdef __APPLE__
-        width *= 0.25;
-        height *= 0.25;
+        width *= 0.5;
+        height *= 0.5;
 #endif
     }
 

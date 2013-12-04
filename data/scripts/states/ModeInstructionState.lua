@@ -51,7 +51,7 @@ function ModeInstructionState:load()
 		[[The two major ESU (electrosurgical unit) modes
  are 'cut' and 'coag'.
 
-Choose the mode yuo want to use next.
+Choose a mode.
  ]] )
 
 	-------------------------------------------------
@@ -60,7 +60,7 @@ Choose the mode yuo want to use next.
 	local ypos = 0.9
 	local lineHeight = 0.15
 	self.buttons["Cut Mode"] = Button:newLargeButton( xpos, ypos, "1", "[1] Cut Mode" )
-	self.buttons["Cut Mode"].onClick = function () self.theNextState = "Simulation" end
+	self.buttons["Cut Mode"].onClick = function () self.theNextState = "CutMode" end
 	self.buttons["Cut Mode"].onMouseOver = function () 
 		self.explanationText:setText(
 [[The CUT mode provides a 100% duty cycle,
@@ -82,7 +82,7 @@ The CUT lesson asks you to:
 	ypos = ypos - lineHeight
 	self.buttons["Coag Mode"] = Button:newLargeButton( xpos, ypos, "2", "[2] Coag Mode" )
 	self.buttons["Coag Mode"].onClick = function () 
-		self.theNextState = "Simulation" 
+		self.theNextState = "CoagMode" 
 		print("Switching to Simulation state")
 end
 	self.buttons["Coag Mode"].onMouseOver = function ()
@@ -101,7 +101,7 @@ The COAG lesson asks you to:
   2) Vaporize a small region of tissue with minimal
 		thermal spread.
      You should learn that coag is more difficult to
-     limit the spread compared to coag.
+     limit the spread compared to cut.
 ]])
 	end
 

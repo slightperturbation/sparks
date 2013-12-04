@@ -251,10 +251,6 @@ int runSimulation(int argc, char** argv)
     // If should use full screen mode on the zspace or primary monitor (if no zspace)
     const bool enableFullScreen = false;
 
-    const bool useZSpaceEyeTracking = true;
-    const bool useZSpaceStylus = true;
-    const bool useTrakStarStylus = false;
-
     OpenGLWindow window( "Spark", 
                          enableLegacyOpenGlLogging, 
                          useStereo, 
@@ -376,6 +372,8 @@ int runSimulation(int argc, char** argv)
     // the C++ class provides the tissue & smoke.
     std::vector< std::string > simStates; 
     simStates.push_back( "Simulation" );
+    simStates.push_back( "CutMode" );
+    simStates.push_back( "CoagMode" );
     simStates.push_back( "ESUPower" );
 
     for( auto iter = simStates.begin(); iter != simStates.end(); ++iter )
