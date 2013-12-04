@@ -63,6 +63,9 @@ The second build should complete, then you can run the sparksGui program.
 
 Note that you'll need to build the everything (ALL_BUILD) as Release before bulding the RelWithDebug target, as the Release version of the GLFW libraries are used for RelWithDebug.
 
+The path to the directory with webfiles is hard-coded in the mongoose.conf file.
+Change C:\src\sparks\www to the appropriate dir.
+
 ## Building - MacOSX ##
 
 Note:  MacOSX is only supported for testing, neither primary interface (zSpace nor TrakStar) is supported on OSX. Only out-of-source builds are supported.
