@@ -74,6 +74,12 @@ function LoadingState:update( dt )
 	if not self.hasRunOnce then
 		print( "\tLoading cemsim logo" )
 		self.hasRunOnce = true
+	else
+		-- Wait one update to be sure splash is loaded
+		local Fonts = require "Fonts"
+		Fonts:init()
+		local fontMgr = sparks:getFontManager()
+		fontMgr:generateAtlas()
 	end
 	-- self.boxB:rotate( 10, vec3(0,1,0) )
 	-- self.boxA:rotate( -10, vec3(0,1,0) )
@@ -88,11 +94,13 @@ function LoadingState:nextState( currTime )
 	-- the next desired state back to the app
 	-- TODO should be changed to use the return value
 	--print( "LoadingState:nextState( " .. currTime .. " )")
-	if currTime > 6 then 
-		theNextState = "Menu" 
-	else
-		theNextState = "" -- null means stay at current state
-	end
+	theNextState = "Menu" 
+
+	-- if currTime > 6 then 
+	-- 	theNextState = "Menu" 
+	-- else
+	-- 	theNextState = "" -- null means stay at current state
+	-- end
 end
 
 theState = LoadingState:new()

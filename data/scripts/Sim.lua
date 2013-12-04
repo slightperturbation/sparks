@@ -1,5 +1,7 @@
 -----------------------------
 local ESUModel = require "ESUModel"
+local Fonts = require "Fonts"
+Fonts:init()
 ----------------------------------------
 --[[
 	Tissue Simulation methods
@@ -33,10 +35,9 @@ function Sim.createHUDElements( owner, esuModel )
 
 	local fontMgr = spark:getFontManager()
 	local fontDesc = {}
-	fontDesc.name = "Sans"
-	fontDesc.fontFilename = "HelveticaNeueLight.ttf"
-	fontDesc.size = 48
-	local smallFontSize = 16
+	fontDesc.name = Fonts.defaultFontName
+	fontDesc.fontFilename = Fonts.defaultFontFileName
+	fontDesc.size = Fonts.defaultFontLabelSize
 
 	fontDesc.material = spark:createMaterial( "TextShader" )
 	fontDesc.material:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
@@ -47,7 +48,7 @@ function Sim.createHUDElements( owner, esuModel )
 	fontDesc.rolloverMaterial:setVec4( "u_color", vec4( 0.8, 0.8, 0.8, 1 ) )
 
 	fontMgr:addFont( fontDesc.name, fontDesc.size, fontDesc.fontFilename )
-	fontMgr:addFont( fontDesc.name, smallFontSize, fontDesc.fontFilename )
+	fontMgr:addFont( fontDesc.name, Fonts.defaultFontUnitsSize, fontDesc.fontFilename )
 
 	-- Wattage
 	owner.wattDisplay = spark:createText( fontDesc.name, 
@@ -57,7 +58,7 @@ function Sim.createHUDElements( owner, esuModel )
 			                             string.format("%2.0f / %2.0f", esuModel.cutWattage, esuModel.coagWattage) )
 	owner.wattDisplay:translate( 0.05, 0.985, 0 )
 	wattUnitMsg = spark:createText( fontDesc.name, 
-		                            smallFontSize, 
+		                            Fonts.defaultFontUnitsSize, 
 		                            fontDesc.material, 
 		                            "HUDPass", 
 		                            "Watts" )
@@ -77,7 +78,7 @@ function Sim.createHUDElements( owner, esuModel )
 			                             string.format("%2.1f", owner.activationTime) )
 	owner.activationTimeDisplay:translate( 0.64, 0.985, 0 )
 	timeUnitMsg = spark:createText( fontDesc.name, 
-		                            smallFontSize, 
+		                            Fonts.defaultFontUnitsSize, 
 		                            fontDesc.material, 
 		                            "HUDPass", 
 		                            "Seconds" )
@@ -92,7 +93,7 @@ function Sim.createHUDElements( owner, esuModel )
 			                             string.format("%2.1f", owner.tissueDistance) )
 	owner.distDisplay:translate( 0.91, 0.985, 0 )
 	areaUnitMsg = spark:createText( fontDesc.name, 
-		                            smallFontSize, 
+		                            Fonts.defaultFontUnitsSize, 
 		                            fontDesc.material, 
 		                            "HUDPass", 
 		                            "mm" )
@@ -106,7 +107,7 @@ function Sim.createHUDElements( owner, esuModel )
 	-- 		                             string.format("%2.1f", owner.contactArea) )
 	-- owner.contactAreaDisplay:translate( 0.91, 0.985, 0 )
 	-- areaUnitMsg = spark:createText( fontDesc.name, 
-	-- 	                            smallFontSize, 
+	-- 	                            Fonts.defaultFontUnitsSize, 
 	-- 	                            fontDesc.material, 
 	-- 	                            "HUDPass", 
 	-- 	                            "mm^2" )
@@ -118,16 +119,14 @@ function Sim.createHUDElements( owner, esuModel )
 	local bgQuad = spark:createQuad( vec2(0,0.915), vec2(1.0,1.0),
 		bgAccentMat, "HUDUnderPass" )
 	bgQuad:translate( 0,0,0 )
-
-
 end
 
 function Sim.createInstructionText( owner, instructions )
 	local fontMgr = spark:getFontManager()
 	local fontDesc = {}
-	fontDesc.name = "Sans"
-	fontDesc.fontFilename = "HelveticaNeueLight.ttf"
-	fontDesc.size = 32
+	fontDesc.name = Fonts.defaultFontName
+	fontDesc.fontFilename = Fonts.defaultFontFileName
+	fontDesc.size = Fonts.defaultFontTextSize
 	fontDesc.material = spark:createMaterial( "TextShader" )
 	fontDesc.material:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
 	fontDesc.material:setVec4( "u_color", vec4( 1, 1, 0.8, 1 ) )
@@ -145,7 +144,7 @@ function Sim.createInstructionText( owner, instructions )
 	bgAccentMat:setVec4( "u_color", vec4( 0, 0, 0, 0.1 ) )
 	owner.instructionBackground = spark:createQuad( 
 		vec2( 0.015, 0.2 ), -- position of lower-left corner, 0,0 is bottom-left of screen
-		vec2( 0.3, 0.6 ),  -- size
+		vec2( 0.3, 0.65 ),  -- size
 		bgAccentMat, "HUDUnderPass" )
 end
 

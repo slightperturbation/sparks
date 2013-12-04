@@ -150,6 +150,7 @@ spark
      luabind::class_< FontManager, FontManagerPtr >( "FontManager" )
      .def( "addFont", &FontManager::addFont )
      .def( "getFontAtlasTextureName", &FontManager::getFontAtlasTextureName )
+     .def( "generateAtlas", &FontManager::generateAtlas )
     ];
 
     //////////////////////////////////////////////////////////// RenderPass

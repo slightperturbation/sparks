@@ -370,6 +370,9 @@ int runSimulation(int argc, char** argv)
     frameBufferTarget->setClearColor( glm::vec4( 0,0,0,0 ) );
     g_guiEventPublisher->subscribe( frameBufferTarget );
 
+    FontManagerPtr fontManager( new FontManager( textureManager, 
+                                                 "FontAtlasTexture" ) );
+
 
     // Create the "special" simulation states from the C++ class
     // The specific functionality is provided in the Lua script,
@@ -391,17 +394,18 @@ int runSimulation(int argc, char** argv)
                             cameraPerspective,
                             frameBufferTarget,
                             inputManager,
+                            fontManager,
                             g_guiEventPublisher ) ) ) );
         stateManager.addState( simState );
     }
 
     std::vector<std::string> scriptStates;
     // Examples
-    scriptStates.push_back( "ShadowTest" );
-    scriptStates.push_back( "ButtonExample" );
+    //scriptStates.push_back( "ShadowTest" );
+    //scriptStates.push_back( "ButtonExample" );
+    //scriptStates.push_back( "Example" );
     // Actual States
     // -- TODO -- get all State.lua files in the States directory
-    scriptStates.push_back( "Example" );
     scriptStates.push_back( "Startup" );
     scriptStates.push_back( "Loading" );
     scriptStates.push_back( "Menu" );
@@ -420,6 +424,7 @@ int runSimulation(int argc, char** argv)
                                             cameraPerspective,
                                             frameBufferTarget,
                                             inputManager,
+                                            fontManager,
                                             g_guiEventPublisher ) );
         stateManager.addState( newState );
     }

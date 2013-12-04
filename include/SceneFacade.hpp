@@ -32,6 +32,7 @@ namespace spark
                       PerspectiveProjectionPtr camera,
                       FrameBufferRenderTargetPtr frameBufferTarget,
                       InputPtr inputManager,
+                      FontManagerPtr fontManager,
                       GuiEventPublisherPtr guiEventPublisher
                     );
         RenderTargetPtr getFrameBufferRenderTarget( void );

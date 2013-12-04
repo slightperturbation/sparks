@@ -2,6 +2,8 @@
 -- Include standard libraries
 local Button = require "button"
 local Render = require "render"
+local Fonts = require "Fonts"
+Fonts:init()
 ----------------------------------------
 
 ModeInstructionState = {}
@@ -42,8 +44,8 @@ function ModeInstructionState:load()
 	explanationMat = spark:createMaterial( "TextShader" )
 	explanationMat:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
 	explanationMat:setVec4( "u_color", vec4( 0.9, 0.9, 0.9, 1.0 ) )
-	self.explanationText = spark:createText( "Sans", 
-		                                     32, 
+	self.explanationText = spark:createText( Fonts.defaultFontName, 
+		                                     Fonts.defaultFontTextSize, 
 		                                     explanationMat, 
 		                            		 "HUDPass", "..." )
 	self.explanationText:translate( vec3( 0.5, 0.75, 0 ) ) 
@@ -59,7 +61,7 @@ Choose a mode.
 	local xpos = 0.1
 	local ypos = 0.9
 	local lineHeight = 0.15
-	self.buttons["Cut Mode"] = Button:newLargeButton( xpos, ypos, KEY_KP_1, "[1] Cut Mode" )
+	self.buttons["Cut Mode"] = Button:newLargeButton( xpos, ypos, KEY_KP_4, "[4] Cut Mode" )
 	self.buttons["Cut Mode"].onClick = function () self.theNextState = "CutMode" end
 	self.buttons["Cut Mode"].onMouseOver = function () 
 		self.explanationText:setText(
@@ -80,7 +82,7 @@ The CUT lesson asks you to:
 	end
 
 	ypos = ypos - lineHeight
-	self.buttons["Coag Mode"] = Button:newLargeButton( xpos, ypos, KEY_KP_2, "[2] Coag Mode" )
+	self.buttons["Coag Mode"] = Button:newLargeButton( xpos, ypos, KEY_KP_5, "[5] Coag Mode" )
 	self.buttons["Coag Mode"].onClick = function () 
 		self.theNextState = "CoagMode" 
 		print("Switching to Simulation state")

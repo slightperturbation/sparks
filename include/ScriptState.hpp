@@ -9,7 +9,7 @@
 
 namespace spark
 {
-    /// State that delegates state responsibilites to a Lua script
+    /// State that delegates state responsibilities to a Lua script
     /// Call runScriptFromFile() to build a "theState" object
     /// instance.  Example:
     ///
@@ -63,6 +63,7 @@ namespace spark
                     PerspectiveProjectionPtr camera,
                     FrameBufferRenderTargetPtr frameBufferTarget,
                     InputPtr inputManager,
+                    FontManagerPtr fontManager,
                     GuiEventPublisherPtr guiEventPublisher );
         virtual ~ScriptState();
         virtual void load( void )             override;

@@ -1,15 +1,15 @@
 -----------------------------
+local Fonts = require "Fonts"
+Fonts:init()
 
 local Button = {}
 
-local largeFontSize = 48
-local mediumFontSize = 32
 Button.fontMgr = spark:getFontManager()
 
 Button.defaultFontDesc = {}
-Button.defaultFontDesc.fontFilename = "HelveticaNeueLight.ttf"
-Button.defaultFontDesc.name = "Sans"
-Button.defaultFontDesc.size = largeFontSize
+Button.defaultFontDesc.fontFilename = Fonts.defaultFontFileName
+Button.defaultFontDesc.name = Fonts.defaultFontName
+Button.defaultFontDesc.size = Fonts.defaultFontButtonSize
 
 Button.defaultFontDesc.material = spark:createMaterial( "TextShader" )
 Button.defaultFontDesc.material:addTexture( "s_color", Button.fontMgr:getFontAtlasTextureName() )
@@ -24,10 +24,10 @@ Button.defaultFontDesc.pressedMaterial:addTexture( "s_color", Button.fontMgr:get
 Button.defaultFontDesc.pressedMaterial:setVec4( "u_color", vec4( 1.0, 1.0, 1.0, 1 ) )
 
 Button.fontMgr:addFont( Button.defaultFontDesc.name, Button.defaultFontDesc.size, Button.defaultFontDesc.fontFilename );
-Button.fontMgr:addFont( Button.defaultFontDesc.name, mediumFontSize, Button.defaultFontDesc.fontFilename );
+Button.fontMgr:addFont( Button.defaultFontDesc.name, Fonts.defaultFontSmallButtonSize, Button.defaultFontDesc.fontFilename );
 
 function Button:newLargeButton( posX, posY, argKeycode, msg, onClickFunc )
-	Button.defaultFontDesc.size = largeFontSize
+	Button.defaultFontDesc.size = Fonts.defaultFontButtonSize
 	return Button:newButton( posX, posY, argKeycode, msg, Button.defaultFontDesc )
 end
 

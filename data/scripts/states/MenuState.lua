@@ -2,6 +2,8 @@
 -- Include standard libraries
 local Button = require "button"
 local Render = require "render"
+local Fonts = require "Fonts"
+Fonts:init()
 ----------------------------------------
 
 MenuState = {}
@@ -42,8 +44,8 @@ function MenuState:load()
 	explanationMat = spark:createMaterial( "TextShader" )
 	explanationMat:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
 	explanationMat:setVec4( "u_color", vec4( 0.8, 0.8, 0.8, 0.8 ) )
-	self.explanationText = spark:createText( "Sans", 
-		                                     32, 
+	self.explanationText = spark:createText( Fonts.defaultFontName, 
+		                                     Fonts.defaultFontTextSize, 
 		                                     explanationMat, 
 		                            		 "HUDPass", "..." )
 	self.explanationText:translate( vec3( 0.5, 0.75, 0 ) ) 

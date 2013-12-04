@@ -27,6 +27,7 @@ spark::ScriptState
                PerspectiveProjectionPtr camera,
                FrameBufferRenderTargetPtr frameBufferTarget,
                InputPtr inputManager,
+               FontManagerPtr fontManager,
                GuiEventPublisherPtr guiEventPublisher )
 : SceneState( name, scene ),
   m_lua( new LuaInterpreter( finder ) )
@@ -38,6 +39,7 @@ spark::ScriptState
                                                 camera,
                                                 frameBufferTarget,
                                                 inputManager,
+                                                fontManager,
                                                 guiEventPublisher )
                               );
     m_lua->setFacade( m_facade );

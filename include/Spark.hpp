@@ -75,6 +75,9 @@ namespace spark
     class FrameBufferRenderTarget;
     typedef spark::shared_ptr< FrameBufferRenderTarget > FrameBufferRenderTargetPtr;
     
+    class FontManager;
+    typedef spark::shared_ptr< FontManager > FontManagerPtr;
+
     class GuiEventPublisher;
     typedef spark::shared_ptr< GuiEventPublisher > GuiEventPublisherPtr;
     

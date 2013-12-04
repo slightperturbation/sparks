@@ -37,12 +37,6 @@ namespace spark
         FontManager( TextureManagerPtr tm, const TextureName& atlasTextureName );
         ~FontManager();
 
-        /// Build the atlas and upload to the video card
-        /// Will be automatically called if getFont() is called after addFont()
-        /// if not manually called.
-        /// Note that this may take some time to process the distance_map.
-        void generateAtlas( void );
-
         /// Load the font at fontFilename with fontSize size into the atlas.
         /// distance map should only be computed once per font.
         /// need to queue all the "active" fonts
@@ -60,11 +54,19 @@ namespace spark
         /// Returns the texture name specified in the ctor.
         /// Use this texture name to get the atlas texture from the TextureManager.
         const TextureName& getFontAtlasTextureName( void ) const;
+
+        /// Build the atlas and upload to the video card
+        /// Will be automatically called if getFont() is called after addFont()
+        /// if not manually called.
+        /// Note that this may take some time to process the distance_map.
+        void generateAtlas( void );
         
         /// Provide TextRenderable direct access to the held font_manager_t
         friend class TextRenderable;
     private:
         /// Queue of fonts that should be loaded on the next generateAtlas call.
+        /// Note that the queue monotonically increases in size, under the
+        /// assumption that previously generated fonts will be used again.
         std::vector< FontDesc > m_fontLoadQueue;
 
         font_manager_t* m_fontManager;

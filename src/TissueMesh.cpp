@@ -101,7 +101,7 @@ spark::TissueMesh
                 //// HACK -------
                 //// depth limited by arbitrary constant!
                 //// see SimulationState.lua local passDepth in update() method
-                const float maxVaporizationDepth = 0.03;
+                const float maxVaporizationDepth = 0.25;
 
                 m_vaporizationDepthMap[ind] = std::min( m_vaporizationDepthMap[ind] + vaporizationDepth,
                                                         maxVaporizationDepth );
@@ -115,9 +115,9 @@ spark::TissueMesh
             else if( m_tissueCondition[ind] == vaporizedTissue )
             {
                 // Depth has been altered, underlying tissue is normal
-               // m_tissueCondition[ind] = normalTissue;
-               // (*m_currTempMap)[ind] = 273.15f + 37.0f;
-               // (*m_nextTempMap)[ind] = 273.15f + 37.0f;
+               m_tissueCondition[ind] = normalTissue;
+               (*m_currTempMap)[ind] = 273.15f + 37.0f;
+               (*m_nextTempMap)[ind] = 273.15f + 37.0f;
             }
             
             // Dessication 
@@ -163,7 +163,7 @@ spark::TissueMesh
     // Diffuse temperature by Fourier's law of thermal conduction
     // q = -k \nabla T
     const double a = 1e-8;//1e-5;//1e-7; // diffusion rate
-    const double decayRate = 1e-5f;//0.33f; // 1e-5f
+    const double decayRate = 0.3;//1e-5f;//0.33f; // 1e-5f
     double k = dt * a / (m_diffusionIters * m_voxelDimMeters * m_voxelDimMeters );
     if( k > 0.25 ) 
     {
@@ -288,7 +288,7 @@ spark::TissueMesh
     float radiusOfContact2 = radiusOfContact*radiusOfContact;
     float areaOfContact = M_PI*radiusOfContact2;
     float currentDensity2 = current*current / areaOfContact;
-    float unitsFactor = 1e-8;
+    float unitsFactor = 1e-10;
     for( size_t y = 1; y < m_N-1; ++y )
     {
         for( size_t x = 1; x < m_N-1; ++x )
@@ -302,7 +302,7 @@ spark::TissueMesh
             // are we inside the direct contact radius?
             if( distCellToContactCenter2 < radiusOfContact2 )
             {
-                m_heatMap[ind] += unitsFactor * currentDensity2 * dutyCycle * dt;
+                m_heatMap[ind] += unitsFactor * currentDensity2 * dt;
             }
             else
             {
@@ -311,7 +311,7 @@ spark::TissueMesh
                 float invDist3 = 1.0f / (d*d*d);
                 {
                     float localCurrDensity2 = (current*current);// / (m_voxelDimMeters*m_voxelDimMeters);
-                    m_heatMap[ind] += unitsFactor * localCurrDensity2 * dutyCycle * dt * invDist3;
+                    m_heatMap[ind] += unitsFactor * localCurrDensity2 * dt * invDist3;
                 }
             }
         }

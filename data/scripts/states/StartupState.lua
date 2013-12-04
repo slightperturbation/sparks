@@ -11,6 +11,8 @@ end
 function StartupState:load()
 	require "loadShaders"
 	require "loadTextures"
+	self.Fonts = require "Fonts"
+	self.Fonts:init()
 end
 
 function StartupState:activate()
@@ -23,9 +25,9 @@ function StartupState:deactivate()
 end
 
 function StartupState:nextState( currTime )
-	-- theNextState = "Loading"
+	theNextState = "Loading"
 
-	theNextState = "Menu"
+	--theNextState = "Menu"
 	--theNextState = "CoagMode"
 	--theNextState = "Simulation"
 	--theNextState = "Example"

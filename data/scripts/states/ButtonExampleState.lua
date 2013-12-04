@@ -37,22 +37,14 @@ function ButtonExampleState:load()
 --[[
 	Setup fonts and materials for buttons 
 --]]
-	local mainFontSize = 36
-	local smallFontSize = 12
 	local fontMgr = spark:getFontManager()
 
-	local fontFilename = "Vera.ttf"
-	if isApple() then
-		--fontFilename = "HelveticaNeueLight.ttf" 
-		fontFilename = "FiraSans-Light.ttf" 
-	end
-	-- Defining "Sans" font based on platform
-	fontMgr:addFont( "Sans", mainFontSize, fontFilename )
-	fontMgr:addFont( "Sans", smallFontSize, fontFilename )
+	fontMgr:addFont( Fonts.defaultFontName, Fonts.defaultFontButtonSize, Fonts.defaultFontFileName )
+	fontMgr:addFont( Fonts.defaultFontName, Fonts.defaultFontSmallButtonSize, Fonts.defaultFontFileName )
 
 	local fontDesc = {}
-	fontDesc.name = "Sans"
-	fontDesc.size = mainFontSize
+	fontDesc.name = Fonts.defaultFontName
+	fontDesc.size = Fonts.defaultFontButtonSize
 
 	-- Normal text color
 	fontDesc.material = spark:createMaterial( "TextShader" )
@@ -67,7 +59,7 @@ function ButtonExampleState:load()
 	fontDesc.pressedMaterial:addTexture( "s_color", fontMgr:getFontAtlasTextureName() )
 	fontDesc.pressedMaterial:setVec4( "u_color", vec4( 1.0, 1.0, 1.0, 1 ) )
 
-	fontMgr:addFont( fontDesc.name, fontDesc.size, fontFilename );
+	fontMgr:addFont( fontDesc.name, fontDesc.size, Fonts.defaultFontFileName );
 --[[
 	End setup fonts and materials for buttons 
 --]]

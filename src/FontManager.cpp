@@ -128,6 +128,7 @@ spark::FontManager
         LOG_ERROR(g_log) << "Failed to find font with filename \""
         << desc.filename << "\".";
     }
+    LOG_INFO(g_log) << "Added to FontQueue: \"" << desc.name << "\" [" << desc.size << "]";
 }
 
 void

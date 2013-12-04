@@ -25,6 +25,7 @@ spark::SceneFacade
                PerspectiveProjectionPtr camera,
                FrameBufferRenderTargetPtr frameBufferTarget,
                InputPtr inputManager,
+               FontManagerPtr fontManager,
                GuiEventPublisherPtr guiEventPublisher
               )
 
@@ -37,6 +38,7 @@ spark::SceneFacade
   m_overlayPerspective( new OrthogonalProjection ),
   m_cameraPerspective( camera ),
   m_frameBufferTarget( frameBufferTarget ),
+  m_fontManager( fontManager ),
   m_guiEventPublisher( guiEventPublisher )
 { }
 
@@ -436,6 +438,7 @@ spark::SceneFacade
     m_cameraPerspective.reset();
     m_frameBufferTarget.reset();
     m_guiEventPublisher.reset();
+    m_fontManager.reset();
 }
 
 spark::FontManagerPtr
