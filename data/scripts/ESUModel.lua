@@ -56,12 +56,10 @@ function ESUModel:createSpark( )
 end
 
 function ESUModel:setCutWattage( wattage )
-	-- TODO
 	self.cutWattage = wattage
 end
 
 function ESUModel:setCoagWattage( wattage )
-	-- TODO
 	self.coagWattage = wattage
 end
 
@@ -86,15 +84,14 @@ end
 function ESUModel:activate( theTissueSim, xpos, ypos, stylusPos, tissueContactPos, distFromTissue, radius, dt )
 
 	local touchThreshold = 0.0004 -- meters
-	local sparkThreshold = 0.01 -- meters
 
 	if( mode == ESUINPUT_CUT ) then
 		dutyCycle = 1
-		current = self.cutWattage * 0.8 
-		voltage = self.cutWattage * 0.2
+		current = self.cutWattage * 0.5 
+		voltage = self.cutWattage * 0.5
 	end
 	if( mode == ESUINPUT_COAG ) then
-		dutyCycle = 0.06
+		dutyCycle = 0.1
 		current = self.coagWattage * dutyCycle
 		voltage = self.coagWattage / dutyCycle
 	end
@@ -103,6 +100,14 @@ function ESUModel:activate( theTissueSim, xpos, ypos, stylusPos, tissueContactPo
 		current = (self.coagWattage + self.cutWattage ) * 0.5 * dutyCycle
 		voltage = (self.coagWattage + self.cutWattage ) * 0.5 / dutyCycle
 	end
+
+	-- sparkThreshold is proportional to voltage
+	-- 10 - 120
+	-- min cut, v = 5, max cut = 60
+	-- min coag, v = 100, max coag = 1200
+	-- @1000V, spark threshold =ex 0.01
+	-- @10V,  spark threshold = 0
+	local sparkThreshold = touchThreshold + ( voltage - 10 ) * 0.01/1000 -- meters
 
 	if abs( distFromTissue ) < touchThreshold then
 		-- Contact heating
@@ -131,18 +136,17 @@ function ESUModel:activate( theTissueSim, xpos, ypos, stylusPos, tissueContactPo
 
 		-- local spreadAngleRadians = 90.0 * math.pi / 180.0 -- 90 degrees in radians
 		-- local spreadSlope = math.tan( spreadAngleRadians * 0.5 )
-
 		-- xpos = xpos + distFromTissue * math.random() * spreadSlope
 		-- ypos = ypos + distFromTissue * math.random() * spreadSlope
 
 		local widthOfInstrument = 0.005 -- TODO -- get from electrode type
-		if( mode == spark.ESUINPUT_COAG ) then
-			widthOfInstrument = 0.013
+		if( mode == ESUINPUT_COAG ) then
+			-- Hacky -- when in coag, always have larger spread
+			widthOfInstrument = widthOfInstrument * 1.5
 		end
 		-- Random jitter for electricity placement
 		xpos = xpos + widthOfInstrument * math.random()
 		ypos = ypos + widthOfInstrument * math.random()
-
 
 		-- Draw the spark
 		if self.hasCreatedSpark then
@@ -158,7 +162,7 @@ function ESUModel:activate( theTissueSim, xpos, ypos, stylusPos, tissueContactPo
 	                             )
 		    -- end
 
-			print(string.format("Spark visual: (%2.4f, %2.4f, %2.4f) (%2.4f, %2.4f, %2.4f)",
+			print(string.format("Spark energy: (%2.4f, %2.4f, %2.4f) (%2.4f, %2.4f, %2.4f)",
 				stylusPos.x, stylusPos.y, stylusPos.z,  
 				tissueContactPos.x, tissueContactPos.y, tissueContactPos.z  
 			) )
