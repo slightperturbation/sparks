@@ -54,6 +54,10 @@ And set the power to %d watts.
 ]], self.targetWattage ) )
     self.step = "Settings"
 
+    -- tissueMat:setVec2( "u_targetCircleCenter", vec2( 0.4, 0.4 ) )
+    -- tissueMat:setFloat( "u_targetCircleOuterRadius", 0.025 )
+    -- tissueMat:setFloat( "u_targetCircleInnerRadius", 0.024 )
+
 end
 
 function CoagModeState:activate()

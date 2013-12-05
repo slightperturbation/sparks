@@ -239,11 +239,16 @@ int runSimulation(int argc, char** argv)
 {
     // Create Window
     // Option Flags
-
+#ifdef HAS_ZSPACE
+    const bool hasZSpace = true;
+#else
+    const bool hasZSpace = false;
+#endif
+    
     // legacy logging is great, but conflicts with nSight debugger
     const bool enableLegacyOpenGlLogging  = false;
     // Stero view, e.g., with ZSpace
-    const bool useStereo = true;
+    const bool useStereo = true && hasZSpace;
     // Create a separate thread to load background textures
     const bool useBackgroundResourceLoading = false;
     // Create a separate thread for input updates
@@ -251,8 +256,8 @@ int runSimulation(int argc, char** argv)
     // If should use full screen mode on the zspace or primary monitor (if no zspace)
     const bool enableFullScreen = false;
 
-    const bool useZSpaceEyeTracking = true;
-    const bool useZSpaceStylus = true;
+    const bool useZSpaceEyeTracking = true && hasZSpace;
+    const bool useZSpaceStylus = true && hasZSpace;
     const bool useTrakStarStylus = false;
 
     OpenGLWindow window( "Spark", 
@@ -401,11 +406,14 @@ int runSimulation(int argc, char** argv)
 
     std::vector<std::string> scriptStates;
     // Examples
-    //scriptStates.push_back( "ShadowTest" );
-    //scriptStates.push_back( "ButtonExample" );
-    //scriptStates.push_back( "Example" );
+    scriptStates.push_back( "ShadowTest" );
+    scriptStates.push_back( "ButtonExample" );
+    scriptStates.push_back( "Example" );
+    scriptStates.push_back( "SparkExample" );
+    scriptStates.push_back( "ShaderExample" );
+    
     // Actual States
-    // -- TODO -- get all State.lua files in the States directory
+    // -- TODO -- get all State.lua files in the States directory?  (could be slow)
     scriptStates.push_back( "Startup" );
     scriptStates.push_back( "Loading" );
     scriptStates.push_back( "Menu" );

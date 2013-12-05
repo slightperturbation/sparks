@@ -20,7 +20,7 @@ local Fonts = {}
 -- bad formatting
 Fonts.defaultFontFileName = "Vera.ttf"
 if isApple() then
-	Fonts.defaultFontFileName = "FiraSans-Light.ttf" 
+	Fonts.defaultFontFileName = "FiraSans-Regular.ttf" -- "FiraSans-Light.ttf" 
 end
 --Fonts.defaultFontFileName = "HelveticaNeueLight.ttf" 
 

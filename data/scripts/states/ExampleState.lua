@@ -2,14 +2,19 @@
 -- Include standard libraries
 local Button = require "button"
 local Render = require "render"
+local Fonts = require "Fonts"
 ----------------------------------------
 
 local ExampleState = {}
 
 function ExampleState:new()
-	  newObj = { angle = 45, startTime = nil }
-	  self.__index = self
-	  return setmetatable(newObj, self)
+    newObj =
+    { 
+        currTime = 0, 
+        startTime = nil 
+    }
+    self.__index = self
+    return setmetatable(newObj, self)
 end
 
 function ExampleState:load()
@@ -18,24 +23,22 @@ function ExampleState:load()
     Render:createDefaultRenderPasses( isShadowOn )
 
     self.boxMat = spark:createMaterial( "colorShader" )
-    self.boxMat:setVec4( "u_color", vec4(1.0,0.3,0.3,1.0) )
+    self.boxMat:setVec4( "u_color", vec4(1,0.5,0.5,1.0) )
 
-    self.boxA = spark:createCube( vec3(-1.0, 0, 0), 0.05, self.boxMat, "OpaquePass" )
-    self.boxB = spark:createCube( vec3( 1.0, 0, 0), 0.05, self.boxMat, "OpaquePass" )
+    self.boxA = spark:createCube( vec3(-1.0, 0, 0), 0.25, self.boxMat, "OpaquePass" )
+    self.boxB = spark:createCube( vec3( 1.0, 0, 0), 0.25, self.boxMat, "OpaquePass" )
 
+    -- Add a message to the screen
+    self.textMaterial = spark:createMaterial( "TextShader" )
+    self.textMaterial:addTexture( "s_color", spark:getFontManager():getFontAtlasTextureName() )
+    self.textMaterial:setVec4( "u_color", vec4(1,0.5,0.5,1.0) )
 
-    self.sparkMat = spark:createMaterial( "texturedSparkShader" )
-    self.sparkIntensity = 1.0
-    self.sparkMat:setVec4( "u_color", vec4(1.0, 1.0, 0.5, self.sparkIntensity) )
-    self.mySpark = spark:createLSpark( vec3(1.0,0,0), vec3(-1.0, 0, 0),
-                                             1.0, --intensity
-                                             0.25, --scale 
-                                             3, --recursiveDepth
-                                             0.5, --forkProb
-                                             "TransparentPass",
-                                             self.sparkMat )
-    self.sparkActivationTime = 0
-    self.sparkPeriod = 0.75
+    self.msg = spark:createText( Fonts.defaultFontName, 
+                                 Fonts.defaultFontTextSize, 
+                                 self.textMaterial,
+                                 "HUDPass", 
+                                 "Hello, World!" )
+    self.msg:translate( 0.05, 0.9, 0 )
 end
 
 function ExampleState:activate()
@@ -50,19 +53,11 @@ function ExampleState:activate()
 end
 
 function ExampleState:update( dt )
+    self.currTime = self.currTime + dt
+    self.msg:setText( string.format( "Time: %f", self.currTime ) )
 
-    self.sparkActivationTime = self.sparkActivationTime + dt
-    if self.sparkActivationTime > self.sparkPeriod then
-        self.sparkActivationTime = 0
-        self.mySpark:reseat( vec3(1.0,0,0), vec3(-1.0, 0, 0),
-                             1.0, --intensity
-                             0.25, --scale 
-                             3, --recursiveDepth
-                             0.5 --forkProb
-                             )
-    end
-    self.mySpark:update( dt )
-
+    self.boxA:rotate( dt*45.0, vec3(0,1,0) )
+    self.boxB:rotate( dt*30.0, vec3(1,0,0) )
 end
 
 function ExampleState:deactivate()
@@ -73,11 +68,7 @@ end
 
 function ExampleState:nextState( currTime )
     if self.startTime == nil then self.startTime = currTime end
-  	-- if (currTime - self.startTime) > 5 then
-   --    theNextState = "Menu"
-   --  else
-   --    theNextState = "" -- Keep current state
-   --  end
+    theNextState = "" -- Keep current state
 end
 
 theState = ExampleState:new()
