@@ -68,7 +68,7 @@ module.
 	greenMat:setVec4( "u_color", vec4( 0.2, 1, 0.2, 1.0) );
 
 	-- Tmp -- 3D mouse cursor
-	useMouseCursorCube = false
+	useMouseCursorCube = true
 	if( useMouseCursorCube ) then
 		self.markerBox = spark:createCube( vec3( -scale/1.5, -scale/2.0, -scale/2.0 ), 
 			scale, redMat, "OpaquePass" )
@@ -84,7 +84,7 @@ module.
 	end
 
 	-- Here's a nice little marker for the origin
-	local useZeroMarker = false
+	local useZeroMarker = true
 	if( useZeroMarker ) then
 		local scale = 0.01
 
@@ -113,7 +113,7 @@ module.
 		end
 	end
 
-	local use10CMMarkers = false
+	local use10CMMarkers = true
 	if use10CMMarkers then
 	    self.boxMat = spark:createMaterial( "colorShader" )
 	    self.boxMat:setVec4( "u_color", vec4(1.0,0.3,0.3,1.0) )

@@ -44,7 +44,7 @@ uniform vec4 u_targetCircleColor = vec4( 0, 1, 1, 1 );
 
 uniform vec4 u_ambientLight = vec4( 0.2, 0.2, 0.2, 1.0 ); // ambient light color
 uniform vec4 u_ks = vec4( 1, 1, 1, 1 ); // material specular coefficient, typically white
-uniform float u_ns = 50.1; // material specular exponent, ~50 is a good value for sharp highlights
+uniform float u_ns = 15.0; // material specular exponent, ~50 is a good value for sharp highlights
 
 
 /// Lights hard-coded

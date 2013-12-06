@@ -255,8 +255,8 @@ void main()
     
     // Phong Shader
 	vec4 Ia = u_ambientLight * textureColor;
-	vec4 Id = shadowFactor() * u_lightDiffuse * textureColor * max( dot (toLight_camera, normal_camera), 0.4 );
-	vec4 Is = shadowFactor() * vec4( 1,1,1,1 ) * u_ks * pow( max(dot(halfVector_camera, normal_camera), 0.1), u_ns );
+	vec4 Id = u_lightDiffuse * textureColor * max( dot (toLight_camera, normal_camera), 0.4 );
+	vec4 Is = vec4( 1,1,1,1 ) * u_ks * pow( max(dot(halfVector_camera, normal_camera), 0.1), u_ns );
     
-	outColor = Ia + Id + Is;
+	outColor = Ia + shadowFactor() * (Id + Is);
 }

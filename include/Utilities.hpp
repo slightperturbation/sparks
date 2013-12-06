@@ -39,8 +39,10 @@ namespace spark
         ~AudioManager();
         void init( void );
         void playSound( void );
+        void stopSound( void );
         static void audio_callback(void *userdata, Uint8 *stream, int len);
     private:
+        bool is_playing;
         FileAssetFinderPtr m_finder;
         Uint8 *audio_pos; // global pointer to the audio buffer to be played
         Uint32 audio_len; // remaining length of the sample we have to play
@@ -50,7 +52,7 @@ namespace spark
         Uint8 *wav_buffer; // buffer containing our audio file
         SDL_AudioSpec wav_spec; // the specs of our piece of music
     };
-
+    typedef spark::shared_ptr< AudioManager > AudioManagerPtr;
 
     /// Simple encapsulation of GLFW main window.  Handles clean-up.
     class OpenGLWindow

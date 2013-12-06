@@ -24,7 +24,7 @@ out vec4 f_vertex_screen;  // Projected vertex into the clip-space
 out vec4 f_normal_camera;  // For phong lighting
 out vec4 f_vertex_camera;  // For phong lighting
 out vec4 f_vertexPosition;
-out vec4 f_shadowPosition; // Position of light
+out vec4 f_shadowPosition; // Position in light
 
 struct ShadowLight 
 {

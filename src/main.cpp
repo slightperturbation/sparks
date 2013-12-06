@@ -237,8 +237,6 @@ void textureManagerCommandThreadOp( OpenGLWindow* window, TextureManager* textur
 /// Online simulation and display of fluid
 int runSimulation(int argc, char** argv)
 {
-    // Create Window
-    // Option Flags
 #ifdef HAS_ZSPACE
     const bool hasZSpace = true;
 #else
@@ -248,7 +246,7 @@ int runSimulation(int argc, char** argv)
     // legacy logging is great, but conflicts with nSight debugger
     const bool enableLegacyOpenGlLogging  = false;
     // Stero view, e.g., with ZSpace
-    const bool useStereo = true && hasZSpace;
+    bool useStereo = false && hasZSpace;
     // Create a separate thread to load background textures
     const bool useBackgroundResourceLoading = false;
     // Create a separate thread for input updates
@@ -256,9 +254,25 @@ int runSimulation(int argc, char** argv)
     // If should use full screen mode on the zspace or primary monitor (if no zspace)
     const bool enableFullScreen = false;
 
-    const bool useZSpaceEyeTracking = true && hasZSpace;
-    const bool useZSpaceStylus = true && hasZSpace;
-    const bool useTrakStarStylus = false;
+    bool useZSpaceEyeTracking = false && hasZSpace;
+    bool useZSpaceStylus = false && hasZSpace;
+    bool useTrakStarStylus = true;
+
+    // Option Flags
+    // Default is to use zspace if available
+    if( (argc > 2) && (std::string("lap") == argv[2] ) )
+    {
+        useStereo = false;
+        useZSpaceEyeTracking = false;
+        useZSpaceStylus = false;
+        useTrakStarStylus = true;
+        if( (argc > 3) && (std::string("stereo") == argv[3] ) )
+        {
+            // allow stereo & head tracking if asked
+            useStereo = true;
+            useZSpaceEyeTracking = true;
+        }
+    }
 
     OpenGLWindow window( "Spark", 
                          enableLegacyOpenGlLogging, 
@@ -320,8 +334,8 @@ int runSimulation(int argc, char** argv)
     TextureManagerPtr textureManager( new TextureManager );
     textureManager->setAssetFinder( finder );
 
-    AudioManager audioMgr( finder );
-    audioMgr.init();
+    AudioManagerPtr audioMgr( new AudioManager( finder ) );
+    audioMgr->init();
 
     int width = 0; int height = 0;
     window.getSize( &width, &height );
@@ -610,11 +624,12 @@ int runSimulation(int argc, char** argv)
         double inputProcessStartTime = glfwGetTime();
         if( window.getKey( GLFW_KEY_UP ) == GLFW_PRESS )
         {
-            stateManager.currState()->reset();
+            //stateManager.currState()->reset();
+            audioMgr->stopSound();
         }
         if( window.getKey( GLFW_KEY_DOWN ) == GLFW_PRESS )
         {
-            audioMgr.playSound();
+            audioMgr->playSound();
         }
         if( window.getKey( GLFW_KEY_ENTER ) == GLFW_PRESS )
         {
@@ -623,12 +638,13 @@ int runSimulation(int argc, char** argv)
         }
         if( window.getKey( GLFW_KEY_ESCAPE  ) == GLFW_PRESS )
         {
+            // quit
             break;
         }
-        if( window.getKey( GLFW_KEY_BACKSPACE ) == GLFW_PRESS )
-        {
-            LOG_DEBUG(g_log) << "Reset sim.\n";
-        }
+        //if( window.getKey( GLFW_KEY_BACKSPACE ) == GLFW_PRESS )
+        //{
+        //    LOG_DEBUG(g_log) << "Reset sim.\n";
+        //}
         if( window.getKey( GLFW_KEY_F1 ) == GLFW_PRESS )
         {
             boost::mutex::scoped_lock lock( g_logGuard );
@@ -663,6 +679,7 @@ int runSimulation(int argc, char** argv)
         //const float eyeSeparationStep = 0.02;
         if( window.getKey( GLFW_KEY_UP ) == GLFW_PRESS )
         {
+            audioMgr->stopSound();
             //SideBySideDisplay* d = dynamic_cast<SideBySideDisplay*>(g_display);
             //if( d )
             //{

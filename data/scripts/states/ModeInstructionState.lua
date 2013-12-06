@@ -52,8 +52,10 @@ function ModeInstructionState:load()
 	self.explanationText:setText( 
 		[[The two major ESU (electrosurgical unit) modes
  are 'cut' and 'coag'.
-
-Choose a mode.
+ 
+Choose a mode to learn more about.
+ 
+[Enter] to return to previous menu.
  ]] )
 
 	-------------------------------------------------
@@ -67,13 +69,13 @@ Choose a mode.
 		self.explanationText:setText(
 [[The CUT mode provides a 100% duty cycle,
 allowing vaporization with less dessication.
-
+ 
 The CUT lesson asks you to:
-
+ 
   1) Create a spark from the tool to the tissue,
      you should learn that electrical arcs are 
      more difficult to create in cut mode than coag mode.
-
+ 
   2) Vaporize a small region of tissue with minimal
 		thermal spread.
      You should learn that cut minimizes spread 
@@ -92,14 +94,14 @@ end
 [[The COAG mode outputs high-voltage
 bursts, allowing easier arcing to nearby tissue.
 Often used to fulgurate a broad area of tissue.
-
+ 
 The COAG lesson asks you to:
-
+ 
   1) Create a spark from the tool to the tissue,
      you should learn that electrical arcs are 
      much easier to create in coag mode than cut mode,
      and that the electricity can arc further.
-
+ 
   2) Vaporize a small region of tissue with minimal
 		thermal spread.
      You should learn that coag is more difficult to
@@ -144,6 +146,9 @@ function ModeInstructionState:update( dt )
 	for id, button in pairs( self.buttons ) do
 		button:update( stylusScreenPos.x, stylusScreenPos.y, buttonState )
 	end
+    if input:isKeyDown( KEY_KP_ENTER ) then
+	    theNextState = "Menu"
+    end
 end
 
 function ModeInstructionState:deactivate()

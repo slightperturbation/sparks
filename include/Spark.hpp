@@ -66,6 +66,9 @@ namespace spark
 
 namespace spark
 {
+    class AudioManager;
+    typedef spark::shared_ptr< AudioManager > AudioManagerPtr;
+
     class FileAssetFinder;
     typedef spark::shared_ptr< FileAssetFinder > FileAssetFinderPtr;
 

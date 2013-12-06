@@ -118,7 +118,8 @@ void APIENTRY debugOpenGLMessageCallback( GLenum source,
 
 spark::AudioManager
 ::AudioManager( FileAssetFinderPtr finder )
-: m_finder( finder )
+: m_finder( finder ),
+ is_playing( false )
 {
     // init()
 }
@@ -145,7 +146,7 @@ spark::AudioManager
     // the specs, length and buffer of our wav are filled
     
     std::string soundFilePath;
-    m_finder->findFile( "cuttingsound.wav", soundFilePath );
+    m_finder->findFile( "ES_Sound.wav", soundFilePath );
     if( SDL_LoadWAV( soundFilePath.c_str(), &wav_spec, &wav_buffer, &wav_length ) == NULL )
     {
         return;
@@ -156,14 +157,14 @@ spark::AudioManager
     // set our global static variables
     audio_pos = wav_buffer; // copy sound buffer
     audio_len = wav_length; // copy file length
-
-
 }
 
 void
 spark::AudioManager
 ::playSound( void )
 {
+    if( is_playing ) return;
+    is_playing  = true;
     if( audio_len <= 0 )
     {
         //already playing
@@ -177,8 +178,20 @@ spark::AudioManager
         std::cerr << "Couldn't open audio: " << SDL_GetError() << "\n";
         return;
     }
-    /* Start playing */
+    // Start playing
     SDL_PauseAudio(0);
+}
+
+void
+spark::AudioManager
+::stopSound( void )
+{
+    // Stop playing 
+    //SDL_PauseAudio(1);
+    is_playing = false;
+    // reset
+    audio_pos = wav_buffer; // copy sound buffer
+    audio_len = wav_length; // copy file length
 }
 
 void
@@ -188,7 +201,10 @@ spark::AudioManager
     
     AudioManager* audioMgr = (AudioManager*)userdata;
     if (audioMgr->audio_len ==0)
+    {
+        audioMgr->is_playing = false;
         return;
+    }
 
     len = ( len > audioMgr->audio_len ? audioMgr->audio_len : len );
     SDL_memcpy (stream, audioMgr->audio_pos, len); 					// simply copy from one buffer into the other
@@ -197,6 +213,7 @@ spark::AudioManager
 
     audioMgr->audio_pos += len;
     audioMgr->audio_len -= len;
+
 }
 
 
@@ -327,9 +344,10 @@ spark::OpenGLWindow
 
     // Hide the mouse cursor
     glfwSetInputMode( m_glfwRenderWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN );
-
+    glfwSetInputMode( m_glfwRenderWindow, GLFW_STICKY_MOUSE_BUTTONS, GL_TRUE );
     glfwSetWindowPos( m_glfwRenderWindow, x, y );
     glfwShowWindow( m_glfwRenderWindow );
+    glfwSetCursorPos( m_glfwRenderWindow, 10, 10 );
     
     checkOpenGLErrors();
     LOG_DEBUG(g_log) << " done.\n";

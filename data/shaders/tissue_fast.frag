@@ -55,8 +55,10 @@ uniform sampler2D s_shadowMap;
 
 uniform vec4 u_ambientLight = vec4( 0.1, 0.1, 0.1, 1.0 ); // ambient light color
 uniform vec4 u_ks = vec4( 1, 1, 1, 1 ); // material specular coefficient, typically white
-uniform float u_ns = 50.1; // material specular exponent, ~50 is a good value for sharp highlights
+uniform vec4 u_kd = vec4( 1, 1, 1, 1 );
+uniform float u_ns = 15; // material specular exponent
 
+uniform float u_shadowBrightness = 0.2;
 
 /// Lights hard-coded
 // light position in view-space (aka camera)
@@ -92,7 +94,7 @@ float shadowFactor()
     float factor = 1; 
 	if (  distFragToLight < (shadowPos.z - bias) )
 	{
-		factor = 0.2;
+		factor = u_shadowBrightness;
 	}
 	return factor;
 }
@@ -208,7 +210,7 @@ void main()
     
     // Phong Shader
 	vec4 Ia = u_ambientLight * textureColor;
-	vec4 Id = shadowFactor() * u_lightDiffuse * textureColor * max( dot (toLight_camera, normal_camera), 0.4 );
+	vec4 Id = shadowFactor() * u_lightDiffuse * textureColor * u_kd * max( dot (toLight_camera, normal_camera), 0.4 );
 	vec4 Is = shadowFactor() * vec4( 1,1,1,1 ) * u_ks * pow( max(dot(halfVector_camera, normal_camera), 0.1), u_ns );
     
 	outColor = Ia + Id + Is;

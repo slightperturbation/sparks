@@ -31,32 +31,52 @@ function ShaderExampleState:load()
                                  Fonts.defaultFontTextSize, 
                                  self.textMaterial,
                                  "HUDPass", 
-                                 "Hello, World!" )
+                                 "" )
     self.msg:translate( 0.05, 0.9, 0 )
 
 
     ------------------------------
     self.testMaterial = spark:createMaterial( "phongShader" )
-    self.testMaterial:addTexture( "s_color", "hook_cautery" )
-    self.testMaterial:setVec4( "u_light.position_camera", vec4(0,1,1,1) )
-    self.testMaterial:setVec4( "u_light.diffuse", vec4(0.4,0.4,0.4,1) )
-    self.testMaterial:setVec4( "u_ambientLight", vec4(0.0,0.0,0.0,1) )
+    self.testMaterial:addTexture( "s_color", "tissueDiffuse" )
+    self.testMaterial:addTexture( "s_normal", "tissueNormal" )
+
+    self.testMaterial:setVec4( "u_light.position_camera", vec4(shadowSource.x, shadowSource.y, shadowSource.z ,1) ) -- generally, should match shadow camera
+    self.testMaterial:setVec4( "u_light.diffuse", vec4(0.7,0.7,0.7,1) )
+    self.testMaterial:setVec4( "u_ambientLight", vec4(0.2,0.2,0.2,1) )
     self.testMaterial:setVec4( "u_ks", vec4(1,1,1,1) )
-    self.testMaterial:setFloat( "u_ns", 100.0 )
+    self.testMaterial:setFloat( "u_ns", 15.0 )
     self.testMaterial:setBool( "u_textureSwapUV", false )
     self.testMaterial:setVec2( "u_textureRepeat", vec2(1,1) )
     self.testMaterial:setVec4( "u_color", vec4( 1, 0.5, 0.5, 0.5) );
     
+    -- This material can receive shadows
     self.testMaterial:addTexture( "s_shadowMap", "light0_shadowMap" )
 
     self.sphere = spark:loadMesh( "sphere.obj", self.testMaterial, "OpaquePass" )
+    self.sphere:setMaterialForPassName( "ShadowPass", shadowMaterial ) -- casts shadow
     self.sphere:translate( 1.5, 0, 0 )
     self.sphere:scale( 2 )
-    self.sphere:setMaterialForPassName( "ShadowPass", shadowMaterial )
 
-    self.box = spark:createCube( vec3(-1.5, 0, 0), 1, self.testMaterial, "OpaquePass" )
-    self.box:setMaterialForPassName( "ShadowPass", shadowMaterial )
+    self.box = spark:createCube( vec3(-1.5, 0, -0.5), 1, self.testMaterial, "OpaquePass" )
+    self.box:setMaterialForPassName( "ShadowPass", shadowMaterial ) -- casts shadow
 
+    self.ground = spark:createCube( vec3(-5, -11, -5), 10, self.testMaterial, "OpaquePass" )
+    self.ground:setMaterialForPassName( "ShadowPass", shadowMaterial ) -- casts shadow
+
+
+    local tissueScale = 0.25
+    local worldOffset = vec3( 0, -.1, -.1 )
+    self.tissue = spark:createPlane( worldOffset + vec3( 0, 0.5*tissueScale, -0.5*tissueScale ), 
+                                      vec2(tissueScale, tissueScale), 
+                                      ivec2( 512, 512 ), -- faster
+                                      --ivec2( 1024, 1024 ), -- nicer
+                                      self.testMaterial, 
+                                      "OpaquePass" )
+    self.tissue:setMaterialForPassName( "ShadowPass", shadowMaterial ) -- casts shadow
+    
+    self.table = spark:createCube( worldOffset + vec3(-0.5, -0.025, -0.5), 1, 
+        self.testMaterial, "OpaquePass" )
+    self.table:rotate( 90, vec3(1,0,0) )
 end
 
 function ShaderExampleState:activate()
@@ -65,7 +85,7 @@ function ShaderExampleState:activate()
     self.startTime = -1
 
     local camera = spark:getCamera()
-    camera:cameraPos( 0.0, 0.345, 3.222 )
+    camera:cameraPos( 0.0, 0.5, 3 )
     camera:cameraTarget( 0.0, 0.0, 0.0 )
     camera:cameraUp( 0,1,0 )
 end

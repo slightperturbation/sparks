@@ -299,7 +299,7 @@ function Sim.update( owner, dt )
 	local worldStylusPos = vec3( stylusPos.x, stylusPos.y, stylusPos.z )
 	worldStylusPos.y = worldStylusPos.y + screenSpaceOffset.y
 
-	--print( "STYLUS POS: " .. worldStylusPos.x .. ", " .. worldStylusPos.y .. ", ".. worldStylusPos.z )
+	print( "STYLUS POS: " .. worldStylusPos.x .. ", " .. worldStylusPos.y .. ", ".. worldStylusPos.z )
 	
 	local tissueContactPos = vec3( stylusPos.x, stylusPos.y, stylusPos.z )
 	tissueContactPos.y = owner.worldOffset.y -- 0.025
@@ -312,25 +312,16 @@ function Sim.update( owner, dt )
 
 	--------------------------------------------------------
 	-- Activate ESU
-
+	-- Device activation 
 	local isActivated = input:isDefaultDeviceButtonPressed( 0 ) or input:isDefaultDeviceButtonPressed( 1 ) 
-	-- if( input:isButtonPressed( "mouse", 0 ) ) then
-	-- 	isActivated = true
-	-- end
-	-- if( input:isButtonPressed( "mouse", 1 ) ) then
-	-- 	isActivated = true
-	-- end
+	-- or mouse (foot pad)
+	if( input:isButtonPressed( "mouse", 0 ) ) then
+		isActivated = true
+	end
+	if( input:isButtonPressed( "mouse", 1 ) ) then
+		isActivated = true
+	end
 
-	-- When using the zSpace, query the buttons on the 
-	-- stylus handle as well
-	-- if inputDeviceName == "stylus" then
-	-- 	if( input:isButtonPressed( "stylus", 0 ) ) then
-	-- 		isActivated = true
-	-- 	end
-	-- 	if( input:isButtonPressed( "stylus", 1 ) ) then
-	-- 		isActivated = true
-	-- 	end
-	-- end
 
 	if( isActivated ) then
 		--print( "Activation:\t" .. stylusPos.x .. ",\t\t" .. stylusPos.y .. ",\t\t" .. stylusPos.z .. ",\t\tmat.y=" .. mat4_at(stylusMat, 3, 1 )  )
@@ -401,23 +392,27 @@ end
 --]]
 function Sim.createTable( owner, worldOffset )
 	owner.clothMat = spark:createMaterial( "phongShader" )
-	owner.clothMat:setVec4( "u_light.position_camera", vec4(5,10,0,1) )
-	owner.clothMat:setVec4( "u_light.diffuse", vec4(0.8,0.8,0.8,1) )
-	owner.clothMat:setVec4( "u_ambientLight", vec4(0.1,0.1,0.1,1) )
-	owner.clothMat:setVec4( "u_ka", vec4(1,1,1,1) )
+
+	-- FAKE LIGHT SOURCE DIRECTION!
+	owner.clothMat:setVec4( "u_light.position_camera", vec4(2,2,-1,1) )--vec4(shadowSource.x, shadowSource.y, shadowSource.z, 1) ) 
+		--"u_light.position_camera", vec4(5,10,0,1) )
+	owner.clothMat:setVec4( "u_light.diffuse", vec4(0.2,0.2,0.2,1) )
+	owner.clothMat:setVec4( "u_ambientLight", vec4(0.3,0.3,0.3,1) )
+	--owner.clothMat:setVec4( "u_ka", vec4(1,1,1,1) )
 	owner.clothMat:setVec4( "u_kd", vec4(1,1,1,1) )
 	owner.clothMat:setVec4( "u_ks", vec4(1,1,1,1) )
-	owner.clothMat:setFloat( "u_ns", 100.0 )
-	owner.clothMat:setFloat( "u_activationTime", 0.0 )
+	owner.clothMat:setFloat( "u_ns", 15.0 )
 	owner.clothMat:addTexture( "s_color", "bgCloth" )
-	owner.clothMat:setVec2( "u_textureRepeat", vec2(4,4) )
+	owner.clothMat:addTexture( "s_normal", "tissueNormal" )
+	owner.clothMat:setFloat( "u_normalMapStrength", 0.1 )
+
+    owner.clothMat:setBool( "u_textureSwapUV", false )
+	owner.clothMat:setVec2( "u_textureRepeat", vec2(6,6) )
+	owner.clothMat:addTexture( "s_shadowMap", "light0_shadowMap" )
+
 	local table = spark:createCube( worldOffset + vec3(-0.5, -0.025, -0.5), 1, owner.clothMat, "OpaquePass" )
 	table:rotate( 90, vec3(1,0,0) )
-
-	if( isShadowOn ) then
-		owner.table:setMaterialForPassName( "ShadowPass", shadowMaterial )
-	end
-
+	table:setMaterialForPassName( "ShadowPass", shadowMaterial )
 	return table
 end
 
@@ -428,19 +423,20 @@ function Sim.createInstruments( owner )
 	--Load hook
 	local hookMat = spark:createMaterial( "phongShader" )
 	hookMat:addTexture( "s_color", "hook_cautery" )
-	hookMat:setVec4( "u_light.position_camera", vec4(0,1,1,1) )
-	hookMat:setVec4( "u_light.diffuse", vec4(0.4,0.4,0.4,1) )
-	hookMat:setVec4( "u_ambientLight", vec4(0.0,0.0,0.0,1) )
+	hookMat:addTexture( "s_normal", "tissueNormal" )
+	hookMat:setFloat( "u_normalMapStrength", 0.1 )
+
+	-- FAKE LIGHT SOURCE DIRECTION!
+	hookMat:setVec4( "u_light.position_camera", vec4(2,2,-1,1) )--vec4(shadowSource.x, shadowSource.y, shadowSource.z ,1) )
+	hookMat:setVec4( "u_light.diffuse", vec4(0.3,0.3,0.3,1) )
+	hookMat:setVec4( "u_ambientLight", vec4(0.2,0.2,0.2,1) )
 	hookMat:setVec4( "u_ks", vec4(1,1,1,1) )
-	hookMat:setFloat( "u_ns", 100.0 )
+	hookMat:setFloat( "u_ns", 45 )
 	hookMat:setBool( "u_textureSwapUV", true )
 	hookMat:setVec2( "u_textureRepeat", vec2(0.5,1) )
 
-
 	owner.hookMesh = spark:loadMesh( "hook_cautery_new.3DS", hookMat, "OpaquePass" )
-	if( isShadowOn ) then
-		owner.hookMesh:setMaterialForPassName( "ShadowPass", shadowMaterial )
-	end
+	owner.hookMesh:setMaterialForPassName( "ShadowPass", shadowMaterial )
 	--owner.hookMesh = spark:loadMesh( "hook_cautery_new.3DS", cursorMat, "OpaquePass" )
 end
 
@@ -461,18 +457,27 @@ function Sim.createTissue( owner, worldOffset )
 	end
 	owner.tissueMat:addTexture( "s_shadowMap", "light0_shadowMap" )
 
-	owner.tissueMat:setVec4( "u_light.position_camera", vec4(5,10,0,1) )
-	owner.tissueMat:setVec4( "u_light.diffuse", vec4(0.8,0.8,0.8,1) )
-	owner.tissueMat:setVec4( "u_ambientLight", vec4(0.1,0.1,0.1,1) )
-	owner.tissueMat:setVec4( "u_ka", vec4(.1,.1,.1,1) )
-	owner.tissueMat:setVec4( "u_kd", vec4(.7,.7,.7,1) )
-	owner.tissueMat:setVec4( "u_ks", vec4(1,1,1,1) )
-	owner.tissueMat:setFloat( "u_ns", 100.0 )
+	--owner.tissueMat:setVec4( "u_light.position_camera", vec4(5,10,0,1) )
+
+	-- FAKE LIGHT SOURCE DIRECTION!
+	owner.tissueMat:setVec4( "u_light.position_camera", vec4(2,2,-1,1) ) --vec4(shadowSource.x, shadowSource.y, shadowSource.z ,1) ) -- generally, should match shadow camera
+	owner.tissueMat:setVec4( "u_light.diffuse", vec4(0.4,0.4,0.4,1) )
+
+	-- TODO -- update lighting parameters for tissue shaders to array of light objects
+	-- FAKE LIGHT SOURCE DIRECTION!
+	owner.tissueMat:setVec4( "u_lightPos", vec4(2,2,-1,1) )--vec4(shadowSource.x, shadowSource.y, shadowSource.z ,1) ) -- generally, should match shadow camera
+	owner.tissueMat:setVec4( "u_lightDiffuse", vec4(0.4,0.4,0.4,1) )
+
+	owner.tissueMat:setVec4( "u_ambientLight", vec4(0.3,0.3,0.3,1) )
+	owner.tissueMat:setVec4( "u_kd", vec4( 0.5,0.5,0.5,1) )
+	owner.tissueMat:setVec4( "u_ks", vec4( 0.3,0.3,0.3, 1) )
+	owner.tissueMat:setFloat( "u_ns", 15 )
 	owner.tissueMat:setFloat( "u_activationTime", 0.0 )
+	owner.tissueMat:setFloat( "u_shadowBrightness", 0.05 ) -- how much non-ambient light is in shadow
 
 	owner.tissueMat:addTexture( "s_color", "tissueDiffuse" );
-	owner.tissueMat:addTexture( "s_bump", "tissueBump" );
-	--owner.tissueMat:addTexture( "s_normal", "tissueNormal" );
+	--owner.tissueMat:addTexture( "s_bump", "tissueBump" );
+	owner.tissueMat:addTexture( "s_normal", "tissueNormal" );
 	--owner.tissueMat:addTexture( "s_ambient", "tissueAmbient" );
 	owner.tissueMat:addTexture( "s_charNormal", "tissueCharNormal" );
 
@@ -499,12 +504,9 @@ function Sim.createTissue( owner, worldOffset )
 	--owner.tissue:setMaterialForPassName( "WirePass", owner.tissueMat_debug )
 
 
-	if( isShadowOn ) then
-		owner.tissue:setMaterialForPassName( "ShadowPass", shadowMaterial )
-	end
-
+	owner.tissue:setMaterialForPassName( "ShadowPass", shadowMaterial )
 	-- show the target ring
-	owner.tissueMat:setVec2( "u_targetCircleCenter", vec2( 0.4, 0.4 ) )
+	owner.tissueMat:setVec2( "u_targetCircleCenter", vec2( 0.7, 0.7 ) )
 	owner.tissueMat:setFloat( "u_targetCircleOuterRadius", 0.025 )
 	owner.tissueMat:setFloat( "u_targetCircleInnerRadius", 0.024 )
 end

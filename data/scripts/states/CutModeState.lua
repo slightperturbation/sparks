@@ -48,7 +48,7 @@ function CutModeState:load()
 [[
 Change the MODE setting on the ESU 
 touchscreen to "CUT" mode (yellow),
- 
+  
 And set the power to %d watts.
  
 (Waiting...)
