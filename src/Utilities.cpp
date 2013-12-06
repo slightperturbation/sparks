@@ -157,6 +157,14 @@ spark::AudioManager
     // set our global static variables
     audio_pos = wav_buffer; // copy sound buffer
     audio_len = wav_length; // copy file length
+    
+    //SDL_OpenAudioDevice
+    if ( SDL_OpenAudio(&wav_spec, NULL) < 0 )
+    {
+        std::cerr << "Couldn't open audio: " << SDL_GetError() << "\n";
+        return;
+    }
+
 }
 
 void
@@ -172,12 +180,6 @@ spark::AudioManager
     }
     /* Open the audio device */
     
-    //SDL_OpenAudioDevice
-    if ( SDL_OpenAudio(&wav_spec, NULL) < 0 )
-    {
-        std::cerr << "Couldn't open audio: " << SDL_GetError() << "\n";
-        return;
-    }
     // Start playing
     SDL_PauseAudio(0);
 }
@@ -187,7 +189,7 @@ spark::AudioManager
 ::stopSound( void )
 {
     // Stop playing 
-    //SDL_PauseAudio(1);
+    SDL_PauseAudio(1);
     is_playing = false;
     // reset
     audio_pos = wav_buffer; // copy sound buffer
@@ -200,7 +202,7 @@ spark::AudioManager
 {
     
     AudioManager* audioMgr = (AudioManager*)userdata;
-    if (audioMgr->audio_len ==0)
+    if( audioMgr->audio_len == 0 )
     {
         audioMgr->is_playing = false;
         return;
@@ -211,8 +213,10 @@ spark::AudioManager
     //SDL_memset(stream, 0, len);
     //SDL_MixAudio(stream, audioMgr->audio_pos, len, SDL_MIX_MAXVOLUME);// mix from one buffer into another
 
-    audioMgr->audio_pos += len;
-    audioMgr->audio_len -= len;
+//    audioMgr->audio_pos += len;
+//    audioMgr->audio_len -= len;
+    audioMgr->audio_pos = audioMgr->wav_buffer;
+    audioMgr->audio_len = audioMgr->wav_length;
 
 }
 

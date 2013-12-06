@@ -334,8 +334,8 @@ int runSimulation(int argc, char** argv)
     TextureManagerPtr textureManager( new TextureManager );
     textureManager->setAssetFinder( finder );
 
-    AudioManagerPtr audioMgr( new AudioManager( finder ) );
-    audioMgr->init();
+    AudioManagerPtr audioManager( new AudioManager( finder ) );
+    audioManager->init();
 
     int width = 0; int height = 0;
     window.getSize( &width, &height );
@@ -414,6 +414,7 @@ int runSimulation(int argc, char** argv)
                             frameBufferTarget,
                             inputManager,
                             fontManager,
+                            audioManager,
                             g_guiEventPublisher ) ) ) );
         stateManager.addState( simState );
     }
@@ -447,6 +448,7 @@ int runSimulation(int argc, char** argv)
                                             frameBufferTarget,
                                             inputManager,
                                             fontManager,
+                                            audioManager,
                                             g_guiEventPublisher ) );
         stateManager.addState( newState );
     }
@@ -625,11 +627,11 @@ int runSimulation(int argc, char** argv)
         if( window.getKey( GLFW_KEY_UP ) == GLFW_PRESS )
         {
             //stateManager.currState()->reset();
-            audioMgr->stopSound();
+            audioManager->stopSound();
         }
         if( window.getKey( GLFW_KEY_DOWN ) == GLFW_PRESS )
         {
-            audioMgr->playSound();
+            audioManager->playSound();
         }
         if( window.getKey( GLFW_KEY_ENTER ) == GLFW_PRESS )
         {
@@ -679,7 +681,6 @@ int runSimulation(int argc, char** argv)
         //const float eyeSeparationStep = 0.02;
         if( window.getKey( GLFW_KEY_UP ) == GLFW_PRESS )
         {
-            audioMgr->stopSound();
             //SideBySideDisplay* d = dynamic_cast<SideBySideDisplay*>(g_display);
             //if( d )
             //{

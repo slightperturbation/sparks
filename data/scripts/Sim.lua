@@ -350,18 +350,12 @@ function Sim.update( owner, dt )
 		owner.activationTime = owner.activationTime + dt
 		txt = string.format("%2.1f", owner.activationTime)
 		owner.activationTimeDisplay:setText( txt )
+	end
 
-		--TODO play sound
-		-- if ESUModel.theESUModel.mode == spark.ESUINPUT_CUT then
-
-		-- end
-		-- if ESUModel.theESUModel.mode == spark.ESUINPUT_COAG then
-
-		-- end
-		-- if ESUModel.theESUModel.mode == spark.ESUINPUT_BLEND then
-
-		-- end
-
+	if isActivated  then
+		spark:playSound()
+	else
+		spark:stopSound()
 	end
 
 	-- Debugging -- Cause randomly located activation with current settings
@@ -437,7 +431,6 @@ function Sim.createInstruments( owner )
 
 	owner.hookMesh = spark:loadMesh( "hook_cautery_new.3DS", hookMat, "OpaquePass" )
 	owner.hookMesh:setMaterialForPassName( "ShadowPass", shadowMaterial )
-	--owner.hookMesh = spark:loadMesh( "hook_cautery_new.3DS", cursorMat, "OpaquePass" )
 end
 
 

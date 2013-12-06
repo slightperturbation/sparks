@@ -49,7 +49,7 @@ function Render:createDefaultRenderPasses( isShadowOn )
 	wireRenderPass:disableBlending()
 	wireRenderPass:setWireframe( true )
 
-	local isShadowDebugDisplayOn = true
+	local isShadowDebugDisplayOn = false -- draws the depth texture
 	local useOrthogonalProjectionForShadow = true
 	if( isShadowOn ) then
 		-- TODO the use of global veriables (e.g., shadowSource) should be bundled into the module

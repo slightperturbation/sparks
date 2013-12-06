@@ -33,6 +33,7 @@ namespace spark
                       FrameBufferRenderTargetPtr frameBufferTarget,
                       InputPtr inputManager,
                       FontManagerPtr fontManager,
+                      AudioManagerPtr audioManager,
                       GuiEventPublisherPtr guiEventPublisher
                     );
         RenderTargetPtr getFrameBufferRenderTarget( void );
@@ -225,6 +226,8 @@ namespace spark
 
         glm::vec2 getWindowSize( void );
         
+        void playSound( void );
+        void stopSound( void );
         
         /// Release all held resources, release all linked resources.
         void reset( void );
@@ -246,6 +249,7 @@ namespace spark
         PerspectiveProjectionPtr m_cameraPerspective;
         // FBOs
         FrameBufferRenderTargetPtr m_frameBufferTarget;
+        AudioManagerPtr m_audioManager;
         GuiEventPublisherPtr m_guiEventPublisher;
 
     };
