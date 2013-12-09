@@ -10,16 +10,21 @@
 
 namespace spark
 {
-
-    /// Implementation of Jos Stam's Stable Fluids
+    /// 3D fluid simulation, based primarily on Jos Stam's Stable Fluids.
+    /// Supports cubic volumes of fixed size.
     class Fluid : public VolumeData
     {
     public:
         /// Create and initialize a fluid volume, with all-equal dimensions.
+        /// The size argument specifies the number of cells, not the scale.
         Fluid( int size = 4 );
         virtual ~Fluid();
 
+        /// Sets the number of cells per dimension.  Contents of the Fluid
+        /// from before a call to setSize() may be lost.
         void setSize( int size );
+
+        /// Returns the number of cells in a single dimension of the Fluid.
         int getSize( void );
 
         /// Save the fluid to a file.
@@ -86,7 +91,11 @@ namespace spark
         /// resets the simulation to some arbitrary initial state
         void reset( void );
 
+        /// Debugging method to add a density source at the bottom of the Fluid.
         void addBottomSource( void );
+
+        /// Adds an amount of density at the given coordinates, capping the highest
+        /// possible density to maxDensity.
         void addSourceAtLocation( float x, float y, 
                                   float deltaDensity, float maxDensity );
     private:
@@ -96,6 +105,8 @@ namespace spark
         void zeroData( void );
         void addDensitySources( float dt );
         void addVelocitySources( float dt );
+
+        /// Debugging method to add a density and velocity impulse.
         void addBoom( void );
 
         /// Compute the curl of a single component, with given (positive) offsets

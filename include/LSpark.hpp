@@ -61,13 +61,25 @@ namespace spark
                      float a_scale,
                      int   a_depth,
                      float a_forkProb );
+
+        /// Set the current camera allowing drawn quads to face the camera.
         void setViewProjection( ConstProjectionPtr aCamera );
+
+        /// Returns the current projection, as previously defined with setViewProjection()
         ConstProjectionPtr viewProjection( void ) const;
+
+        /// Returns the position segments making up this LSpark.
         const Segments& segments( void ) const { return m_segments; }
+
+        /// Returns the position segments making up this LSpark.
         Segments& segments( void ) { return m_segments; }
+
+        /// Allow the LSpark to update itself, e.g., animation.
         void update( double dt );
+
         /// Move mid-points according to velocity field
         void advect( VelocityFieldInterfacePtr velocityField );
+
         /// Returns the total length of the spark, begin to end.
         float length( void ) const;
     private:

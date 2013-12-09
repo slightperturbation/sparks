@@ -26,16 +26,24 @@ namespace spark
         Material( TextureManagerPtr tm );
         Material( TextureManagerPtr tm, ShaderInstancePtr aShader );
         ~Material();
+
         /// Specifies the shader this material is based on.  All materials
         /// must have a shader.
         void setShader( ShaderInstancePtr aShader );
+
         /// Returns the OpenGL Shader ID used by this material.
         GLuint getGLShaderIndex( void ) const;
+
         /// Returns the name of the **shader** used by this material.
         const std::string& name( void ) const;
+
+        /// Set the debugging name for this material.  Use with restraint, 
+        /// as its often nicer to leave it as the shader name.
         void name( const std::string& aName );
+
         /// Set OpenGLs state to use the material
         void use( void ) const;
+
         /// Usage examples:
         ///   materialPtr->shaderUniforms()["u_projMat"] = glm::mat4();
         ///   materialPtr->shaderUniforms()["u_color"] = glm::vec4( 1,1,1,1 );
@@ -64,8 +72,16 @@ namespace spark
         void dumpShaderUniforms( void ) const;
     private:
         std::string m_name;
+
+        /// Holds each texture used by this material.  Maps from the name of
+        /// the texture in the TextureManager (TextureName, e.g., "skin_normals")
+        /// to the uniform name in m_shader (ShaderUniformName, e.g., "s_normalMap")
         std::set< std::pair< const TextureName, const ShaderUniformName > > m_textures;
+
+        /// The instance of the shader used by this material.
         ShaderInstancePtr m_shader;
+
+        /// The texture manager holding this material's textures.
         TextureManagerPtr m_textureManager;
     };
 }

@@ -15,6 +15,7 @@ namespace spark
         Updateable( const std::string& name = "no_name" ) : m_debugName( name ) {}
         virtual ~Updateable() {}
 
+        /// Returns the debugging name of this Updatable.
         virtual const std::string& updateableName( void ) { return m_debugName; }
         
         /// Update this by dt seconds.

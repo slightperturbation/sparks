@@ -100,6 +100,9 @@ function CutModeState:deactivate()
 end
 
 function CutModeState:nextState( currTime )
+    -- if input:isKeyDown( KEY_ESC ) then
+    --     theNextState = "Loading"
+    -- end
     if input:isKeyDown( KEY_KP_ENTER ) then
         theNextState = "Menu"
     end

@@ -27,6 +27,7 @@
 #include <memory>
 namespace spark
 {
+    /// Vertex holding the VBO data for the PointSparkRenderable
     struct PointSparkVertex
     {
         GLfloat m_position[4];

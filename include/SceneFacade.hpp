@@ -103,7 +103,7 @@ namespace spark
 
         /// Creates newTargetTextureName as a texture and renders to it
         /// using an overlay projection
-        /// TODO need a new name!
+        /// \todo need a better name!
         RenderTargetPtr createPostProcessingRenderPassAndTarget( 
             float priority,
             const RenderPassName& name,

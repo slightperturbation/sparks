@@ -25,10 +25,12 @@ namespace spark
             implUpdatePerspective( persp, eye );
         }
 
-        /// Update the viewport
+        /// Update the viewport using the newly calculated positions of the
+        /// the tracked eyes.
         virtual void resizeViewport( int left, int bottom,
                                      int right, int top ) = 0;
 
+        /// Allows the EyeTracker to update it's estimate of the user's Eyes.
         virtual void update( double dt ) override = 0;
     protected:
         virtual void implUpdatePerspective( PerspectiveProjectionPtr persp, 

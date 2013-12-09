@@ -164,11 +164,16 @@ namespace spark
     typedef spark::shared_ptr< ShaderUniformHolder > ShaderUniformHolderPtr;
     typedef spark::shared_ptr< const ShaderUniformHolder > ConstShaderUniformHolderPtr;
 
-    /// Responsible for holding the uniforms settings
-    /// Caches uniform settings to minimize chatter.
+    /// A ShaderInstance is a combination of a GLSL shader (with ShaderName)
+    /// and the set of uniforms that specify how this shader is rendered.
+    /// The uniforms are stored in the superclass ShaderUniformHolder.
+    /// 
+    /// ShaderInstace caches uniform settings to minimize OpenGL chatter.
     class ShaderInstance : public ShaderUniformHolder
     {
     public:
+        /// Create the shader instance based on the shader name that has been
+        /// or will be loaded into manager.
         ShaderInstance( const ShaderName& name, ShaderManagerPtr manager )
         : m_name( name ),
           m_manager( manager )
@@ -199,6 +204,7 @@ namespace spark
             applyShaderUniforms( shaderIndex);
         }
     
+        /// Check the shader and associated uniforms for errors.
         void preDrawValidation( void ) const
         {
             GLuint shaderIndex = getGLProgramIndex();
@@ -219,12 +225,14 @@ namespace spark
             }
         }
         
+        /// Returns the OpenGL program index for this shader.
         GLuint getGLProgramIndex( void ) const
         {
             return m_manager->getProgramIndexForShaderName( m_name );
         }
 
     protected:
+        /// The name of the shader as registered with m_manager.
         ShaderName m_name;
         ShaderManagerPtr m_manager;
     };

@@ -5,8 +5,8 @@
 
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <map>
 
 namespace spark
 {
@@ -18,11 +18,9 @@ namespace spark
     class Renderable
     {
     public:
-        Renderable( const RenderableName& name );
-        virtual ~Renderable();
-
         /// Provides the descriptive (not necessarily unique) name
         virtual RenderableName name( void ) const;
+
         /// Sets a descriptive name for the Renderable
         virtual void name( const RenderableName& aName );
 
@@ -37,15 +35,42 @@ namespace spark
         /// to this material for that RenderPass.
         /// Best used for "effect" renderables like full-screen overlay quads.
         void setRequireExplicitMaterial( bool explicitMat );
+
+        /// Returns true if this renderable will only be added to a
+        /// RenderPass (using the RenderPass' default Material) when a
+        /// material is explicitly assigned to that RenderPass.
         bool requiresExplicitMaterial( void ) const;
         
+        /// Returns the current transform of this Renderable as a 4x4 matrix.
         const glm::mat4& getTransform( void ) const;
+
+        /// Set the transform of this renderable to mat, ignores any previous 
+        /// transformations applied.
         void setTransform( const glm::mat4& mat );
+
+        /// Post-multiply the renderables current transform by mat.
+        /// This is equivalent to:
+        ///   r.setTransform( r.getTransform() * mat );
         void transform( const glm::mat4& mat );
+
+        /// Non-uniformly scale the Renderable by scaleFactor in all three dimensions.
+        /// See glm::scale()
         void scale( const glm::vec3& scaleFactor );
+
+        /// Uniformly scale the Renderable by the scalar scaleFactor.
+        /// See glm::scale()
         void scale( float scaleFactor );
+
+        /// Translate the Renderable by the given vector.
+        /// See glm::translate()
         void translate( const glm::vec3& x );
+
+        /// Translate the Renderable by given components.
+        /// See glm::translate()
         void translate( float x, float y, float z );
+
+        /// Rotate the Renderable around axis by angleInDegrees.
+        /// See glm::rotate()
         void rotate( float angleInDegrees, const glm::vec3& axis );
         
         /// Align this Renderable's z-axis with the given dir vector.
@@ -74,6 +99,9 @@ namespace spark
             RenderablePtr renderable );
 
     protected:
+        Renderable( const RenderableName& name );
+        virtual ~Renderable();
+
         /// Ties the shader's "in" variables to the channels of this
         /// Renderable's data, e.g, "in vec3 v_position" in the shader
         /// needs to point to offset 0, stride 6.
@@ -83,9 +111,21 @@ namespace spark
         /// Must be called for each shader that uses this Renderable
         virtual void attachShaderAttributes( GLuint shaderIndex ) = 0;
         
+
+        /// Debugging label for this Renderable.
         RenderableName m_name;
+
+        /// If true, this material will not use a RenderPass's default
+        /// material, instead requiring an entry in m_materials to be 
+        /// Rendered in the RenderPass.
         bool m_requiresExplicitMaterial;
+
+        /// Stores which material should be used to render this
+        /// Renderable in a given RenderPass.  Note that only
+        /// one material per pass is currently supported.
         std::map< const RenderPassName, MaterialPtr > m_materials;
+
+        /// The 4x4 matrix of the current transform of the Renderable.
         glm::mat4 m_objectTransform;
     };
 

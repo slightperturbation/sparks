@@ -47,7 +47,7 @@ namespace spark
     /// theState = ExampleState:new()
     /// theNextState = ""
     //////////
-    /// TODO - should hold the luabind::object and call methods on that
+    /// \todo should hold the luabind::object and call methods on that
     /// instead of relying on the name of the state object ("theState")
     /// but luabind method calls not working yet.
     class ScriptState : public SceneState
@@ -76,10 +76,13 @@ namespace spark
         
         boost::optional<spark::StateName> nextState( double currTime ) override;
 
-        void reloadScript( void ); // TODO-implement reload
+        /// \todo -- Implement reloading of scripts (handling of recreating objects)
+        void reloadScript( void ); 
+
     protected:
         void runScriptFromFile( const std::string& filename );
         std::string fileNameFromStateName( const StateName& name );
+
         SceneFacadePtr m_facade;
         LuaInterpreterPtr m_lua;
         

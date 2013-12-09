@@ -86,36 +86,6 @@ namespace spark
     };
 
 
-    //struct LineVertex
-    //{
-    //    GLfloat m_position[4];
-    //    GLfloat m_direction[4];
-    //    GLfloat m_diffuseColor[4];
-    //
-    //    static void addVertexAttributes( std::vector<VertexAttributePtr>&  outShaderAttributes )
-    //    {
-    //        VertexAttributePtr position(new FloatVertexAttribute("position", 3,
-    //            sizeof(LineVertex),
-    //            (void*)offsetof(LineVertex, m_position) )
-    //            );
-    //        outShaderAttributes.push_back( position );
-    //        VertexAttributePtr direction(new FloatVertexAttribute("direction",
-    //            3,
-    //            sizeof(LineVertex),
-    //            (void*)offsetof(LineVertex, m_direction) )
-    //            );
-    //        outShaderAttributes.push_back( direction );
-    //        VertexAttributePtr diffuse(new FloatVertexAttribute("inColor",
-    //            3,
-    //            sizeof(LineVertex),
-    //            (void*)offsetof(LineVertex, m_diffuseColor) )
-    //            );
-    //        outShaderAttributes.push_back( diffuse );
-    //    }
-    //};
-
-
-
     /// Wraps glBufferData to load from a std::vector
     /// E.g.:
     /// std::vector< MeshVertex > verts;
@@ -129,8 +99,8 @@ namespace spark
                      usagePattern );
     }
 
-    // TODO -- template-tize over MeshVertex
-    /// Mesh supports rendering of a indexed set of triangles
+    /// Mesh supports rendering of a indexed set of triangles.
+    /// \todo template-tize over MeshVertex
     class Mesh : public Renderable
     {
     public:

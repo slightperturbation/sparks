@@ -82,25 +82,6 @@ static spark::GuiEventPublisherPtr g_guiEventPublisher;
 static spark::ArcBallPtr g_arcBall;
 
 
-class InteractionVars
-{
-public:
-    InteractionVars()
-    : fps( 0 ),
-      isSavingFrames( false )
-    {
-        lightPos[0] = 0.0f;
-        lightPos[1] = 0.5f;
-        lightPos[2] = 0.5f;
-        lightColor[0] = 0.7f;
-        lightColor[0] = lightColor[0] = 0.3f;
-    }
-    float lightPos[3];
-    float lightColor[3];
-    
-    float fps;
-    bool isSavingFrames;
-};
 
 void mousePosCallback( GLFWwindow* glfwWindow, double x, double y )
 {
@@ -247,16 +228,15 @@ int runSimulation(int argc, char** argv)
     const bool enableLegacyOpenGlLogging  = false;
     // Stero view, e.g., with ZSpace
     bool useStereo = false && hasZSpace;
-    // Create a separate thread to load background textures
-    const bool useBackgroundResourceLoading = false;
-    // Create a separate thread for input updates
-    const bool useBackgroundInputUpdates = false;
     // If should use full screen mode on the zspace or primary monitor (if no zspace)
     const bool enableFullScreen = false;
 
-    bool useZSpaceEyeTracking = false && hasZSpace;
-    bool useZSpaceStylus = false && hasZSpace;
-    bool useTrakStarStylus = true;
+    bool useZSpaceEyeTracking = true && hasZSpace;
+    bool useZSpaceStylus = true && hasZSpace;
+    bool useTrakStarStylus = false;
+
+    // If true, sequence of frames is stored to disk
+    bool isSavingFrames = false;
 
     // Option Flags
     // Default is to use zspace if available
@@ -274,13 +254,17 @@ int runSimulation(int argc, char** argv)
         }
     }
 
+    // Create a separate thread to load background textures
+    const bool useBackgroundResourceLoading = false;
+    // Create a separate thread for input updates
+    const bool useBackgroundInputUpdates = false;
+
     OpenGLWindow window( "Spark", 
                          enableLegacyOpenGlLogging, 
                          useStereo, 
                          useBackgroundResourceLoading,
                          enableFullScreen );
     using namespace std;
-    InteractionVars vars;
     
     // Setup Gui Callbacks
     g_guiEventPublisher = GuiEventPublisherPtr( new GuiEventPublisher );
@@ -617,7 +601,7 @@ int runSimulation(int argc, char** argv)
         secondsInComponentSinceLastReport["Render"] += glfwGetTime() - renderStartTime;
 
         LOG_TRACE(g_log) << "Scene end - glfwSwapBuffers()";
-        if( vars.isSavingFrames ) window.writeFrameBufferToFile( "sparks_" );
+        if( isSavingFrames ) window.writeFrameBufferToFile( "sparks_" );
 
 
         ////////////////////////////////////////////////////////////////////////
@@ -701,11 +685,11 @@ int runSimulation(int argc, char** argv)
         }
         if( window.getKey( GLFW_KEY_HOME ) == GLFW_PRESS )
         {
-            vars.isSavingFrames = true;
+            isSavingFrames = true;
         }
         if( window.getKey( GLFW_KEY_END ) == GLFW_PRESS )
         {
-            vars.isSavingFrames = false;
+            isSavingFrames = false;
         }
         secondsInComponentSinceLastReport["InputProcessing"] += glfwGetTime() - inputProcessStartTime;
 

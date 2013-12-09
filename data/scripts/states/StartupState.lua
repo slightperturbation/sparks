@@ -25,14 +25,14 @@ function StartupState:deactivate()
 end
 
 function StartupState:nextState( currTime )
---	theNextState = "Loading"
+	theNextState = "Loading"
 
 --theNextState = "Example"
---theNextState = "ShaderExample"
+theNextState = "ShaderExample"
 
 	--theNextState = "Menu"
 	--theNextState = "CoagMode"
-	theNextState = "Simulation"
+	--theNextState = "Simulation"
 	--theNextState = "Example"
 	--theNextState = "TextureTest"
 	--theNextState = "ESUPower"

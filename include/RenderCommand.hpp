@@ -22,11 +22,11 @@
 
 namespace spark
 {
-    /// Command that encapsulates all the needed information
-    /// to render a particular object.
-    /// RenderCommands can be ordered for rendering to support
-    /// effects such as transparency and to reduce the number
-    /// of calls to the graphics API.
+    /// RenderCommand encapsulates all the needed information
+    /// to render a particular Renderable, including the current RenderPass,
+    /// the current Perspective, Material and IlluminationModel.
+    /// 
+    /// RenderCommands are ordered for rendering to support
     class RenderCommand
     {
     public:

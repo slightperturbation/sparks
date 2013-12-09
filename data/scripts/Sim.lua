@@ -299,8 +299,6 @@ function Sim.update( owner, dt )
 	local worldStylusPos = vec3( stylusPos.x, stylusPos.y, stylusPos.z )
 	worldStylusPos.y = worldStylusPos.y + screenSpaceOffset.y
 
-	print( "STYLUS POS: " .. worldStylusPos.x .. ", " .. worldStylusPos.y .. ", ".. worldStylusPos.z )
-	
 	local tissueContactPos = vec3( stylusPos.x, stylusPos.y, stylusPos.z )
 	tissueContactPos.y = owner.worldOffset.y -- 0.025
 	

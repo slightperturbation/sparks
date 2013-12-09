@@ -30,6 +30,7 @@ namespace {
     };
 }
 
+/// Convert from a boost shared_ptr to a std::shared_ptr
 template<class T> std::shared_ptr<T> to_std_ptr(const boost::shared_ptr<T> &p) {
     typedef Holder<std::shared_ptr<T>> H;
     if(H *h = boost::get_deleter<H, T>(p)) {
@@ -39,6 +40,7 @@ template<class T> std::shared_ptr<T> to_std_ptr(const boost::shared_ptr<T> &p) {
     }
 }
 
+/// Convert from a std::shared_ptr to a boost shared_ptr 
 template<class T> boost::shared_ptr<T> to_boost_ptr(const std::shared_ptr<T> &p){
     typedef Holder<boost::shared_ptr<T>> H;
     if(H * h = std::get_deleter<H, T>(p)) {

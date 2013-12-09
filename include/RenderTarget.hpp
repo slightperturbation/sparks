@@ -23,14 +23,30 @@ namespace spark
     public:
         RenderTarget() : m_clearColor( 0,1,0,0 ) {}
         virtual ~RenderTarget();
+
+        /// Returns the debug-friendly name of the RenderTarget.
         virtual std::string name( void ) const = 0;
+
+        /// Returns the size (in pixels) of this target.
         virtual glm::vec2 size( void ) const = 0;
+
+        /// Allow one-time initialization of the RenderTarget.
         virtual void initialize( TextureManagerPtr& mgr ) = 0;
+
+        /// Called just before render to this target, allows setup.
         virtual void preRender( void ) const = 0;
+
+        /// Called after rendering to this target, allows clean-up.
         virtual void postRender( void ) const = 0;
+
+        /// Called when the frame is starting.
         virtual void startFrame( void ) const = 0;
+
+        /// Handle the event of the viewport resizing.
         virtual void resizeViewport( int left, int bottom,
             int width, int height ) override {}
+
+        /// Set the color used for clearing the RenderTarget.
         void setClearColor( const glm::vec4& c ) { m_clearColor = c; }
         virtual std::ostream& debugInfo( std::ostream& out ) const { return out; }
         friend std::ostream& operator<<( std::ostream& out,
@@ -149,6 +165,8 @@ namespace spark
         virtual void resizeViewport( int left, int bottom,
                                     int width, int height ) override;
 
+        /// Set the scale factor, making the target texture this fraction
+        /// of the current viewport.
         void scaleFactor( float x, float y );
 
         virtual std::ostream& debugInfo( std::ostream& out ) const override;

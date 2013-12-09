@@ -77,6 +77,29 @@ function ShaderExampleState:load()
     self.table = spark:createCube( worldOffset + vec3(-0.5, -0.025, -0.5), 1, 
         self.testMaterial, "OpaquePass" )
     self.table:rotate( 90, vec3(1,0,0) )
+
+
+    -- Create a Picture-in-Picture 
+    if false then
+        local pipCamera = spark:createPerspectiveProjection( vec3( -0.025, 5.75, -5.05 ), -- camera
+                                                       vec3( 0, 0, 0 ),        -- target
+                                                       vec3( 0, 1, 0 ),        -- up
+                                                       50.0, -- FOV
+                                                       1,  -- near plane
+                                                       50 )   -- far plane
+        local pipTarget = spark:createTextureRenderTarget( "pipTexture" )
+        -- Note we're creating a second pass with the name OpaquePass that renders
+        -- after the standard OpaquePass (1.0) and before the HUDPass (0.1)
+        local pipPass = spark:createRenderPassWithProjection( 0.9, "OpaquePass", pipCamera, pipTarget )
+        -- A standard shader for direct painting
+        self.pipMaterial = spark:createMaterial( "texturedOverlayShader" )
+        self.pipMaterial:addTexture( "s_color", "pipTexture" )
+        -- The quad to show the PIP using the new material
+        local pipSize = 0.3
+        self.pipQuad = spark:createQuad( vec2( 0.5, 0.5 ), 
+                                         vec2( pipSize*(9/16), pipSize ), -- 9/16 is aspect ratio of display 
+                                         self.pipMaterial, "HUDPass" )
+    end
 end
 
 function ShaderExampleState:activate()

@@ -17,7 +17,8 @@ namespace spark
         ProjectionPtr m_context;
     };
 
-    // TODO rename to SingleDisplay
+    /// SimpleDisplay renders to one viewport.
+    /// \todo rename to "SingleDisplay" to better represent the use.
     class SimpleDisplay : public Display
     {
     public:
@@ -30,7 +31,7 @@ namespace spark
     };
 
     /// Handles side-by-side 3d rendering
-    //TODO abstract 3d display interface for tweaking eye params
+    /// \todo abstract 3d display interface for tweaking eye params
     class SideBySideDisplay : public Display
     {
     public:

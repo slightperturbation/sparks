@@ -19,6 +19,9 @@
 
 namespace spark
 {
+    /// Sets outRC to render the given Renderable on the RenderPass using
+    /// the appropriate perspective, illumination and material, as defined
+    /// by aRenderPass.
     bool createRenderCommand( RenderCommand& outRC, 
                               ConstRenderPassPtr aRenderPass, 
                               ConstRenderablePtr aRenderable );
@@ -33,23 +36,39 @@ namespace spark
     /// any rendering itself.
     /// RenderPass must be registered with a Scene object  (via Scene::add)
     /// to be rendered.
+    /// \todo Add support for per-pass render sorting order (e.g., transparent pass prioritizes sorts by depth, opaque to minimize state changes)
     class RenderPass
     {
     public:
         RenderPass( const RenderPassName& aName = "UNLABELED_RENDER_PASS" );
         ~RenderPass();
+
+        /// Setup the RenderPass to render to aTarget from aPerspective.
         void initialize( RenderTargetPtr aTarget, 
                          ProjectionPtr aPerspective );
+
+        /// Setup the RenderPass to render to aTarget from aPerspective with
+        /// rendering order defined by aPriority.
         void initialize( RenderTargetPtr aTarget, 
                          ProjectionPtr aPerspective,
                          float aPriority );
 
+        /// Returns the Material to be used to render aRenderable, obeying
+        /// both the Material's and Renderable's preferences for defaults.
         ConstMaterialPtr getMaterialForRenderable( ConstRenderablePtr aRenderable ) const;
 
+        /// Returns the handle for this RenderPass.
         RenderPassName name( void ) const;
-        std::string targetName( void ) const;
-        glm::vec2 targetSize( void ) const;
+
+        /// Sets the handle for this RenderPass.  RenderPasses are often 
+        /// specified by client code by RenderPassName.
         void setName( const RenderPassName& aName );
+
+        /// Returns name of the RenderTarget targeted by this RenderPass.
+        std::string targetName( void ) const;
+
+        /// Returns the size of the RenderTarget targeted by this RenderPass.
+        glm::vec2 targetSize( void ) const;
 
         /// Defines how this pass will blend into its target.
         /// If not set, the pass uses interpolation blending, which is
