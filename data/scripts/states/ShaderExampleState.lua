@@ -100,6 +100,9 @@ function ShaderExampleState:load()
                                          vec2( pipSize*(9/16), pipSize ), -- 9/16 is aspect ratio of display 
                                          self.pipMaterial, "HUDPass" )
     end
+
+    -- self.pencil = spark:loadMesh( "pen.obj", self.testMaterial, "OpaquePass" )
+    -- self.sphere:setMaterialForPassName( "ShadowPass", shadowMaterial ) -- casts shadow
 end
 
 function ShaderExampleState:activate()
