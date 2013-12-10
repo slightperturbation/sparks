@@ -23,17 +23,19 @@ function ShaderExampleState:load()
     Render:createDefaultRenderPasses( isShadowOn )
 
     -- Add a message to the screen
-    self.textMaterial = spark:createMaterial( "TextShader" )
-    self.textMaterial:addTexture( "s_color", spark:getFontManager():getFontAtlasTextureName() )
-    self.textMaterial:setVec4( "u_color", vec4(1,0.5,0.5,1.0) )
+    self.showTextTime = false
+    if self.showTextTime then
+        self.textMaterial = spark:createMaterial( "TextShader" )
+        self.textMaterial:addTexture( "s_color", spark:getFontManager():getFontAtlasTextureName() )
+        self.textMaterial:setVec4( "u_color", vec4(1,0.5,0.5,1.0) )
 
-    self.msg = spark:createText( Fonts.defaultFontName, 
-                                 Fonts.defaultFontTextSize, 
-                                 self.textMaterial,
-                                 "HUDPass", 
-                                 "" )
-    self.msg:translate( 0.05, 0.9, 0 )
-
+        self.msg = spark:createText( Fonts.defaultFontName, 
+                                     Fonts.defaultFontTextSize, 
+                                     self.textMaterial,
+                                     "HUDPass", 
+                                     "" )
+        self.msg:translate( 0.05, 0.9, 0 )
+    end
 
     ------------------------------
     self.testMaterial = spark:createMaterial( "phongShader" )
@@ -117,9 +119,10 @@ function ShaderExampleState:activate()
 end
 
 function ShaderExampleState:update( dt )
-    self.currTime = self.currTime + dt
-    self.msg:setText( string.format( "Time: %f", self.currTime ) )
-
+    if self.showTextTime then
+        self.currTime = self.currTime + dt
+        self.msg:setText( string.format( "Time: %f", self.currTime ) )
+    end
     self.sphere:rotate( dt*45.0, vec3(0,1,0) )
     self.box:rotate( dt*30.0, vec3(1,0,0) )
 end
