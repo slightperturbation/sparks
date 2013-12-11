@@ -51,11 +51,11 @@ https://bitbucket.org/cemsim_rpi/sparks.git
 
 Then gather dependencies and create the Visual Studio project file:
 
-> cd sparks
-> mkdir build-VisualStudio10Win64
-> cd build-VisualStudio10Win64
-> cmake .. -G "Visual Studio 10 Win64"
-> start sparks.sln
+	cd sparks
+	mkdir build-VisualStudio10Win64
+	cd build-VisualStudio10Win64
+	cmake .. -G "Visual Studio 10 Win64"
+	start sparks.sln
 
 Build the entire project TWICE (the first time will download and build some dependencies, including Intel TBB).
 
@@ -70,11 +70,11 @@ Change C:\src\sparks\www to the appropriate dir.
 
 Note:  MacOSX is only supported for testing, neither primary interface (zSpace nor TrakStar) is supported on OSX. Only out-of-source builds are supported.
 
-> cd spark
-> mkdir build-xcode
-> cd build-xcode
-> cmake .. -G Xcode
-> open sparks.xcodeproj
+	cd spark
+	mkdir build-xcode
+	cd build-xcode
+	cmake .. -G Xcode
+	open sparks.xcodeproj
 
 ## Running ##
 
