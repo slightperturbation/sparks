@@ -21,7 +21,8 @@ function ShadowExampleState:new()
 		startTime = -1, 
 		currWattage = 200, 
 		activationTime = 0,
-		currTime = 0 
+		currTime = 0,
+		theNextState = ""
 	}
 	self.__index = self
 	return setmetatable(newObj, self)
@@ -140,7 +141,7 @@ function ShadowExampleState:deactivate()
 end
 
 function ShadowExampleState:nextState( currTime )
-
+	theNextState = self.theNextState
 end
 
 theState = ShadowExampleState:new()

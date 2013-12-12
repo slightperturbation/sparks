@@ -9,9 +9,13 @@ local Render = require "render"
 local TextureTestState = {}
 
 function TextureTestState:new()
-	  newObj = { angle = 45, startTime = nil }
-	  self.__index = self
-	  return setmetatable(newObj, self)
+    newObj = {
+        angle = 45, 
+        startTime = nil,
+        theNextState = ""
+    }
+    self.__index = self
+    return setmetatable(newObj, self)
 end
 
 function TextureTestState:load()
@@ -23,6 +27,7 @@ function TextureTestState:load()
 end
 
 function TextureTestState:activate()
+    self.theNextState = ""
     -- acquire resources release on last deactivate()
     local camera = spark:getCamera()
     camera:cameraPos( 0.2, 1.2, -0.9 )
@@ -42,10 +47,9 @@ end
 function TextureTestState:nextState( currTime )
     if self.startTime == nil then self.startTime = currTime end
   	if (currTime - self.startTime) > 5 then
-      theNextState = "Menu"
-    else
-      theNextState = "" -- Keep current state
+      self.theNextState = "Menu"
     end
+    theNextState = self.theNextState
 end
 
 theState = TextureTestState:new()

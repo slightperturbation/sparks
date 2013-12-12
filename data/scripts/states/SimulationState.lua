@@ -31,8 +31,7 @@ function SimulationState:new()
 		currTime = 0, 
 		contactArea = 0,  -- area of contact (m^2) between tissue and electrode
 		tissueDistance = 0,  -- distance to tissue in mm
-		theNextState = "",
-
+		theNextState = ""
 	}
 	self.__index = self
 	return setmetatable(newObj, self)
@@ -135,8 +134,8 @@ end
 function SimulationState:activate()
 	print( "SimulationState:activate" )
 	self.startTime = -1
-
 	Sim.activate( self )
+	self.theNextState = ""
 end
 
 
@@ -151,13 +150,13 @@ function SimulationState:deactivate()
 end
 
 function SimulationState:nextState( currTime )
-	theNextState = self.theNextState
 	if input:isKeyDown( KEY_KP_ENTER ) then
-		theNextState = "Menu"
+		self.theNextState = "Menu"
 	end
  	if input:isButtonPressed( "stylus", 2 ) then
-		theNextState = "Menu"
+		self.theNextState = "Menu"
 	end
+	theNextState = self.theNextState
 end
 
 theState = SimulationState:new()

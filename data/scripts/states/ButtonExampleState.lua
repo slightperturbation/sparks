@@ -11,6 +11,7 @@ function ButtonExampleState:new()
 	print( "ButtonExampleState:new" )
 	newObj = { 
 		buttons = {}, 
+		theNextState = ""
 	}
 	self.__index = self
 	return setmetatable(newObj, self)
@@ -95,7 +96,7 @@ end
 function ButtonExampleState:activate()
 	print( "ButtonExampleState:activate" )
 	self.startTime = -1
-
+	self.theNextState = ""
 end
 
 function ButtonExampleState:update( dt )
@@ -138,6 +139,7 @@ function ButtonExampleState:deactivate()
 end
 
 function ButtonExampleState:nextState( currTime )
+	theNextState = self.theNextState
 end
 
 theState = ButtonExampleState:new()

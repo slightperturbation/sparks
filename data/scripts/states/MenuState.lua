@@ -115,7 +115,7 @@ end
 function MenuState:activate()
 	print( "MenuState:activate" )
 	self.startTime = -1
-
+	self.theNextState = ""
 end
 
 function MenuState:update( dt )
@@ -140,20 +140,6 @@ end
 
 function MenuState:nextState( currTime )
 	theNextState = self.theNextState
-	-- For now, theNextState global is used to pass
-	-- the next desired state back to the app
-	-- TODO should be changed to use the return value
-	-- print( "MenuState:nextState( " .. currTime .. " )")
-	-- if self.startTime == -1 then
-	-- 	self.startTime = currTime
-	-- end
-
-	-- if (currTime - self.startTime) > 10 then 
-	-- 	theNextState = "Loading" 
-	-- 	print( "Changing state to menu!" )
-	-- else
-	-- 	theNextState = ""
-	-- end
 end
 
 theState = MenuState:new()

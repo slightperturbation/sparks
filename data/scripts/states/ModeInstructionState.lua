@@ -63,6 +63,8 @@ Choose a mode to learn more about.
 	local xpos = 0.1
 	local ypos = 0.9
 	local lineHeight = 0.15
+
+	ypos = ypos - lineHeight
 	self.buttons["Cut Mode"] = Button:newLargeButton( xpos, ypos, KEY_KP_4, "[4] Cut Mode" )
 	self.buttons["Cut Mode"].onClick = function () self.theNextState = "CutMode" end
 	self.buttons["Cut Mode"].onMouseOver = function () 
@@ -130,7 +132,7 @@ end
 function ModeInstructionState:activate()
 	print( "ModeInstructionState:activate" )
 	self.startTime = -1
-
+	self.theNextState = ""
 end
 
 function ModeInstructionState:update( dt )
@@ -147,7 +149,7 @@ function ModeInstructionState:update( dt )
 		button:update( stylusScreenPos.x, stylusScreenPos.y, buttonState )
 	end
     if input:isKeyDown( KEY_KP_ENTER ) then
-	    theNextState = "Menu"
+	    self.theNextState = "Menu"
     end
 end
 
@@ -158,20 +160,6 @@ end
 
 function ModeInstructionState:nextState( currTime )
 	theNextState = self.theNextState
-	-- For now, theNextState global is used to pass
-	-- the next desired state back to the app
-	-- TODO should be changed to use the return value
-	-- print( "ModeInstructionState:nextState( " .. currTime .. " )")
-	-- if self.startTime == -1 then
-	-- 	self.startTime = currTime
-	-- end
-
-	-- if (currTime - self.startTime) > 10 then 
-	-- 	theNextState = "Loading" 
-	-- 	print( "Changing state to menu!" )
-	-- else
-	-- 	theNextState = ""
-	-- end
 end
 
 theState = ModeInstructionState:new()

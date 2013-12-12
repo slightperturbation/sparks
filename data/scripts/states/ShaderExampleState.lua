@@ -11,7 +11,8 @@ function ShaderExampleState:new()
     newObj =
     { 
         currTime = 0, 
-        startTime = nil 
+        startTime = nil,
+        theNextState = "" 
     }
     self.__index = self
     return setmetatable(newObj, self)
@@ -135,7 +136,7 @@ end
 
 function ShaderExampleState:nextState( currTime )
     if self.startTime == nil then self.startTime = currTime end
-    theNextState = "" -- Keep current state
+    theNextState = self.theNextState
 end
 
 theState = ShaderExampleState:new()

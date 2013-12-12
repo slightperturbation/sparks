@@ -11,7 +11,8 @@ function LoadingState:new()
 	print( "LoadingState:new" )
 	local newObj = { 
 		angle = 45, 
-		hasRunOnce = false
+		hasRunOnce = false,
+		theNextState = ""
 	}
 	self.__index = self
 	return setmetatable(newObj, self)
@@ -61,7 +62,7 @@ end
 
 function LoadingState:activate()
 	print( "LoadingState:activate" )
-
+	self.theNextState = ""
 	local camera = spark:getCamera()
 	camera:cameraPos( 0.2, 1.2, -0.9 )
 	camera:cameraTarget( 0.06, 0.1, 0.0 )
@@ -90,17 +91,8 @@ function LoadingState:deactivate()
 end
 
 function LoadingState:nextState( currTime )
-	-- For now, theNextState global is used to pass
-	-- the next desired state back to the app
-	-- TODO should be changed to use the return value
-	--print( "LoadingState:nextState( " .. currTime .. " )")
-	theNextState = "Menu" 
-
-	-- if currTime > 6 then 
-	-- 	theNextState = "Menu" 
-	-- else
-	-- 	theNextState = "" -- null means stay at current state
-	-- end
+	self.theNextState = "Menu" 
+	theNextState = self.theNextState
 end
 
 theState = LoadingState:new()

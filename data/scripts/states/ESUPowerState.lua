@@ -98,12 +98,13 @@ end
 
 function ESUPowerState:nextState( currTime )
     if input:isKeyDown( KEY_KP_ENTER ) then
-        theNextState = "Menu"
+        self.theNextState = "Menu"
     end
 
     if input:isButtonPressed( "stylus", 2 ) then
-        theNextState = "Menu"
+        self.theNextState = "Menu"
     end
+    theNextState = self.theNextState
 end
 
 theState = ESUPowerState:new()

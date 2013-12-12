@@ -10,7 +10,8 @@ function SparkExampleState:new()
     newObj =
     { 
         angle = 45, 
-        startTime = nil 
+        startTime = nil,
+        theNextState = ""
     }
     self.__index = self
     return setmetatable(newObj, self)
@@ -46,6 +47,7 @@ function SparkExampleState:activate()
     print( "SparkExampleState:activate" )
     -- acquire resources release on last deactivate()
     self.startTime = -1
+    self.theNextState = ""
 
     local camera = spark:getCamera()
     camera:cameraPos( 0.0, 0.345, 3.222 )
@@ -77,11 +79,7 @@ end
 
 function SparkExampleState:nextState( currTime )
     if self.startTime == nil then self.startTime = currTime end
-    -- if (currTime - self.startTime) > 5 then
-    --    theNextState = "Menu"
-    --  else
-    --    theNextState = "" -- Keep current state
-    --  end
+    theNextState = self.theNextState
 end
 
 theState = SparkExampleState:new()

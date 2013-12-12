@@ -60,6 +60,7 @@ end
 function CutModeState:activate()
     print( "CutModeState:activate" )
     self.startTime = -1
+    self.theNextState = ""
 
     Sim.activate( self )
 end
@@ -101,15 +102,16 @@ end
 
 function CutModeState:nextState( currTime )
     -- if input:isKeyDown( KEY_ESC ) then
-    --     theNextState = "Loading"
+    --     self.theNextState = "Loading"
     -- end
     if input:isKeyDown( KEY_KP_ENTER ) then
-        theNextState = "Menu"
+        self.theNextState = "Menu"
     end
 
     if input:isButtonPressed( "stylus", 2 ) then
-        theNextState = "Menu"
+        self.theNextState = "Menu"
     end
+    theNextState = self.theNextState
 end
 
 theState = CutModeState:new()

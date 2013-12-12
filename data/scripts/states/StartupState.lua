@@ -3,7 +3,9 @@
 local StartupState = {}
 
 function StartupState:new()
-	  newObj = {  }
+	  newObj = { 
+	  	theNextState = ""
+	  }
 	  self.__index = self
 	  return setmetatable(newObj, self)
 end
@@ -16,27 +18,32 @@ function StartupState:load()
 end
 
 function StartupState:activate()
+	print( "StartupState:activate()" )
+	self.theNextState = ""
 end
 
 function StartupState:update( dt )
 end
 
 function StartupState:deactivate()
+	print( "StartupState:deactivate()" )
 end
 
 function StartupState:nextState( currTime )
-	--theNextState = "Loading"
+	--self.theNextState = "Loading"
 
---theNextState = "Example"
-theNextState = "ShaderExample"
+	--self.theNextState = "Example"
+	self.theNextState = "ShaderExample"
 
-	--theNextState = "Menu"
-	--theNextState = "CoagMode"
-	--theNextState = "Simulation"
-	--theNextState = "Example"
-	--theNextState = "TextureTest"
-	--theNextState = "ESUPower"
-	--theNextState = "Calibration"
+	--self.theNextState = "Menu"
+	--self.theNextState = "CoagMode"
+	--self.theNextState = "Simulation"
+	--self.theNextState = "Example"
+	--self.theNextState = "TextureTest"
+	--self.theNextState = "ESUPower"
+	--self.theNextState = "Calibration"
+
+	theNextState = self.theNextState
 end
 
 theState = StartupState:new()

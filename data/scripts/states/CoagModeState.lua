@@ -63,6 +63,7 @@ end
 function CoagModeState:activate()
     print( "CoagModeState:activate" )
     self.startTime = -1
+    self.theNextState = ""
 
     Sim.activate( self )
 end
@@ -104,12 +105,13 @@ end
 
 function CoagModeState:nextState( currTime )
     if input:isKeyDown( KEY_KP_ENTER ) then
-        theNextState = "Menu"
+        self.theNextState = "Menu"
     end
 
     if input:isButtonPressed( "stylus", 2 ) then
-        theNextState = "Menu"
+        self.theNextState = "Menu"
     end
+    theNextState = self.theNextState
 end
 
 theState = CoagModeState:new()
