@@ -412,7 +412,7 @@ int runSimulation(int argc, char** argv)
     scriptStates.push_back( "ShaderExample" );
     
     // Actual States
-    // -- TODO -- get all State.lua files in the States directory?  (could be slow)
+    // \todo get all State.lua files in the States directory(?)
     scriptStates.push_back( "Startup" );
     scriptStates.push_back( "Loading" );
     scriptStates.push_back( "Menu" );
@@ -496,19 +496,19 @@ int runSimulation(int argc, char** argv)
         if(   (currTime - lastTimingUpdateTime >= secondsBetweenProfileReports)
             && framesSinceLastReport > 0 )
         {
-            std::cerr << "\t" << (1000.0*secondsBetweenProfileReports)/(double)(framesSinceLastReport) << " ms/frame\n";
+            LOG_TRACE(g_log) << "\t" << (1000.0*secondsBetweenProfileReports)/(double)(framesSinceLastReport) << " ms/frame\n";
             double totalSeconds = 0.0;
             for( auto iter = secondsInComponentSinceLastReport.begin();
                  iter != secondsInComponentSinceLastReport.end(); 
                  ++iter )
             {
-                std::cerr << "\t\t" << setw(20) << iter->first << "\t"
+                LOG_TRACE(g_log) << "\t\t" << setw(20) << iter->first << "\t"
                     << setw(5) << (1000.0)*iter->second/(double)(framesSinceLastReport) 
                     << " ms\n";
                 totalSeconds += iter->second;
                 iter->second = 0.0; // reset accumulated time
             }
-            std::cerr << "\t" << setw(20) << "Total:" << "\t"
+            LOG_TRACE(g_log) << "\t" << setw(20) << "Total:" << "\t"
                 << setw(5) << (1000.0)*totalSeconds/(double)(framesSinceLastReport) 
                 << " ms\n";
             framesSinceLastReport = 0;

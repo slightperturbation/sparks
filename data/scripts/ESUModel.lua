@@ -85,9 +85,6 @@ function ESUModel:activate( theTissueSim, xpos, ypos, stylusPos, tissueContactPo
 
 	local touchThreshold = 0.0004 -- meters
 
-
-	print( "ESUINPUT_CUT = "..ESUINPUT_CUT..", ESUINPUT_COAG = "..ESUINPUT_COAG.." self.mode = "..self.mode )
-
 	if( self.mode == ESUINPUT_CUT ) then
 		dutyCycle = 0.75
 		current = self.cutWattage * dutyCycle 
@@ -122,12 +119,12 @@ function ESUModel:activate( theTissueSim, xpos, ypos, stylusPos, tissueContactPo
 		xpos = xpos + widthOfInstrument * math.random()
 		ypos = ypos + widthOfInstrument * math.random()
 
-		print(string.format("Touch energy: (%2.2f, %2.2f, %2.2f, %2.2f, %2.2f, %2.2f, %2.2f)",
-			xpos, ypos, 
-			voltage, current, 
-			dutyCycle, 
-			radius, 
-			dt ) )
+		-- print(string.format("Touch energy: (%2.2f, %2.2f, %2.2f, %2.2f, %2.2f, %2.2f, %2.2f)",
+		-- 	xpos, ypos, 
+		-- 	voltage, current, 
+		-- 	dutyCycle, 
+		-- 	radius, 
+		-- 	dt ) )
 		theTissueSim:accumulateElectricalEnergy( xpos, ypos, 
 			voltage, current, 
 			dutyCycle, 
@@ -165,10 +162,10 @@ function ESUModel:activate( theTissueSim, xpos, ypos, stylusPos, tissueContactPo
 	                             )
 		    -- end
 
-			print(string.format("Spark energy: (%2.4f, %2.4f, %2.4f) (%2.4f, %2.4f, %2.4f)",
-				stylusPos.x, stylusPos.y, stylusPos.z,  
-				tissueContactPos.x, tissueContactPos.y, tissueContactPos.z  
-			) )
+			-- print(string.format("Spark energy: (%2.4f, %2.4f, %2.4f) (%2.4f, %2.4f, %2.4f)",
+			-- 	stylusPos.x, stylusPos.y, stylusPos.z,  
+			-- 	tissueContactPos.x, tissueContactPos.y, tissueContactPos.z  
+			-- ) )
 		end
 
 
