@@ -53,7 +53,7 @@ namespace spark
 
         /// Defines the names of the "in" data channels for the vertex shader
         /// By convention, per-vertex attributes start with "v_"
-        static void addVertexAttributes( std::vector<VertexAttributePtr>& outShaderAttributes )
+        static void acquireVertexAttributes( std::vector<VertexAttributePtr>& outShaderAttributes )
         {
             VertexAttributePtr position(new FloatVertexAttribute("v_position",
                 3,
@@ -105,11 +105,15 @@ namespace spark
     {
     public:
         Mesh( void );
+
+        /// Copy constructor
+        Mesh( const Mesh& other );
+
         virtual ~Mesh();
 
         /// Renderable
         virtual void render( const RenderCommand& rc ) const override;
-        
+
         void clearGeometry( void );
         void resizeVertexArray( size_t newSize );
         void setVertex( size_t i, const Eigen::Vector3f& a, 
@@ -202,6 +206,24 @@ namespace spark
         glm::mat4 m_modelTransform;
     };
     typedef spark::shared_ptr< Mesh > MeshPtr;
+
+
+    /// Illustrative example of a mesh that dynamically updates its vertices
+    /// during a call to update.
+    /// DO NOT USE -- just proof of concept. (a real version should deal
+    /// with threading issues, or ensure that update is called with 
+    /// the GL context)
+    class UpdateableMesh : public Mesh, public Updateable
+    {
+    public:
+        UpdateableMesh( MeshPtr sourceMesh );
+        virtual ~UpdateableMesh() {}
+
+        /// Example update showing mapping updates.  Should only call
+        /// on thread with OpenGL context (i.e., not to be async updated)
+        void update( double dt ) override;
+    };
+    typedef spark::shared_ptr< UpdateableMesh > UpdateableMeshPtr;
 }
 #endif
 

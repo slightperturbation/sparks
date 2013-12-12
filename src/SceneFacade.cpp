@@ -317,7 +317,6 @@ spark::SceneFacade
                                                                            m_shaderManager ) ) ) );
 }
 
-
 spark::RenderablePtr
 spark::SceneFacade
 ::loadMesh( const char* filename,
@@ -339,6 +338,33 @@ spark::SceneFacade
         mesh->setMaterialForPassName( passName, material );
         m_scene->add( mesh );
         lastMesh = mesh;
+    }
+    return lastMesh;
+}
+
+spark::RenderablePtr  
+spark::SceneFacade
+::loadUpdateableMesh( const char* filename,
+                      spark::MaterialPtr material,
+                      const spark::RenderPassName& passName )
+{
+    std::vector< MeshPtr > meshes;
+    createMeshesFromFile( filename, m_finder, meshes );
+    if( meshes.empty() || meshes.size() > 1 )
+    {
+        LOG_ERROR(g_log) << "Loading meshes from \"" << filename
+            << "\", expected one mesh but got " << meshes.size();
+    }
+    MeshPtr lastMesh;
+    for( auto meshItr = meshes.begin(); meshItr != meshes.end();
+        ++meshItr )
+    {
+        MeshPtr mesh = *meshItr;
+        UpdateableMeshPtr upMesh( new UpdateableMesh(mesh) );
+        m_scene->add( upMesh );
+        m_scene->addUpdateable( upMesh );
+        upMesh->setMaterialForPassName( passName, material );
+        lastMesh = upMesh;
     }
     return lastMesh;
 }

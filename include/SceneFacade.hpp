@@ -174,6 +174,16 @@ namespace spark
         RenderablePtr loadMesh( const char* filename,
                                 MaterialPtr material,
                                 const RenderPassName& passName );
+
+        /// Load the mesh file from filename and assign the given material
+        /// and updater to modify the mesh as needed.
+        /// NOTE -- this is only an example of how to add a class, 
+        /// probably not very useful.  To make updateable meshes,
+        /// probably want to pass in a client class that knows how to do
+        /// the actual updating.
+        RenderablePtr loadUpdateableMesh( const char* filename,
+                                          MaterialPtr material,
+                                          const RenderPassName& passName );
         
         /// Create a new Mesh as a cube with lower-left vertex at
         /// position and with sides of size.  Render on pass with material.

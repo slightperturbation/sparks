@@ -52,10 +52,11 @@ function ShaderExampleState:load()
     self.testMaterial:setVec2( "u_textureRepeat", vec2(1,1) )
     self.testMaterial:setVec4( "u_color", vec4( 1, 0.5, 0.5, 0.5) );
     
-    -- This material can receive shadows
+    -- This material can receive shadows, so pass the shadow map texture
     self.testMaterial:addTexture( "s_shadowMap", "light0_shadowMap" )
 
-    self.sphere = spark:loadMesh( "sphere.obj", self.testMaterial, "OpaquePass" )
+    --self.sphere = spark:loadMesh( "sphere.obj", self.testMaterial, "OpaquePass" )
+    self.sphere = spark:loadUpdateableMesh( "sphere.obj", self.testMaterial, "OpaquePass" )
     self.sphere:setMaterialForPassName( "ShadowPass", shadowMaterial ) -- casts shadow
     self.sphere:translate( 1.5, 0, 0 )
     self.sphere:scale( 2 )
@@ -84,7 +85,7 @@ function ShaderExampleState:load()
 
     -- Create a Picture-in-Picture 
     if false then
-        local pipCamera = spark:createPerspectiveProjection( vec3( -0.025, 5.75, -5.05 ), -- camera
+        local pipCamera = spark:createPerspectiveProjection( vec3( -0.025, 5.75, 5.05 ), -- camera
                                                        vec3( 0, 0, 0 ),        -- target
                                                        vec3( 0, 1, 0 ),        -- up
                                                        50.0, -- FOV

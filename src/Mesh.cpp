@@ -43,6 +43,38 @@ spark::Mesh
 }
 
 spark::Mesh
+::Mesh( const Mesh& other )
+: Renderable( other.name() ),
+    m_vertexArrayObjectId(-1),
+    m_vertexBufferId(-1),
+    m_elementBufferId(-1),
+    m_vertexData( other.m_vertexData ),
+    m_vertexIndicies( other.m_vertexIndicies ),
+    m_modelTransform( other.m_modelTransform )
+{
+    LOG_DEBUG(g_log) << "Copying Mesh \""<< name() << "\"\tCreating vertex arrays... ";
+    GL_CHECK( glGenVertexArrays( 1, &(m_vertexArrayObjectId) ) );
+    if( GL_INVALID_VALUE == m_vertexArrayObjectId )
+    { 
+        LOG_DEBUG(g_log) << "------- ERROR in VAO creation ------ \n"; throw; 
+    }
+    LOG_DEBUG(g_log) << "done.\n";
+
+    LOG_DEBUG(g_log) << "\tCreating array buffer... ";
+    GL_CHECK( glGenBuffers( 1, &(m_vertexBufferId) ) );
+    LOG_DEBUG(g_log) << "done.\n";
+
+    LOG_DEBUG(g_log) << "\tCreating element buffer... ";
+    GL_CHECK( glGenBuffers( 1, &(m_elementBufferId) ) ); // Generate 1 buffer
+    LOG_DEBUG(g_log) << "done.\n";
+
+    // \todo -- when MeshVertex is templatized, need to change MeshVertex to templated Vertex type
+    MeshVertex::acquireVertexAttributes( m_attributes );
+
+    bindDataToBuffers();
+}
+
+spark::Mesh
 ::~Mesh()
 {
     GL_CHECK( glDeleteBuffers( 1, &m_vertexBufferId ) );
@@ -51,45 +83,6 @@ spark::Mesh
     LOG_TRACE(g_log) << "Mesh \"" << name() << "\" destroyed.";
 }
 
-//void 
-//spark::Mesh
-//::update( double dt )
-//{
-//    return;
-//
-//    // An example of updating the mesh dynamically  (assuming no topological changes)
-//    GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, m_vertexBufferId ) );
-//    MeshVertex* mutableVerts;
-//    GL_CHECK( mutableVerts = (MeshVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE ) );
-//    if( mutableVerts )
-//    {
-//        // number of verts is same size as m_vertexData
-//        for( size_t i = 0; i < m_vertexData.size(); ++i )
-//        {
-//            mutableVerts[i].m_position[2] *= 1.001; // scale up the z
-//            mutableVerts[i].m_diffuseColor[0] += 0.001; // make it more red
-//            for( size_t gb = 1; gb < 3; gb++ )
-//            {
-//                mutableVerts[i].m_diffuseColor[gb] = std::max( 0.0f, mutableVerts[i].m_diffuseColor[gb] - 0.001f );
-//            }
-//        }
-//        GLint retVal; 
-//        GL_CHECK( retVal = glUnmapBuffer( GL_ARRAY_BUFFER ) );
-//        if( retVal == GL_FALSE )
-//        {
-//            LOG_DEBUG(g_log) << "Error un-mapping vertex buffer.\n";
-//        }
-//    }
-//    else
-//    {
-//        GLenum errCode = glGetError();
-//        if( errCode == 0 ) LOG_DEBUG(g_log) << "NoError\n";
-//        if( errCode == GL_INVALID_ENUM  ) LOG_DEBUG(g_log) << "INVALID_ENUM\n";
-//        if( errCode == GL_OUT_OF_MEMORY ) LOG_DEBUG(g_log) << "OUT OF MEMORY\n";
-//        if( errCode == GL_INVALID_OPERATION ) LOG_DEBUG(g_log) << "INVALID_OPERATION\n";
-//    }
-//    GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, 0 ) );
-//}
 
 void
 spark::Mesh
@@ -456,7 +449,7 @@ spark::Mesh
     // glVertexAttribPointer( ... );
     // glEnableVertexAttribArray( position_loc_in_shader );
 
-    MeshVertex::addVertexAttributes( m_attributes );
+    MeshVertex::acquireVertexAttributes( m_attributes );
 
     LOG_TRACE(g_log) << "Binding vertex array object: " << m_vertexArrayObjectId ;
     // Must bind VAO & VBO to set attributes
@@ -562,6 +555,48 @@ spark::Mesh
     return mesh;
 }
 
+////////////////////////////////////////////////////////////////////////
+spark::UpdateableMesh
+::UpdateableMesh( MeshPtr orgMesh )
+: Mesh( *(orgMesh.get()) ), Updateable( std::string("UpdatableMesh_") + orgMesh->name() )  
+{
+    // noop
+}
+
+void 
+spark::UpdateableMesh
+::update( double dt )
+{
+    // An example of updating the mesh dynamically through mapping
+    GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, m_vertexBufferId ) );
+    MeshVertex* mutableVerts;
+    GL_CHECK( mutableVerts = (MeshVertex*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_WRITE ) );
+    if( mutableVerts )
+    {
+        // number of verts is same size as m_vertexData
+        for( size_t i = 0; i < m_vertexData.size(); ++i )
+        {
+            for( size_t d = 0; d < 3; ++d )
+            {
+                mutableVerts[i].m_position[d] *= 1.0 - (dt*0.05); // scale down at 5% per second
+            }
+        }
+        GLint retVal; 
+        GL_CHECK( retVal = glUnmapBuffer( GL_ARRAY_BUFFER ) );
+        if( retVal == GL_FALSE )
+        {
+            LOG_DEBUG(g_log) << "Error un-mapping vertex buffer.\n";
+        }
+    }
+    else
+    {
+        GLenum errCode = glGetError();
+        if( errCode == GL_INVALID_ENUM  ) LOG_ERROR(g_log) << "INVALID_ENUM\n";
+        if( errCode == GL_OUT_OF_MEMORY ) LOG_ERROR(g_log) << "OUT OF MEMORY\n";
+        if( errCode == GL_INVALID_OPERATION ) LOG_ERROR(g_log) << "INVALID_OPERATION\n";
+    }
+    GL_CHECK( glBindBuffer( GL_ARRAY_BUFFER, 0 ) );
+}
 
 
 

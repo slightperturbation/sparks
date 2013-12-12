@@ -2,6 +2,7 @@
 
 #include "IlluminationModel.hpp"
 #include "TextRenderable.hpp"
+#include "Mesh.hpp"
 #include "TissueMesh.hpp"
 #include "SlicedVolume.hpp"
 #include "Fluid.hpp"
@@ -114,7 +115,7 @@ spark
      .def( "getTempMapTextureName", &TissueMesh::getTempMapTextureName )
      .def( "getConditionMapTextureName", &TissueMesh::getConditionMapTextureName )
      ];
-
+            
     ///////////////////////////////////////////////////////////SlicedVolume
     luabind::module( lua )
     [
@@ -335,6 +336,8 @@ spark
           &SceneFacade::createMaterial )
      .def( "loadMesh",
           &SceneFacade::loadMesh )
+     .def( "loadUpdateableMesh",
+          &SceneFacade::loadUpdateableMesh )
      .def( "createCube",
           &SceneFacade::createCube )
      .def( "createQuad",
