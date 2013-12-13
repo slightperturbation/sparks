@@ -113,6 +113,25 @@ spark::SceneFacade
     return ortho;
 }
 
+void
+spark::SceneFacade
+::updateOrthogonalProjection( ProjectionPtr proj, 
+                              float left, float right,
+                              float bottom, float top,
+                              float nearPlane, float farPlane,
+                              glm::vec3 direction )
+{
+    OrthogonalProjectionPtr ortho = spark::dynamic_pointer_cast< OrthogonalProjection >( proj );
+
+    ortho->left( left );
+    ortho->right( right );
+    ortho->bottom( bottom );
+    ortho->top( top );
+    ortho->nearPlaneDistance( nearPlane );
+    ortho->farPlaneDistance( farPlane );
+    ortho->setLookAtDirection( direction );
+}
+
 spark::ProjectionPtr
 spark::SceneFacade
 ::createPerspectiveProjection( const glm::vec3& pos,

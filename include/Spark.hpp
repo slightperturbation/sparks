@@ -50,6 +50,7 @@ namespace spark
 {
     using boost::shared_ptr;
     using boost::const_pointer_cast;
+    using boost::dynamic_pointer_cast;
     using boost::weak_ptr;
     using boost::enable_shared_from_this;
 };
@@ -59,6 +60,7 @@ namespace spark
 {
     using std::shared_ptr;
     using std::const_pointer_cast;
+    using std::dynamic_pointer_cast;
     using std::weak_ptr;
     using std::enable_shared_from_this;
 };

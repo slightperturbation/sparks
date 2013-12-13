@@ -312,6 +312,8 @@ spark
           &SceneFacade::getCamera )
      .def( "createOrthogonalProjection",
           &SceneFacade::createOrthogonalProjection )
+     .def( "updateOrthogonalProjection",
+          &SceneFacade::updateOrthogonalProjection)    
      .def( "createPerspectiveProjection",
           &SceneFacade::createPerspectiveProjection )
      .def( "createScaledTextureRenderTarget",
@@ -606,6 +608,12 @@ spark
     luabind::globals( lua )["KEY_KP_SUBTRACT"] = GLFW_KEY_KP_SUBTRACT;
     luabind::globals( lua )["KEY_KP_DECIMAL"] = GLFW_KEY_KP_DECIMAL;
     luabind::globals( lua )["KEY_KP_SUBTRACT"] = GLFW_KEY_KP_SUBTRACT;
+
+    luabind::globals( lua )["KEY_UP"] = GLFW_KEY_UP;
+    luabind::globals( lua )["KEY_DOWN"] = GLFW_KEY_DOWN;
+    luabind::globals( lua )["KEY_LEFT"] = GLFW_KEY_LEFT;
+    luabind::globals( lua )["KEY_RIGHT"] = GLFW_KEY_RIGHT;
+    
 }
 
 void

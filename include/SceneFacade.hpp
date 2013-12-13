@@ -59,12 +59,20 @@ namespace spark
         /// of "No matching overload candidates found".)
         /// Until resolved, the Lua caller needs a "pure" ProjectionPtr
         ProjectionPtr createOrthogonalProjection( float left,
-                                                            float right,
-                                                            float bottom,
-                                                            float top,
-                                                            float nearPlane,
-                                                            float farPlane,
-                                                            glm::vec3 direction );
+                                                  float right,
+                                                  float bottom,
+                                                  float top,
+                                                  float nearPlane,
+                                                  float farPlane,
+                                                  glm::vec3 direction );
+
+        /// Requires that proj be an OrthogonalProjectionPtr
+        /// Modifies the orthogonalProjection with the new parameters.
+        void updateOrthogonalProjection( ProjectionPtr proj, 
+                                         float left, float right,
+                                         float bottom, float top,
+                                         float nearPlane, float farPlane,
+                                         glm::vec3 direction );
 
         /// Returns a camera with the eye at pos, looking at target.
         /// See note for createOrthogonalProjection for why this returns a ProjectionPtr.
