@@ -66,10 +66,20 @@ spark::StateManager
 {
     if( !hasStateByName(nextState) )
     {
-        LOG_ERROR(g_log) << "Attempt to setCurrState(\"" << nextState
-        << "\") but no such state is managed by this StateManager. "
-        << "(Remember to remove the \"State.lua\" suffix from file names, "
-        << "e.g, use \"Xxx\" for the state defined in XxxState.lua)";
+        // Use a static flag to avoid flooding with error output.
+        static StateName lastErrorStateName = "";
+        if( lastErrorStateName != nextState )
+        {
+            lastErrorStateName = nextState;
+            std::stringstream msg;
+            msg << "Attempt to setCurrState(\"" << nextState
+                << "\") but no such state is managed by this StateManager. "
+                << "(Remember to remove the \"State.lua\" suffix from file names, "
+                << "e.g, use \"Xxx\" for the state defined in XxxState.lua)";
+            // Note -- serious enough error that warrants dumping to stderr
+            std::cerr << msg.str() << std::endl;
+            LOG_ERROR(g_log)  << msg.str();
+        }
         return;
     }
     if( m_currState )
