@@ -117,17 +117,18 @@ function ContactAreaState:update( dt )
 
     Sim.update( self, dt )
 
+    local moveRate = 0.1
     if input:isKeyDown( KEY_UP ) then
-        self.sphere:translate( 0, 0.05, 0 )
+        self.sphere:translate( 0, moveRate, 0 )
     end
     if input:isKeyDown( KEY_DOWN ) then
-        self.sphere:translate( 0, -0.05, 0 )
+        self.sphere:translate( 0, -moveRate, 0 )
     end
     if input:isKeyDown( KEY_RIGHT ) then
-        self.sphere:translate( 0.05, 0, 0 )
+        self.sphere:translate( moveRate, 0, 0 )
     end
     if input:isKeyDown( KEY_LEFT ) then
-        self.sphere:translate( -0.05, 0, 0 )
+        self.sphere:translate( -moveRate, 0, 0 )
     end
 
     --local toolTipPos = vec3( 0, 0, 1 - self.worldOffset.z )
