@@ -94,6 +94,15 @@ spark::Renderable
         glm::vec3(x,y,z) );
 }
 
+glm::vec3
+spark::Renderable
+::getTranslation( void )
+{
+    return glm::vec3( m_objectTransform[3][0], 
+                      m_objectTransform[3][1],
+                      m_objectTransform[3][2] ); 
+}
+
 void 
 spark::Renderable
 ::rotate( float angleInDegrees, const glm::vec3& axis )

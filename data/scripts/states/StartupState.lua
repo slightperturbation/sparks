@@ -32,8 +32,10 @@ end
 function StartupState:nextState( currTime )
 	--self.theNextState = "Loading"
 
+	self.theNextState = "ContactArea"
+	
 	--self.theNextState = "Example"
-	self.theNextState = "ShaderExample"
+	--self.theNextState = "ShaderExample"
 
 	--self.theNextState = "Menu"
 	--self.theNextState = "CoagMode"

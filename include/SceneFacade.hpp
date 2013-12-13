@@ -229,6 +229,12 @@ namespace spark
                                     const RenderPassName& pass, 
                                     MaterialPtr material );
 
+        /// Returns the fraction of the pixels of the given depth texture 
+        /// with values between lowerBound and upperBound.
+        float calculateAreaOfTexture( const TextureName& name, 
+                                      float lowerBound, 
+                                      float upperBound );
+
         FontManagerPtr getFontManager( void );
         
         TextRenderablePtr createText( const std::string& fontName,

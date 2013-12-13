@@ -85,6 +85,8 @@ spark
      .def( "translate",
           (void (Renderable::*)(const glm::vec3&) )
           &Renderable::translate )
+     .def( "getTranslation",
+          &Renderable::getTranslation )
      .def( "scale",
           (void (Renderable::*)(float))
           &Renderable::scale )
@@ -366,6 +368,8 @@ spark
           &SceneFacade::playSound )
      .def( "stopSound",
           &SceneFacade::stopSound )
+     .def( "calculateAreaOfTexture",
+          &SceneFacade::calculateAreaOfTexture )
      ];
 
     ////////////////////////////////////////////////////////////// Material

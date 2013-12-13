@@ -74,6 +74,7 @@ spark::TextureManager
     else
     {
         // need to create a new texture
+        m_textureSizes[aHandle] = std::make_pair( width, height );
         GL_CHECK( glGenTextures( 1, &textureId ) );
         if( -1 == textureId )
         {
@@ -122,6 +123,7 @@ spark::TextureManager
         return;
     }
     m_registry[aHandle] = textureId;
+    m_textureSizes[aHandle] = std::make_pair( width, height );
     GLint textureUnit = reserveTextureUnit();
     bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
 
@@ -135,6 +137,37 @@ spark::TextureManager
     // Remove artifact on the edges of the shadowmap
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+}
+
+void 
+spark::TextureManager
+::readDepthTextureData( const TextureName& aHandle, 
+                   std::vector<float>& aData,
+                   size_t& aDim )
+{
+    boost::unique_lock<boost::recursive_mutex> lock( m_registryMutex );
+    if( ! isTextureReady( aHandle ) )
+    {
+        aDim = 0;
+        aData.clear();
+        LOG_ERROR(g_log) << "Attempt to read from non-existent texture \""
+            << aHandle << "\".";
+        return;
+    }
+    int sizeX = m_textureSizes[aHandle].first;
+    int sizeY = m_textureSizes[aHandle].second;
+    if( sizeX != sizeY )
+    {
+        LOG_ERROR(g_log) << "Attempt to read non-square texture \"" 
+            << aHandle << "\".";
+        return;
+    }
+    aDim = sizeX;
+    aData.resize( sizeX * sizeY );
+    GLuint textureId = getTextureIdForHandle( aHandle );
+    activateTextureUnitForHandle( aHandle );
+    GL_CHECK( glGetTexImage( m_textureType[textureId], 0, // mipmap level
+                             GL_DEPTH_COMPONENT, GL_FLOAT, &(aData[0]) ) );
 }
 
 void
@@ -156,7 +189,6 @@ spark::TextureManager
         return;
     }
     m_registry[aHandle] = textureId;
-
 
     bindTextureIdToUnit( textureId, textureUnit, GL_TEXTURE_2D );
 

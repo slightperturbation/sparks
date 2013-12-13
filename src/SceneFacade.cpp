@@ -473,6 +473,30 @@ spark::SceneFacade
     return sparkRenderable;
 }
 
+float 
+spark::SceneFacade
+::calculateAreaOfTexture( const TextureName& depthTextureName, 
+                          float lowerBound, 
+                          float upperBound )
+{
+    std::vector<float> data;
+    size_t dim = 0;
+    m_textureManager->readDepthTextureData( depthTextureName, data, dim );
+
+    float total = 0;
+    float max = 0;
+    for( size_t x = 0; x < dim; ++x )
+    {
+        for( size_t y = 0; y < dim; ++y )
+        {
+            float d = data[x*dim + y];
+            total += ( (d > lowerBound) && (d < upperBound) ) ? 1.0f : 0.0f;
+            max += 1.0f;
+        }
+    }
+    return total / max;
+}
+
 void
 spark::SceneFacade
 ::reset( void )

@@ -239,6 +239,11 @@ namespace spark
         void createDepthTargetTexture( const TextureName& aHandle,
                                        int width, int height );
         
+        /// Read data from depth texture
+        void readDepthTextureData( const TextureName& aHandle, 
+                                   std::vector<float>& aData,
+                                   size_t& aDim );
+
         /// Load a simple test texture.
         void loadTestTexture( const TextureName& aHandle,
                               GLint textureUnit = -1  );
@@ -362,6 +367,9 @@ namespace spark
         /// Stores the textureId (second) known to be bound to a given 
         /// texture unit (first).
         std::vector< std::pair<GLint, GLuint> > m_bindingTextureUnitToTextureId;
+
+        /// Store dimensions for textures
+        std::map< const TextureName, std::pair< int, int > > m_textureSizes;
 
         GLint m_maxTextureUnits;
         GLint m_nextAvailableTextureUnit;
