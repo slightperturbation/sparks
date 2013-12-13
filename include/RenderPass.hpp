@@ -89,9 +89,19 @@ namespace spark
                           GLenum destinationFactor,
                           GLenum equation = GL_FUNC_ADD );
         void useAdditiveBlending( void );
+        
+        /// The default mode.  Equivalent to setBlending( GL_SRC_ALPHA,
+        ///                                    GL_ONE_MINUS_SRC_ALPHA )
         void useInterpolatedBlending( void );
+        
+        /// Equivalent to setBlending( GL_ONE, GL_ONE, GL_MAX )
         void useMaxBlending( void );
+        
+        /// If called, no blending will occur on this render pass.
         void disableBlending( void );
+        
+        /// If enabled, blending will be enabled on this render pass.
+        /// By default, interpolated blending will be used.
         void enableBlending( void );
         
         /// Lights
@@ -107,6 +117,8 @@ namespace spark
         /// If true (default), this pass will test depth before writing.
         /// If false, fragments will not be discarded due to depth occlusion.
         void setDepthTest( bool isDepthTestEnabled );
+        
+        /// Returns true if depth testing is currently enabled.
         bool depthTest( void ) const;
         
         /// If true (default), then this pass
