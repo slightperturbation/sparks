@@ -221,7 +221,7 @@ function Sim.update( owner, dt )
 		print( "Error: "..inputDeviceName )
 	end
 
-	local stylusPos = input:getDefaultDevicePosition()
+	owner.stylusPos = input:getDefaultDevicePosition()
 	local stylusMat = input:getDefaultDeviceTransform()
 
 	-- TODO -- screenSpaceOffset is a bit of a hack for getting the zspace world to 
@@ -236,7 +236,7 @@ function Sim.update( owner, dt )
 		--owner.markerBox2:applyTransform( stylusMat )
 		-- red block on base position
 		owner.markerBox:setTransform( mat4() )
-		owner.markerBox:translate( stylusPos )
+		owner.markerBox:translate( owner.stylusPos )
 	end
 
 	local tissueHeight = owner.worldOffset.y - screenSpaceOffset.y
@@ -248,8 +248,8 @@ function Sim.update( owner, dt )
 	local useOnlyPosition = false -- for debugging only
 	local limitDepth = true
 
-	local isBelowSurface = stylusPos.y < (tissueHeight - passDepth)
-	local isNearHolster = stylusPos.x > 0.275
+	local isBelowSurface = owner.stylusPos.y < (tissueHeight - passDepth)
+	local isNearHolster = owner.stylusPos.x > 0.275
 	-- Vibrate when below surface
 	if( isBelowSurface and not isNearHolster and not owner.hasVibrated ) then
 		input:vibrateForSeconds( inputDeviceName, .15 )
@@ -267,7 +267,7 @@ function Sim.update( owner, dt )
 	if( useOnlyPosition ) then
 		-- Only useful for debugging 
 		owner.instrument:setTransform( mat4() )
-		owner.instrument:translate( stylusPos )
+		owner.instrument:translate( owner.stylusPos )
 		owner.instrument:translate( 0,.3,0 )
 		owner.instrument:rotate( 120,  vec3(0,0,1) )
 		owner.instrument:rotate( 30,  vec3(0,1,0) )
@@ -277,7 +277,7 @@ function Sim.update( owner, dt )
 		owner.instrument:translate( screenSpaceOffset )
 		if( mat4_at(stylusMat, 3, 1 ) < (tissueHeight - passDepth) ) then
 			mat4_set(stylusMat, 3,1, tissueHeight - passDepth )
-			stylusPos = vec3( stylusPos.x, tissueHeight - passDepth, stylusPos.z )
+			owner.stylusPos = vec3( owner.stylusPos.x, tissueHeight - passDepth, owner.stylusPos.z )
 		end 
 		owner.instrument:applyTransform( stylusMat )
 	end
@@ -296,14 +296,14 @@ function Sim.update( owner, dt )
 		owner.instrument:scale( 0.002 )
 	end 
 
-	local worldStylusPos = vec3( stylusPos.x, stylusPos.y, stylusPos.z )
+	local worldStylusPos = vec3( owner.stylusPos.x, owner.stylusPos.y, owner.stylusPos.z )
 	worldStylusPos.y = worldStylusPos.y + screenSpaceOffset.y
 
-	local tissueContactPos = vec3( stylusPos.x, stylusPos.y, stylusPos.z )
+	local tissueContactPos = vec3( owner.stylusPos.x, owner.stylusPos.y, owner.stylusPos.z )
 	tissueContactPos.y = owner.worldOffset.y -- 0.025
 	
 	-- Map from world coordinates to Tissue UV coordinates (xpos,ypos)
-	local toolTipPos = stylusPos.y
+	local toolTipPos = owner.stylusPos.y
 	local distFromTissue = toolTipPos - tissueHeight -- tissueHeight already has worldOffset baked in
 
 	owner.distDisplay:setText( string.format( "%3.0f", math.max(distFromTissue, 0) * 1000.0 ) ) -- convert to mm
@@ -322,12 +322,12 @@ function Sim.update( owner, dt )
 
 
 	if( isActivated ) then
-		--print( "Activation:\t" .. stylusPos.x .. ",\t\t" .. stylusPos.y .. ",\t\t" .. stylusPos.z .. ",\t\tmat.y=" .. mat4_at(stylusMat, 3, 1 )  )
+		--print( "Activation:\t" .. owner.stylusPos.x .. ",\t\t" .. owner.stylusPos.y .. ",\t\t" .. owner.stylusPos.z .. ",\t\tmat.y=" .. mat4_at(stylusMat, 3, 1 )  )
 		-- print( "Activation at " .. ESUModel.theESUModel.cutWattage .. " / " .. ESUModel.theESUModel.coagWattage 
 		-- 	.. " watts " .. ESUModel.ESUModeLabels[ESUModel.theESUModel.mode] 
 		-- 	.. " at dist " .. abs( toolTipPos - tissueHeight ) )
-		local xpos = 2*(stylusPos.x - owner.worldOffset.x) -- tissue has been moved by worldOffset
-		local ypos = 2*(stylusPos.z - owner.worldOffset.z) 
+		local xpos = 2*(owner.stylusPos.x - owner.worldOffset.x) -- tissue has been moved by worldOffset
+		local ypos = 2*(owner.stylusPos.z - owner.worldOffset.z) 
 
 		-- radius of contact is determined by the penetration depth
 		local radiusOfSparkEffect = 0.002

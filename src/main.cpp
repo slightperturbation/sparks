@@ -385,6 +385,7 @@ int runSimulation(int argc, char** argv)
     simStates.push_back( "CutMode" );
     simStates.push_back( "CoagMode" );
     simStates.push_back( "ESUPower" );
+    simStates.push_back( "ContactArea" );
 
     for( auto iter = simStates.begin(); iter != simStates.end(); ++iter )
     {

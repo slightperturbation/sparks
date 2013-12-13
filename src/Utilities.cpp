@@ -348,7 +348,7 @@ spark::OpenGLWindow
 
     // Hide the mouse cursor
     glfwSetInputMode( m_glfwRenderWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN );
-    glfwSetInputMode( m_glfwRenderWindow, GLFW_STICKY_MOUSE_BUTTONS, GL_TRUE );
+    //glfwSetInputMode( m_glfwRenderWindow, GLFW_STICKY_MOUSE_BUTTONS, GL_TRUE );
     glfwSetWindowPos( m_glfwRenderWindow, x, y );
     glfwShowWindow( m_glfwRenderWindow );
     glfwSetCursorPos( m_glfwRenderWindow, 10, 10 );

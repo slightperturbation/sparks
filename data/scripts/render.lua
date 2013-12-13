@@ -49,30 +49,31 @@ function Render:createDefaultRenderPasses( isShadowOn )
 	wireRenderPass:disableBlending()
 	wireRenderPass:setWireframe( true )
 
-	local isShadowDebugDisplayOn = false -- draws the depth texture
+	local isShadowDebugDisplayOn = true -- draws the depth texture
 	local useOrthogonalProjectionForShadow = true
 	if( isShadowOn ) then
 		-- TODO the use of global veriables (e.g., shadowSource) should be bundled into the module
 		--Shader uniform must be set:  s_shadowMap = "light0_shadowMap"
 		shadowTarget = spark:createDepthMapRenderTarget( "light0_shadowMap", 2048, 2048 )
 		if useOrthogonalProjectionForShadow then
-			shadowSource = vec3( -2, 2, 1 )
+			shadowSource = vec3( 0.001, 1, 0 )
+			--shadowSource = vec3( -2, 2, 1 )
 			-- Either ortho (=directional light) or perspective (=local/spot light) can be used
-			shadowCamera = spark:createOrthogonalProjection( -0.5, 0.5,  -- left, right
-				                                             -0.5, 0.5,  -- bottom, top
-				                                                0, 8,      -- near, far
+			shadowCamera = spark:createOrthogonalProjection( -0.3, 0.3,  -- left, right
+				                                             -0.3, 0.3,  -- bottom, top
+				                                             -.25, 2,      -- near, far
 				                                             shadowSource -- from direction 
 				                                             )
 		else
 		--			shadowCamera = spark:createPerspectiveProjection( vec3( -1, 1.345, 1.222 ), vec3(0,0,0), vec3(0,1,0), 10.0, 0.5, 5.0 )
 			-- Good values for tissue simulation 
-			shadowSource = vec3( -0.025, -0.75, 0.05 )
+			shadowSource = vec3( -0.5, 1.0, -0.2 )
 			shadowCamera = spark:createPerspectiveProjection( shadowSource, 
 				                                              vec3( 0, 0, 0 ),        -- target
-				                                              vec3( 0, 1, 0 ),        -- up
-				                                              28.0, -- FOV
+				                                              vec3( 0, 0, 1 ),        -- up
+				                                              45.0, -- FOV
 				                                              0.5,  -- near plane
-				                                              5 )   -- far plane
+				                                              3 )   -- far plane
  		end
 
 		-- Either ortho (=directional light) or perspective (=local/spot light) can be used

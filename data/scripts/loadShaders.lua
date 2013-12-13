@@ -12,6 +12,10 @@ shaderManager:loadShaderFromFiles( "shadowCasterShader",
                                     "shadowCaster.vert",
                                     "shadowCaster.frag" );
 
+shaderManager:loadShaderFromFiles( "contactAreaShader",
+                                    "contactArea.vert",
+                                    "contactArea.frag" );
+
 shaderManager:loadShaderFromFiles( "phongShader",
                                     "base.vert",
                                     "phong.frag" );
