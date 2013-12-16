@@ -225,6 +225,71 @@ if( USING_TBB )
   )
 endif( USING_TBB )
 
+
+#####################################################################
+# FreeType
+#####################################################################
+if( WIN32 )
+  # freetype2 isn't distributed to build for x64, so a pre-built binary is included in project for windows
+  list( APPEND PROJECT_LINK_LIBRARIES      debug ${CMAKE_SOURCE_DIR}/ext/freetype2/freetype250MT_D.lib )
+  list( APPEND PROJECT_LINK_LIBRARIES      optimized ${CMAKE_SOURCE_DIR}/ext/freetype2/freetype250MT.lib )
+  set( FREETYPE_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/ext/freetype2/include )
+  INCLUDE_DIRECTORIES( ${FREETYPE_INCLUDE_DIRS} )
+else( WIN32 )
+  # Set to ON if need to workaround bug in cmake's default FindFreetype.cmake on OSX.
+  # Alternatively, fix the standard search at:
+  #   /usr/local/Cellar/cmake/2.8.12.1/share/cmake/Modules/FindFreetype.cmake
+  set( FREETYPE_CMAKE_FIND_BUG_WORKAROUND OFF )  
+
+  if( FREETYPE_CMAKE_FIND_BUG_WORKAROUND )
+    FIND_PACKAGE( Freetype )
+  else( FREETYPE_CMAKE_FIND_BUG_WORKAROUND )
+    FIND_PACKAGE( Freetype REQUIRED )
+  endif( FREETYPE_CMAKE_FIND_BUG_WORKAROUND )
+  
+  if( FREETYPE_CMAKE_FIND_BUG_WORKAROUND AND (NOT FREETYPE_FOUND) )
+    MESSAGE( STATUS "Unable to find freetype2 using standard search.  Searching additional dirs..." )
+    find_path(FREETYPE_INCLUDE_DIR_ft2build ft2build.h
+      HINTS
+        ENV FREETYPE_DIR
+      PATHS
+        /usr/X11R6
+        /usr/local/X11R6
+        /usr/local/X11
+        /usr/freeware
+        /usr/local
+        ENV GTKMM_BASEPATH
+        [HKEY_CURRENT_USER\\SOFTWARE\\gtkmm\\2.4;Path]
+        [HKEY_LOCAL_MACHINE\\SOFTWARE\\gtkmm\\2.4;Path]
+      PATH_SUFFIXES include/freetype2 include
+    )
+    find_path(FREETYPE_INCLUDE_DIR_freetype2 freetype2/config/ftheader.h
+      HINTS
+        ENV FREETYPE_DIR
+      PATHS
+        /usr/X11R6
+        /usr/local/X11R6
+        /usr/local/X11
+        /usr/local
+        /usr/freeware
+        ENV GTKMM_BASEPATH
+        [HKEY_CURRENT_USER\\SOFTWARE\\gtkmm\\2.4;Path]
+        [HKEY_LOCAL_MACHINE\\SOFTWARE\\gtkmm\\2.4;Path]
+      PATH_SUFFIXES include/freetype2 include
+    )
+    if( FREETYPE_INCLUDE_DIR_ft2build AND FREETYPE_INCLUDE_DIR_freetype2 )
+      MESSAGE( STATUS "Found Freetype2 -- OK")
+      set(FREETYPE_INCLUDE_DIRS "${FREETYPE_INCLUDE_DIR_ft2build};${FREETYPE_INCLUDE_DIR_freetype2}")
+    else( FREETYPE_INCLUDE_DIR_ft2build AND FREETYPE_INCLUDE_DIR_freetype2 )
+      MESSAGE( "\n\nERROR ---------- Unable to find freetype --------------- \n\n")
+    endif( FREETYPE_INCLUDE_DIR_ft2build AND FREETYPE_INCLUDE_DIR_freetype2 )
+  endif( FREETYPE_CMAKE_FIND_BUG_WORKAROUND AND (NOT FREETYPE_FOUND) )
+
+  LIST( APPEND PROJECT_LINK_LIBRARIES ${FREETYPE_LIBRARY} )
+  INCLUDE_DIRECTORIES( ${FREETYPE_INCLUDE_DIRS} )
+endif( WIN32 )
+
+
 #####################################################################
 # Freetype-GL
 # https://code.google.com/p/freetype-gl/
@@ -281,19 +346,6 @@ LIST( APPEND EXT_SRC
   ./ext/edtaa/edtaa3func.c
 )
 
-
-#####################################################################
-# FreeType
-#####################################################################
-if( WIN32 )
-  # freetype2 isn't distributed to build for x64, so a pre-built binary is included in project for windows
-  list( APPEND PROJECT_LINK_LIBRARIES      debug ${CMAKE_SOURCE_DIR}/ext/freetype2/freetype250MT_D.lib )
-  list( APPEND PROJECT_LINK_LIBRARIES      optimized ${CMAKE_SOURCE_DIR}/ext/freetype2/freetype250MT.lib )
-else( WIN32 )
-  FIND_PACKAGE( Freetype REQUIRED )
-  LIST( APPEND PROJECT_LINK_LIBRARIES ${FREETYPE_LIBRARY} )
-endif( WIN32 )
-INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/ext/freetype2/include )
 
 #####################################################################
 # Lua and Luabind
