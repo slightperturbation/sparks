@@ -188,7 +188,7 @@ INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}/unsupported/" )
 #####################################################################
 # Intel Thread Building Blocks (TBB)
 #####################################################################
-set( USING_TBB ON )
+set( USING_TBB OFF )
 if( USING_TBB )
   MESSAGE( STATUS "\tTBB ON")
   if( WIN32 )
@@ -231,50 +231,21 @@ endif( USING_TBB )
 #####################################################################
 
 set( FREETYPEGL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/ext/FreeTypeGL" )
-set( FREETYPEGL_SVN_URL "http://freetype-gl.googlecode.com/svn/trunk/"
-     CACHE STRING "SVN Repository for FreeType-GL library." )
-
-# Fix bugs in REV 227 of FreeTypeGL's build on windows and an opengl bug on mac
-# Note that we need to stick this in a temporary batch file because
-# the expanded patch command can easily be too long for widows CMD 
-SET( FREETYPEGL_PATCH_BATCH ${CMAKE_SOURCE_DIR}/cmake/freetype-gl-patch-rev227.patch )
-
-if( FALSE ) #WIN32 )
-  # Batch file to be created by this CMake
-  SET( FREETYPE_PATCH_BATCH_FILE ${FREETYPEGL_PREFIX}/freetypegl_patch_wrap.bat )
-  # Lock file to prevent re-patching with every build
-  SET( FREETYPEGL_PATCH_GUARDFILE ${FREETYPEGL_PREFIX}/freetypegl_patch_guardfile.txt )
-
-  # Batch file uses a guard file to avoid patching multiple times (e.g., for Debug and Release builds)
-  FILE( WRITE  ${FREETYPE_PATCH_BATCH_FILE} "echo FreeTypeGL patching...\n" )
-  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "@ECHO OFF\n" )
-  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} ":BEGIN\n" )
-  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "if exist \"${FREETYPEGL_PATCH_GUARDFILE}\" GOTO HASPATCHED\n" )
-  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "  \"${PATCH_CMD}\" -d \"${FREETYPEGL_PREFIX}/src/FREETYPEGL/\" -p0 -t -i \"${FREETYPEGL_PATCH_BATCH}\"\n" )
-  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "  copy /y nul \"${FREETYPEGL_PATCH_GUARDFILE}\"\n" )
-  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "  echo File patched.\n" )
-  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} ":HASPATCHED\n" )
-  FILE( APPEND ${FREETYPE_PATCH_BATCH_FILE} "echo Done.\n" )
-
-  set( FREETYPEGL_PATCH_CMD "${FREETYPE_PATCH_BATCH_FILE}" )
-endif( FALSE )
-#else( WIN32 )
-  #set( FREETYPEGL_PATCH_CMD "${PATCH_CMD} -d \"${FREETYPEGL_PREFIX}/src/FREETYPEGL/\" -p0 -t -i  \"${FREETYPEGL_PATCH_BATCH}\"" )
-#endif( WIN32 )
+set( FREETYPEGL_GIT_URL "https://github.com/rougier/freetype-gl.git"
+     CACHE STRING "GIT Repository for FreeType-GL library." )
 
 if( NOT WIN32 )
   ExternalProject_Add(
       FREETYPEGL
       PREFIX ${FREETYPEGL_PREFIX}
-      SVN_REPOSITORY ${FREETYPEGL_SVN_URL}
+      GIT_REPOSITORY ${FREETYPEGL_GIT_URL}
       #SVN_REVISION
       # Force th output paths for the libs to help find them afterwards
       CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
                  -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
                  -Dfreetype-gl_BUILD_DEMOS=OFF
-      # Disable install step
+      # Disable install step, using lib files in build dir
       INSTALL_COMMAND ""
-      PATCH_COMMAND ${FREETYPEGL_PATCH_CMD}
       # Log all errors 
       LOG_DOWNLOAD ON
       LOG_CONFIGURE ON
