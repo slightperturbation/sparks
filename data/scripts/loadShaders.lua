@@ -24,6 +24,10 @@ shaderManager:loadShaderFromFiles( "texturedOverlayShader",
                                     "base.vert",
                                     "texturedOverlay.frag" );
 
+shaderManager:loadShaderFromFiles( "contactAreaDisplayOverlayShader",
+                                    "base.vert",
+                                    "contactAreaDisplayOverlay.frag" );
+
 shaderManager:loadShaderFromFiles( "simpleShadowExampleShader",
                                     "simpleShadowExample.vert",
                                     "simpleShadowExample.frag" );

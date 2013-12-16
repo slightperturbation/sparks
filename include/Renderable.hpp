@@ -69,6 +69,9 @@ namespace spark
         /// See glm::translate()
         void translate( float x, float y, float z );
 
+        /// Returns the current translation of the renderable.
+        glm::vec3 getTranslation( void );
+
         /// Rotate the Renderable around axis by angleInDegrees.
         /// See glm::rotate()
         void rotate( float angleInDegrees, const glm::vec3& axis );

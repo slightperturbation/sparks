@@ -165,6 +165,9 @@ function Sim.load( owner )
 
 	Sim.createInstruments( owner )
 
+	-- Contact Area depends on instruments being created already
+	Sim.createContactArea( owner )
+
 	-- set the default instrument
 	owner.instrument = owner.hookMesh
 end
@@ -262,7 +265,6 @@ function Sim.update( owner, dt )
 		owner.hasVibrated = false
 	end
 
-
 	------------------------------------------------
 	if( useOnlyPosition ) then
 		-- Only useful for debugging 
@@ -308,6 +310,27 @@ function Sim.update( owner, dt )
 
 	owner.distDisplay:setText( string.format( "%3.0f", math.max(distFromTissue, 0) * 1000.0 ) ) -- convert to mm
 
+
+
+	-- Update the rendering perspective to track the tool tip
+    local toolTipPos = vec3( -owner.stylusPos.z, -owner.stylusPos.x, 1 - owner.worldOffset.z )
+    spark:updateOrthogonalProjection( owner.contactAreaCamera,
+                                      toolTipPos.x - owner.contactAreaRegionSize.x, -- left
+                                      toolTipPos.x + owner.contactAreaRegionSize.x, -- right
+                                      toolTipPos.y + owner.contactAreaRegionSize.y, -- bottom
+                                      toolTipPos.y - owner.contactAreaRegionSize.y, -- top
+                                      toolTipPos.z + owner.contactAreaRegionSize.z, -- near
+                                      toolTipPos.z - owner.contactAreaRegionSize.z, -- far
+                                      owner.contactAreaRegionDirection )
+
+    -- distances for calculation are normalized to fractions contactAreaRegionSize.z 
+    local areaOfTexture = (2 * owner.contactAreaRegionSize.x) * (2 * owner.contactAreaRegionSize.y)
+    --print("areaOfTexture: "..areaOfTexture)
+    local contactArea = areaOfTexture * spark:calculateAreaOfTexture( "contactAreaDepthMap", 0.0, 0.5 )
+    --print("contactArea: "..contactArea)
+
+    -- TODO -- use measured contactArea in ESU activation
+
 	--------------------------------------------------------
 	-- Activate ESU
 	-- Device activation 
@@ -341,8 +364,9 @@ function Sim.update( owner, dt )
 			xpos, ypos,                        -- location of activation
 			worldStylusPos,                         -- vec3 tool-tip position
 			tissueContactPos,                  -- vec3 positon on tissue nearest to tool
-			math.max( 0.0, distFromTissue),    -- positive distance from tissue
-			radiusOfContact, dt )
+			math.max( 0.0, distFromTissue ),    -- positive distance from tissue
+			radiusOfContact, 
+			dt )
 
 		-- Update the total time reported
 		owner.activationTime = owner.activationTime + dt
@@ -431,6 +455,50 @@ function Sim.createInstruments( owner )
 	owner.hookMesh:setMaterialForPassName( "ShadowPass", shadowMaterial )
 end
 
+--[[
+	Create the render target for instrument contact area calculations
+--]]
+function Sim.createContactArea( owner )
+        local toolTipPos = vec3( 0, 0, owner.worldOffset.z )
+        owner.contactAreaRegionSize = vec3( 0.01, 0.01, 0.01 ) -- block around tooltip's projection to surface
+        owner.contactAreaRegionDirection = vec3( 0.001, 1, 0 ) -- looking up
+        owner.contactAreaCamera = spark:createOrthogonalProjection( toolTipPos.x - owner.contactAreaRegionSize.x, -- left
+                                                                    toolTipPos.x + owner.contactAreaRegionSize.x, -- right
+                                                                    toolTipPos.y - owner.contactAreaRegionSize.y, -- bottom
+                                                                    toolTipPos.y + owner.contactAreaRegionSize.y, -- top
+                                                                    toolTipPos.z - owner.contactAreaRegionSize.z, -- near
+                                                                    toolTipPos.z + owner.contactAreaRegionSize.z, -- far
+                                                                    owner.contactAreaRegionDirection )
+
+        local contactAreaDepthTarget = spark:createDepthMapRenderTarget( "contactAreaDepthMap", 256, 256 )
+        local contactAreaPass = spark:createRenderPassWithProjection( 10.0, "ContactAreaPass", owner.contactAreaCamera, contactAreaDepthTarget )
+
+        -- create a material for contact Area rendering
+        owner.contactAreaMaterial = spark:createMaterial( "contactAreaShader" )
+
+        -- Add the tools to the depth map render
+        owner.hookMesh:setMaterialForPassName( "ContactAreaPass", owner.contactAreaMaterial ) -- owner.contactAreaMaterial writes the depth
+
+        -- Dummy sphere tool for testing w/o zspace
+        local showDebugSphere = false
+        if showDebugSphere then
+            owner.testMaterial = spark:createMaterial( "colorShader" )
+            owner.testMaterial:setVec4( "u_color", vec4(0.5,0.5,0.5,1.0) )
+            owner.sphere = spark:loadMesh( "sphere.obj", owner.testMaterial, "OpaquePass" )
+            owner.sphere:setMaterialForPassName( "ContactAreaPass", owner.contactAreaMaterial ) -- acts as a tool
+            owner.sphere:translate( 0, toolTipPos.z, 0 )
+            owner.sphere:scale( vec3(0.01, 0.001, 0.01) )
+        end
+
+        -- Render the contact area as a texture
+        owner.depthMapRenderMaterial = spark:createMaterial( "contactAreaDisplayOverlayShader" )
+        owner.depthMapRenderMaterial:addTexture( "s_color", "contactAreaDepthMap" )
+        -- The quad to show the PIP using the new material
+        local pipSize = 0.2
+        owner.pipQuad = spark:createQuad( vec2( 0.89, 0.01 ), 
+                                         vec2( pipSize*(9/16), pipSize ), -- 9/16 is aspect ratio of display 
+                                         owner.depthMapRenderMaterial, "HUDPass" )
+end
 
 --[[
 	Create the tissue model to be simulated
