@@ -53,7 +53,6 @@ if( WINDOWS )
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
   if( MSVC )
     # warning C4530: C++ exception handler used, but unwind semantics are not 
-SET( FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR_ft2build} ${FREETYPE_INCLUDE_DIR_freetype2} )
     # enabled. Specify /EHsc 
     # MSVC needs /EHsc flag, which I included in root CMakeLists.txt, but 
     # above SET(CMAKE_CXX_FLAGS "") erases it.
@@ -410,7 +409,7 @@ set( GLFW_LIBRARY "" )
 #####################################################################
 # GLEW 1.9.0
 #####################################################################
-# GLEW -- on Windows: depends on env var: GLEW_ROOT_DIR
+# GLEW is included with repository
 set( GLEW_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/glew-1.9.0" )
 FIND_PACKAGE(glew REQUIRED)
 IF( GLEW_FOUND )
@@ -441,7 +440,10 @@ IF( OPENGL_FOUND AND APPLE )
     FIND_LIBRARY( IOKIT_LIBRARY IOKit )
 ENDIF()
 
-## DEVIL -- image loading library
+#####################################################################
+# DEVIL -- image loading library
+#####################################################################
+# Depends on Windows environment var SOFMIS_DEVIL
 IF( MSVC )
     MESSAGE( STATUS "-- MSVC ")
     SET( CMAKE_PREFIX_PATH $ENV{SOFMIS_DEVIL} )
@@ -467,7 +469,9 @@ ELSE( MSVC )
   ENDIF( IL_FOUND )  
 ENDIF( MSVC )  
 
-## AssImp -- Asset Importer
+#####################################################################
+# AssImp -- Asset Importer
+#####################################################################
 FIND_PACKAGE( assimp REQUIRED )
 IF( ASSIMP_FOUND )
   MESSAGE( STATUS "Found ASSIMP.  Headers at " ${ASSIMP_INCLUDE_DIR} )
@@ -476,15 +480,15 @@ ELSE( ASSIMP_FOUND )
   MESSAGE( STATUS "Failed to find ASSIMP -----------------")
 ENDIF( ASSIMP_FOUND )
 
+#####################################################################
 # AntTweakBar -- on windows, depends on env var: ANT_TWEAK_BAR_ROOT
+#####################################################################
 #FIND_PACKAGE(AntTweakBar REQUIRED)
 #IF( ANT_TWEAK_BAR_FOUND )
 #  INCLUDE_DIRECTORIES( ${ANT_TWEAK_BAR_INCLUDE_PATH} )
 #ELSE( ANT_TWEAK_BAR_FOUND )
 #  MESSAGE( STATUS "Failed to find AntTweakBar ----------------------")
 #ENDIF( ANT_TWEAK_BAR_FOUND )
-
-###########################################################################
 
 #####################################################################
 # SDL2

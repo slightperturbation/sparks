@@ -23,12 +23,20 @@ Features:
 * GLEW -- Required GLEW_ROOT_DIR environment variable
 * GLM  -- Required GLM_ROOT_DIR environment variable
 * DevIL -- Required
-* AssImp -- Optional 
+* AssImp -- Required 
 
 ### Optional dependencies ###
 * To use zSpace devices, the VS2010 zSpace bin dir must be in the PATH.  (e.g., C:\zSpace\zSpaceSDK\2.10.0.19412\Win64\VS2010\Bin).  The zSpace SDK installs can be downloaded: http://zspace.com/download-the-zspace-sdk-current/
 * Note: zSpace SDK has problems setting the path, this may need to be done manually.
 * Download the Hydra controller SDK is at: http://sixense.com/developers
+
+### Windows Environment Variables ###
+
+Building on Windows requires the following environment variables to be set to the directory containing headers and binaries libaries:
+
+* BOOST_ROOT -- for Boost 1.53+ (including libraries for date_time, unit_test_framework, filesystem, system, thread and chrono)
+* GLM_ROOT_DIR
+* SOFMIS_DEVIL -- for the DEVIL image 
 
 ## Dependencies -- MacOSX ##
 
@@ -40,6 +48,7 @@ HomeBrew is recommended.  Required packages:
 * devil
 * assimp
 * glm 
+* lua 
 
 ## Building - Windows, Visual Studio 2010, 64-bit ##
 
@@ -94,6 +103,8 @@ The sparks/src/main.cpp file contains the main() entry point for sparkGui.
 The ESUServerCGI.cgi is called by a webserver to provide interaction with the touch interface for the ESU on the iPad Mini.  The CGI script can be run by any webserver that can server static files from sparks/www and CGI scripts from sparks/www/cgi.
 
 The Mongoose webserver can be used to server both static and CGI.  A trivial script for starting the Mongoose server is located in sparks/bin-win32/startWebserver.bat.  This script uses the spark/bin-win32/mongoose.conf configuration file to find the static and CGI directories.
+
+Note that both these scripts have full-paths to the project directory and must be modified if the project is moved.
 
 The CGI script communicates with the main simulator program (sparkGui) through a shared memory section "SPARK_SharedMemory" and the object "CurrentESUSettings".  These constants are defined in spark/src/ESUInputFromSharedMemory.cpp.
 
