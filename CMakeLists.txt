@@ -299,32 +299,14 @@ set( FREETYPEGL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/ext/FreeTypeGL" )
 set( FREETYPEGL_GIT_URL "https://github.com/rougier/freetype-gl.git"
      CACHE STRING "GIT Repository for FreeType-GL library." )
 
-if( NOT WIN32 )
-  ExternalProject_Add(
-      FREETYPEGL
-      PREFIX ${FREETYPEGL_PREFIX}
-      GIT_REPOSITORY ${FREETYPEGL_GIT_URL}
-      #SVN_REVISION
-      # Force th output paths for the libs to help find them afterwards
-      CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
-                 -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
-                 -Dfreetype-gl_BUILD_DEMOS=OFF
-      # Disable install step, using lib files in build dir
-      INSTALL_COMMAND ""
-      # Log all errors 
-      LOG_DOWNLOAD ON
-      LOG_CONFIGURE ON
-      LOG_BUILD ON
-  )
-ELSE( NOT WIN32)
-  set( FREETYPEGL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/ext/FreeTypeGL/" )
-endif( NOT WIN32 )
+set( FREETYPEGL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/ext/FreeTypeGL/" )
 set( FREETYPEGL_INCLUDE_DIRS "${FREETYPEGL_PREFIX}/src/FREETYPEGL" )
 INCLUDE_DIRECTORIES( "${FREETYPEGL_INCLUDE_DIRS}" )
 
 
-
 set( FREETYPEGL_LIB_DIR "${FREETYPEGL_PREFIX}/src/FREETYPEGL-build" )
+
+
 # FreetypeGL compiles to a static library.  Windows uses .lib for both static and dynamic libs.
 # note that we can't use find_library() (and so CMAKE_FIND_LIBRARY_SUFFIXES)
 # because this is an external project.
