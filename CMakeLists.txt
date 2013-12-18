@@ -635,7 +635,6 @@ set( HDRS
   ./include/TransformGroup.hpp
   ./include/Updateable.hpp
   ./include/Utilities.hpp
-  ./include/Viewport.hpp
   ./include/VolumeData.hpp
   ./include/VertexAttribute.hpp
   ./include/VelocityFieldInterface.hpp
@@ -682,10 +681,8 @@ set( SRCS
   ./src/TextRenderable.cpp
   ./src/TexturedSparkRenderable.cpp
   ./src/TextureManager.cpp
-  ./src/Utilities.cpp
-  ./src/Viewport.cpp
-
   ./src/TissueMesh.cpp
+  ./src/Utilities.cpp
  )
 set( GUI_SRCS 
   ./src/main.cpp
