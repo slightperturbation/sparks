@@ -75,6 +75,11 @@ namespace spark
         virtual void postRender( void ) const override;
         virtual void startFrame( void ) const override;
         virtual std::ostream& debugInfo( std::ostream& out ) const override;
+        
+        int left() const { return m_left; }
+        int bottom() const { return m_bottom; }
+        int width() const { return m_width; }
+        int height() const { return m_height; }
     protected:
         int m_left;
         int m_bottom;

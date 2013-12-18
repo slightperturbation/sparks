@@ -3,48 +3,75 @@
 
 #include "Spark.hpp"
 #include "Viewport.hpp"
+#include "GuiEventSubscriber.hpp"
+
 namespace spark
 {
     /// Display manages a collection of viewports
-    class Display
+    class Display : public GuiEventSubscriber
     {
     public:
-        Display( ProjectionPtr context );
+        Display( void );
         virtual ~Display() {}
-        virtual void render( const Renderables& scene ) = 0;
-        virtual void resizeWindow( int width, int height ) = 0;
+        virtual void render( StateManager& renderer ) = 0;
+        virtual void resizeViewport( int left, int bottom,
+                                    int width, int height ) override;
+
+        virtual void setPerspective( PerspectiveProjectionPtr camera );
+        virtual void setEyeTracker( ConstEyeTrackerPtr eyeTracker );
+        virtual void setFrameBufferRenderTarget( FrameBufferRenderTargetPtr target );
     protected:
-        ProjectionPtr m_context;
+        /// Store the current window's dimensions and location
+        /// Note this is not a "viewport", but the total window
+        /// we are drawing into.  The difference is important for
+        /// Side-by-Side stereo displays.
+        int m_windowLeft;
+        int m_windowBottom;
+        int m_windowWidth;
+        int m_windowHeight;
+
+        PerspectiveProjectionPtr m_camera;
+        ConstEyeTrackerPtr m_eyeTracker;
+        
+        /// FrameBufferRenderTarget is responsible for calling glViewport
+        /// during RenderTarget::preRender()
+        FrameBufferRenderTargetPtr m_frameBuffer;
     };
 
-    /// SimpleDisplay renders to one viewport.
-    /// \todo rename to "SingleDisplay" to better represent the use.
-    class SimpleDisplay : public Display
+    /// MonoDisplay renders to one viewport.
+    class MonoDisplay : public Display
     {
     public:
-        SimpleDisplay( ProjectionPtr context );
-        virtual ~SimpleDisplay() {}
-        virtual void render( const Renderables& scene );
-        virtual void resizeWindow( int width, int height );
-    private:
-        Viewport m_viewport;
+        MonoDisplay( void );
+        virtual ~MonoDisplay() {}
+        
+        virtual void render( StateManager& renderer ) override;
     };
 
-    /// Handles side-by-side 3d rendering
-    /// \todo abstract 3d display interface for tweaking eye params
+    /// Allow side-by-side 3D rendering
     class SideBySideDisplay : public Display
     {
     public:
-        SideBySideDisplay( ProjectionPtr context );
+        SideBySideDisplay( );
         virtual ~SideBySideDisplay() {}
-        virtual void render( const Renderables& scene );
-        virtual void resizeWindow( int width, int height );
+        virtual void render( StateManager& renderer ) override;
+
         float getEyeSeparation( void ) const { return m_eyeSeparationDistance; }
         void setEyeSeparation( float distance ) { m_eyeSeparationDistance = distance; }
+        
+        void enableOculusDistortion( void );
+        void disableOculusDistoration( void );
     private:
-        Viewport m_rightViewport;
-        Viewport m_leftViewport;
         float m_eyeSeparationDistance;
     };
+    
+    class QuadBufferStereoDisplay : public MonoDisplay
+    {
+    public:
+        QuadBufferStereoDisplay( );
+        virtual ~QuadBufferStereoDisplay() {}
+        virtual void render( StateManager& renderer ) override;
+    };
+    
 } // end namespace spark
 #endif

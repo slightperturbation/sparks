@@ -137,7 +137,7 @@ namespace spark
         void setWireframe( bool isWireframeMode );
         bool wireframe( void ) const;
 
-        //TODO-implement per-pass render order
+        // \todo implement per-pass render order
         // void setRenderCommandComparison( )
         // void farToNearRenderOrder()
         // void nearToFarRenderOrder()

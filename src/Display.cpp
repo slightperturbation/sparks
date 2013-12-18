@@ -3,72 +3,139 @@
 #include "Viewport.hpp"
 #include "Projection.hpp"
 #include "Renderable.hpp"
-
+#include "StateManager.hpp"
+#include "RenderTarget.hpp"
 
 spark::Display
-::Display( ProjectionPtr context )
-    : m_context( context )
+::Display( void )
 {
-
-}
-
-spark::SimpleDisplay
-::SimpleDisplay( ProjectionPtr context )
-    : Display( context )
-{
+    // Noop
 }
 
 void
-spark::SimpleDisplay
-::resizeWindow( int width, int height ) 
+spark::Display
+::resizeViewport( int left, int bottom,
+                  int width, int height )
 {
-    m_viewport.setExtents( 0, 0, width, height );
+    m_windowLeft = left;
+    m_windowBottom = bottom;
+    m_windowWidth = width;
+    m_windowHeight = height;
 }
 
-void 
-spark::SimpleDisplay
-::render( const Renderables& scene )
+void
+spark::Display
+::setPerspective( PerspectiveProjectionPtr camera )
 {
-    m_context->aspectRatio( float(m_viewport.m_width)/float(m_viewport.m_height) );
-    m_viewport.render( scene, m_context );
+    m_camera = camera;
+}
+
+void
+spark::Display
+::setEyeTracker( ConstEyeTrackerPtr eyeTracker )
+{
+    m_eyeTracker = eyeTracker;
+}
+
+void
+spark::Display
+::setFrameBufferRenderTarget( FrameBufferRenderTargetPtr target )
+{
+    m_frameBuffer = target;
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+spark::MonoDisplay
+::MonoDisplay( void )
+{
+}
+
+
+void
+spark::MonoDisplay
+::render( StateManager& stateManager )
+{
+    m_camera->aspectRatio( float(m_windowWidth)/float(m_windowHeight) );
+    m_frameBuffer->resizeViewport( m_windowLeft, m_windowBottom,
+                                   m_windowWidth, m_windowHeight );
+
+    if( m_eyeTracker )
+    {
+        m_eyeTracker->updatePerspective( m_camera );
+    }
+    stateManager.render();
 }
 
 //////////////////////////////////////////////////////////////////////////
 
 spark::SideBySideDisplay
-::SideBySideDisplay( ProjectionPtr context )
-    : Display( context ), m_eyeSeparationDistance( 0.0 )
+::SideBySideDisplay(  )
+    : m_eyeSeparationDistance( 0.1 )
 {
 }
 
 void
 spark::SideBySideDisplay
-::resizeWindow( int width, int height )
+::render( StateManager& stateManager )
 {
-    // update viewports
-    m_rightViewport.setExtents( 0,0, width/2, height );
-    m_leftViewport.setExtents( width/2, 0, width/2, height );
+    m_camera->aspectRatio( float(m_windowWidth/2)/float(m_windowHeight) );
+
+    glm::vec3 rightVec = glm::cross( ( m_camera->cameraTarget() - m_camera->cameraPos() ), m_camera->cameraUp() );
+    rightVec = glm::normalize( rightVec );
+    
+    
+    // Right eye
+    m_frameBuffer->resizeViewport( m_windowLeft, m_windowBottom,
+                                   m_windowWidth/2, m_windowHeight );
+    m_camera->cameraPos() += rightVec * m_eyeSeparationDistance;
+    m_eyeTracker->updatePerspective( m_camera, EyeTracker::rightEye );
+    stateManager.render();
+
+    // Left eye
+    m_frameBuffer->resizeViewport( m_windowLeft + m_windowWidth/2, m_windowBottom,
+                                   m_windowWidth/2, m_windowHeight );
+    m_camera->cameraPos() -= rightVec * m_eyeSeparationDistance;
+    m_eyeTracker->updatePerspective( m_camera, EyeTracker::leftEye );
+    stateManager.render();
 }
 
 void
 spark::SideBySideDisplay
-::render( const Renderables& scene )
+::enableOculusDistortion( void )
 {
-    m_context->aspectRatio( float(m_rightViewport.m_width)/float(m_rightViewport.m_height) );
+    // set shader on framebuffer render target
+    
+}
 
-    //glm::vec3 rightVec = glm::cross( ( m_context->cameraTarget() - m_context->cameraPos() ), m_context->cameraUp() );
-    //rightVec = glm::normalize( rightVec );
+void
+spark::SideBySideDisplay
+::disableOculusDistoration( void )
+{
+    
+}
 
-    // TODO -- need to wrap and hold the rendercontext?
-    // change viewpoint, make a duplicate context, shift it
-    //{
-    //    RenderContext right( m_context );
-    //    right.cameraPos() += rightVec * m_eyeSeparationDistance;
-    //    m_rightViewport.render( scene, right );
-    //}
-    //{
-    //    RenderContext left( m_context );
-    //    left.cameraPos() -= rightVec * m_eyeSeparationDistance;
-    //    m_leftViewport.render( scene, left );
-    //}
+//////////////////////////////////////////////////////////////////////////
+
+spark::QuadBufferStereoDisplay
+::QuadBufferStereoDisplay()
+{
+    // Noop
+}
+
+void
+spark::QuadBufferStereoDisplay
+::render( StateManager& stateManager )
+{
+    m_camera->aspectRatio( float(m_windowWidth)/float(m_windowHeight) );
+    m_frameBuffer->resizeViewport( m_windowLeft, m_windowBottom,
+                                   m_windowWidth, m_windowHeight );
+
+    glDrawBuffer( GL_BACK_RIGHT );
+    m_eyeTracker->updatePerspective( m_camera, EyeTracker::rightEye );
+    stateManager.render(); // Extra scene render in stereo mode
+    
+    glDrawBuffer( GL_BACK_LEFT );
+    m_eyeTracker->updatePerspective( m_camera, EyeTracker::leftEye );
+    stateManager.render();
 }

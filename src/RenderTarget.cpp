@@ -65,12 +65,15 @@ spark::FrameBufferRenderTarget
     GL_CHECK( glBindFramebuffer( GL_FRAMEBUFFER, 0 ) );
     checkFramebufferStatus( "FrameBuffer0" );
     glViewport( m_left, m_bottom, m_width, m_height );
+    glEnable( GL_SCISSOR_TEST );
+    glScissor( m_left, m_bottom, m_width, m_height );
 }
 
 void
 spark::FrameBufferRenderTarget
 ::postRender( void ) const
 {
+    glDisable( GL_SCISSOR_TEST );
 }
 
 void
@@ -85,11 +88,19 @@ spark::FrameBufferRenderTarget
     GL_CHECK( glBindFramebuffer( GL_FRAMEBUFFER, 0 ) );
     checkFramebufferStatus( "FrameBuffer0" );
     glViewport( m_left, m_bottom, m_width, m_height );
+    
+    // Limit clearing to this viewport
+    glEnable( GL_SCISSOR_TEST );
+    glScissor( m_left, m_bottom, m_width, m_height );
+    
     glClearColor( m_clearColor[0],
                   m_clearColor[1],
                   m_clearColor[2],
                   m_clearColor[3] );
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    
+    // glClear is done, can disable the scissoring until preRender
+    glDisable( GL_SCISSOR_TEST );
 }
 
 std::ostream&

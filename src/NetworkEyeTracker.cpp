@@ -74,7 +74,7 @@ spark::NetworkEyeTracker
 void
 spark::NetworkEyeTracker
 ::implUpdatePerspective( PerspectiveProjectionPtr persp,
-                         PerspectiveEye eye )
+                         PerspectiveEye eye ) const
 {
     float x, y;
     m_server->getEyePos( x, y );

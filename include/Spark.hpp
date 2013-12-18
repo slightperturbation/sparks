@@ -70,6 +70,13 @@ namespace spark
 {
     class AudioManager;
     typedef spark::shared_ptr< AudioManager > AudioManagerPtr;
+    
+    class Display;
+    typedef spark::shared_ptr< Display > DisplayPtr;
+    
+    class EyeTracker;
+    typedef spark::shared_ptr< EyeTracker > EyeTrackerPtr;
+    typedef spark::shared_ptr< const EyeTracker > ConstEyeTrackerPtr;
 
     class FileAssetFinder;
     typedef spark::shared_ptr< FileAssetFinder > FileAssetFinderPtr;
@@ -159,6 +166,8 @@ namespace spark
     typedef spark::shared_ptr< State > StatePtr;
     typedef spark::shared_ptr< const State > ConstStatePtr;
     typedef std::string StateName;
+    
+    class StateManager;
 
     class Time;
     typedef spark::shared_ptr< Time > TimePtr;

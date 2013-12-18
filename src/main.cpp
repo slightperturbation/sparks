@@ -350,18 +350,6 @@ int runSimulation(int argc, char** argv)
         }
     }
 
-    // Set window/textures sizes by sending signals to listeners
-    // Note that the current design has a circular dependency
-    // between guiEventPublisher and textures, calling resize explicitly
-    // helps break the cycle.  -- TODO
-    {
-        int width = 0; int height = 0;
-        int xPos = 0; int yPos = 0;
-        window.getSize( &width, &height );
-        window.getPosition( &xPos, &yPos );
-        g_guiEventPublisher->resizeViewport( 0, 0, width, height );
-    }
-
     StateManager stateManager;
 
     PerspectiveProjectionPtr cameraPerspective( new PerspectiveProjection );
@@ -372,7 +360,53 @@ int runSimulation(int argc, char** argv)
     frameBufferTarget->initialize( textureManager );
     frameBufferTarget->setClearColor( glm::vec4( 0,0,0,0 ) );
     g_guiEventPublisher->subscribe( frameBufferTarget );
+    
+    /// Create the displays for stereo and mono.
+    DisplayPtr display;
+    std::vector< DisplayPtr > allDisplays;
+    
+    DisplayPtr theQuadBufferStereoDisplay( new QuadBufferStereoDisplay );
+    allDisplays.push_back( theQuadBufferStereoDisplay );
 
+    DisplayPtr theSideBySideDisplay( new SideBySideDisplay );
+    allDisplays.push_back( theSideBySideDisplay );
+
+    DisplayPtr theMonoDisplay( new MonoDisplay );
+    allDisplays.push_back( theMonoDisplay );
+    
+    for( auto d = allDisplays.begin(); d != allDisplays.end(); ++d )
+    {
+        (*d)->setPerspective( cameraPerspective );
+        (*d)->setEyeTracker( eyeTracker );
+        (*d)->setFrameBufferRenderTarget( frameBufferTarget );
+        g_guiEventPublisher->subscribe( *d );
+    }
+    
+    // Choose the starting display type
+    if( useStereo )
+    {
+#ifdef HAS_ZSPACE
+        display = theQuadBufferStereoDisplay;
+#else
+        display = theSideBySideDisplay;
+#endif
+    }
+    else
+    {
+        display = theMonoDisplay;
+    }
+    
+    // Need to initialize the textures and framebuffers with the
+    // starting window size, before any resize events are triggered
+    // so inject a resize event.
+    {
+        int width = 0; int height = 0;
+        int xPos = 0; int yPos = 0;
+        window.getSize( &width, &height );
+        window.getPosition( &xPos, &yPos );
+        g_guiEventPublisher->resizeViewport( 0, 0, width, height );
+    }
+    
     FontManagerPtr fontManager( new FontManager( textureManager, 
                                                  "FontAtlasTexture" ) );
 
@@ -576,21 +610,9 @@ int runSimulation(int argc, char** argv)
         // Render Setup
         // 
         double renderSetupStartTime = glfwGetTime();
-        if( eyeTracker && !useStereo )
-        {
-            eyeTracker->updatePerspective( cameraPerspective );
-        }
-        if( eyeTracker && useStereo )
-        {
-            glDrawBuffer( GL_BACK_RIGHT );
-            eyeTracker->updatePerspective( cameraPerspective, EyeTracker::rightEye );
-            stateManager.render(); // Extra scene render in stereo mode
+        
+        display->render( stateManager );
 
-            glDrawBuffer( GL_BACK_LEFT );
-            eyeTracker->updatePerspective( cameraPerspective, EyeTracker::leftEye );
-        }
-        // render the leftEye or the non-stereo view
-        stateManager.render();
         secondsInComponentSinceLastReport["RenderSetup"] += glfwGetTime() - renderSetupStartTime;
         
 
@@ -663,6 +685,25 @@ int runSimulation(int argc, char** argv)
             //currScene->reset();
             //lua.runScriptFromFile( "defaultScene.lua" );
         }
+        
+        if( window.getKey( 'S' ) == GLFW_PRESS )
+        {
+            display = theSideBySideDisplay;
+        }
+        if( window.getKey( 'S' ) == GLFW_PRESS )
+        {
+            SideBySideDisplay& d = *(spark::dynamic_pointer_cast<SideBySideDisplay>( display ));
+            d.enableOculusDistortion();
+        }
+        if( window.getKey( 'Q' ) == GLFW_PRESS )
+        {
+            display = theQuadBufferStereoDisplay;
+        }
+        if( window.getKey( 'M' ) == GLFW_PRESS )
+        {
+            display = theMonoDisplay;
+        }
+        
         //const float eyeSeparationStep = 0.02;
         if( window.getKey( GLFW_KEY_UP ) == GLFW_PRESS )
         {

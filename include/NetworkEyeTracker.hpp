@@ -109,14 +109,14 @@ namespace spark
         /// Note that vision-based tracker can only find the head, 
         /// not the individual eyes
         virtual void implUpdatePerspective( PerspectiveProjectionPtr persp,
-            PerspectiveEye eye ) override;
+            PerspectiveEye eye ) const override;
     private:
         std::unique_ptr< EyeTrackerServer > m_server;
         std::unique_ptr< boost::thread > m_listenerThread;
         boost::asio::io_service m_ioService;
         std::unique_ptr< boost::asio::io_service::work > m_work;
-        float m_prevX;
-        float m_prevY;
+        mutable float m_prevX;
+        mutable float m_prevY;
     };
 
 }

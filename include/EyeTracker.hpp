@@ -9,6 +9,7 @@ namespace spark
 {
     /// Interface for head/eye tracking system
     /// Responsible for conversion of motion in camera updates
+    /// \todo add updatePerspective( OrthogonalProjectionPtr ) overload to support orthographic cameras.
     class EyeTracker : public GuiEventSubscriber, public Updateable
     {
     public:
@@ -20,7 +21,7 @@ namespace spark
         /// of the specified eye.  Use "monoEye" (the default) to
         /// get the position of the head or face.
         void updatePerspective( PerspectiveProjectionPtr persp,
-            PerspectiveEye eye = monoEye )
+            PerspectiveEye eye = monoEye ) const
         {
             implUpdatePerspective( persp, eye );
         }
@@ -34,7 +35,7 @@ namespace spark
         virtual void update( double dt ) override = 0;
     protected:
         virtual void implUpdatePerspective( PerspectiveProjectionPtr persp, 
-            PerspectiveEye eye ) = 0;
+            PerspectiveEye eye ) const = 0;
     };
     typedef spark::shared_ptr< EyeTracker > EyeTrackerPtr;
     
