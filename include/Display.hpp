@@ -2,7 +2,6 @@
 #define DISPLAY_HPP
 
 #include "Spark.hpp"
-#include "Viewport.hpp"
 #include "GuiEventSubscriber.hpp"
 
 namespace spark
@@ -18,7 +17,7 @@ namespace spark
                                     int width, int height ) override;
 
         virtual void setPerspective( PerspectiveProjectionPtr camera );
-        virtual void setEyeTracker( ConstEyeTrackerPtr eyeTracker );
+        virtual void setEyeTracker( EyeTrackerPtr eyeTracker );
         virtual void setFrameBufferRenderTarget( FrameBufferRenderTargetPtr target );
     protected:
         /// Store the current window's dimensions and location
@@ -31,7 +30,7 @@ namespace spark
         int m_windowHeight;
 
         PerspectiveProjectionPtr m_camera;
-        ConstEyeTrackerPtr m_eyeTracker;
+        EyeTrackerPtr m_eyeTracker;
         
         /// FrameBufferRenderTarget is responsible for calling glViewport
         /// during RenderTarget::preRender()

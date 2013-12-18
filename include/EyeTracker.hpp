@@ -21,7 +21,7 @@ namespace spark
         /// of the specified eye.  Use "monoEye" (the default) to
         /// get the position of the head or face.
         void updatePerspective( PerspectiveProjectionPtr persp,
-            PerspectiveEye eye = monoEye ) const
+            PerspectiveEye eye = monoEye )
         {
             implUpdatePerspective( persp, eye );
         }
@@ -35,7 +35,7 @@ namespace spark
         virtual void update( double dt ) override = 0;
     protected:
         virtual void implUpdatePerspective( PerspectiveProjectionPtr persp, 
-            PerspectiveEye eye ) const = 0;
+            PerspectiveEye eye ) = 0;
     };
     typedef spark::shared_ptr< EyeTracker > EyeTrackerPtr;
     

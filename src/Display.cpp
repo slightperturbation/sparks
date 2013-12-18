@@ -1,6 +1,5 @@
 #include "Display.hpp"
 
-#include "Viewport.hpp"
 #include "Projection.hpp"
 #include "Renderable.hpp"
 #include "StateManager.hpp"
@@ -32,7 +31,7 @@ spark::Display
 
 void
 spark::Display
-::setEyeTracker( ConstEyeTrackerPtr eyeTracker )
+::setEyeTracker( EyeTrackerPtr eyeTracker )
 {
     m_eyeTracker = eyeTracker;
 }

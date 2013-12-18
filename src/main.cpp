@@ -3,7 +3,6 @@
 #include "Display.hpp"
 #include "Renderable.hpp"
 #include "Projection.hpp"
-#include "Viewport.hpp"
 #include "TextureManager.hpp"
 #include "RenderTarget.hpp"
 #include "FileAssetFinder.hpp"
