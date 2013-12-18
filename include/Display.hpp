@@ -3,6 +3,7 @@
 
 #include "Spark.hpp"
 #include "GuiEventSubscriber.hpp"
+#include "Utilities.hpp"
 
 namespace spark
 {
@@ -12,13 +13,16 @@ namespace spark
     public:
         Display( void );
         virtual ~Display() {}
+        virtual void activate() = 0;
         virtual void render( StateManager& renderer ) = 0;
         virtual void resizeViewport( int left, int bottom,
                                     int width, int height ) override;
 
-        virtual void setPerspective( PerspectiveProjectionPtr camera );
-        virtual void setEyeTracker( EyeTrackerPtr eyeTracker );
-        virtual void setFrameBufferRenderTarget( FrameBufferRenderTargetPtr target );
+        void setPerspective( PerspectiveProjectionPtr camera );
+        void setEyeTracker( EyeTrackerPtr eyeTracker );
+        void setFrameBufferRenderTarget( FrameBufferRenderTargetPtr target );
+        void setWindow( OpenGLWindow* window );
+
     protected:
         /// Store the current window's dimensions and location
         /// Note this is not a "viewport", but the total window
@@ -35,6 +39,8 @@ namespace spark
         /// FrameBufferRenderTarget is responsible for calling glViewport
         /// during RenderTarget::preRender()
         FrameBufferRenderTargetPtr m_frameBuffer;
+
+        OpenGLWindow* m_window;
     };
 
     /// MonoDisplay renders to one viewport.
@@ -44,6 +50,7 @@ namespace spark
         MonoDisplay( void );
         virtual ~MonoDisplay() {}
         
+        virtual void activate() override;
         virtual void render( StateManager& renderer ) override;
     };
 
@@ -53,6 +60,7 @@ namespace spark
     public:
         SideBySideDisplay( );
         virtual ~SideBySideDisplay() {}
+        virtual void activate() override;
         virtual void render( StateManager& renderer ) override;
 
         float getEyeSeparation( void ) const { return m_eyeSeparationDistance; }
@@ -69,6 +77,8 @@ namespace spark
     public:
         QuadBufferStereoDisplay( );
         virtual ~QuadBufferStereoDisplay() {}
+
+        virtual void activate( ) override;
         virtual void render( StateManager& renderer ) override;
     };
     

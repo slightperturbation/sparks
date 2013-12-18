@@ -3,6 +3,7 @@
 
 #include "InputDevice.hpp"
 #include "InputFactory.hpp"
+#include "Utilities.hpp" // for OpenGLWindow
 
 // Forward Decl
 struct GLFWwindow;
@@ -40,13 +41,13 @@ namespace spark
     class GlfwInputFactory : public InputFactory
     {
     public:
-        GlfwInputFactory( GLFWwindow* window );
+        GlfwInputFactory( OpenGLWindow& window );
 
         virtual std::unique_ptr<KeyboardInputDevice> createKeyboard( void ) const override;
         
         virtual std::unique_ptr<InputDevice> createDevice( int index ) const override;
     private:
-        GLFWwindow* m_window;
+        OpenGLWindow& m_window;
     };
 }
 #endif

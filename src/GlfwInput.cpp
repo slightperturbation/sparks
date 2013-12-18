@@ -79,7 +79,7 @@ spark::GlfwKeyboardInputDevice
 //////////////////////////////////////////////////////////////////////
 
 spark::GlfwInputFactory
-::GlfwInputFactory( GLFWwindow* window )
+::GlfwInputFactory( OpenGLWindow& window )
 : m_window( window )
 {
     // Noop
@@ -89,15 +89,8 @@ std::unique_ptr<spark::KeyboardInputDevice>
 spark::GlfwInputFactory
 ::createKeyboard( void ) const
 {
-    if( !m_window )
-    {
-        LOG_ERROR(g_log) << "Failed to create keyboard device because "
-        << "GlfwInputFactory not properly initialized.";
-        assert( false );
-        return nullptr;
-    }
     std::unique_ptr<KeyboardInputDevice> kid(
-        new GlfwKeyboardInputDevice( m_window ) );
+        new GlfwKeyboardInputDevice( m_window.glfwWindow() ) );
     return std::move( kid );
 }
 
@@ -109,6 +102,6 @@ spark::GlfwInputFactory
     {
         LOG_ERROR(g_log) << "GLFW only supports one mouse device";
     }
-    std::unique_ptr<InputDevice> id( new GlfwMouseInputDevice(m_window) );
+    std::unique_ptr<InputDevice> id( new GlfwMouseInputDevice(m_window.glfwWindow()) );
     return std::move( id );
 }

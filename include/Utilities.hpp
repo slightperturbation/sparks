@@ -64,6 +64,9 @@ namespace spark
                       bool createLoadingContext = false,
                       bool enableFullScreen = false ); 
         ~OpenGLWindow();
+        /// Open the window, possibly destroying the current window if needed.
+        void open();
+
         void makeContextCurrent( void );
         bool isOK( void ) { return m_isOK; }
         bool isRunning( void );
@@ -71,7 +74,7 @@ namespace spark
         void swapBuffers( void );
         void getSize( int* width, int* height );
         void getPosition( int* xPos, int* yPos );
-        GLFWwindow* glfwWindow( void ) { return m_glfwRenderWindow; }
+        GLFWwindow* glfwWindow( void ) const { return m_glfwRenderWindow; }
         GLFWwindow* glfwLoadingThreadWindow( void ) { return m_glfwLoadingThreadWindow; }
         GLFWwindow* glfwRenderThreadWindow( void ) { return m_glfwRenderWindow; }
         EyeTrackerPtr getEyeTracker( void )  { return m_eyeTracker; }
@@ -81,12 +84,40 @@ namespace spark
         glm::vec2 pixelsToScreenCoords( const glm::vec2& pixelPosition );
         glm::vec2 screenCoordsToPixels( const glm::vec2& screenCoord );
         void writeFrameBufferToFile( const std::string& frameBaseFileName );
-    
-private:
+ 
+        /// Parameters for window creation
+        /// only used when open() is called.
+        void setProgramName( const std::string& name ) { m_programName = name; }
+        void setQuadBufferedStereo( bool isStereo ) { m_enableStereo = isStereo; }
+        void setFullScreen( bool isFullScreen ) { m_enableFullScreen = isFullScreen; }
+        void setLoadingContext( bool isLoadingContext ) { m_enableLoadingContext = isLoadingContext; }
+        void setLegacyOpenGlLogging( bool isLegacyLogging ) { m_enableLegacyOpenGlLogging = isLegacyLogging; }
+
+        bool isStereo() const { return m_enableStereo; }
+        bool isFullScreen() const { return m_enableFullScreen; }
+
+        /// Callbacks, store to allow re-registering if window is re-open()'d
+        void setMousePositionCallback( GLFWcursorposfun callbackFunc ) { m_mousePosCallback = callbackFunc; }
+        void setMouseButtonCallback( GLFWmousebuttonfun callbackFunc ) { m_mouseButtonCallback = callbackFunc; }
+        void setFrameBufferSizeCallback( GLFWframebuffersizefun callbackFunc ) { m_frameBufferSizeCallback = callbackFunc; }
+        void setWindowPositionCallback( GLFWwindowposfun callbackFunc ) { m_windowPositionCallback = callbackFunc; }
+
+    private:
+        std::string m_programName;
+        bool m_enableLegacyOpenGlLogging;
+        bool m_enableStereo;
+        bool m_enableLoadingContext;
+        bool m_enableFullScreen;
+
         EyeTrackerPtr m_eyeTracker;
         GLFWwindow* m_glfwRenderWindow;
         GLFWwindow* m_glfwLoadingThreadWindow;
         bool m_isOK;
+
+        GLFWcursorposfun m_mousePosCallback;
+        GLFWmousebuttonfun m_mouseButtonCallback;
+        GLFWframebuffersizefun m_frameBufferSizeCallback;
+        GLFWwindowposfun m_windowPositionCallback;
     };
 
     std::string readFileToString( const char* filename );

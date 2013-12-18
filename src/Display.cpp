@@ -43,6 +43,14 @@ spark::Display
     m_frameBuffer = target;
 }
 
+void
+spark::Display
+::setWindow( OpenGLWindow* window )
+{
+    m_window = window;
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 
 spark::MonoDisplay
@@ -50,11 +58,23 @@ spark::MonoDisplay
 {
 }
 
+void
+spark::MonoDisplay
+::activate( )
+{
+    // change mode to quad buffered if needed 
+    if( m_window->isStereo() )
+    {
+        m_window->setQuadBufferedStereo( false );
+        m_window->open();
+    }
+}
 
 void
 spark::MonoDisplay
 ::render( StateManager& stateManager )
 {
+    activate();
     m_camera->aspectRatio( float(m_windowWidth)/float(m_windowHeight) );
     m_frameBuffer->resizeViewport( m_windowLeft, m_windowBottom,
                                    m_windowWidth, m_windowHeight );
@@ -76,8 +96,22 @@ spark::SideBySideDisplay
 
 void
 spark::SideBySideDisplay
+::activate( )
+{
+    // change mode to quad buffered if needed 
+    if( m_window->isStereo() )
+    {
+        m_window->setQuadBufferedStereo( false );
+        m_window->open();
+    }
+}
+
+void
+spark::SideBySideDisplay
 ::render( StateManager& stateManager )
 {
+    activate();
+
     m_camera->aspectRatio( float(m_windowWidth/2)/float(m_windowHeight) );
 
     glm::vec3 rightVec = glm::cross( ( m_camera->cameraTarget() - m_camera->cameraPos() ), m_camera->cameraUp() );
@@ -124,17 +158,37 @@ spark::QuadBufferStereoDisplay
 
 void
 spark::QuadBufferStereoDisplay
+::activate( )
+{
+    // change mode to quad buffered if needed 
+    if( ! m_window->isStereo() )
+    {
+        m_window->setQuadBufferedStereo( true );
+        m_window->open();
+    }
+}
+
+void
+spark::QuadBufferStereoDisplay
 ::render( StateManager& stateManager )
 {
+    activate();
+
     m_camera->aspectRatio( float(m_windowWidth)/float(m_windowHeight) );
     m_frameBuffer->resizeViewport( m_windowLeft, m_windowBottom,
                                    m_windowWidth, m_windowHeight );
 
     glDrawBuffer( GL_BACK_RIGHT );
-    m_eyeTracker->updatePerspective( m_camera, EyeTracker::rightEye );
+    if( m_eyeTracker )
+    {
+        m_eyeTracker->updatePerspective( m_camera, EyeTracker::rightEye );
+    }
     stateManager.render(); // Extra scene render in stereo mode
     
     glDrawBuffer( GL_BACK_LEFT );
-    m_eyeTracker->updatePerspective( m_camera, EyeTracker::leftEye );
+    if( m_eyeTracker )
+    {
+        m_eyeTracker->updatePerspective( m_camera, EyeTracker::leftEye );
+    }
     stateManager.render();
 }

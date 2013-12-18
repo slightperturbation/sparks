@@ -124,21 +124,6 @@ void windowPosCallback(GLFWwindow* window, int xpos, int ypos)
     }
 }
 
-void setGLFWCallbacks( GLFWwindow* glfwWindow )
-{
-    // Set GLFW event callbacks
-    // - Redirect window size changes to the callback function WindowSizeCB
-    glfwSetCursorPosCallback( glfwWindow, mousePosCallback );
-    glfwSetMouseButtonCallback( glfwWindow, mouseButtonCallback );
-    
-    glfwSetFramebufferSizeCallback( glfwWindow, frameBufferSizeCallback );
-    glfwSetWindowPosCallback( glfwWindow, windowPosCallback );
-
-#ifdef __APPLE__
-    //glGetError(); // eat spurious GLFW-caused OpenGL errors on OSX/iOS
-    // commented out because it violates the core profile
-#endif
-}
 
 void inputManagerUpdateThreadOp( OpenGLWindow* window, InputPtr inputManager )
 {
@@ -226,7 +211,7 @@ int runSimulation(int argc, char** argv)
     // legacy logging is great, but conflicts with nSight debugger
     const bool enableLegacyOpenGlLogging  = false;
     // Stero view, e.g., with ZSpace
-    bool useStereo = false && hasZSpace;
+    bool useStereo = true && hasZSpace;
     // If should use full screen mode on the zspace or primary monitor (if no zspace)
     const bool enableFullScreen = false;
 
@@ -263,17 +248,23 @@ int runSimulation(int argc, char** argv)
                          useStereo, 
                          useBackgroundResourceLoading,
                          enableFullScreen );
+    window.open();
     using namespace std;
     
     // Setup Gui Callbacks
     g_guiEventPublisher = GuiEventPublisherPtr( new GuiEventPublisher );
-    setGLFWCallbacks( window.glfwWindow() );
+    
+    window.setMousePositionCallback( mousePosCallback );
+    window.setMouseButtonCallback( mouseButtonCallback );
+    window.setFrameBufferSizeCallback( frameBufferSizeCallback );
+    window.setWindowPositionCallback( windowPosCallback );
+
 
     // And Input manager
     // Choose windowing library -- glfw for now
     InputPtr inputManager( new Input );
     std::unique_ptr<InputFactory> glfwInputFactory(
-        new GlfwInputFactory( window.glfwWindow() ) );
+        new GlfwInputFactory( window ) );
     inputManager->acquireKeyboardDevice( glfwInputFactory->createKeyboard() );
     
     //
@@ -378,6 +369,7 @@ int runSimulation(int argc, char** argv)
         (*d)->setPerspective( cameraPerspective );
         (*d)->setEyeTracker( eyeTracker );
         (*d)->setFrameBufferRenderTarget( frameBufferTarget );
+        (*d)->setWindow( &window );
         g_guiEventPublisher->subscribe( *d );
     }
     
@@ -395,20 +387,8 @@ int runSimulation(int argc, char** argv)
         display = theMonoDisplay;
     }
     
-    // Need to initialize the textures and framebuffers with the
-    // starting window size, before any resize events are triggered
-    // so inject a resize event.
-    {
-        int width = 0; int height = 0;
-        int xPos = 0; int yPos = 0;
-        window.getSize( &width, &height );
-        window.getPosition( &xPos, &yPos );
-        g_guiEventPublisher->resizeViewport( 0, 0, width, height );
-    }
-    
     FontManagerPtr fontManager( new FontManager( textureManager, 
                                                  "FontAtlasTexture" ) );
-
 
     // Create the "special" simulation states from the C++ class
     // The specific functionality is provided in the Lua script,
@@ -473,10 +453,9 @@ int runSimulation(int argc, char** argv)
     // Modify the StartupState.lua script to change the starting state
     stateManager.setCurrState( "Startup" );
     
-    // Set window/textures sizes by sending signals to listeners
-    // Note that the current design has a circular dependency
-    // between guiEventPublisher and textures, calling resize explicitly
-    // helps break the cycle.  -- TODO
+    // Need to initialize the textures and framebuffers with the
+    // starting window size, before any resize events are triggered
+    // so inject a resize event.
     {
         int width = 0; int height = 0;
         int xPos = 0; int yPos = 0;
@@ -484,6 +463,7 @@ int runSimulation(int argc, char** argv)
         window.getPosition( &xPos, &yPos );
         g_guiEventPublisher->resizeViewport( 0, 0, width, height );
     }
+
     const double startTime = glfwGetTime();
     double currTime = startTime;
     double lastTime = startTime;

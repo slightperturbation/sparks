@@ -228,7 +228,13 @@ spark::OpenGLWindow
                 bool enableStereo,
                 bool createLoadingContext,
                 bool enableFullScreen )
-: m_glfwLoadingThreadWindow( nullptr ), m_isOK( false )
+: m_glfwRenderWindow( nullptr ), 
+  m_glfwLoadingThreadWindow( nullptr ), 
+  m_isOK( false ),
+  m_mousePosCallback( nullptr ),
+  m_mouseButtonCallback( nullptr ),
+  m_frameBufferSizeCallback( nullptr ),
+  m_windowPositionCallback( nullptr )
 {
     LOG_DEBUG(g_log) << "glfwInit...";
     if( !glfwInit() )
@@ -237,14 +243,50 @@ spark::OpenGLWindow
     }
     LOG_DEBUG(g_log) << "done.\n";
 
+    setProgramName( programName );
+    setLegacyOpenGlLogging( enableLegacyOpenGlLogging );
+    setQuadBufferedStereo( enableStereo );
+    setLoadingContext( createLoadingContext );
+    setFullScreen( enableFullScreen );
+
+    open();
+
+    ilInit();
+    iluInit();
+    checkOpenGLErrors();
+    LOG_DEBUG(g_log) << "OpenGL initialization complete.";
+    m_isOK = true;
+}
+
+spark::OpenGLWindow
+::~OpenGLWindow()
+{
+    ilShutDown();
+    glfwTerminate();
+}
+
+void
+spark::OpenGLWindow
+::open()
+{
+    // shutdown current windows, if needed
+    if( m_glfwRenderWindow )
+    {
+        glfwDestroyWindow( m_glfwRenderWindow );
+    }
+    if( m_glfwLoadingThreadWindow )
+    {
+        glfwDestroyWindow( m_glfwLoadingThreadWindow );
+    }
+
     // Create an invisible/dummy window as a handle for resource 
     // thread's rendering context
-    if( createLoadingContext )
+    if( m_enableLoadingContext )
     {
         glfwWindowHint( GLFW_VISIBLE, GL_FALSE );
         m_glfwLoadingThreadWindow = glfwCreateWindow( 1,1, "LoadingThreadWindow", nullptr, nullptr );
     }
-    
+
     // Default window position, upper left
     int x = 0;
     int y = 0;
@@ -283,11 +325,11 @@ spark::OpenGLWindow
     // Want as deep a depth buffer as possible!
     glfwWindowHint( GLFW_DEPTH_BITS, 32 );
 
-    if( enableStereo )
+    if( m_enableStereo )
     {
         glfwWindowHint( GLFW_STEREO, GL_TRUE );
     }
-   
+
 #ifdef _DEBUG
     glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE );
 #endif
@@ -318,8 +360,8 @@ spark::OpenGLWindow
     const GLFWvidmode* mode = glfwGetVideoMode( monitor );
     int width = mode->width;
     int height = mode->height;
-    
-    if( enableFullScreen )
+
+    if( m_enableFullScreen )
     {
         // force to "main" display if not using zspace
         //monitor = glfwGetPrimaryMonitor();
@@ -335,9 +377,9 @@ spark::OpenGLWindow
 
     LOG_DEBUG(g_log) << "glfwOpenWindow...";
     m_glfwRenderWindow = glfwCreateWindow( width, height,
-                                     programName, 
-                                     monitor, // non-null for fullscreen
-                                     m_glfwLoadingThreadWindow );
+        m_programName.c_str(), 
+        monitor, // non-null for fullscreen
+        m_glfwLoadingThreadWindow );
     if( !m_glfwRenderWindow )
     {
         LOG_FATAL(g_log) << "Unable to open GLFW window.";
@@ -353,7 +395,7 @@ spark::OpenGLWindow
     glfwSetWindowPos( m_glfwRenderWindow, x, y );
     glfwShowWindow( m_glfwRenderWindow );
     glfwSetCursorPos( m_glfwRenderWindow, 10, 10 );
-    
+
     checkOpenGLErrors();
     LOG_DEBUG(g_log) << " done.\n";
     LOG_DEBUG(g_log) << "glewInit on render thread.";
@@ -363,7 +405,7 @@ spark::OpenGLWindow
     {
         LOG_DEBUG(g_log) << "glewInit() failed!\n";
     }
-    
+
     // according to http://www.opengl.org/wiki/OpenGL_Loading_Library
     // glewInit may throw invalid enumerant error
     glGetError(); // eat glew's spurious error
@@ -392,7 +434,7 @@ spark::OpenGLWindow
         checkOpenGLErrors();
 
         // Must be disabled for gDebugger and similar tools
-        if( enableLegacyOpenGlLogging )
+        if( m_enableLegacyOpenGlLogging )
         {
             glDebugMessageCallback( debugOpenGLMessageCallback, 0 );
             checkOpenGLErrors();
@@ -408,20 +450,13 @@ spark::OpenGLWindow
 #endif
     }
     checkOpenGLErrors();
-    ilInit();
-    iluInit();
-    checkOpenGLErrors();
-    LOG_DEBUG(g_log) << "OpenGL initialization complete.";
-    m_isOK = true;
-}
 
-spark::OpenGLWindow
-::~OpenGLWindow()
-{
-    ilShutDown();
-    glfwTerminate();
-}
+    glfwSetCursorPosCallback( m_glfwRenderWindow, m_mousePosCallback );
+    glfwSetMouseButtonCallback( m_glfwRenderWindow, m_mouseButtonCallback );
 
+    glfwSetFramebufferSizeCallback( m_glfwRenderWindow, m_frameBufferSizeCallback );
+    glfwSetWindowPosCallback( m_glfwRenderWindow, m_windowPositionCallback );
+}
 
 void
 spark::OpenGLWindow
