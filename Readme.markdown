@@ -89,6 +89,19 @@ Note:  MacOSX is only supported for testing, neither primary interface (zSpace n
 
 The VEST simulator consists of two programs on the simulator computer. The main program is sparkGui.exe and the supporting program is a CGI program called ESUServerCGI.cgi.
 
+### Quick Start
+
+In order:
+
+* On the simulation computer, run "sparks\bin-win32\startWebserver.bat" to start the webserver.  This will not return unless there is an error in the configuration.
+* On the simulation computer, run "sparks\build\Release\sparkGui.exe" (with no options) to start the main simulator.  This command should display the simulator on the zSpace monitor.
+* Determine the IP address of the simulation computer (use ipconfig if needed).
+* On the iPad, open Safari and go to URL:  "http://192.168.1.X:8080", with X replaced by the proper IP octet for the simulation computer.  This should show the yellow-and-blue ESU interface.
+* On the Simulator, choose the lesson by pointing with the zSpace stylus or entering numbers on the detacted number pad.
+* When the simulation lesson begins (showing the slab of tissue), on the iPad, touch "Blend".  (Forces a sync between the iPad and the simulation computer.)
+* Begin the lesson.
+
+
 ### sparkGui ###
 
 The sparkGui.exe runs with options:
@@ -102,9 +115,11 @@ The sparks/src/main.cpp file contains the main() entry point for sparkGui.
 
 The ESUServerCGI.cgi is called by a webserver to provide interaction with the touch interface for the ESU on the iPad Mini.  The CGI script can be run by any webserver that can server static files from sparks/www and CGI scripts from sparks/www/cgi.
 
-The Mongoose webserver can be used to server both static and CGI.  A trivial script for starting the Mongoose server is located in sparks/bin-win32/startWebserver.bat.  This script uses the spark/bin-win32/mongoose.conf configuration file to find the static and CGI directories.
+Note that the ESUServerCGI.exe is built (on windows) and placed in sparks/build/Debug or sparks/build/Release.  You must manually copy the executable to the sparks/bin-win32/ directory.  (TODO, this should be an automated post-build step, though perhaps only for Release mode.)
 
-Note that both these scripts have full-paths to the project directory and must be modified if the project is moved.
+The Mongoose webserver is used to server both static and the CGI.  A trivial script for starting the Mongoose server is located in sparks/bin-win32/startWebserver.bat.  This script uses the spark/bin-win32/mongoose.conf configuration file to find the static and CGI directories.
+
+Note that both these scripts have full-paths to the project directory and are configured by cmake.
 
 The CGI script communicates with the main simulator program (sparkGui) through a shared memory section "SPARK_SharedMemory" and the object "CurrentESUSettings".  These constants are defined in spark/src/ESUInputFromSharedMemory.cpp.
 
@@ -152,6 +167,8 @@ Standard speakers are needed for the ESU sounds.
 ## Adding script states ##
 
 States can be created using Lua scripts, C++ class or a mix of both. 
+
+The state entered on startup is determined by the sparks/data/scripts/states/StartupState.lua script.  (I.e., StartupState is always the first state run, and by convention it does nothing but swith to another State.)  Typically, StartupState should switch to LoadingState for normal operation.
 
 ### Lua State Scripts ###
 
