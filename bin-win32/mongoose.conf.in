@@ -6,6 +6,6 @@
 # save this file and then restart Mongoose.
 
 cgi_pattern **.cgi
-document_root C:\src\sparks\www
+document_root ${CMAKE_SOURCE_DIR_NATIVE}\www
 access_log_file access_log.txt
 error_log_file error_log.txt

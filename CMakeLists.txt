@@ -765,6 +765,18 @@ include_directories( ${CMAKE_BINARY_DIR}/config/ )
 # SET_TARGET_PROPERTIES(${APP_NAME} PROPERTIES RESOURCE "${RESOURCES}")
 
 #####################################################################
+# Webserver config
+#  NOTE only supports running webserver on Windows due to 
+#       dependency on mongoose webserver (bundled).
+#####################################################################
+set( WEBSERVER_DIR "${CMAKE_SOURCE_DIR}/bin-win32" )
+FILE( TO_NATIVE_PATH ${CMAKE_SOURCE_DIR} CMAKE_SOURCE_DIR_NATIVE )
+# Set the path in the config files to the absolute path of this distribution
+configure_file( ${WEBSERVER_DIR}/startWebserver.bat.in ${WEBSERVER_DIR}/startWebserver.bat )
+configure_file( ${WEBSERVER_DIR}/mongoose.conf.in ${WEBSERVER_DIR}/mongoose.conf )
+
+
+#####################################################################
 # Executables
 #####################################################################
 
