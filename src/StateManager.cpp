@@ -73,10 +73,11 @@ spark::StateManager
             lastErrorStateName = nextState;
             std::stringstream msg;
             msg << "Attempt to setCurrState(\"" << nextState
-                << "\") but no such state is managed by this StateManager. "
-                << "(Remember to remove the \"State.lua\" suffix from file names, "
+                << "\") but no such state is managed by this StateManager.\n"
+                << "(Remember to add the state in main.cpp\n"
+                << "and to remove the \"State.lua\" suffix from file names, "
                 << "e.g, use \"Xxx\" for the state defined in XxxState.lua)";
-            // Note -- serious enough error that warrants dumping to stderr
+            // Note -- common and serious enough error that warrants dumping to stderr
             std::cerr << msg.str() << std::endl;
             LOG_ERROR(g_log)  << msg.str();
         }

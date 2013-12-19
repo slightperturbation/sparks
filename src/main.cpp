@@ -211,7 +211,7 @@ int runSimulation(int argc, char** argv)
     // legacy logging is great, but conflicts with nSight debugger
     const bool enableLegacyOpenGlLogging  = false;
     // Stero view, e.g., with ZSpace
-    bool useStereo = true && hasZSpace;
+    bool useStereo = false && hasZSpace;
     // If should use full screen mode on the zspace or primary monitor (if no zspace)
     const bool enableFullScreen = false;
 
@@ -424,7 +424,8 @@ int runSimulation(int argc, char** argv)
     scriptStates.push_back( "Example" );
     scriptStates.push_back( "SparkExample" );
     scriptStates.push_back( "ShaderExample" );
-    
+    scriptStates.push_back( "GlowExample" );
+
     // Actual States
     // \todo get all State.lua files in the States directory(?)
     scriptStates.push_back( "Startup" );
