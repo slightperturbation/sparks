@@ -64,7 +64,6 @@ namespace spark
                     FrameBufferRenderTargetPtr frameBufferTarget,
                     InputPtr inputManager,
                     FontManagerPtr fontManager,
-                    AudioManagerPtr audioManager,
                     GuiEventPublisherPtr guiEventPublisher );
         virtual ~ScriptState();
         virtual void load( void )             override;

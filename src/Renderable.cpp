@@ -74,10 +74,11 @@ void
 spark::Renderable
 ::scale( float scaleFactor )
 {
-    m_objectTransform = glm::scale( m_objectTransform,
-        scaleFactor,
-        scaleFactor,
-        scaleFactor );
+    // TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+//    m_objectTransform = glm::scale( m_objectTransform,
+//        scaleFactor,
+//        scaleFactor,
+//        scaleFactor );
 }
 void
 spark::Renderable

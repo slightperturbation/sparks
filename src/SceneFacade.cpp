@@ -26,7 +26,6 @@ spark::SceneFacade
                FrameBufferRenderTargetPtr frameBufferTarget,
                InputPtr inputManager,
                FontManagerPtr fontManager,
-               AudioManagerPtr audioManager,
                GuiEventPublisherPtr guiEventPublisher
               )
 
@@ -40,7 +39,6 @@ spark::SceneFacade
   m_cameraPerspective( camera ),
   m_frameBufferTarget( frameBufferTarget ),
   m_fontManager( fontManager ),
-  m_audioManager( audioManager ),
   m_guiEventPublisher( guiEventPublisher )
 { }
 
@@ -605,19 +603,4 @@ spark::SceneFacade
     }
     return out;
 }
-
-void
-spark::SceneFacade
-::playSound( void )
-{
-    m_audioManager->playSound();
-}
-
-void
-spark::SceneFacade
-::stopSound( void )
-{
-    m_audioManager->stopSound();
-}
-
 

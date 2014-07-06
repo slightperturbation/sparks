@@ -33,7 +33,6 @@ namespace spark
                       FrameBufferRenderTargetPtr frameBufferTarget,
                       InputPtr inputManager,
                       FontManagerPtr fontManager,
-                      AudioManagerPtr audioManager,
                       GuiEventPublisherPtr guiEventPublisher
                     );
         RenderTargetPtr getFrameBufferRenderTarget( void );

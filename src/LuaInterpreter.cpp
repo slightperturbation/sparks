@@ -364,10 +364,6 @@ spark
           &SceneFacade::screenCoordsToPixels )
      .def( "getWindowSize",
           &SceneFacade::getWindowSize )
-     .def( "playSound",
-          &SceneFacade::playSound )
-     .def( "stopSound",
-          &SceneFacade::stopSound )
      .def( "calculateAreaOfTexture",
           &SceneFacade::calculateAreaOfTexture )
      ];

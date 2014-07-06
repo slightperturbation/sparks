@@ -28,7 +28,6 @@ spark::ScriptState
                FrameBufferRenderTargetPtr frameBufferTarget,
                InputPtr inputManager,
                FontManagerPtr fontManager,
-               AudioManagerPtr audioManager,
                GuiEventPublisherPtr guiEventPublisher )
 : SceneState( name, scene ),
   m_lua( new LuaInterpreter( finder ) )
@@ -41,7 +40,6 @@ spark::ScriptState
                                                 frameBufferTarget,
                                                 inputManager,
                                                 fontManager,
-                                                audioManager,
                                                 guiEventPublisher )
                               );
     m_lua->setFacade( m_facade );
