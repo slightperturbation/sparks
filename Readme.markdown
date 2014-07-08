@@ -1,5 +1,5 @@
 
-# Spark VR Rendering & Interaction Library {#mainpage}
+# Spark Rendering & Interaction Library
 
 Features:
 
@@ -7,6 +7,20 @@ Features:
 * Multi-pass rendering (see spark::RenderPass)
 * RenderTarget support to enable shadows and deferred rendering
 * Extensibility using Lua
+
+## Dependencies -- MacOSX ##
+
+HomeBrew is recommended.  Required packages:
+
+* boost
+* eigen
+* glew
+* devil
+* assimp
+* glm 
+* lua 
+
+Oculus Rift support requires the 
 
 ## Dependencies -- Windows ##
 
@@ -26,8 +40,6 @@ Features:
 * AssImp -- Required 
 
 ### Optional dependencies ###
-* To use zSpace devices, the VS2010 zSpace bin dir must be in the PATH.  (e.g., C:\zSpace\zSpaceSDK\2.10.0.19412\Win64\VS2010\Bin).  The zSpace SDK installs can be downloaded: http://zspace.com/download-the-zspace-sdk-current/
-* Note: zSpace SDK has problems setting the path, this may need to be done manually.
 * Download the Hydra controller SDK is at: http://sixense.com/developers
 
 ### Windows Environment Variables ###
@@ -38,25 +50,13 @@ Building on Windows requires the following environment variables to be set to th
 * GLM_ROOT_DIR
 * SOFMIS_DEVIL -- for the DEVIL image 
 
-## Dependencies -- MacOSX ##
-
-HomeBrew is recommended.  Required packages:
-
-* boost
-* eigen
-* glew
-* devil
-* assimp
-* glm 
-* lua 
-
 ## Building - Windows, Visual Studio 2010, 64-bit ##
 
 Only out-of-source builds are supported.
 
 First, clone the git repository locally from:
 
-https://bitbucket.org/cemsim_rpi/sparks.git
+https://bitbucket.org/vector/sparks
 
 Then gather dependencies and create the Visual Studio project file:
 
@@ -85,22 +85,6 @@ Note:  MacOSX is only supported for testing, neither primary interface (zSpace n
 	cmake .. -G Xcode
 	open sparks.xcodeproj
 
-## Running ##
-
-The VEST simulator consists of two programs on the simulator computer. The main program is sparkGui.exe and the supporting program is a CGI program called ESUServerCGI.cgi.
-
-### Quick Start
-
-In order:
-
-* On the simulation computer, run "sparks\bin-win32\startWebserver.bat" to start the webserver.  This will not return unless there is an error in the configuration.
-* On the simulation computer, run "sparks\build\Release\sparkGui.exe" (with no options) to start the main simulator.  This command should display the simulator on the zSpace monitor.
-* Determine the IP address of the simulation computer (use ipconfig if needed).
-* On the iPad, open Safari and go to URL:  "http://192.168.1.X:8080", with X replaced by the proper IP octet for the simulation computer.  This should show the yellow-and-blue ESU interface.
-* On the Simulator, choose the lesson by pointing with the zSpace stylus or entering numbers on the detacted number pad.
-* When the simulation lesson begins (showing the slab of tissue), on the iPad, touch "Blend".  (Forces a sync between the iPad and the simulation computer.)
-* Begin the lesson.
-
 
 ### sparkGui ###
 
@@ -111,59 +95,9 @@ The sparkGui.exe runs with options:
 
 The sparks/src/main.cpp file contains the main() entry point for sparkGui.
 
-### ESUServerCGI.cgi
-
-The ESUServerCGI.cgi is called by a webserver to provide interaction with the touch interface for the ESU on the iPad Mini.  The CGI script can be run by any webserver that can server static files from sparks/www and CGI scripts from sparks/www/cgi.
-
-Note that the ESUServerCGI.exe is built (on windows) and placed in sparks/build/Debug or sparks/build/Release.  You must manually copy the executable to the sparks/bin-win32/ directory.  (TODO, this should be an automated post-build step, though perhaps only for Release mode.)
-
-The Mongoose webserver is used to server both static and the CGI.  A trivial script for starting the Mongoose server is located in sparks/bin-win32/startWebserver.bat.  This script uses the spark/bin-win32/mongoose.conf configuration file to find the static and CGI directories.
-
-Note that both these scripts have full-paths to the project directory and are configured by cmake.
-
-The CGI script communicates with the main simulator program (sparkGui) through a shared memory section "SPARK_SharedMemory" and the object "CurrentESUSettings".  These constants are defined in spark/src/ESUInputFromSharedMemory.cpp.
-
-The main() entry point for the CGI program is in spark/src/ESUServerCGI.cpp.
-
-# Hardware Setup & Requirements #
+# Scripting #
 
 
-## iPad Mini ##
-
-The iPad Mini acts as a touch interface for the ESU.  Once the iPad is connected to the NETGEAR52 wifi, and once the local webserver is running on the simulator computer, the iPad should be able to connect and get the ESU interface webpage.  The simulator computer is assigned an IP dynamically, so you may need to use ipconfig to find its current address in the 192.168.1.x subnet.
-
-## Wifi Router ##
-
-The wireless router provides connectivity between the iPad mini and the simulation computer.  Using a separate router allows the simulator to be independent of the local network, which is critical because the simulation sets up an HTTP server on port 8080 and corporate networks often block those packets.
-
-The wireless router is setup with name "NETGEAR52" and has the password "sillyoctopus52".  The created network is the 0.0.0.255 subnet from 192.168.1.1.  The router can be configured through HTTP on 192.168.1.1:80 with username admin.
-
-The simulation computer must be connected to one of the Ethernet ports on the router.  An external/Internet connection is not needed.  
-
-## Foot Pedal ##
-
-The Kinesis foot pedal uses the factory-default setting, so it sends right and left mouse clicks.  No setup is required.
-
-## zSpace ##
-
-Drivers and example programs are available from http://zspace.com
-
-## AscensionTech TrakStar ##
-
-Drivers and documentation are available from ftp://ftp.ascension-tech.com/
-
-The sensor embedded in the instrument should be plugged into the "1" input.
-
-## Numeric Keypad ##
-
-The keypad is used to select from options on the screen.  It requires two disposable AAA batteries.  The tiny USB dongle must be plugged into the simulation computer.
-
-## Speakers ##
-
-Standard speakers are needed for the ESU sounds.
-
-
-# Development #
 ## Adding script states ##
 
 States can be created using Lua scripts, C++ class or a mix of both. 

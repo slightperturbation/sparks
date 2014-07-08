@@ -546,6 +546,36 @@ if( WIN32 )
   endif( ASCENSION_TECH_FOUND )
 endif( WIN32 )
 
+
+#####################################################################
+# Oculus Rift
+#####################################################################
+find_path( OCULUS_INCLUDE_DIRS
+  NAMES OVR.h
+  HINTS
+    "${CMAKE_SOURCE_DIR}/ext/LibOVR/include/"
+    /usr/local/include/
+    /usr/include/
+)
+find_library( OCULUS_LIBRARY
+  NAMES ovr
+  HINTS
+    "${CMAKE_SOURCE_DIR}/ext/LibOVR/Lib/MacOS/Release"
+    /usr/local/lib
+    /usr/lib
+)
+
+if( OCULUS_INCLUDE_DIRS AND OCULUS_LIBRARY )
+  message( STATUS "Oculus VR Library found" )
+  include_directories( ${OCULUS_INCLUDE_DIRS} )
+  set( OCULUS_LIBRARIES ${OCULUS_LIBRARY} )
+else( OCULUS_INCLUDE_DIRS AND SDL2_MAIN_LIBRARY )
+  message( "------------------------ Error: SDL2 not found.")
+  set( OCULUS_LIBRARIES "" )
+endif( OCULUS_INCLUDE_DIRS AND OCULUS_LIBRARY )
+
+
+
 #####################################################################
 # Final gather of libraries 
 #####################################################################
@@ -557,6 +587,7 @@ LIST( APPEND PROJECT_LINK_LIBRARIES
   ${ASSIMP_LIBRARIES}
   ${SDL2_LIBRARIES}
   ${ASCENSION_TECH_LIBRARIES}
+  ${OCULUS_LIBRARIES}
 )
 
 
@@ -764,17 +795,6 @@ include_directories( ${CMAKE_BINARY_DIR}/config/ )
 # Alternatively, could use resources, e.g.:
 # SET_TARGET_PROPERTIES(${APP_NAME} PROPERTIES RESOURCE "${RESOURCES}")
 
-#####################################################################
-# Webserver config
-#  NOTE only supports running webserver on Windows due to 
-#       dependency on mongoose webserver (bundled).
-#####################################################################
-set( WEBSERVER_DIR "${CMAKE_SOURCE_DIR}/bin-win32" )
-FILE( TO_NATIVE_PATH ${CMAKE_SOURCE_DIR} CMAKE_SOURCE_DIR_NATIVE )
-# Set the path in the config files to the absolute path of this distribution
-configure_file( ${WEBSERVER_DIR}/startWebserver.bat.in ${WEBSERVER_DIR}/startWebserver.bat )
-configure_file( ${WEBSERVER_DIR}/mongoose.conf.in ${WEBSERVER_DIR}/mongoose.conf )
-
 
 #####################################################################
 # Executables
@@ -793,19 +813,6 @@ add_dependencies( ${PROJECT_NAME} FREETYPEGL )
 add_dependencies( ${PROJECT_NAME} GLFW3 )
 
 target_link_libraries(${PROJECT_NAME} 
-	${PROJECT_LINK_LIBRARIES}
-)
-
-#####################################################################
-# CGI program, uses shared memory to communicate with sparkGui
-add_executable( ESUServerCGI 
- ./src/ESUServer/ESUServerCGI.cpp 
- ./src/ESUInputFromSharedMemory.cpp
- ./include/ESUInput.hpp
- ./include/ESUInputFromSharedMemory.hpp
-)
-
-target_link_libraries( ESUServerCGI
 	${PROJECT_LINK_LIBRARIES}
 )
 

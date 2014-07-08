@@ -122,14 +122,14 @@ spark::SideBySideDisplay
     m_frameBuffer->resizeViewport( m_windowLeft, m_windowBottom,
                                    m_windowWidth/2, m_windowHeight );
     m_camera->cameraPos() += rightVec * m_eyeSeparationDistance;
-    m_eyeTracker->updatePerspective( m_camera, EyeTracker::rightEye );
+    if( m_eyeTracker ) m_eyeTracker->updatePerspective( m_camera, EyeTracker::rightEye );
     stateManager.render();
 
     // Left eye
     m_frameBuffer->resizeViewport( m_windowLeft + m_windowWidth/2, m_windowBottom,
                                    m_windowWidth/2, m_windowHeight );
     m_camera->cameraPos() -= rightVec * m_eyeSeparationDistance;
-    m_eyeTracker->updatePerspective( m_camera, EyeTracker::leftEye );
+    if( m_eyeTracker ) m_eyeTracker->updatePerspective( m_camera, EyeTracker::leftEye );
     stateManager.render();
 }
 

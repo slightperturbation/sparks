@@ -8,14 +8,7 @@
 #include "FileAssetFinder.hpp"
 #include "SceneFacade.hpp"
 
-#include "DBMSpark.hpp"
-#include "PointSparkRenderable.hpp"
-
-#include "LSpark.hpp"
-#include "TexturedSparkRenderable.hpp"
-
 #include "TextRenderable.hpp"
-
 
 #include "Scene.hpp"
 #include "ArcBall.hpp"
@@ -28,18 +21,8 @@
 #include "Input.hpp"
 #include "InputFactory.hpp"
 #include "GlfwInput.hpp"
-#include "ESUInputFromSharedMemory.hpp"
 
 #include "NetworkEyeTracker.hpp"
-
-#ifdef HAS_ZSPACE
-  #include "ZSpaceEyeTracker.hpp"
-  #include "ZSpaceInput.hpp"
-#endif
-
-#ifdef HAS_ASCENSIONTECH
-  #include "AscensionTechInputDevice.hpp"
-#endif
 
 #include "StateManager.hpp"
 #include "State.hpp"
@@ -202,41 +185,15 @@ void textureManagerCommandThreadOp( OpenGLWindow* window, TextureManager* textur
 /// Online simulation and display of fluid
 int runSimulation(int argc, char** argv)
 {
-#ifdef HAS_ZSPACE
-    const bool hasZSpace = true;
-#else
-    const bool hasZSpace = false;
-#endif
-    
     // legacy logging is great, but conflicts with nSight debugger
     const bool enableLegacyOpenGlLogging  = false;
     // Stero view, e.g., with ZSpace
-    bool useStereo = false && hasZSpace;
+    bool useStereo = false;
     // If should use full screen mode on the zspace or primary monitor (if no zspace)
     const bool enableFullScreen = false;
 
-    bool useZSpaceEyeTracking = true && hasZSpace;
-    bool useZSpaceStylus = true && hasZSpace;
-    bool useTrakStarStylus = false;
-
     // If true, sequence of frames is stored to disk
     bool isSavingFrames = false;
-
-    // Option Flags
-    // Default is to use zspace if available
-    if( (argc > 2) && (std::string("lap") == argv[2] ) )
-    {
-        useStereo = false;
-        useZSpaceEyeTracking = false;
-        useZSpaceStylus = false;
-        useTrakStarStylus = true;
-        if( (argc > 3) && (std::string("stereo") == argv[3] ) )
-        {
-            // allow stereo & head tracking if asked
-            useStereo = true;
-            useZSpaceEyeTracking = true;
-        }
-    }
 
     // Create a separate thread to load background textures
     const bool useBackgroundResourceLoading = false;
@@ -248,8 +205,6 @@ int runSimulation(int argc, char** argv)
                          useStereo, 
                          useBackgroundResourceLoading,
                          enableFullScreen );
-    window.open();
-    using namespace std;
     
     // Setup Gui Callbacks
     g_guiEventPublisher = GuiEventPublisherPtr( new GuiEventPublisher );
@@ -259,6 +214,8 @@ int runSimulation(int argc, char** argv)
     window.setFrameBufferSizeCallback( frameBufferSizeCallback );
     window.setWindowPositionCallback( windowPosCallback );
 
+    // Open must follow callbacks being set
+    window.open();
 
     // And Input manager
     // Choose windowing library -- glfw for now
@@ -273,35 +230,15 @@ int runSimulation(int argc, char** argv)
     //
     inputManager->acquireInputDeviceAsDefault( "mouse",
                                                glfwInputFactory->createDevice(0) );
-
-#ifdef HAS_ZSPACE
-    if( useZSpaceStylus )
-    {
-        ZSpaceInputFactory zSpaceInputFactory;
-        inputManager->acquireInputDeviceAsDefault( "stylus",
-                                                   zSpaceInputFactory.createDevice(0) );
-    }
-#endif
-#ifdef HAS_ASCENSIONTECH
-    if( useTrakStarStylus )
-    {
-        try
-        {
-            AscensionTechInputFactory atInputFactory;
-            inputManager->acquireInputDeviceAsDefault( "trakStar",
-                                                       atInputFactory.createDevice(0) );
-        }
-        catch(...)
-        {
-            std::cerr << "Unable to create AscensionTech TrakStar input device.\n";
-            LOG_ERROR(g_log) << "Unable to create trakStar input device";
-        }
-    }
-#endif
+    
+    // See ZSpaceInputFactory
+    // See AscensionTechInputFactory
 
     // Create common managers and tell them how to find file resources
     FileAssetFinderPtr finder( new FileAssetFinder );
     finder->addRecursiveSearchPath( DATA_PATH );
+    finder->addRecursiveSearchPath( DATA_PATH "/Examples/" );
+
     ShaderManagerPtr shaderManager( new ShaderManager );
     shaderManager->setAssetFinder( finder );
 
@@ -315,17 +252,11 @@ int runSimulation(int argc, char** argv)
     g_arcBall->resizeViewport( 0, 0, width, height );
     g_guiEventPublisher->subscribe( g_arcBall );
     
-
     // Eye Tracker
     EyeTrackerPtr eyeTracker;
-    // Create eyeTracker if desired
+    const bool shouldCreateEyeTracker = false;
+    if( shouldCreateEyeTracker )
     {
-#ifdef HAS_ZSPACE
-        if( useZSpaceEyeTracking )
-        {
-            eyeTracker = window.getEyeTracker();
-        }
-#endif
         if( !eyeTracker )
         {
             // by default, use NetworkEyeTracker
@@ -373,11 +304,8 @@ int runSimulation(int argc, char** argv)
     // Choose the starting display type
     if( useStereo )
     {
-#ifdef HAS_ZSPACE
-        display = theQuadBufferStereoDisplay;
-#else
+        //display = theQuadBufferStereoDisplay;
         display = theSideBySideDisplay;
-#endif
     }
     else
     {
@@ -390,12 +318,13 @@ int runSimulation(int argc, char** argv)
     // Create the "special" simulation states from the C++ class
     // The specific functionality is provided in the Lua script,
     // the C++ class provides the tissue & smoke.
-    std::vector< std::string > simStates; 
-    simStates.push_back( "Simulation" );
-    simStates.push_back( "CutMode" );
-    simStates.push_back( "CoagMode" );
-    simStates.push_back( "ESUPower" );
-    simStates.push_back( "ContactArea" );
+    std::vector< std::string > simStates;
+    
+//    simStates.push_back( "Simulation" );
+//    simStates.push_back( "CutMode" );
+//    simStates.push_back( "CoagMode" );
+//    simStates.push_back( "ESUPower" );
+//    simStates.push_back( "ContactArea" );
 
     for( auto iter = simStates.begin(); iter != simStates.end(); ++iter )
     {
@@ -416,6 +345,7 @@ int runSimulation(int argc, char** argv)
     std::vector<std::string> scriptStates;
     // Examples
     scriptStates.push_back( "ShadowTest" );
+    scriptStates.push_back( "ShadowExample" );
     scriptStates.push_back( "ButtonExample" );
     scriptStates.push_back( "Example" );
     scriptStates.push_back( "SparkExample" );
@@ -425,11 +355,11 @@ int runSimulation(int argc, char** argv)
     // Actual States
     // \todo get all State.lua files in the States directory(?)
     scriptStates.push_back( "Startup" );
-    scriptStates.push_back( "Loading" );
-    scriptStates.push_back( "Menu" );
-    scriptStates.push_back( "Instructions" );
-    scriptStates.push_back( "Calibration" );
-    scriptStates.push_back( "ModeInstruction" );
+//    scriptStates.push_back( "Loading" );
+//    scriptStates.push_back( "Menu" );
+//    scriptStates.push_back( "Instructions" );
+//    scriptStates.push_back( "Calibration" );
+//    scriptStates.push_back( "ModeInstruction" );
 
     for( auto iter = scriptStates.begin(); iter != scriptStates.end(); ++iter )
     {

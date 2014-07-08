@@ -186,25 +186,6 @@ spark::OpenGLWindow
     int x = 0;
     int y = 0;
     int targetDisplayId = 0;
-#ifdef HAS_ZSPACE
-    // Get the zSpace display
-    zspace::common::DisplayInfo displayInfo;
-    int index = 0;
-    int numDisplays = displayInfo.getNumDisplays();
-    while (index < numDisplays && !displayInfo.getDisplay(index)->isZSpaceDisplay)
-    {
-        index++;
-    }
-    // If a zSpace display was found, then position the window on the zSpace
-    if (index < numDisplays)
-    {
-        const zspace::common::DisplayInfo::Display* display = displayInfo.getDisplay(index);
-        x = display->displayPosition[0];
-        y = display->displayPosition[1];
-        targetDisplayId = index;
-    }
-    m_eyeTracker.reset( new spark::ZSpaceEyeTracker );
-#endif
 
     // OpenGL 3.2 or higher only
     //glfwWindowHint( GLFW_SAMPLES, 8 ); // 8x anti aliasing
@@ -235,7 +216,6 @@ spark::OpenGLWindow
     // V-Sync
     //glfwSwapInterval(0);
 
-
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     int monitorCount = 0;
     GLFWmonitor** monitors = glfwGetMonitors( &monitorCount );	
@@ -258,8 +238,7 @@ spark::OpenGLWindow
 
     if( m_enableFullScreen )
     {
-        // force to "main" display if not using zspace
-        //monitor = glfwGetPrimaryMonitor();
+        monitor = glfwGetPrimaryMonitor();
     }
     else
     {
@@ -284,9 +263,9 @@ spark::OpenGLWindow
     glfwMakeContextCurrent( m_glfwRenderWindow );
 
     // Hide the mouse cursor
-#ifndef DEBUG
-    glfwSetInputMode( m_glfwRenderWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN );
-#endif
+//#ifndef DEBUG
+//    glfwSetInputMode( m_glfwRenderWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN );
+//#endif
     glfwSetWindowPos( m_glfwRenderWindow, x, y );
     glfwShowWindow( m_glfwRenderWindow );
     glfwSetCursorPos( m_glfwRenderWindow, 10, 10 );

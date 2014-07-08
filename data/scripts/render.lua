@@ -49,8 +49,8 @@ function Render:createDefaultRenderPasses( isShadowOn )
 	wireRenderPass:disableBlending()
 	wireRenderPass:setWireframe( true )
 
-	local isShadowDebugDisplayOn = false -- draws the depth texture
-	local useOrthogonalProjectionForShadow = true
+	local isShadowDebugDisplayOn = true -- draws the depth texture
+	local useOrthogonalProjectionForShadow = false
 	if( isShadowOn ) then
 		-- TODO the use of global veriables (e.g., shadowSource) should be bundled into the module
 		--Shader uniform must be set:  s_shadowMap = "light0_shadowMap"
@@ -65,13 +65,13 @@ function Render:createDefaultRenderPasses( isShadowOn )
 				                                             shadowSource -- from direction 
 				                                             )
 		else
-		--			shadowCamera = spark:createPerspectiveProjection( vec3( -1, 1.345, 1.222 ), vec3(0,0,0), vec3(0,1,0), 10.0, 0.5, 5.0 )
+			--			shadowCamera = spark:createPerspectiveProjection( vec3( -1, 1.345, 1.222 ), vec3(0,0,0), vec3(0,1,0), 10.0, 0.5, 5.0 )
 			-- Good values for tissue simulation 
 			shadowSource = vec3( -0.5, 1.0, -0.2 )
 			shadowCamera = spark:createPerspectiveProjection( shadowSource, 
 				                                              vec3( 0, 0, 0 ),        -- target
 				                                              vec3( 0, 0, 1 ),        -- up
-				                                              45.0, -- FOV
+				                                              60.0, --45.0, -- FOV
 				                                              0.5,  -- near plane
 				                                              3 )   -- far plane
  		end

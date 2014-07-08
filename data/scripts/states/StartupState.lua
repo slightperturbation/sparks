@@ -30,13 +30,16 @@ function StartupState:deactivate()
 end
 
 function StartupState:nextState( currTime )
-	self.theNextState = "Loading"
+	--self.theNextState = "Loading"
 
 	--self.theNextState = "ContactArea"
 	
 	--self.theNextState = "Example"
 	--self.theNextState = "ShaderExample"
 	--self.theNextState = "GlowExample"
+	--self.theNextState = "ShadowTest"
+	--self.theNextState = "SparkExample"
+	self.theNextState = "ShadowExample"
 
 	--self.theNextState = "Menu"
 	--self.theNextState = "CoagMode"
