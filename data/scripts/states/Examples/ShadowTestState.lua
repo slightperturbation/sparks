@@ -87,7 +87,7 @@ function ShadowExampleState:load()
 			                          self.shadowMapMaterial, "HUDPass" )
 	end
 	
-	local scale = 0.2
+	local scale = 0.4
 	local cursorMat = spark:createMaterial( "simpleShadowExampleShader" )
 	cursorMat:setVec4( "u_color", vec4( 0.7, 0.2, 0.2, 1.0 ) );
 	cursorMat:addTexture( "s_shadowMap", "light0_shadowMap" )

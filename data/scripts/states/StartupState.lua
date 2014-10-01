@@ -39,6 +39,9 @@ function StartupState:nextState( currTime )
 	--self.theNextState = "GlowExample"
 	--self.theNextState = "ShadowTest"
 	--self.theNextState = "SparkExample"
+
+	--self.theNextState = "Simulation"
+
 	self.theNextState = "ShadowExample"
 
 	--self.theNextState = "Menu"
