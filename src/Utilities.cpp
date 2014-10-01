@@ -365,7 +365,7 @@ void
 spark::OpenGLWindow
 ::getSize( int* width, int* height )
 {
-    glfwGetWindowSize( m_glfwRenderWindow, width, height );
+    glfwGetFramebufferSize( m_glfwRenderWindow, width, height);
 }
 
 void 

@@ -320,12 +320,9 @@ int runSimulation(int argc, char** argv)
     // the C++ class provides the tissue & smoke.
     std::vector< std::string > simStates;
     
-//    simStates.push_back( "Simulation" );
-//    simStates.push_back( "CutMode" );
-//    simStates.push_back( "CoagMode" );
-//    simStates.push_back( "ESUPower" );
-//    simStates.push_back( "ContactArea" );
-
+    simStates.push_back( "Simulation" );
+    simStates.push_back( "ShadowExample" );
+    
     for( auto iter = simStates.begin(); iter != simStates.end(); ++iter )
     {
         StatePtr simState( new SimulationState( *iter, SceneFacadePtr( 
@@ -345,7 +342,7 @@ int runSimulation(int argc, char** argv)
     std::vector<std::string> scriptStates;
     // Examples
     scriptStates.push_back( "ShadowTest" );
-    scriptStates.push_back( "ShadowExample" );
+//    scriptStates.push_back( "ShadowExample" );
     scriptStates.push_back( "ButtonExample" );
     scriptStates.push_back( "Example" );
     scriptStates.push_back( "SparkExample" );
@@ -583,16 +580,6 @@ int runSimulation(int argc, char** argv)
         if( window.getKey( 'P' ) == GLFW_PRESS )
         {
             //currScene->logPasses();
-        }
-        if( window.getKey( 'R' ) == GLFW_PRESS )
-        {
-            //currScene->reset();
-            //lua.runScriptFromFile( "defaultScene.lua" );
-        }
-        
-        if( window.getKey( 'S' ) == GLFW_PRESS )
-        {
-            display = theSideBySideDisplay;
         }
         if( window.getKey( 'S' ) == GLFW_PRESS )
         {

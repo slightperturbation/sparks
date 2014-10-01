@@ -53,11 +53,11 @@ void main()
     shadowPos += 1.0; 
     shadowPos *= 0.5;
 
-	outColor = vec4( 1, 1, 1, 1 );
+	outColor = u_color;
 	/// Read from the shadow map
     float distFragToLight = texture( s_shadowMap, shadowPos.xy ).r;
 
-	int secs = 3;//int(u_time);
+	int secs = 5; //int(u_time/3.0);
 	int versions = 6;
 	if( 0 == (secs % versions) )
 	{
@@ -78,20 +78,20 @@ void main()
 		}
 		else
 		{
-			outColor = vec4( 0.4, 0, 0, 1 );
+			outColor = u_color;
 		}
 	}
 	if( 3 == (secs % versions) )
 	{
 		// With fixed, bad guess bias
-	    float bias = 0.0015; 
+	    float bias = 0.0125; 
 		if (  distFragToLight < (shadowPos.z - bias) )
 		{
 		    outColor = vec4( 0.1, 0.1, 0.1, 1 );
 		}
 		else
 		{
-			outColor = vec4( 1,1,1, 1 );
+			outColor = u_color;
 		}
 	}
 	if( 4 == (secs % versions) )
@@ -109,7 +109,7 @@ void main()
 		}
 		else
 		{
-			outColor = vec4( 0.5,1,1, 1 );
+			outColor = u_color;
 		}
 	}
 	if( 5 == (secs % versions ) )
@@ -154,7 +154,7 @@ void main()
 				// visibility -= 0.2*(1.0-texture( s_shadowMap, vec3(shadowPos.xy + poissonDisk[index]/700.0, shadowPos.z-bias) ));
 		    }
     	}
-	    outColor = vec4( 1, 1, 1, 1 );
+	    outColor = u_color;
 	    outColor *= visibility;
 	}
 }

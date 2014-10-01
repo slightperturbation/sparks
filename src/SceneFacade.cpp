@@ -508,7 +508,6 @@ spark::SceneFacade
     m_frameBufferTarget.reset();
     m_guiEventPublisher.reset();
     m_fontManager.reset();
-    m_audioManager.reset();
 }
 
 spark::FontManagerPtr

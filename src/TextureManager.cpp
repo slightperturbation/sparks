@@ -362,7 +362,7 @@ spark::TextureManager
     }
     std::set<TextureManagerCommandPtr, TextureManagerCommandComparator>::iterator oldestIter;
     {
-        boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
+        boost::unique_lock<boost::mutex> lock( m_commandQueueMutex );
         // get the command that has been waiting the longest, ie. smallest time/oldest
         oldestIter = m_commandQueue.begin();
         for( auto iter = m_commandQueue.begin();
@@ -374,9 +374,12 @@ spark::TextureManager
                 oldestIter = iter;
             }
         }
-        //std::cerr << "\t Loading texture: " << (*oldestIter)->m_handle << "\n";
-        (*oldestIter)->operator()( this );
+        TextureManagerCommandPtr cmd = *oldestIter;
         m_commandQueue.erase( oldestIter );
+        lock.unlock();
+        
+        //std::cerr << "\t Loading texture: " << (*oldestIter)->m_handle << "\n";
+        cmd->operator()( this );
     }
     return !m_commandQueue.empty();
 }
@@ -391,6 +394,7 @@ spark::TextureManager
         boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
         std::copy( m_commandQueue.begin(), m_commandQueue.end(),
             std::inserter( execCopy, execCopy.begin() ) );
+        m_commandQueue.clear();
     }
     for( auto iter = execCopy.begin();
          iter != execCopy.end();
@@ -399,10 +403,6 @@ spark::TextureManager
         assert( *iter );
         //std::cerr << "\t COMMAND: " << (*iter)->m_handle << "\n";
         (*iter)->operator()( this );
-    }
-    {
-        boost::lock_guard<boost::mutex> lock( m_commandQueueMutex );
-        m_commandQueue.clear();
     }
     //std::cerr << "------------\n";
 }

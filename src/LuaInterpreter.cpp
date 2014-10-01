@@ -5,6 +5,7 @@
 #include "Mesh.hpp"
 #include "TissueMesh.hpp"
 #include "SlicedVolume.hpp"
+#include "RayCastVolume.hpp"
 #include "Fluid.hpp"
 #include "Utilities.hpp" // for glm operator<< functions
 #include "Projection.hpp"
@@ -125,6 +126,14 @@ spark
         .def( "setCameraDirection", &SlicedVolume::setCameraDirection )
     ];
 
+    ///////////////////////////////////////////////////////////SlicedVolume
+    luabind::module( lua )
+    [
+     luabind::class_< RayCastVolume, Renderable, RayCastVolumePtr >( "RayCastVolume" )
+         .def( "setLightSamples", &RayCastVolume::setLightSamples )
+         .def( "setVolumeSamples", &RayCastVolume::setVolumeSamples )
+     ];
+    
     /////////////////////////////////////////////////////////// Fluid
     luabind::module( lua )
     [
