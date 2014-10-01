@@ -238,7 +238,7 @@ else( WIN32 )
   # Set to ON if need to workaround bug in cmake's default FindFreetype.cmake on OSX.
   # Alternatively, fix the standard search at:
   #   /usr/local/Cellar/cmake/2.8.12.1/share/cmake/Modules/FindFreetype.cmake
-  set( FREETYPE_CMAKE_FIND_BUG_WORKAROUND OFF )  
+  set( FREETYPE_CMAKE_FIND_BUG_WORKAROUND ON )
 
   if( FREETYPE_CMAKE_FIND_BUG_WORKAROUND )
     FIND_PACKAGE( Freetype )
@@ -341,52 +341,63 @@ source_group( "External Source" FILES ${EXT_SRC} )
 FIND_PACKAGE(OpenGL REQUIRED)
 
 #####################################################################
-# GLFW 3.03
+# GLFW
 #####################################################################
-set( GLFW3_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/ext/GLFW3" )
-set( GLFW3_URL "http://sourceforge.net/projects/glfw/files/glfw/3.0.3/glfw-3.0.3.zip/download")
-ExternalProject_Add(
-    GLFW3
-    PREFIX ${GLFW3_PREFIX}
-    URL ${GLFW3_URL}
-    # Force th output paths for the libs to help find them afterwards
-    CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
-               -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
-               -DGLFW_BUILD_EXAMPLES=OFF
-               -DGLFW_BUILD_TESTS=OFF
-               -DGLFW_INSTALL=OFF
-               -DBUILD_SHARED_LIBS=OFF
-               -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON
-    # Disable install step
-    INSTALL_COMMAND ""
-    # Log all errors 
-    LOG_DOWNLOAD ON
-    LOG_CONFIGURE ON
-    LOG_BUILD ON
-)
-set( GLFW3_INCLUDE_DIRS "${GLFW3_PREFIX}/src/GLFW3/include" )
-INCLUDE_DIRECTORIES( "${GLFW3_INCLUDE_DIRS}" )
-set( GLFW3_LIBRARY_DIR_PREFIX "${GLFW3_PREFIX}/src/GLFW3-build/src" )
-if( WIN32 )
-  set( GLFW3_DEBUG_LIBRARY ${GLFW3_LIBRARY_DIR_PREFIX}/DebugLibs/glfw3.lib )
-  set( GLFW3_RELEASE_LIBRARY ${GLFW3_LIBRARY_DIR_PREFIX}/ReleaseLibs/glfw3.lib )
-else( WIN32 )
-  set( GLFW3_DEBUG_LIBRARY ${GLFW3_LIBRARY_DIR_PREFIX}/DebugLibs/libglfw3.a )
-  set( GLFW3_RELEASE_LIBRARY ${GLFW3_LIBRARY_DIR_PREFIX}/ReleaseLibs/libglfw3.a )
-endif( WIN32 )
-list( APPEND PROJECT_LINK_LIBRARIES      debug ${GLFW3_DEBUG_LIBRARY} )
-list( APPEND PROJECT_LINK_LIBRARIES      optimized ${GLFW3_RELEASE_LIBRARY} )
+if( APPLE )
+    find_package(PkgConfig REQUIRED)
 
-set( GLFW_LIBRARY "" )
+    pkg_search_module(GLFW REQUIRED glfw3)
+    include_directories(${GLFW_INCLUDE_DIRS})
+    list( APPEND PROJECT_LINK_LIBRARIES ${GLFW_LIBRARIES} )
+
+else( APPLE )
+    set( GLFW3_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/ext/GLFW3" )
+    set( GLFW3_URL "http://sourceforge.net/projects/glfw/files/glfw/3.0.4/glfw-3.0.4.zip/download")
+    ExternalProject_Add(
+        GLFW3
+        PREFIX ${GLFW3_PREFIX}
+        URL ${GLFW3_URL}
+        # Force th output paths for the libs to help find them afterwards
+        CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
+                   -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
+                   -DGLFW_BUILD_EXAMPLES=OFF
+                   -DGLFW_BUILD_TESTS=OFF
+                   -DGLFW_INSTALL=OFF
+                   -DBUILD_SHARED_LIBS=OFF
+                   -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON
+        # Disable install step
+        INSTALL_COMMAND ""
+        # Log all errors
+        LOG_DOWNLOAD ON
+        LOG_CONFIGURE ON
+        LOG_BUILD ON
+    )
+    set( GLFW3_INCLUDE_DIRS "${GLFW3_PREFIX}/src/GLFW3/include" )
+    INCLUDE_DIRECTORIES( "${GLFW3_INCLUDE_DIRS}" )
+    set( GLFW3_LIBRARY_DIR_PREFIX "${GLFW3_PREFIX}/src/GLFW3-build/src" )
+    if( WIN32 )
+      set( GLFW3_DEBUG_LIBRARY ${GLFW3_LIBRARY_DIR_PREFIX}/DebugLibs/glfw3.lib )
+      set( GLFW3_RELEASE_LIBRARY ${GLFW3_LIBRARY_DIR_PREFIX}/ReleaseLibs/glfw3.lib )
+    else( WIN32 )
+      set( GLFW3_DEBUG_LIBRARY ${GLFW3_LIBRARY_DIR_PREFIX}/DebugLibs/libglfw3.a )
+      set( GLFW3_RELEASE_LIBRARY ${GLFW3_LIBRARY_DIR_PREFIX}/ReleaseLibs/libglfw3.a )
+    endif( WIN32 )
+
+    set( GLFW_LIBRARY "" )
 
 
-# GLFW -- on Windows: depends on env var: GLFW_ROOT_DIR
-#FIND_PACKAGE(glfw REQUIRED)
-#IF( GLFW_FOUND )
-#  INCLUDE_DIRECTORIES (${GLFW_INCLUDE_DIR})
-#ELSE( GLFW_FOUND )
-#  MESSAGE(STATUS "GLFW NOT FOUND --------------------------")
-#ENDIF( GLFW_FOUND )
+    # GLFW -- on Windows: depends on env var: GLFW_ROOT_DIR
+    #FIND_PACKAGE(glfw REQUIRED)
+    #IF( GLFW_FOUND )
+    #  INCLUDE_DIRECTORIES (${GLFW_INCLUDE_DIR})
+    #ELSE( GLFW_FOUND )
+    #  MESSAGE(STATUS "GLFW NOT FOUND --------------------------")
+    #ENDIF( GLFW_FOUND )
+
+    list( APPEND PROJECT_LINK_LIBRARIES      debug ${GLFW3_DEBUG_LIBRARY} )
+    list( APPEND PROJECT_LINK_LIBRARIES      optimized ${GLFW3_RELEASE_LIBRARY} )
+endif( APPLE )
+
 
 #####################################################################
 # GLEW 1.9.0
@@ -809,8 +820,8 @@ add_executable( ${PROJECT_NAME}
   ${VERT_SHADERS} ${FRAG_SHADERS}
 )
 #add_dependencies( ${PROJECT_NAME} TBB )
-add_dependencies( ${PROJECT_NAME} FREETYPEGL )
-add_dependencies( ${PROJECT_NAME} GLFW3 )
+#add_dependencies( ${PROJECT_NAME} FREETYPEGL )
+#add_dependencies( ${PROJECT_NAME} GLFW3 )
 
 target_link_libraries(${PROJECT_NAME} 
 	${PROJECT_LINK_LIBRARIES}
