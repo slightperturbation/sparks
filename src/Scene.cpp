@@ -295,6 +295,13 @@ spark::Scene
         taskIter != m_updateTasks.end();
         ++taskIter )
     {
+        (*taskIter)->stop();
+    }
+
+    for( auto taskIter = m_updateTasks.begin();
+        taskIter != m_updateTasks.end();
+        ++taskIter )
+    {
         (*taskIter)->join();
     }
 }
@@ -317,7 +324,7 @@ spark::Scene::FixedUpdateTask
     LOG_INFO(g_log) << "In thread " << getThreadId()
         << " for FixedUpdateTask for updateable \"" 
         << m_updateable->updateableName();
-    while( true )
+    while( !m_isStopped )
     {
         double currTime = getTime();
         double elapsedTimeSoFar = currTime - m_prevUpdateTime;
@@ -330,14 +337,10 @@ spark::Scene::FixedUpdateTask
         {
             // Wait for roughly how long until the next update is needed.
             const int waitTimeMilliseconds = int( 1000.0 * (m_dt - (getTime() - m_prevUpdateTime)) );
-            if( waitTimeMilliseconds > 3 )
+            if( waitTimeMilliseconds > 1 )
             {
                 boost::this_thread::sleep_for( boost::chrono::milliseconds( waitTimeMilliseconds ) );
             }
-        }
-        if( m_isStopped )
-        {
-            break;
         }
     }
     // Never returns, expect on break for m_isStopped
@@ -386,7 +389,6 @@ spark::Scene::FixedUpdateTask
         << m_updateable->updateableName() 
         << "\" on thread " << getThreadId();
     m_isStopped = true;
-    m_thread.timed_join( boost::posix_time::seconds( 1 ) );
 }
 
 void
