@@ -272,7 +272,6 @@ namespace spark
         PerspectiveProjectionPtr m_cameraPerspective;
         // FBOs
         FrameBufferRenderTargetPtr m_frameBufferTarget;
-        AudioManagerPtr m_audioManager;
         GuiEventPublisherPtr m_guiEventPublisher;
 
     };

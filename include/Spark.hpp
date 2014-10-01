@@ -68,9 +68,6 @@ namespace spark
 
 namespace spark
 {
-    class AudioManager;
-    typedef spark::shared_ptr< AudioManager > AudioManagerPtr;
-    
     class Display;
     typedef spark::shared_ptr< Display > DisplayPtr;
     

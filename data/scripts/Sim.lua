@@ -157,7 +157,7 @@ function Sim.load( owner )
 	owner.worldOffset = vec3( 0, -.1, -.1 ) -- -0.0625 ) -- -0.125 )
 
 	-- Create the tissue
-	Sim.createTissue( owner, owner.worldOffset )
+	--Sim.createTissue( owner, owner.worldOffset )
 	owner.table = Sim.createTable( owner, owner.worldOffset )
 
 	-- Add HUD elements to the top of the screen
@@ -374,11 +374,11 @@ function Sim.update( owner, dt )
 		owner.activationTimeDisplay:setText( txt )
 	end
 
-	if isActivated  then
-		spark:playSound()
-	else
-		spark:stopSound()
-	end
+	-- if isActivated  then
+	-- 	spark:playSound()
+	-- else
+	-- 	spark:stopSound()
+	-- end
 
 	-- Debugging -- Cause randomly located activation with current settings
 	if( input:isKeyDown( string.byte('X') ) ) then
