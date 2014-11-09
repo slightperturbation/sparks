@@ -8,7 +8,7 @@
 #include "ShaderManager.hpp"
 #include "FileAssetFinder.hpp"
 #include "Scene.hpp"
-#include "GuiEventPublisher.hpp"
+#include "input/GuiEventPublisher.hpp"
 #include "TextRenderable.hpp"
 #include "TissueMesh.hpp"
 #include "LSpark.hpp"

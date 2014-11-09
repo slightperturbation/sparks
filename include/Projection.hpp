@@ -4,7 +4,7 @@
 #include "Spark.hpp"
 #include "ShaderInstance.hpp"
 #include "Utilities.hpp"
-#include "GuiEventSubscriber.hpp"
+#include "input/GuiEventSubscriber.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>

@@ -4,7 +4,7 @@
 #include "TextureManager.hpp"
 #include "ShaderManager.hpp"
 #include "SceneFacade.hpp"
-#include "Input.hpp"
+#include "input/Input.hpp"
 
 #include "lua.hpp"
 #include "luabind/luabind.hpp"

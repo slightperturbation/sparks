@@ -9,7 +9,7 @@
 #include "ShaderManager.hpp"
 #include "FileAssetFinder.hpp"
 #include "Scene.hpp"
-#include "GuiEventPublisher.hpp"
+#include "input/GuiEventPublisher.hpp"
 
 #include "FontManager.hpp"
 

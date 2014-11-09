@@ -3,7 +3,7 @@
 
 #include "Spark.hpp"
 #include "Updateable.hpp"
-#include "GuiEventSubscriber.hpp"
+#include "input/GuiEventSubscriber.hpp"
 
 namespace spark
 {

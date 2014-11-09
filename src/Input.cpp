@@ -1,7 +1,7 @@
 
-#include "Input.hpp"
+#include "input/Input.hpp"
 
-#include "InputDevice.hpp"
+#include "input/InputDevice.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>

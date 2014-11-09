@@ -2,7 +2,7 @@
 #define DISPLAY_HPP
 
 #include "Spark.hpp"
-#include "GuiEventSubscriber.hpp"
+#include "input/GuiEventSubscriber.hpp"
 #include "Utilities.hpp"
 
 namespace spark

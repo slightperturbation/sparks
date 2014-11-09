@@ -9,8 +9,8 @@
 #include "Fluid.hpp"
 #include "Utilities.hpp" // for glm operator<< functions
 #include "Projection.hpp"
-#include "ESUInput.hpp"
-#include "ESUInputFromSharedMemory.hpp"
+#include "esu/ESUInput.hpp"
+#include "esu/ESUInputFromSharedMemory.hpp"
 #include "TexturedSparkRenderable.hpp"
 
 #include <luabind/operator.hpp>

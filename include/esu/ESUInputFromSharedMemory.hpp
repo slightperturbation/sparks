@@ -9,7 +9,7 @@
 #ifndef sparkGui_ESUInputFromSharedMemory_hpp
 #define sparkGui_ESUInputFromSharedMemory_hpp
 
-#include "ESUInput.hpp"
+#include "esu/ESUInput.hpp"
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/containers/vector.hpp>

@@ -11,16 +11,16 @@
 #include "TextRenderable.hpp"
 
 #include "Scene.hpp"
-#include "ArcBall.hpp"
+#include "input/ArcBall.hpp"
 #include "EyeTracker.hpp"
 
-#include "GuiEventPublisher.hpp"
+#include "input/GuiEventPublisher.hpp"
 
 #include "LuaInterpreter.hpp"
 
-#include "Input.hpp"
-#include "InputFactory.hpp"
-#include "GlfwInput.hpp"
+#include "input/Input.hpp"
+#include "input/InputFactory.hpp"
+#include "input/GlfwInput.hpp"
 
 #include "NetworkEyeTracker.hpp"
 

@@ -1,6 +1,6 @@
 
 
-#include "GlfwInput.hpp"
+#include "input/GlfwInput.hpp"
 
 #include "Utilities.hpp"
 

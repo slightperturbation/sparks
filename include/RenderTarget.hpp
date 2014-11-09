@@ -3,7 +3,7 @@
 #define sparks_RENDER_TARGET_HPP
 
 #include "Spark.hpp"
-#include "GuiEventSubscriber.hpp"
+#include "input/GuiEventSubscriber.hpp"
 
 #define GLEW_STATIC
 #include <GL/glew.h>
