@@ -11,3 +11,6 @@ startWebserver.bat
 
 # OBJ geometry files should be tracked (override standard globals)
 !*.obj
+
+# hidden files
+.* 
