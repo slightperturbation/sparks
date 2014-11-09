@@ -13,6 +13,5 @@ startWebserver.bat
 !*.obj
 
 # hidden files
-**/.* 
-!/.gitignore
+**/.*
 
