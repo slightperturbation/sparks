@@ -1,4 +1,4 @@
-#include "ArcBall.hpp"
+#include "input/ArcBall.hpp"
 
 #include "Projection.hpp"
 
