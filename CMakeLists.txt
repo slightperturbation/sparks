@@ -628,25 +628,25 @@ endif()
 
 ###########################################################################
 set( HDRS
-  ./include/ArcBall.hpp
+  ./include/input/ArcBall.hpp
   ./include/DBMSpark.hpp
   ./include/Display.hpp
   ./include/IlluminationModel.hpp
   ./include/LSpark.hpp
   ./include/LuaInterpreter.hpp
-  ./include/ESUInput.hpp
-  ./include/ESUInputFromSharedMemory.hpp
+  ./include/esu/ESUInput.hpp
+  ./include/esu/ESUInputFromSharedMemory.hpp
   ./include/Exceptions.hpp
   ./include/EyeTracker.hpp
   ./include/Fluid.hpp
   ./include/FileAssetFinder.hpp
-  ./include/GlfwInput.hpp
-  ./include/GuiEventSubscriber.hpp
-  ./include/GuiEventPublisher.hpp
+  ./include/input/GlfwInput.hpp
+  ./include/input/GuiEventSubscriber.hpp
+  ./include/input/GuiEventPublisher.hpp
   ./include/FontManager.hpp
-  ./include/Input.hpp
-  ./include/InputDevice.hpp
-  ./include/InputFactory.hpp
+  ./include/input/Input.hpp
+  ./include/input/InputDevice.hpp
+  ./include/input/InputFactory.hpp
   ./include/Material.hpp
   ./include/Mesh.hpp
   ./include/NetworkEyeTracker.hpp
@@ -681,7 +681,7 @@ set( HDRS
   ./include/VertexAttribute.hpp
   ./include/VelocityFieldInterface.hpp
 
-  ./include/SixenseInputDevice.hpp
+  ./include/input/SixenseInputDevice.hpp
   ./include/TissueMesh.hpp
 )
 include_directories( ./include/ )  # Move headers to ./include/
@@ -734,9 +734,8 @@ if( ZSPACE_FOUND )
   LIST( APPEND SRCS ./src/ZSpaceEyeTracker.cpp )
   LIST( APPEND SRCS ./src/ZSpaceInput.cpp )
   LIST( APPEND SRCS ./src/ZSpaceSystem.cpp )
-  LIST( APPEND HDRS ./include/ZSpaceEyeTracker.hpp )
-  LIST( APPEND HDRS ./include/ZSpaceInput.hpp )
-  LIST( APPEND HDRS ./include/ZSpaceSystem.hpp )
+  LIST( APPEND HDRS ./include/zspace/ZSpaceInput.hpp )
+  LIST( APPEND HDRS ./include/zspace/ZSpaceSystem.hpp )
 else( ZSPACE_FOUND )
   LIST( APPEND SRCS ./src/EyeTrackerNetwork.cpp )
 endif( ZSPACE_FOUND )
